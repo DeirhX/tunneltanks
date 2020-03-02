@@ -87,7 +87,7 @@ void draw_line(Level *dest, Vector a, Vector b, char value, int fat_line) {
 	pt_func = (fat_line) ? set_circle : set_point;
 	
 	/* Swap x and y values when the graph gets too steep to operate normally: */
-	if((swap = abs(b.y - a.y) > abs(b.x - a.x))) {
+	if((swap = /*abs*/(b.y - a.y) > /*abs*/(b.x - a.x))) {
 		SWAP(unsigned, a.x, a.y);
 		SWAP(unsigned, b.x, b.y);
 	}
@@ -97,7 +97,7 @@ void draw_line(Level *dest, Vector a, Vector b, char value, int fat_line) {
 
 	/* A few calculations: */
 	dx = b.x - a.x;
-	dy = abs(b.y - a.y);
+	dy = /*abs*/(b.y - a.y);
 	error = dx / 2;
 	stepy = (a.y < b.y) ? 1 : -1;
 	

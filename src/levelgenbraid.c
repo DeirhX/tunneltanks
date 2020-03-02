@@ -137,11 +137,11 @@ static void braid_populate(Braid *b) {
 		b->data[i].up = b->data[i].right = 0;
 	
 	/* Get, and fill our list of walls: */
-	w = get_mem(sizeof(Wall) * b->w * b->h * 2);
+	w = static_cast<Wall*>(get_mem(sizeof(Wall) * b->w * b->h * 2));
 	x = y = 0;
 	for(i=0; i < b->w * b->h * 2; i+=2) {
-		w[i]   = (Wall){x, y, DIR_UP};
-		w[i+1] = (Wall){x, y, DIR_RIGHT};
+		w[i]   = Wall{x, y, DIR_UP};
+		w[i+1] = Wall{x, y, DIR_RIGHT};
 		
 		if(++x==b->w) {
 			y++;
@@ -181,7 +181,7 @@ static void braid_populate(Braid *b) {
 static Braid *braid_new(unsigned w, unsigned h) {
 	Braid *b = get_object(Braid);
 	b->w = w; b->h = h;
-	b->data = get_mem(sizeof(Cell) * w * h);
+	b->data = static_cast<Cell*>(get_mem(sizeof(Cell) * w * h));
 	
 	braid_populate(b);
 	

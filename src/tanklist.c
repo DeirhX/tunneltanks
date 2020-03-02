@@ -27,7 +27,7 @@ TankList *tanklist_new(Level *lvl, PList *pl) {
 
 void tanklist_destroy(TankList *tl) {
 	unsigned i;
-	for(i=0; i<MAX_TANKS; i++) tank_destroy(tl->list[i]);
+	for(i=0; i<MAX_TANKS; i++) delete (tl->list[i]);
 	free_mem(tl);
 }
 
@@ -35,7 +35,7 @@ void tanklist_destroy(TankList *tl) {
 Tank *tanklist_add_tank(TankList *tl, unsigned id, Vector p) {
 	if(id >= MAX_TANKS) return NULL;
 	if(tl->list[id]) return NULL;
-	tl->list[id] = tank_new(tl->lvl, tl->pl, p.x, p.y, id);
+	tl->list[id] = new Tank(tl->lvl, tl->pl, p.x, p.y, id);
 	return tl->list[id];
 }
 
@@ -72,7 +72,7 @@ int tanklist_check_collision(TankList *tl, Vector p, unsigned pdir, unsigned ign
 		
 		/* Let's see if these two tanks are ANYWHERE near each other: */
 		tank_get_position(tl->list[i], &x, &y);
-		if(abs(p.x-x)>6 || abs(p.y-y)>6) continue;
+		if(/*abs*/(p.x-x)>6 || /*abs*/(p.y-y)>6) continue;
 		
 		/* Ok, if we're here, the two tanks are real close. Now it's time for
 		 * brute-force pixel checking: */

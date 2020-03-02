@@ -51,11 +51,11 @@ static void generate_tree(Level *lvl) {
 	Pairing *pairs;
 	
 	/* Get an array of disjoint set IDs: */
-	dsets = get_mem( sizeof(unsigned) * TREESIZE );
+	dsets = static_cast<unsigned*>(get_mem( sizeof(unsigned) * TREESIZE ));
 	for(i=0; i<TREESIZE; i++) dsets[i] = i;
 	
 	/* Randomly generate all points: */
-	points = get_mem( sizeof(Vector) * TREESIZE );
+	points = static_cast<Vector*>(get_mem( sizeof(Vector) * TREESIZE ));
 	for(i=0; i<TREESIZE; i++) points[i] = pt_rand(lvl->width, lvl->height, BORDER);
 	
 	/* While we're here, copy in some of those points: */
@@ -76,7 +76,7 @@ static void generate_tree(Level *lvl) {
 	}
 	/* Get an array of all point-point pairings: */
 	paircount = TREESIZE*(TREESIZE-1) / 2;
-	pairs = get_mem( sizeof(Pairing) * (paircount) );
+	pairs = static_cast<Pairing*>(get_mem( sizeof(Pairing) * (paircount) ));
 
 	/* Set up all the pairs, and sort them: */
 	for(k=i=0; i<TREESIZE; i++)
@@ -143,7 +143,7 @@ static void expand_init(Level *lvl, Queue *q) {
 		for(x=1; x<lvl->width-1; x++)
 			if(lvl->array[y*lvl->width+x] && has_neighbor(lvl, x, y)) {
 				lvl->array[y*lvl->width+x] = 2;
-				queue_enqueue(q, &(Vector){x,y});
+				queue_enqueue(q, &Vector{x,y});
 			}
 }
 
@@ -178,7 +178,8 @@ static unsigned expand_once(Level *lvl, Queue *q) {
 				c = &lvl->array[ty*lvl->width + tx];
 				if(*c == 1) {
 					*c = 2;
-					queue_enqueue(q, &(Vector){tx, ty});
+					Vector v{ tx, ty };
+					queue_enqueue(q, &v);
 				}
 			}
 		} else

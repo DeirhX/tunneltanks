@@ -65,7 +65,7 @@ struct DrawBuffer {
 
 DrawBuffer *drawbuffer_new(unsigned w, unsigned h) {
 	DrawBuffer *out = get_object(DrawBuffer);
-	out->pixel_data = get_mem(sizeof(Color) * w * h);
+	out->pixel_data = static_cast<Color*>(get_mem(sizeof(Color) * w * h));
 	out->w = w; out->h = h;
 	out->default_color.r = 0;
 	out->default_color.g = 0;

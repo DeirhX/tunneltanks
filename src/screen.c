@@ -102,7 +102,7 @@ void screen_draw_pixel(Screen *s, unsigned x, unsigned y, Color color) {
 	w = s->pixelw + (xs!=((x+1)*s->xskips/GAME_WIDTH));
 	h = s->pixelh + (ys!=((y+1)*s->yskips/GAME_HEIGHT));
 	
-	r = RECT(x,y,w,h);
+	r = RECT(static_cast<int>(x), static_cast<int>(y),w, h);
 	gamelib_draw_box(&r, color);
 }
 
@@ -420,7 +420,7 @@ void screen_add_window(Screen *s, Rect r, Tank *t) {
 	if(s->mode != SCREEN_DRAW_LEVEL) return;
 	
 	if(s->window_count >= SCREEN_MAX_WINDOWS) return;
-	s->window[ s->window_count++ ] = (Window) {r, t, 0, 0};
+	s->window[ s->window_count++ ] = Window {r, t, 0, 0};
 }
 
 /* We can add the health/energy status bars here: */
@@ -432,7 +432,7 @@ void screen_add_status(Screen *s, Rect r, Tank *t, int decreases_to_left) {
 	/* Make sure that this status bar isn't too small: */
 	if(r.w <= 2 || r.h <= 4) return;
 	
-	s->status[ s->status_count++ ] = (StatusBar) {r, t, decreases_to_left};
+	s->status[ s->status_count++ ] = StatusBar {r, t, decreases_to_left};
 }
 
 /* We tell the graphics system about GUI graphics here: 
@@ -446,7 +446,7 @@ void screen_add_bitmap(Screen *s, Rect r, char *bitmap, Color *color) {
 	if(s->bitmap_count >= SCREEN_MAX_BITMAPS) return;
 	if(!bitmap || !color) return;
 	
-	s->bitmap[ s->bitmap_count++ ] = (Bitmap) {r, bitmap, color};
+	s->bitmap[ s->bitmap_count++ ] = Bitmap{r, bitmap, color};
 }
 
 /* We don't check to see if gamelib needs the gui controller thing in this file.

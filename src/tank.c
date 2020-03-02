@@ -13,57 +13,31 @@
 #include <tanklist.h>
 
 
-struct Tank {
-	unsigned x, y;
-	int vx, vy; /* Velocity... ie: is it moving now? */
-	unsigned direction;
-	
-	unsigned color;
-	
-	unsigned bullet_timer, bullets_left, is_shooting;
-	
-	unsigned health, energy;
-	
-	TankController controller;
-	void          *controller_data;
-	
-	Level *lvl;
-	PList *pl;
-	LevelSlice *cached_slice;
-};
-
-
-Tank *tank_new(Level *lvl, PList *pl, unsigned x, unsigned y, unsigned color) {
-	Tank *t;
-	
-	t = get_object(Tank);
-	t->x = x; t->y = y; t->color = color;
-	
-	t->cached_slice = level_slice_new(lvl, t);
+Tank::Tank(Level *lvl, PList *pl, unsigned x, unsigned y, unsigned color) :
+	x(x), y(y), color(color)
+{
+	this->cached_slice = level_slice_new(lvl, this);
 	
 	/* Let's just make the starting direction random, because we can: */
-	t->direction = rand_int(0, 7);
-	if(t->direction >= 4) t->direction ++;
+	this->direction = rand_int(0, 7);
+	if(this->direction >= 4) this->direction ++;
 	
-	t->vx = t->vy = 0; t->lvl = lvl; t->pl = pl;
+	this->vx = this->vy = 0; this->lvl = lvl; this->pl = pl;
 	 
-	t->bullet_timer = TANK_BULLET_DELAY;
-	t->bullets_left = TANK_BULLET_MAX;
-	t->is_shooting = 0;
-	t->health = TANK_STARTING_SHIELD;
-	t->energy = TANK_STARTING_FUEL;
-	t->controller = NULL;
-	t->controller_data = NULL;
-	
-	return t;
+	this->bullet_timer = TANK_BULLET_DELAY;
+	this->bullets_left = TANK_BULLET_MAX;
+	this->is_shooting = 0;
+	this->health = TANK_STARTING_SHIELD;
+	this->energy = TANK_STARTING_FUEL;
+	this->controller = NULL;
+	this->controller_data = NULL;
 }
 
 
-void tank_destroy(Tank *t) {
-	if(!t) return;
-	level_slice_free(t->cached_slice);
-	free_mem(t->controller_data);
-	free_mem(t);
+Tank::~Tank()
+{
+	level_slice_free(this->cached_slice);
+	free_mem(this->controller_data);
 }
 
 void tank_get_position(Tank *t, unsigned *x, unsigned *y) {
@@ -109,7 +83,7 @@ static CollisionType tank_collision(Level *lvl, unsigned dir, unsigned x, unsign
 		}
 	
 	/* Tank collisions: */
-	if(tanklist_check_collision(tl, (Vector){x,y}, dir, id)) return CT_COLLIDE;
+	if(tanklist_check_collision(tl, Vector{x,y}, dir, id)) return CT_COLLIDE;
 	return out;
 }
 
@@ -123,10 +97,10 @@ void tank_move(Tank *t, TankList *tl) {
 	if(t->controller) {
 		Vector         base = level_get_spawn(t->lvl, t->color);
 		PublicTankInfo i = {
-			.energy = t->energy,
 			.health = t->health,
-			.x      = t->x - base.x,
-			.y      = t->y - base.y,
+			.energy = t->energy,
+			.x      = static_cast<int>(t->x - base.x),
+			.y      = static_cast<int>(t->y - base.y),
 			.slice  = t->cached_slice};
 		t->controller(&i, t->controller_data, &t->vx, &t->vy, &t->is_shooting);
 	}
@@ -270,4 +244,3 @@ void tank_set_controller(Tank *t, TankController func, void *data) {
 int tank_is_dead(Tank *t) {
 	return !t->health;
 }
-

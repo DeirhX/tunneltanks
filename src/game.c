@@ -77,7 +77,7 @@ static void twitch_fill(TankList *tl, Level *lvl, unsigned starting_id) {
 static void init_single_player(Screen *s, TankList *tl, Level *lvl) {
 	Tank *t;
 	Rect gui;
-	unsigned gui_shift;
+	int gui_shift;
 	
 	/* Account for the GUI Controller: */
 	gui = gamelib_gui_get_size();
@@ -90,9 +90,9 @@ static void init_single_player(Screen *s, TankList *tl, Level *lvl) {
 	gamelib_tank_attach(t, 0, 1);
 	
 	screen_add_window(s, RECT(2, 2, GAME_WIDTH-4, GAME_HEIGHT-6-STATUS_HEIGHT), t);
-	screen_add_status(s, RECT(9 + gui_shift, GAME_HEIGHT - 2 - STATUS_HEIGHT, GAME_WIDTH-12 - gui_shift, STATUS_HEIGHT), t, 1);
+	screen_add_status(s, RECT(9 + gui_shift, GAME_HEIGHT - 2 - STATUS_HEIGHT, static_cast<unsigned>(GAME_WIDTH-12 - gui_shift), STATUS_HEIGHT), t, 1);
 	if(gui_shift)
-		screen_add_controller(s, RECT(3, GAME_HEIGHT - 5 - gui.h, gui.w, gui.h));
+		screen_add_controller(s, RECT(3, GAME_HEIGHT - 5 - static_cast<int>(gui.h), gui.w, gui.h));
 	
 	/* Add the GUI bitmaps: */
 	screen_add_bitmap(s, RECT(3 + gui_shift, GAME_HEIGHT - 2 - STATUS_HEIGHT    , 4, 5), GUI_ENERGY, &color_status_energy);
@@ -243,7 +243,7 @@ void game_finalize(GameData *gd) {
 
 /* Step the game simulation by handling events, and drawing: */
 int game_step(void *input) {
-	GameData *gd = input;
+	GameData *gd = static_cast<GameData*>(input);
 	ASSERT_ACTIVE();
 	
 	EventType temp;

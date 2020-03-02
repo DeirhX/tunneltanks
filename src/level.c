@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <level.h>
 #include <memalloc.h>
@@ -20,7 +20,7 @@ Level *level_new(DrawBuffer *b, unsigned w, unsigned h) {
 	lvl->height = h;
 	lvl->b = b;
 	
-	lvl->array = get_mem( sizeof(char) * w * h );
+	lvl->array = static_cast<char*>(get_mem( sizeof(char) * w * h ));
 	for(i=0; i<w*h; i++) lvl->array[i] = 1;
 	
 	return lvl;
@@ -153,7 +153,7 @@ BaseCollision level_check_base_collision(Level *lvl, unsigned x, unsigned y, uns
 	unsigned id;
 	
 	for(id=0; id < MAX_TANKS; id++) {
-		if(abs(lvl->spawn[id].x - x) < BASE_SIZE/2 && abs(lvl->spawn[id].y - y) < BASE_SIZE/2) {
+		if(/*std::abs*/(lvl->spawn[id].x - x) < BASE_SIZE/2 && /*std::abs*/(lvl->spawn[id].y - y) < BASE_SIZE/2) {
 			if(id == color)
 				return BASE_COLLISION_YOURS;
 			return BASE_COLLISION_ENEMY;

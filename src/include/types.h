@@ -7,14 +7,14 @@
 typedef struct Vector {
 	unsigned x, y;
 } Vector;
-#define VECTOR(x,y) ((Vector){(x),(y)})
+#define VECTOR(x,y) (Vector{(x),(y)})
 
 /* A simple struct for quads: */
 typedef struct Rect {
 	int x, y;
 	unsigned w, h;
 } Rect;
-#define RECT(x,y,w,h) ((Rect){(x),(y),(w),(h)})
+#define RECT(x,y,w,h) (Rect{(x),(y),(w),(h)})
 
 /* A simple way to reference a color: */
 typedef struct Color {

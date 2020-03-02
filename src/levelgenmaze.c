@@ -134,7 +134,7 @@ static void maze_dump(Maze *m) {
 static Maze *maze_new(unsigned w, unsigned h) {
 	Maze *m = get_object(Maze);
 	m->w = w; m->h = h;
-	m->data = get_mem(sizeof(Cell) * w * h);
+	m->data = static_cast<Cell*>(get_mem(sizeof(Cell) * w * h));
 	
 	maze_populate(m);
 	

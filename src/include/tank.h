@@ -23,8 +23,29 @@ typedef void (*TankController)(PublicTankInfo *, void *, int *, int *, unsigned 
 #include <projectile.h>
 #include <tanklist.h>
 
-Tank *tank_new(Level *lvl, PList *pl, unsigned x, unsigned y, unsigned color) ;
-void tank_destroy(Tank *t) ;
+struct Tank
+{
+public:
+	unsigned x, y;
+	int vx, vy; /* Velocity... ie: is it moving now? */
+	unsigned direction;
+
+	unsigned color;
+
+	unsigned bullet_timer, bullets_left, is_shooting;
+
+	unsigned health, energy;
+
+	TankController controller;
+	void* controller_data;
+
+	Level* lvl;
+	PList* pl;
+	LevelSlice* cached_slice;
+
+	Tank(Level* lvl, PList* pl, unsigned x, unsigned y, unsigned color);
+	~Tank();
+};
 
 unsigned tank_get_color(Tank *t) ;
 
