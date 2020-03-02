@@ -27,7 +27,7 @@
 	}
 
 	void free_mem(void *ptr) {
-		unsigned *t = (ptr - sizeof(unsigned));
+		unsigned *t = ((unsigned*)ptr - 1);
 		
 		if(t && ptr) {
 			__TOTAL_MEMORY_ALLOCATED -= t[0];

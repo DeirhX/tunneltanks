@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\aitwitch.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\drawbuffer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\game.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\bitmap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\control.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\controllersdl.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\events.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\graphics.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\gui.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\logging.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\sdldata.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\guisprites.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\level.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelgen.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelgenbraid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelgenmaze.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelgensimple.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelgentoast.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelgenutil.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelslice.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\memalloc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\projectile.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\queue.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\random.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\screen.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\tank.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\tanklist.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\tanksprites.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fix.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{7A5EB5DD-7831-3A96-9433-D1B557B44C35}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

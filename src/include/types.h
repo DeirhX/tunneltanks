@@ -20,7 +20,7 @@ typedef struct Rect {
 typedef struct Color {
 	unsigned char r, g, b;
 } Color;
-#define COLOR(r,g,b) ((Color){(r),(g),(b)})
+#define COLOR(r,g,b) {(r),(g),(b)}
 
 #endif /* _TYPES_H_ */
 

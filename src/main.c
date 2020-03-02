@@ -15,7 +15,7 @@
 
 /* Nothing in this file uses SDL, but we still have to include SDL.h for Macs,
  * since they do some extra magic in the file WRT the main() function: */
-#include <SDL/SDL.h>
+#include <SDL.h>
 
 	
 int main(int argc, char *argv[]) {

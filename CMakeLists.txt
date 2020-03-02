@@ -6,8 +6,18 @@ cmake_minimum_required(VERSION 2.6)
 
 project(tunneltanks C)
 
+set(SDL_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/sdl2/include")
+
+# Support both 32 and 64 bit builds
+if (${CMAKE_SIZEOF_VOID_P} MATCHES 8)
+  set(SDL_LIBRARY "${CMAKE_CURRENT_LIST_DIR}/sdl2/lib/x64/SDL2.lib;${CMAKE_CURRENT_LIST_DIR}/lib/x64/SDL2main.lib")
+else ()
+  set(SDL_LIBRARY "${CMAKE_CURRENT_LIST_DIR}/sdl2/lib/x86/SDL2.lib;${CMAKE_CURRENT_LIST_DIR}/lib/x86/SDL2main.lib")
+endif ()
+
+string(STRIP "${SDL2_LIBRARIES}" SDL2_LIBRARIES)
+
 # Verify that SDL is installed:
-find_package( SDL REQUIRED )
 include_directories( ${SDL_INCLUDE_DIR} )
 include_directories( "src/include" )
 

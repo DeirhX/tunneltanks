@@ -11,7 +11,7 @@ typedef struct LevelGenerator {
 	LevelGeneratorFunc gen;
 	char              *desc;
 } LevelGenerator;
-#define LEVEL_GENERATOR(id, gen, desc) ((LevelGenerator){(id), (gen), (desc)})
+#define LEVEL_GENERATOR(id, gen, desc) {(id), (gen), (desc)}
 
 
 /* === All the generator headers go here: =================================== */

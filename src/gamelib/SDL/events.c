@@ -19,7 +19,7 @@ typedef struct Event {
 static Event cur_event = {
 	/*.e         = NULL,*/
 	.type      = GAME_EVENT_NONE,
-	.dim       = RECT(0,0,0,0)
+	.dim = {0,0,0,0}
 };
 
 

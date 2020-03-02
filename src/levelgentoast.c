@@ -75,9 +75,9 @@ static void generate_tree(Level *lvl) {
 		exit(1);
 	}
 	/* Get an array of all point-point pairings: */
-	paircount = TREESIZE*(TREESIZE+1) / 2;
-	pairs = get_mem( sizeof(Pairing) * paircount );
-	
+	paircount = TREESIZE*(TREESIZE-1) / 2;
+	pairs = get_mem( sizeof(Pairing) * (paircount) );
+
 	/* Set up all the pairs, and sort them: */
 	for(k=i=0; i<TREESIZE; i++)
 		for(j=i+1; j<TREESIZE; j++, k++) {
@@ -85,7 +85,6 @@ static void generate_tree(Level *lvl) {
 			pairs[k].dist = pt_dist(points[i], points[j]);
 		}
 	qsort(pairs, paircount, sizeof(Pairing), pairing_cmp);
-	
 	for(i=j=0; i<paircount; i++) {
 		unsigned aset, bset;
 		

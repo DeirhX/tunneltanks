@@ -67,7 +67,9 @@ DrawBuffer *drawbuffer_new(unsigned w, unsigned h) {
 	DrawBuffer *out = get_object(DrawBuffer);
 	out->pixel_data = get_mem(sizeof(Color) * w * h);
 	out->w = w; out->h = h;
-	out->default_color = COLOR(0,0,0);
+	out->default_color.r = 0;
+	out->default_color.g = 0;
+	out->default_color.b = 0;
 	
 	return out;
 }
