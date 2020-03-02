@@ -11,3 +11,7 @@ cmake_install.cmake
 pack/*.cpack
 tunneltanks
 *.bmp
+/SDL/docs/
+/Build/
+/obj/
+*.vcxproj.user
