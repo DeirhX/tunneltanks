@@ -11,16 +11,19 @@ typedef struct PListNode PListNode;
 #include <tank.h>
 #include <tanklist.h>
 
-PList *plist_new() ;
-void plist_destroy(PList *pl) ;
+extern "C" {
 
-void plist_push_bullet(PList *pl, Tank *t) ;
-void plist_push_explosion(PList *pl, unsigned x, unsigned y, unsigned count, unsigned r, unsigned ttl);
+	PList* plist_new();
+	void plist_destroy(PList* pl);
 
-void plist_step(PList *pl, Level *b, TankList *tl) ;
+	void plist_push_bullet(PList* pl, Tank* t);
+	void plist_push_explosion(PList* pl, unsigned x, unsigned y, unsigned count, unsigned r, unsigned ttl);
 
-void plist_clear(PList *pl, DrawBuffer *b) ;
-void plist_draw(PList *pl, DrawBuffer *b) ;
+	void plist_step(PList* pl, Level* b, TankList* tl);
 
+	void plist_clear(PList* pl, DrawBuffer* b);
+	void plist_draw(PList* pl, DrawBuffer* b);
+
+}
 #endif /* _PROJECTILE_H_ */
 

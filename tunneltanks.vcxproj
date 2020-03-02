@@ -37,6 +37,76 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\aitwitch.c" />
+    <ClCompile Include="src\drawbuffer.c" />
+    <ClCompile Include="src\fix.cpp">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsCpp</CompileAs>
+    </ClCompile>
+    <ClCompile Include="src\game.c" />
+    <ClCompile Include="src\gamelib\SDL\bitmap.c" />
+    <ClCompile Include="src\gamelib\SDL\control.c" />
+    <ClCompile Include="src\gamelib\SDL\controllersdl.c" />
+    <ClCompile Include="src\gamelib\SDL\events.c" />
+    <ClCompile Include="src\gamelib\SDL\graphics.c" />
+    <ClCompile Include="src\gamelib\SDL\gui.c" />
+    <ClCompile Include="src\gamelib\SDL\logging.c" />
+    <ClCompile Include="src\gamelib\SDL\sdldata.c" />
+    <ClCompile Include="src\guisprites.c" />
+    <ClCompile Include="src\level.c" />
+    <ClCompile Include="src\levelgen.c" />
+    <ClCompile Include="src\levelgenbraid.c" />
+    <ClCompile Include="src\levelgenmaze.c" />
+    <ClCompile Include="src\levelgensimple.c" />
+    <ClCompile Include="src\levelgentoast.c" />
+    <ClCompile Include="src\levelgenutil.c" />
+    <ClCompile Include="src\levelslice.c" />
+    <ClCompile Include="src\main.c" />
+    <ClCompile Include="src\memalloc.c" />
+    <ClCompile Include="src\projectile.c" />
+    <ClCompile Include="src\queue.c" />
+    <ClCompile Include="src\random.c" />
+    <ClCompile Include="src\screen.c" />
+    <ClCompile Include="src\tank.c" />
+    <ClCompile Include="src\tanklist.c" />
+    <ClCompile Include="src\tanksprites.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\gamelib\SDL\controllersdl.h" />
+    <ClInclude Include="src\gamelib\SDL\require_sdl.h" />
+    <ClInclude Include="src\gamelib\SDL\sdldata.h" />
+    <ClInclude Include="src\include\controller.h" />
+    <ClInclude Include="src\include\drawbuffer.h" />
+    <ClInclude Include="src\include\game.h" />
+    <ClInclude Include="src\include\gamelib.h" />
+    <ClInclude Include="src\include\guisprites.h" />
+    <ClInclude Include="src\include\level.h" />
+    <ClInclude Include="src\include\levelgen.h" />
+    <ClInclude Include="src\include\levelgenbraid.h" />
+    <ClInclude Include="src\include\levelgenmaze.h" />
+    <ClInclude Include="src\include\levelgensimple.h" />
+    <ClInclude Include="src\include\levelgentoast.h" />
+    <ClInclude Include="src\include\levelgenutil.h" />
+    <ClInclude Include="src\include\levelslice.h" />
+    <ClInclude Include="src\include\level_defn.h" />
+    <ClInclude Include="src\include\memalloc.h" />
+    <ClInclude Include="src\include\projectile.h" />
+    <ClInclude Include="src\include\queue.h" />
+    <ClInclude Include="src\include\random.h" />
+    <ClInclude Include="src\include\screen.h" />
+    <ClInclude Include="src\include\tank.h" />
+    <ClInclude Include="src\include\tanklist.h" />
+    <ClInclude Include="src\include\tanksprites.h" />
+    <ClInclude Include="src\include\tweak.h" />
+    <ClInclude Include="src\include\types.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9DD4DF14-B88C-370B-8C6A-BF39F7125DBF}</ProjectGuid>
     <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
@@ -534,155 +604,6 @@
       <Command>copy "sdl\lib\$(PlatformShortName)\sdl.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <CustomBuild Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeLists.txt">
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master/CMakeLists.txt</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building Custom Rule C:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master/CMakeLists.txt</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master -BC:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master --check-stamp-file C:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master/CMakeFiles/generate.stamp
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master -BC:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master --check-stamp-file C:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master/CMakeFiles/generate.stamp
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeInitializeConfigs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeLanguageInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Compiler\MSVC-C.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\WindowsPaths.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeCCompiler.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeRCCompiler.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeSystem.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\config.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.deb.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.rpm.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.tbz2.cpack.in;%(AdditionalInputs)</AdditionalInputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeInitializeConfigs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeLanguageInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Compiler\MSVC-C.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\WindowsPaths.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeCCompiler.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeRCCompiler.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeSystem.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\config.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.deb.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.rpm.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.tbz2.cpack.in;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\generate.stamp</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\generate.stamp</Outputs>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master/CMakeLists.txt</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building Custom Rule C:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master/CMakeLists.txt</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master -BC:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master --check-stamp-file C:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master/CMakeFiles/generate.stamp
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master -BC:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master --check-stamp-file C:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master/CMakeFiles/generate.stamp
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeInitializeConfigs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeLanguageInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Compiler\MSVC-C.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\WindowsPaths.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeCCompiler.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeRCCompiler.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeSystem.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\config.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.deb.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.rpm.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.tbz2.cpack.in;%(AdditionalInputs)</AdditionalInputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeInitializeConfigs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeLanguageInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Compiler\MSVC-C.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\WindowsPaths.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeCCompiler.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeRCCompiler.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeSystem.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\config.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.deb.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.rpm.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.tbz2.cpack.in;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\generate.stamp</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\generate.stamp</Outputs>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master/CMakeLists.txt</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">Building Custom Rule C:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master/CMakeLists.txt</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master -BC:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master --check-stamp-file C:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master/CMakeFiles/generate.stamp
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master -BC:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master --check-stamp-file C:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master/CMakeFiles/generate.stamp
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeInitializeConfigs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeLanguageInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Compiler\MSVC-C.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\WindowsPaths.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeCCompiler.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeRCCompiler.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeSystem.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\config.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.deb.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.rpm.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.tbz2.cpack.in;%(AdditionalInputs)</AdditionalInputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeInitializeConfigs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeLanguageInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Compiler\MSVC-C.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\WindowsPaths.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeCCompiler.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeRCCompiler.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeSystem.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\config.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.deb.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.rpm.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.tbz2.cpack.in;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\generate.stamp</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\generate.stamp</Outputs>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master/CMakeLists.txt</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">Building Custom Rule C:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master/CMakeLists.txt</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master -BC:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master --check-stamp-file C:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master/CMakeFiles/generate.stamp
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master -BC:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master --check-stamp-file C:/Users/doome/Downloads/tunneltanks-master/tunneltanks-master/CMakeFiles/generate.stamp
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeInitializeConfigs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeLanguageInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Compiler\MSVC-C.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\WindowsPaths.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeCCompiler.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeRCCompiler.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeSystem.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\config.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.deb.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.rpm.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.tbz2.cpack.in;%(AdditionalInputs)</AdditionalInputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeGenericSystem.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeInitializeConfigs.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeLanguageInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeRCInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Compiler\MSVC-C.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows-MSVC.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\Windows.cmake;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\share\cmake-3.15\Modules\Platform\WindowsPaths.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeCCompiler.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeRCCompiler.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\3.15.19101501-MSVC_2\CMakeSystem.cmake;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\config.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.deb.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.rpm.cpack.in;C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\pack\target.tbz2.cpack.in;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\generate.stamp</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeFiles\generate.stamp</Outputs>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">false</LinkObjects>
-    </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\aitwitch.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\drawbuffer.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\game.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\bitmap.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\control.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\controllersdl.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\events.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\graphics.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\gui.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\logging.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\sdldata.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\guisprites.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\level.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelgen.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelgenbraid.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelgenmaze.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelgensimple.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelgentoast.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelgenutil.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelslice.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\main.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\memalloc.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\projectile.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\queue.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\random.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\screen.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\tank.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\tanklist.c" />
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\tanksprites.c" />
-    <ClCompile Include="fix.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
-    </ClCompile>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

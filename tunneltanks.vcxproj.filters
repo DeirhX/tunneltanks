@@ -1,101 +1,184 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\aitwitch.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\drawbuffer.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\game.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\bitmap.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\control.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\controllersdl.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\events.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\graphics.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\gui.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\logging.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\gamelib\SDL\sdldata.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\guisprites.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\level.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelgen.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelgenbraid.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelgenmaze.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelgensimple.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelgentoast.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelgenutil.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\levelslice.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\main.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\memalloc.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\projectile.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\queue.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\random.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\screen.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\tank.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\tanklist.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\src\tanksprites.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="fix.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="C:\Users\doome\Downloads\tunneltanks-master\tunneltanks-master\CMakeLists.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{7A5EB5DD-7831-3A96-9433-D1B557B44C35}</UniqueIdentifier>
+    <Filter Include="gamelib">
+      <UniqueIdentifier>{4e67f530-6514-4333-a5cb-f806424c4517}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{2bec0e26-c4c7-4941-abaf-a7a2598710dd}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\gamelib\SDL\bitmap.c">
+      <Filter>gamelib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\control.c">
+      <Filter>gamelib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\controllersdl.c">
+      <Filter>gamelib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\events.c">
+      <Filter>gamelib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\graphics.c">
+      <Filter>gamelib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\gui.c">
+      <Filter>gamelib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\logging.c">
+      <Filter>gamelib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\sdldata.c">
+      <Filter>gamelib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\aitwitch.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\drawbuffer.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\guisprites.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\level.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgen.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgenbraid.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgenmaze.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgensimple.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgentoast.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgenutil.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelslice.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\memalloc.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\projectile.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\queue.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\random.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\screen.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tank.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tanklist.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tanksprites.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fix.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\gamelib\SDL\controllersdl.h">
+      <Filter>gamelib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamelib\SDL\require_sdl.h">
+      <Filter>gamelib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamelib\SDL\sdldata.h">
+      <Filter>gamelib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\controller.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\drawbuffer.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\game.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\gamelib.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\guisprites.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\level.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\level_defn.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\levelgen.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\levelgenbraid.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\levelgenmaze.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\levelgensimple.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\levelgentoast.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\levelgenutil.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\levelslice.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\memalloc.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\projectile.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\queue.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\random.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\screen.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\tank.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\tanklist.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\tanksprites.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\tweak.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\types.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
