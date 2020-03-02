@@ -25,7 +25,8 @@ void rand_seed() {
 	FILE *urand;
 	
 	/* Try to load out of /dev/urandom, but it isn't fatal if we can't: */
-	urand = fopen("/dev/urandom", "r");
+	urand = NULL;
+	fopen("/dev/urandom", "r");
 	if(urand) {
 		if(fread(&seed, sizeof(seed), 1, urand) != 1) seed = 0;
 		fclose(urand);
