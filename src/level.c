@@ -43,7 +43,7 @@ char level_get(Level *lvl, unsigned x, unsigned y) {
 }
 
 void level_decorate(Level *lvl) {
-	register int x, y;
+	int x, y;
 	
 	for(y=0; y<lvl->height; y++)
 		for(x=0; x<lvl->width; x++) {
@@ -54,7 +54,7 @@ void level_decorate(Level *lvl) {
 }
 
 static void make_base(Level *lvl, unsigned bx, unsigned by, unsigned color) {
-	register int x, y;
+	int x, y;
 	
 	if(color >= MAX_TANKS) return;
 	
@@ -84,7 +84,7 @@ Vector level_get_spawn(Level *lvl, unsigned i) {
 }
 
 int level_dig_hole(Level *lvl, unsigned x, unsigned y) {
-	register unsigned tx, ty;
+	unsigned tx, ty;
 	int did_dig = 0;
 	
 	for(ty=y-3; ty<=y+3; ty++)
@@ -109,7 +109,7 @@ int level_dig_hole(Level *lvl, unsigned x, unsigned y) {
 }
 
 void level_draw_all(Level *lvl, DrawBuffer *b) {
-	register unsigned x, y;
+	unsigned x, y;
 	unsigned color;
 	
 	for(y=0; y<lvl->height; y++)

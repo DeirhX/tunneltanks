@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 
 #include <level.h>
 #include <level_defn.h>
@@ -7,6 +7,8 @@
 #include <queue.h>
 #include <random.h>
 
+namespace levelgen::braid
+{
 
 /* REMEMBER: The bases are centered in cells, so these cells need to larger: */
 #define CELL_SIZE 60
@@ -62,7 +64,7 @@ static void flood_fill(Braid *b, unsigned x, unsigned y) {
 
 /* This will check a map for a cut-off region: */
 static int braid_is_connected(Braid *b) {
-	register int i;
+	int i;
 	
 	/* Set all flags to 0: */
 	for(i=0; i<b->w * b->h; i++)
@@ -115,7 +117,7 @@ static int braid_makes_dead_end(Braid *b, unsigned x, unsigned y, Dir d) {
 
 /* This will shuffle a list of walls: */
 static void wall_shuffle(Wall *w, unsigned int len) {
-	register unsigned i;
+	unsigned i;
 	
 	/* Run through the list once, shuffling everything: */
 	for(i=0; i<len; i++) {
@@ -129,7 +131,7 @@ static void wall_shuffle(Wall *w, unsigned int len) {
 /* Fills in a Braid object with a braid maze: */
 static void braid_populate(Braid *b) {
 	Wall *w;
-	register unsigned i;
+	unsigned i;
 	unsigned x, y;
 	
 	/* Set all walls to empty: */
@@ -273,3 +275,4 @@ void braid_generator(Level *lvl) {
 	braid_free(b);
 }
 
+}

@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 
 #include <level.h>
 #include <level_defn.h>

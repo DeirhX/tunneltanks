@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 
 
 //FILE _iob[3] = { *stdin, *stdout, *stderr };

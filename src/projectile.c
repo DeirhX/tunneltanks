@@ -1,5 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 #include <projectile.h>
 #include <level.h>
@@ -215,7 +215,7 @@ void plist_step(PList* pl, Level* lvl, TankList* tl) {
 				n->p.x += n->p.xstep; n->p.y += n->p.ystep;
 
 				/* Did we hit another tank? */
-				clr = tank_get_color(n->p.tank);
+				clr = n->p.tank->get_color();
 				t = tanklist_check_point(tl, n->p.x, n->p.y, clr);
 				if (t) {
 					/* If we have an associated tank, return the shot: */

@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <queue.h>
 #include <types.h>
@@ -11,7 +11,7 @@ struct Queue {
 } ;
 
 static void resize(Queue *q) {
-	register unsigned i, j;
+	unsigned i, j;
 	Vector *v;
 	
 	q->max *= 2;

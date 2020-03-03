@@ -1,6 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
 
 #include <gamelib.h>
 #include <levelgen.h>
@@ -46,7 +46,7 @@ static int pairing_cmp(const void *a, const void *b) {
 
 static void generate_tree(Level *lvl) {
 	unsigned *dsets, paircount;
-	register unsigned i, j, k;
+	unsigned i, j, k;
 	Vector *points;
 	Pairing *pairs;
 	
@@ -127,7 +127,7 @@ static int has_neighbor(Level *lvl, unsigned x, unsigned y) {
 }
 
 static void set_outside(Level *lvl, char val) {
-	register unsigned i;
+	unsigned i;
 	unsigned w = lvl->width, h = lvl->height;
 	
 	for(i=0; i<w; i++)   lvl->array[i]           = val;
@@ -137,7 +137,7 @@ static void set_outside(Level *lvl, char val) {
 }
 
 static void expand_init(Level *lvl, Queue *q) {
-	register unsigned x, y;
+	unsigned x, y;
 	
 	for(y=1; y<lvl->height-1; y++)
 		for(x=1; x<lvl->width-1; x++)
@@ -189,7 +189,7 @@ static unsigned expand_once(Level *lvl, Queue *q) {
 }
 
 static void expand_cleanup(Level *lvl) {
-	register unsigned x, y;
+	unsigned x, y;
 	
 	for(y=0; y<lvl->height; y++)
 		for(x=0; x<lvl->width; x++)
@@ -231,7 +231,7 @@ static int count_neighbors(Level *lvl, unsigned x, unsigned y) {
 #define MIN2(a,b)   ((a<b) ? a : b)
 #define MIN3(a,b,c) ((a<b) ? a : (b<c) ? b : c)
 static unsigned smooth_once(Level *lvl) {
-	register unsigned x, y, count = 0;
+	unsigned x, y, count = 0;
 	
 	for(y=1; y<lvl->height-1; y++)
 		for(x=1; x<lvl->width-1; x++) {

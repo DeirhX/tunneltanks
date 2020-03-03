@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <screen.h>
 #include <tweak.h>
@@ -75,7 +75,7 @@ struct Screen {
 
 /* Fills a surface with a blue/black pattern: */
 static void fill_background() {
-	register unsigned x, y;
+	unsigned x, y;
 	Rect dim;
 	
 	dim = gamelib_get_resolution();
@@ -127,7 +127,7 @@ int  screen_map_y(Screen *s, int y) {
 /* Will randomly draw static to a window, based on a tank's health. Returns 1 if
  * static was drawn: */
 static void screen_draw_static(Screen *s, Window *w) {
-	register unsigned x, y;
+	unsigned x, y;
 	unsigned health, energy;
 	unsigned black_counter, drawing_black;
 	
@@ -191,7 +191,7 @@ static void screen_draw_static(Screen *s, Window *w) {
 /* Will draw a window using the level's drawbuffer: */
 static void screen_draw_window(Screen *s, Window *w) {
 	DrawBuffer *b = s->drawing.level.b;
-	register unsigned x, y;
+	unsigned x, y;
 	unsigned tx, ty;
 
 	tank_get_position(w->t, &tx, &ty);
@@ -212,7 +212,7 @@ static void screen_draw_window(Screen *s, Window *w) {
  *       redraw when it's needed? Also, can we put some of these calculations in
  *       the StatusBar structure, so they don't have to be done every frame? */
 static void screen_draw_status(Screen *s, StatusBar *b) {
-	register unsigned x, y;
+	unsigned x, y;
 	
 	/* At what y value does the median divider start: */
 	unsigned mid_y = (b->r.h - 1) / 2;
@@ -289,7 +289,7 @@ static void screen_draw_status(Screen *s, StatusBar *b) {
 }
 
 static void screen_draw_bitmap(Screen *s, Bitmap *b) {
-	register unsigned x, y, i;
+	unsigned x, y, i;
 
 	for(x=y=i=0; i < (b->r.w * b->r.h); i++) {
 		if(b->data[i]) screen_draw_pixel(s, x + b->r.x, y + b->r.y, *b->color);
@@ -298,7 +298,7 @@ static void screen_draw_bitmap(Screen *s, Bitmap *b) {
 }
 
 static void screen_draw_level(Screen *s) {
-	register unsigned i;
+	unsigned i;
 	
 	for(i=0; i<s->window_count; i++) screen_draw_window(s, &s->window[i]);
 	for(i=0; i<s->status_count; i++) screen_draw_status(s, &s->status[i]);

@@ -1,5 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <tank.h>
 #include <level.h>
@@ -52,8 +51,8 @@ unsigned tank_get_dir(Tank *t) {
 	return t->direction;
 }
 
-unsigned tank_get_color(Tank *t) {
-	return t->color;
+unsigned Tank::get_color() const {
+	return this->color;
 }
 
 /* We don't use the Tank structure in this function, since we are checking the
@@ -163,7 +162,7 @@ void tank_try_base_heal(Tank *t) {
 }
 
 void tank_draw(Tank *t, DrawBuffer *b) {
-	register unsigned x, y;
+	unsigned x, y;
 	
 	if(!t->health) return;
 	
@@ -176,7 +175,7 @@ void tank_draw(Tank *t, DrawBuffer *b) {
 }
 
 void tank_clear(Tank *t, DrawBuffer *b) {
-	register unsigned x, y;
+	unsigned x, y;
 	
 	if(!t->health) return;
 	

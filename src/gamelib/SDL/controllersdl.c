@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include <cstdlib>
 #include <SDL.h>
 
 #include <gamelib.h>

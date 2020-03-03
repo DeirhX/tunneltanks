@@ -1,6 +1,6 @@
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
+#include <cstdio>
+#include <cstring>
+#include <ctime>
 
 #include <gamelib.h>
 #include <levelgen.h>
@@ -26,7 +26,7 @@ LevelGenerator GENERATOR_LIST[] =
 {
 	LEVEL_GENERATOR("toast",  toast_generator,  "Twisty, cavernous maps." ),
 	
-	LEVEL_GENERATOR("braid",  braid_generator,  "Maze-like maps with no dead ends."),
+	LEVEL_GENERATOR("braid",  levelgen::braid::braid_generator,  "Maze-like maps with no dead ends."),
 	LEVEL_GENERATOR("maze",   maze_generator,   "Complicated maps with a maze surrounding the bases."),
 	LEVEL_GENERATOR("simple", simple_generator, "Simple rectangular maps with ragged sides."),
 	

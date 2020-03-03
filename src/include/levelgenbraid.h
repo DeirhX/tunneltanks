@@ -3,7 +3,10 @@
 
 #include <level.h>
 
-void braid_generator(Level *lvl) ;
+namespace levelgen::braid {
 
+	void braid_generator(Level *lvl) ;
+
+}
 #endif /* _LEVEL_GEN_MAZE_H_ */
 

@@ -1,5 +1,5 @@
-#include <stdio.h>
-#include <time.h>
+#include <cstdio>
+#include <ctime>
 #include <SDL.h>
 
 #include <gamelib.h>

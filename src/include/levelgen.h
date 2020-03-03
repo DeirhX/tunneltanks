@@ -1,7 +1,7 @@
 #ifndef _LEVEL_GEN_H_
 #define _LEVEL_GEN_H_
 
-#include <stdio.h>
+#include <cstdio>
 
 #include <level.h>
 

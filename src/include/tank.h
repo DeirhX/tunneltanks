@@ -45,9 +45,9 @@ public:
 
 	Tank(Level* lvl, PList* pl, unsigned x, unsigned y, unsigned color);
 	~Tank();
-};
 
-unsigned tank_get_color(Tank *t) ;
+	unsigned get_color() const;
+};
 
 unsigned tank_get_dir(Tank *t) ;
 void tank_get_stats(Tank *t, unsigned *energy, unsigned *health) ;

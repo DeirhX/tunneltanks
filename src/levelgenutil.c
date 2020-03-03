@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <levelgenutil.h>
 #include <level.h>
@@ -9,7 +9,7 @@
 
 
 void fill_all(Level *lvl, char c) {
-	register unsigned i;
+	unsigned i;
 	
 	for(i=0; i<lvl->width * lvl->height; i++) {
 		lvl->array[i] = c;
@@ -65,7 +65,7 @@ static void set_point(Level *lvl, unsigned x, unsigned y, char value) {
 }
 
 void set_circle(Level *lvl, unsigned x, unsigned y, char value) {
-	register int tx, ty;
+	int tx, ty;
 	for(ty=-3; ty<=3; ty++) {
 		for(tx=-3; tx<=3; tx++) {
 			if((tx==-3 || tx==3) && (ty==-3 || ty==3)) continue;
@@ -80,7 +80,7 @@ void set_circle(Level *lvl, unsigned x, unsigned y, char value) {
 
 void draw_line(Level *dest, Vector a, Vector b, char value, int fat_line) {
 	int swap, dx, dy, error, stepy;
-	register unsigned x, y;
+	unsigned x, y;
 	void (*pt_func)(Level *, unsigned, unsigned, char) ;
 	
 	/* How is this thing getting drawn? */
