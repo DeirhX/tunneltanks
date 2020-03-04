@@ -23,7 +23,7 @@ TankList::~TankList() {
 Tank *tanklist_add_tank(TankList *tl, int id, Vector p) {
 	if(id >= MAX_TANKS) return NULL;
 	if(tl->list[id]) return NULL;
-	tl->list[id] = new Tank(tl->lvl, tl->pl, p.x, p.y, id);
+	tl->list[id] = new Tank(id, tl->lvl, tl->pl, p.x, p.y, id);
 	return tl->list[id];
 }
 
@@ -42,7 +42,7 @@ Tank *tanklist_check_point(TankList *tl, int x, int y, int ignored) {
 		
 		tank_get_position(tl->list[i], &tx, &ty);
 		tx = x - tx + 3; ty = y - ty + 3;
-		if(tx > 6 || ty > 6) continue;
+		if(tx < 0 || tx > 6 || ty < 0 || ty > 6) continue;
 		
 		if(TANK_SPRITE[ tank_get_dir(tl->list[i]) ][ty][tx])
 			return tl->list[i];

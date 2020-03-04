@@ -12,8 +12,8 @@
 #include <tanklist.h>
 
 
-Tank::Tank(Level *lvl, PList *pl, int x, int y, int color) :
-	x(x), y(y), color(color)
+Tank::Tank(int id, Level *lvl, PList *pl, int x, int y, int color) :
+	id(id), x(x), y(y), color(color)
 {
 	this->cached_slice = level_slice_new(lvl, this);
 	

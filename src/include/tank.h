@@ -25,6 +25,7 @@ typedef void (*TankController)(PublicTankInfo *, void *, int *, int *, int *) ;
 struct Tank
 {
 public:
+	int id;
 	int x, y;
 	int vx, vy; /* Velocity... ie: is it moving now? */
 	int direction;
@@ -42,7 +43,7 @@ public:
 	PList* pl;
 	LevelSlice* cached_slice;
 
-	Tank(Level* lvl, PList* pl, int x, int y, int color);
+	Tank(int id, Level* lvl, PList* pl, int x, int y, int color);
 	~Tank();
 
 	int get_color() const;
