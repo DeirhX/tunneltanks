@@ -12,7 +12,7 @@ static SDL_Rect screen_get_best_resolution() {
 	SDL_Rect** modes;
 	unsigned i;
 	SDL_Rect out = {0,0,0,0};
-	unsigned out_score = 0;
+	int out_score = 0;
 	
 	modes = SDL_ListModes(NULL, SDL_OPTIONS_FS);
 	if(!modes) return out;
@@ -97,7 +97,7 @@ int gamelib_draw_box(Rect *rect, Color color) {
 	Uint32 c = SDL_MapRGB(_DATA.s->format, color.r, color.g, color.b);
 	
 	if(rect) {
-		SDL_Rect r = {rect->x, rect->y, rect->w, rect->h};
+		auto r = SDL_Rect{(Sint16)rect->x, (Sint16)rect->y, (Uint16)rect->w, (Uint16)rect->h};
 		SDL_FillRect(_DATA.s, &r, c);
 		return 0;
 	}

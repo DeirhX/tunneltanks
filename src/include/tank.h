@@ -50,7 +50,7 @@ public:
 
 unsigned tank_get_dir(Tank *t) ;
 void tank_get_stats(Tank *t, int *energy, int *health) ;
-void tank_get_position(Tank *t, unsigned *x, unsigned *y) ;
+void tank_get_position(Tank *t, int *x, int *y) ;
 void tank_move(Tank *t, struct TankList *tl) ;
 void tank_try_base_heal(Tank *t) ;
 

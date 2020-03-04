@@ -11,8 +11,8 @@
 #include <tanklist.h>
 
 struct Projectile {
-	unsigned x, y;       /* The x,y of the 'hot' portion.  (#ff3408) */
-	unsigned oldx, oldy; /* The x,y of the 'cold' portion. (#ba0000) */
+	int		x, y;       /* The x,y of the 'hot' portion.  (#ff3408) */
+	int		oldx, oldy; /* The x,y of the 'cold' portion. (#ba0000) */
 
 	int      xstep, ystep;
 	unsigned life : 7;

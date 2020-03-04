@@ -29,7 +29,7 @@ void level_slice_free(LevelSlice *ls) {
 
 
 LevelSliceQuery level_slice_query_point(LevelSlice *ls, int x, int y) {
-	unsigned tx, ty;
+	int tx, ty;
 	char c;
 	
 	tank_get_position(ls->t, &tx, &ty);
@@ -61,7 +61,7 @@ LevelSliceQuery level_slice_query_circle(LevelSlice *ls, int x, int y) {
 
 
 void level_slice_copy(LevelSlice *ls, LevelSliceCopy *lsc) {
-	unsigned tx, ty;
+	int tx, ty;
 	int x, y;
 	
 	tank_get_position(ls->t, &tx, &ty);

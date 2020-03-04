@@ -12,7 +12,7 @@ typedef struct Vector {
 /* A simple struct for quads: */
 typedef struct Rect {
 	int x, y;
-	unsigned w, h;
+	int w, h;
 } Rect;
 #define RECT(x,y,w,h) (Rect{(x),(y),(w),(h)})
 

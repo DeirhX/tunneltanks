@@ -90,7 +90,7 @@ static void init_single_player(Screen *s, TankList *tl, Level *lvl) {
 	gamelib_tank_attach(t, 0, 1);
 	
 	screen_add_window(s, RECT(2, 2, GAME_WIDTH-4, GAME_HEIGHT-6-STATUS_HEIGHT), t);
-	screen_add_status(s, RECT(9 + gui_shift, GAME_HEIGHT - 2 - STATUS_HEIGHT, static_cast<unsigned>(GAME_WIDTH-12 - gui_shift), STATUS_HEIGHT), t, 1);
+	screen_add_status(s, RECT(9 + gui_shift, GAME_HEIGHT - 2 - STATUS_HEIGHT, GAME_WIDTH-12 - gui_shift, STATUS_HEIGHT), t, 1);
 	if(gui_shift)
 		screen_add_controller(s, RECT(3, GAME_HEIGHT - 5 - static_cast<int>(gui.h), gui.w, gui.h));
 	

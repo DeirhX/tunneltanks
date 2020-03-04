@@ -37,7 +37,7 @@ int tanklist_remove_tank(TankList *tl, unsigned id) {
 Tank *tanklist_check_point(TankList *tl, unsigned x, unsigned y, unsigned ignored) {
 	unsigned i;
 	for(i=0; i<MAX_TANKS; i++) {
-		unsigned tx, ty;
+		int tx, ty;
 		if(i==ignored || !tl->list[i] || tank_is_dead(tl->list[i])) continue;
 		
 		tank_get_position(tl->list[i], &tx, &ty);
@@ -54,7 +54,7 @@ Tank *tanklist_check_point(TankList *tl, unsigned x, unsigned y, unsigned ignore
 int tanklist_check_collision(TankList *tl, Vector p, unsigned pdir, unsigned ignored) {
 	unsigned i;
 	for(i=0; i<MAX_TANKS; i++) {
-		unsigned x, y, dir, tx, ty, lx, ly, ux, uy;
+		int x, y, dir, tx, ty, lx, ly, ux, uy;
 		
 		if( i==ignored || !tl->list[i] || tank_is_dead(tl->list[i]) ) continue;
 		

@@ -39,7 +39,7 @@ Tank::~Tank()
 	free_mem(this->controller_data);
 }
 
-void tank_get_position(Tank *t, unsigned *x, unsigned *y) {
+void tank_get_position(Tank *t, int *x, int *y) {
 	*x = t->x; *y = t->y;
 }
 

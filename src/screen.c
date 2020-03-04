@@ -75,7 +75,7 @@ struct Screen {
 
 /* Fills a surface with a blue/black pattern: */
 static void fill_background() {
-	unsigned x, y;
+	int x, y;
 	Rect dim;
 	
 	dim = gamelib_get_resolution();
@@ -90,7 +90,7 @@ static void fill_background() {
 }
 
 void screen_draw_pixel(Screen *s, unsigned x, unsigned y, Color color) {
-	unsigned w, h, xs, ys;
+	int w, h, xs, ys;
 	Rect r;
 	
 	xs = (x * s->xskips)/GAME_WIDTH;
@@ -127,7 +127,7 @@ int  screen_map_y(Screen *s, int y) {
 /* Will randomly draw static to a window, based on a tank's health. Returns 1 if
  * static was drawn: */
 static void screen_draw_static(Screen *s, Window *w) {
-	unsigned x, y;
+	int x, y;
 	int health, energy;
 	unsigned black_counter, drawing_black;
 	
@@ -148,7 +148,7 @@ static void screen_draw_static(Screen *s, Window *w) {
 	
 	if(!w->showing_static) return;
 
-#define _BLACK_BAR_RAND rand_int(1u, w->r.w*w->r.h * STATIC_BLACK_BAR_SIZE/1000)
+#define _BLACK_BAR_RAND rand_int(1, w->r.w*w->r.h * STATIC_BLACK_BAR_SIZE/1000)
 #define _RAND_COLOR     color_primary[rand_int(0,7)]
 
 	/* Should we draw a black bar in the image? */
@@ -191,8 +191,8 @@ static void screen_draw_static(Screen *s, Window *w) {
 /* Will draw a window using the level's drawbuffer: */
 static void screen_draw_window(Screen *s, Window *w) {
 	DrawBuffer *b = s->drawing.level.b;
-	unsigned x, y;
-	unsigned tx, ty;
+	int x, y;
+	int tx, ty;
 
 	tank_get_position(w->t, &tx, &ty);
 	
@@ -212,13 +212,13 @@ static void screen_draw_window(Screen *s, Window *w) {
  *       redraw when it's needed? Also, can we put some of these calculations in
  *       the StatusBar structure, so they don't have to be done every frame? */
 static void screen_draw_status(Screen *s, StatusBar *b) {
-	unsigned x, y;
+	int x, y;
 	
 	/* At what y value does the median divider start: */
-	unsigned mid_y = (b->r.h - 1) / 2;
+	int mid_y = (b->r.h - 1) / 2;
 	
 	/* How many pixels high is the median divider: */
-	unsigned mid_h = (b->r.h % 2) ? 1u : 2u;
+	int mid_h = (b->r.h % 2) ? 1u : 2u;
 	
 	/* How many pixels are filled in? */
 	int energy_filled, health_filled, half_energy_pixel;

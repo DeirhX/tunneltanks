@@ -39,7 +39,7 @@ static void check_for_event() {
 		/* Resize event: */
 		if(e.type == SDL_VIDEORESIZE) {
 			cur_event.type = GAME_EVENT_RESIZE;
-			cur_event.dim = RECT(0,0, static_cast<unsigned>(e.resize.w), static_cast<unsigned>(e.resize.h));
+			cur_event.dim = RECT(0,0, e.resize.w, e.resize.h);
 		
 		/* Keyboard events: */
 		} else if(e.type == SDL_KEYDOWN) {
