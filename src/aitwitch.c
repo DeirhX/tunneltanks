@@ -51,7 +51,8 @@ static void do_start(PublicTankInfo *i, void *d, int *vx, int *vy, unsigned *s) 
 static void do_exit_up(PublicTankInfo *i, void *d, int *vx, int *vy, unsigned *s) {
 	TwitchPrivateData *data = static_cast<TwitchPrivateData*>(d);
 	
-	*vx = *vy = *s = 0;
+	*vx = *vy = 0;
+	*s = 0;
 	
 	if(i->y < -OUTSIDE) { /* Some point outside the base. */
 		data->time_to_change = 0;
@@ -65,7 +66,8 @@ static void do_exit_up(PublicTankInfo *i, void *d, int *vx, int *vy, unsigned *s
 static void do_exit_down(PublicTankInfo *i, void *d, int *vx, int *vy, unsigned *s) {
 	TwitchPrivateData *data = static_cast<TwitchPrivateData*>(d);
 	
-	*vx = *vy = *s = 0;
+	*vx = *vy = 0;
+	*s = 0;
 	
 	if(i->y > OUTSIDE) {
 		data->time_to_change = 0;
@@ -86,7 +88,7 @@ static void do_twitch(PublicTankInfo *i, void *d, int *vx, int *vy, unsigned *s)
 	}
 	
 	if(!data->time_to_change) {
-		data->time_to_change = rand_int(10, 30);
+		data->time_to_change = rand_int(10u, 30u);
 		data->vx = rand_int(0,2) - 1;
 		data->vy = rand_int(0,2) - 1;
 		data->s  = rand_bool(300);
@@ -108,14 +110,16 @@ static void do_return(PublicTankInfo *i, void *d, int *vx, int *vy, unsigned *s)
 	/* Check to see if we've gotten there: */
 	if((i->x == 0 && i->y == targety) || 
 	   (abs(i->x)<BASE_SIZE/2 && abs(i->y)<BASE_SIZE/2)) {
-		*s = *vx = *vy = 0;
+		*s = 0;
+		*vx = *vy = 0;
 		data->mode = TWITCH_RECHARGE;
 		return;
 	}
 	
 	/* If we are close to the base, we need to navigate around the walls: */
 	if( abs(i->x) <= OUTSIDE && abs(i->y) < OUTSIDE ) {
-		*s = *vx = 0;
+		*s = 0;
+		*vx = 0;
 		*vy = (i->y < targety) * 2 - 1;
 		return;
 	}

@@ -7,17 +7,7 @@
 
 
 int rand_bool(unsigned odds) {
-	return rand_int(0,999) < odds;
-}
-
-unsigned rand_int(unsigned min, unsigned max) {
-	unsigned range = max - min + 1;
-	
-	if(max <= min) return min;
-	
-	/* I know that using the % isn't entirely accurate, but it only uses
-	 * integers, so w/e: */
-	return (rand() % range) + min;
+	return rand_int(0u,999u) < odds;
 }
 
 void rand_seed() {

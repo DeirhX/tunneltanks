@@ -18,10 +18,10 @@ int gamelib_exit();
 
 /* Gives a way to poll the gamelib for the capabilities provided by the
  * underlying system: */
-int gamelib_get_max_players() ;    /* Returns 1 or 2. */
-int gamelib_get_can_resize() ;     /* Returns 0 or 1. */
-int gamelib_get_can_fullscreen() ; /* Returns 0 or 1. */
-int gamelib_get_can_window() ;     /* Returns 0 or 1. */
+unsigned gamelib_get_max_players() ;    /* Returns 1 or 2. */
+bool gamelib_get_can_resize() ;     /* Returns 0 or 1. */
+bool gamelib_get_can_fullscreen() ; /* Returns 0 or 1. */
+bool gamelib_get_can_window() ;     /* Returns 0 or 1. */
 int gamelib_get_target_fps() ;     /* Usually returns 24. */
 
 /* Some platforms (Android) will be acting as the game loop, so the game loop
@@ -50,7 +50,7 @@ void      gamelib_event_done() ;
 int  gamelib_set_fullscreen() ;
 int  gamelib_set_window(unsigned w, unsigned h) ;
 Rect gamelib_get_resolution() ;
-int  gamelib_get_fullscreen() ;
+bool gamelib_get_fullscreen() ;
 
 /* We need a way to draw: */
 /* TODO: Implement an API for locking/unlocking the pixel array. */

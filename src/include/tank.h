@@ -9,7 +9,7 @@ typedef struct Tank Tank;
 
 /* Put inside a structure, so we are protected from casual AI cheating: */
 typedef struct PublicTankInfo {
-	unsigned health, energy;
+	int health, energy;
 	int x, y; /* relative from home base */
 	LevelSlice *slice;
 } PublicTankInfo;
@@ -21,7 +21,6 @@ typedef void (*TankController)(PublicTankInfo *, void *, int *, int *, unsigned 
 #include <screen.h>
 #include <drawbuffer.h>
 #include <projectile.h>
-#include <tanklist.h>
 
 struct Tank
 {
@@ -34,7 +33,7 @@ public:
 
 	unsigned bullet_timer, bullets_left, is_shooting;
 
-	unsigned health, energy;
+	int health, energy;
 
 	TankController controller;
 	void* controller_data;
@@ -50,9 +49,9 @@ public:
 };
 
 unsigned tank_get_dir(Tank *t) ;
-void tank_get_stats(Tank *t, unsigned *energy, unsigned *health) ;
+void tank_get_stats(Tank *t, int *energy, int *health) ;
 void tank_get_position(Tank *t, unsigned *x, unsigned *y) ;
-void tank_move(Tank *t, TankList *tl) ;
+void tank_move(Tank *t, struct TankList *tl) ;
 void tank_try_base_heal(Tank *t) ;
 
 void tank_clear(Tank *t, DrawBuffer *b) ;

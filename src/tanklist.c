@@ -8,27 +8,15 @@
 #include <projectile.h>
 #include <tweak.h>
 #include <tanksprites.h>
+#include <vector>
 
 
-struct TankList {
-	Tank  *list[MAX_TANKS];
-	Level *lvl;
-	PList *pl;
-};
-
-
-TankList *tanklist_new(Level *lvl, PList *pl) {
-	unsigned i;
-	TankList *out = get_object(TankList);
-	out->lvl = lvl; out->pl = pl;
-	for(i=0; i<MAX_TANKS; i++) out->list[i] = NULL;
-	return out;
+TankList::TankList(Level *lvl, PList *pl): lvl(lvl), pl(pl)
+{
+	list.resize(MAX_TANKS);
 }
 
-void tanklist_destroy(TankList *tl) {
-	unsigned i;
-	for(i=0; i<MAX_TANKS; i++) delete (tl->list[i]);
-	free_mem(tl);
+TankList::~TankList() {
 }
 
 

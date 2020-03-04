@@ -121,7 +121,7 @@ static void wall_shuffle(Wall *w, unsigned int len) {
 	
 	/* Run through the list once, shuffling everything: */
 	for(i=0; i<len; i++) {
-		unsigned new_index = rand_int(0,len-1);
+		unsigned new_index = rand_int(0u,len-1);
 		Wall temp = w[i];
 		w[i] = w[new_index];
 		w[new_index] = temp;
@@ -256,7 +256,7 @@ void braid_generator(Level *lvl) {
 		
 		/* Pick a random spot for the base: */
 		do {
-			x = rand_int(0, b->w-1); y = rand_int(0, b->h-1);
+			x = rand_int(0u, b->w-1); y = rand_int(0u, b->h-1);
 		} while(b->data[y*b->w+x].flag);
 		
 		/* Mark our spot, and the ones around it as well: */

@@ -140,8 +140,8 @@ void plist_push_bullet(PList* pl, Tank* t) {
 	payload.oldx = payload.x; payload.oldy = payload.y;
 
 	dir = tank_get_dir(t);
-	payload.xstep = dir % 3 - 1;
-	payload.ystep = dir / 3 - 1;
+	payload.xstep = static_cast<int>(dir) % 3 - 1;
+	payload.ystep = static_cast<int>(dir) / 3 - 1;
 	payload.life = TANK_BULLET_SPEED;
 	payload.is_effect = 0;
 	payload.tank = t;
@@ -150,7 +150,7 @@ void plist_push_bullet(PList* pl, Tank* t) {
 }
 
 
-void plist_push_explosion(PList* pl, unsigned x, unsigned y, unsigned count, unsigned r, unsigned ttl) {
+void plist_push_explosion(PList* pl, unsigned x, unsigned y, unsigned count, int r, int ttl) {
 	unsigned i;
 
 	/* Add all of the effect particles: */

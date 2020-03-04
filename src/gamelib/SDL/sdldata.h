@@ -8,7 +8,7 @@
 
 typedef struct SDLData {
 	SDL_Surface *s;
-	int is_fullscreen;
+	bool is_fullscreen;
 } SDLData;
 
 extern SDLData _DATA;

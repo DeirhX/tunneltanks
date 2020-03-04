@@ -49,7 +49,7 @@ static Dir pick_dir(Maze *m, unsigned x, unsigned y) {
 	if(y != m->h-1 && !m->data[(y+1)*m->w + x].used) list[i++] = DIR_DOWN;
 	
 	/* Pick one: */
-	return (i==0) ? DIR_INVALID : list[rand_int(0,i-1)];
+	return (i==0) ? DIR_INVALID : list[rand_int(0u,i-1)];
 }
 
 /* Note: this doesn't do range checking, so make sure that dir is valid: */
@@ -82,7 +82,7 @@ static void maze_populate(Maze *m) {
 	}
 	
 	/* Now, pick a random cell: */
-	x = rand_int(0, m->w-1); y = rand_int(0, m->h-1);
+	x = rand_int(0u, m->w-1); y = rand_int(0u, m->h-1);
 	
 	do {
 		Dir d = DIR_INVALID;
@@ -204,7 +204,7 @@ void maze_generator(Level *lvl) {
 		
 		/* Pick a random spot for the base: */
 		do {
-			x = rand_int(0, m->w-1); y = rand_int(0, m->h-1);
+			x = rand_int(0u, m->w-1); y = rand_int(0u, m->h-1);
 		} while(m->data[y*m->w+x].used);
 		
 		/* Mark our spot, and the ones around it as well: */

@@ -74,10 +74,10 @@ void gamelib_main_loop(draw_func func, void *data) {
 
 
 /* All of this backend's capabilities: */
-int gamelib_get_max_players()    { return 2; }
-int gamelib_get_can_resize()     { return 1; }
-int gamelib_get_can_fullscreen() { return 1; }
-int gamelib_get_can_window()     { return 1; }
+unsigned gamelib_get_max_players()    { return 2; }
+bool gamelib_get_can_resize()     { return 1; }
+bool gamelib_get_can_fullscreen() { return 1; }
+bool gamelib_get_can_window()     { return 1; }
 int gamelib_get_target_fps()     { return GAME_FPS; }
 
 

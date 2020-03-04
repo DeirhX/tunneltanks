@@ -36,7 +36,7 @@
 typedef struct GameDataConfig {
 	char *gen;
 	unsigned w, h;
-	unsigned is_fullscreen;
+	bool is_fullscreen;
 	unsigned player_count;
 	int rand_seed;
 } GameDataConfig;
@@ -169,13 +169,13 @@ void game_set_level_size(GameData *gd, unsigned w, unsigned h) {
 	gd->data.config.w = w; gd->data.config.h = h;
 }
 
-void game_set_debug(GameData *gd, int is_debugging) {
+void game_set_debug(GameData *gd, bool is_debugging) {
 	ASSERT_CONFIG();
 	
 	gd->is_debug = is_debugging;
 }
 
-void game_set_fullscreen(GameData *gd, int is_fullscreen) {
+void game_set_fullscreen(GameData *gd, bool is_fullscreen) {
 	ASSERT_CONFIG();
 	
 	gd->data.config.is_fullscreen = is_fullscreen;
@@ -208,7 +208,7 @@ void game_finalize(GameData *gd) {
 	pl  = plist_new     ();
 	b   = drawbuffer_new(gd->data.config.w, gd->data.config.h);
 	lvl = level_new     (b, gd->data.config.w, gd->data.config.h);
-	tl  = tanklist_new  (lvl, pl);
+	tl  = new TankList(lvl, pl);
 	
 	/* Generate our random level: */
 	generate_level(lvl, gd->data.config.gen);
@@ -258,7 +258,7 @@ int game_step(void *input) {
 		
 		/* Trying to toggle fullscreen? */
 		} else if(temp == GAME_EVENT_TOGGLE_FULLSCREEN) {
-			screen_set_fullscreen(gd->data.active.s, -1);
+			screen_set_fullscreen(gd->data.active.s, true);
 		
 		/* Trying to exit? */
 		} else if(temp == GAME_EVENT_EXIT) {
@@ -302,7 +302,7 @@ void game_free(GameData *gd) {
 		
 		drawbuffer_destroy(gd->data.active.b);
 		plist_destroy     (gd->data.active.pl);
-		tanklist_destroy  (gd->data.active.tl);
+		delete			  (gd->data.active.tl);
 		level_destroy     (gd->data.active.lvl);
 		screen_destroy    (gd->data.active.s);
 	}

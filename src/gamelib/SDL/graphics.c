@@ -81,13 +81,14 @@ int gamelib_set_window(unsigned w, unsigned h) {
 Rect gamelib_get_resolution() {
 	Rect r = {0,0,0,0};
 	if(!_DATA.s) return r;
-	r.w = _DATA.s->w; r.h = _DATA.s->h;
+	r.w = static_cast<unsigned>(_DATA.s->w);
+	r.h = static_cast<unsigned>(_DATA.s->h);
 	
 	return r;
 }
 
 /* Returns whether the current graphics mode is fullscreen: */
-int gamelib_get_fullscreen() {
+bool gamelib_get_fullscreen() {
 	return _DATA.is_fullscreen;
 }
 

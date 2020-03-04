@@ -10,11 +10,11 @@ typedef struct Screen Screen;
 
 
 /* (Con|De)structor: */
-Screen  *screen_new(int is_fullscreen) ;
+Screen  *screen_new(bool is_fullscreen) ;
 void     screen_destroy(Screen *s) ;
 
 /* Resizing the screen: */
-void screen_set_fullscreen(Screen *s, int is_fullscreen) ;
+void screen_set_fullscreen(Screen *s, bool is_fullscreen) ;
 int screen_resize(Screen *s, unsigned width, unsigned height) ;
 
 /* Set the current drawing mode: */

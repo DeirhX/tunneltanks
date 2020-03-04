@@ -43,7 +43,7 @@ typedef struct GUIController {
 
 struct Screen {
 	
-	unsigned is_fullscreen;
+	bool	 is_fullscreen;
 	
 	/* Various variables for the current resolution: */
 	unsigned width, height, xstart, ystart, pixelw, pixelh, xskips, yskips;
@@ -83,7 +83,7 @@ static void fill_background() {
 	gamelib_draw_box(NULL, color_bg);
 	for(y=0; y<dim.h; y++) {
 		for(x=(y%2)*2; x<dim.w; x+=4) {
-			Rect r = {x, y, 1, 1};
+			Rect r = {(int)x, (int)y, 1, 1};
 			gamelib_draw_box(&r, color_bg_dot);
 		}
 	}
@@ -128,7 +128,7 @@ int  screen_map_y(Screen *s, int y) {
  * static was drawn: */
 static void screen_draw_static(Screen *s, Window *w) {
 	unsigned x, y;
-	unsigned health, energy;
+	int health, energy;
 	unsigned black_counter, drawing_black;
 	
 	tank_get_stats(w->t, &energy, &health);
@@ -142,13 +142,13 @@ static void screen_draw_static(Screen *s, Window *w) {
 	if(!w->counter) {
 		unsigned intensity = 1000 * energy / STATIC_THRESHOLD;
 		w->showing_static = !rand_bool(intensity);
-		w->counter = rand_int(GAME_FPS/16, GAME_FPS/8) * w->showing_static ? 1 : 4;
+		w->counter = rand_int(GAME_FPS/16, GAME_FPS/8) * w->showing_static ? 1u : 4u;
 
 	} else w->counter--;
 	
 	if(!w->showing_static) return;
 
-#define _BLACK_BAR_RAND rand_int(1, w->r.w*w->r.h * STATIC_BLACK_BAR_SIZE/1000)
+#define _BLACK_BAR_RAND rand_int(1u, w->r.w*w->r.h * STATIC_BLACK_BAR_SIZE/1000)
 #define _RAND_COLOR     color_primary[rand_int(0,7)]
 
 	/* Should we draw a black bar in the image? */
@@ -218,10 +218,10 @@ static void screen_draw_status(Screen *s, StatusBar *b) {
 	unsigned mid_y = (b->r.h - 1) / 2;
 	
 	/* How many pixels high is the median divider: */
-	unsigned mid_h = (b->r.h % 2) ? 1 : 2;
+	unsigned mid_h = (b->r.h % 2) ? 1u : 2u;
 	
 	/* How many pixels are filled in? */
-	unsigned energy_filled, health_filled, half_energy_pixel;
+	int energy_filled, health_filled, half_energy_pixel;
 	half_energy_pixel = TANK_STARTING_FUEL/((b->r.w - STATUS_BORDER*2)*2);
 	
 	tank_get_stats(b->t, &energy_filled, &health_filled);
@@ -315,7 +315,7 @@ void screen_draw(Screen *s) {
 
 
 /* The constructor sets the video mode: */
-Screen *screen_new(int is_fullscreen) {
+Screen *screen_new(bool is_fullscreen) {
 	Screen *out = get_object(Screen);
 	
 	out->is_fullscreen = is_fullscreen;
@@ -339,12 +339,12 @@ void screen_destroy(Screen *s) {
 
 /* TODO: Change the screen API to better match gamelib... */
 
-void screen_set_fullscreen(Screen *s, int is_fullscreen) {
+void screen_set_fullscreen(Screen *s, bool is_fullscreen) {
 	
 	if(s->is_fullscreen == is_fullscreen) return;
 	
 	/* -1 will toggle: */
-	if(is_fullscreen < 0) is_fullscreen = !s->is_fullscreen;
+	if(is_fullscreen) is_fullscreen = !s->is_fullscreen;
 	
 	s->is_fullscreen = is_fullscreen;
 	

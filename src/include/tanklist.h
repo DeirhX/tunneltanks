@@ -1,5 +1,6 @@
 #ifndef _TANK_LIST_H_
 #define _TANK_LIST_H_
+#include <vector>
 
 typedef struct TankList TankList;
 
@@ -7,8 +8,15 @@ typedef struct TankList TankList;
 #include <types.h>
 #include <tweak.h>
 
-TankList *tanklist_new(Level *lvl, PList *pl) ;
-void tanklist_destroy(TankList *tl) ;
+struct TankList {
+public:
+	std::vector<Tank*> list;
+	Level* lvl;
+	PList* pl;
+
+	TankList(Level* lvl, PList* pl);
+	~TankList();
+};
 
 Tank *tanklist_add_tank(TankList *tl, unsigned id, Vector p) ;
 int   tanklist_remove_tank(TankList *tl, unsigned id) ;

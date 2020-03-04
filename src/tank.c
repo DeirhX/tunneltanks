@@ -18,7 +18,7 @@ Tank::Tank(Level *lvl, PList *pl, unsigned x, unsigned y, unsigned color) :
 	this->cached_slice = level_slice_new(lvl, this);
 	
 	/* Let's just make the starting direction random, because we can: */
-	this->direction = rand_int(0, 7);
+	this->direction = rand_int(0u, 7u);
 	if(this->direction >= 4) this->direction ++;
 	
 	this->vx = this->vy = 0; this->lvl = lvl; this->pl = pl;
@@ -43,7 +43,7 @@ void tank_get_position(Tank *t, unsigned *x, unsigned *y) {
 	*x = t->x; *y = t->y;
 }
 
-void tank_get_stats(Tank *t, unsigned *energy, unsigned *health) {
+void tank_get_stats(Tank *t, int *energy, int *health) {
 	*energy = t->energy; *health = t->health;
 }
 
@@ -87,7 +87,7 @@ static CollisionType tank_collision(Level *lvl, unsigned dir, unsigned x, unsign
 }
 
 void tank_move(Tank *t, TankList *tl) {
-	int newdir;
+	
 	
 	/* Don't let this tank do anything if it is dead: */
 	if(!t->health) return;
@@ -108,7 +108,7 @@ void tank_move(Tank *t, TankList *tl) {
 	if(t->vx != 0 || t->vy != 0) {
 		CollisionType ct;
 		
-		newdir = (t->vx+1) + (t->vy+1)*3;
+		unsigned newdir = static_cast<unsigned> ((t->vx+1) + (t->vy+1) * 3);
 		
 		ct = tank_collision(t->lvl, newdir, t->x+t->vx, t->y+t->vy, tl, t->color);
 		/* Now, is there room to move forward in that direction? */

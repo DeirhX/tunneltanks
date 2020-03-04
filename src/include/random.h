@@ -2,8 +2,18 @@
 #define _RANDOM_H_
 
 int      rand_bool(unsigned odds) ;
-unsigned rand_int (unsigned min, unsigned max) ;
 void     rand_seed() ;
+
+template <typename IntegerType>
+IntegerType rand_int(IntegerType min, IntegerType max) {
+	IntegerType range = max - min + 1;
+
+	if (max <= min) return min;
+
+	/* I know that using the % isn't entirely accurate, but it only uses
+	 * integers, so w/e: */
+	return (rand() % range) + min;
+}
 
 #endif /* _RANDOM_H_ */
 
