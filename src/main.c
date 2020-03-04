@@ -19,8 +19,8 @@
 
 	
 int main(int argc, char *argv[]) {
-	unsigned i, is_reading_level=0, is_reading_seed=0, is_reading_file=0;
-	unsigned fullscreen=0, width=1000, height=500, player_count = 2, debug = 0;
+	int i, is_reading_level=0, is_reading_seed=0, is_reading_file=0;
+	int fullscreen=0, width=1000, height=500, player_count = 2, debug = 0;
 	char *id = NULL, *outfile_name = NULL;
 	int seed = 0, manual_seed=0;
 	GameData *gd;

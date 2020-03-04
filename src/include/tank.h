@@ -14,7 +14,7 @@ typedef struct PublicTankInfo {
 	LevelSlice *slice;
 } PublicTankInfo;
 
-typedef void (*TankController)(PublicTankInfo *, void *, int *, int *, unsigned *) ;
+typedef void (*TankController)(PublicTankInfo *, void *, int *, int *, int *) ;
 
 
 #include <level.h>
@@ -25,13 +25,13 @@ typedef void (*TankController)(PublicTankInfo *, void *, int *, int *, unsigned 
 struct Tank
 {
 public:
-	unsigned x, y;
+	int x, y;
 	int vx, vy; /* Velocity... ie: is it moving now? */
-	unsigned direction;
+	int direction;
 
-	unsigned color;
+	int color;
 
-	unsigned bullet_timer, bullets_left, is_shooting;
+	int bullet_timer, bullets_left, is_shooting;
 
 	int health, energy;
 
@@ -42,13 +42,13 @@ public:
 	PList* pl;
 	LevelSlice* cached_slice;
 
-	Tank(Level* lvl, PList* pl, unsigned x, unsigned y, unsigned color);
+	Tank(Level* lvl, PList* pl, int x, int y, int color);
 	~Tank();
 
-	unsigned get_color() const;
+	int get_color() const;
 };
 
-unsigned tank_get_dir(Tank *t) ;
+int tank_get_dir(Tank *t) ;
 void tank_get_stats(Tank *t, int *energy, int *health) ;
 void tank_get_position(Tank *t, int *x, int *y) ;
 void tank_move(Tank *t, struct TankList *tl) ;

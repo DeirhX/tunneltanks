@@ -18,7 +18,7 @@ int gamelib_exit();
 
 /* Gives a way to poll the gamelib for the capabilities provided by the
  * underlying system: */
-unsigned gamelib_get_max_players() ;    /* Returns 1 or 2. */
+int gamelib_get_max_players() ;    /* Returns 1 or 2. */
 bool gamelib_get_can_resize() ;     /* Returns 0 or 1. */
 bool gamelib_get_can_fullscreen() ; /* Returns 0 or 1. */
 bool gamelib_get_can_window() ;     /* Returns 0 or 1. */
@@ -48,7 +48,7 @@ void      gamelib_event_done() ;
 
 /* We need to be able to switch resolutions: */
 int  gamelib_set_fullscreen() ;
-int  gamelib_set_window(unsigned w, unsigned h) ;
+int  gamelib_set_window(int w, int h) ;
 Rect gamelib_get_resolution() ;
 bool gamelib_get_fullscreen() ;
 
@@ -58,8 +58,8 @@ int  gamelib_draw_box(Rect *rect, Color c) ;
 
 /* Now, for a way to draw a bitmap, if the platform wants to... */
 typedef struct BMPFile BMPFile;
-BMPFile *gamelib_bmp_new      (unsigned width, unsigned height) ;
-void     gamelib_bmp_set_pixel(BMPFile *f, unsigned x, unsigned y, Color c) ;
+BMPFile *gamelib_bmp_new      (int width, int height) ;
+void     gamelib_bmp_set_pixel(BMPFile *f, int x, int y, Color c) ;
 void     gamelib_bmp_finalize (BMPFile *f, char *filename) ;
 
 /* A few outputting commands: */

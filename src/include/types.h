@@ -5,7 +5,7 @@
 
 /* A very simple struct used to store spawn locations of tanks: */
 typedef struct Vector {
-	unsigned x, y;
+	int x, y;
 } Vector;
 #define VECTOR(x,y) (Vector{(x),(y)})
 

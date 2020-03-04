@@ -15,7 +15,7 @@ void     screen_destroy(Screen *s) ;
 
 /* Resizing the screen: */
 void screen_set_fullscreen(Screen *s, bool is_fullscreen) ;
-int screen_resize(Screen *s, unsigned width, unsigned height) ;
+int screen_resize(Screen *s, int width, int height) ;
 
 /* Set the current drawing mode: */
 void screen_set_mode_level(Screen *s, DrawBuffer *b) ;
@@ -25,7 +25,7 @@ void screen_set_mode_map(Screen *s, Map *m) ;
 */
 
 /* A few useful functions for external drawing: */
-void screen_draw_pixel(Screen *s, unsigned x, unsigned y, Color color) ;
+void screen_draw_pixel(Screen *s, int x, int y, Color color) ;
 int  screen_map_x(Screen *s, int x) ;
 int  screen_map_y(Screen *s, int y) ;
 

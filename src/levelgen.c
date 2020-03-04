@@ -40,7 +40,7 @@ LevelGenerator GENERATOR_LIST[] =
 	(t) = clock()
 
 #define TIMER_STOP(t) do { \
-	unsigned temp = ((clock() - (t)) * 100) / CLOCKS_PER_SEC; \
+	int temp = ((clock() - (t)) * 100) / CLOCKS_PER_SEC; \
 	gamelib_print("%u.%02u sec\n", temp/100, temp%100); \
 } while(0)
 
@@ -48,7 +48,7 @@ LevelGenerator GENERATOR_LIST[] =
 
 void generate_level(Level *lvl, char *id) {
 	LevelGeneratorFunc func = NULL;
-	unsigned i;
+	int i;
 	clock_t t;
 	
 	/* If 'id' is null, go with the default: */
@@ -88,7 +88,7 @@ static void put_chars(int i, char c) {
 }
 
 void print_levels(FILE *out) {
-	unsigned i, max_id = 7, max_desc = strlen("Description:");
+	int i, max_id = 7, max_desc = strlen("Description:");
 	
 	/* Get the longest ID/Description length: */
 	for(i=0; GENERATOR_LIST[i].id; i++) {

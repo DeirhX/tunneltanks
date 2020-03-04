@@ -18,19 +18,19 @@ public:
 	~TankList();
 };
 
-Tank *tanklist_add_tank(TankList *tl, unsigned id, Vector p) ;
-int   tanklist_remove_tank(TankList *tl, unsigned id) ;
+Tank *tanklist_add_tank(TankList *tl, int id, Vector p) ;
+int   tanklist_remove_tank(TankList *tl, int id) ;
 
-Tank *tanklist_check_point(TankList *tl, unsigned x, unsigned y, unsigned ignored) ;
-int tanklist_check_collision(TankList *tl, Vector p, unsigned dir, unsigned ignored) ;
+Tank *tanklist_check_point(TankList *tl, int x, int y, int ignored) ;
+int tanklist_check_collision(TankList *tl, Vector p, int dir, int ignored) ;
 
-Tank *tanklist_get(TankList *tl, unsigned id) ;
+Tank *tanklist_get(TankList *tl, int id) ;
 
 template <typename TFunc>
 inline void tanklist_map(TankList* tl, TFunc&& tank_func)
 {
 	do {
-		unsigned i;
+		int i;
 		for (i = 0; i < MAX_TANKS; i++) {
 			Tank* t = tanklist_get(tl, i);
 			if (!t) continue;

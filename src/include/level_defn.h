@@ -7,8 +7,8 @@
 
 struct Level {
 	char       *array;
-	unsigned    width;
-	unsigned    height;
+	int    width;
+	int    height;
 	DrawBuffer *b;
 	Vector      spawn[MAX_TANKS];
 };

@@ -62,7 +62,7 @@ void      gamelib_event_done() { _DATA.next_event = GAME_EVENT_NONE; }
 
 /* We need to be able to switch resolutions: */
 int  gamelib_set_fullscreen() {return 0; }
-int  gamelib_set_window(unsigned w, unsigned h) { return 0; }
+int  gamelib_set_window(int w, int h) { return 0; }
 Rect gamelib_get_resolution() { return _DATA.prev; }
 int  gamelib_get_fullscreen() { return 1; }
 
@@ -115,7 +115,7 @@ int  gamelib_draw_box(Rect *rect, Color c) {
 
 
 /* Mobile devices have limited storage. Don't waste it with huge bmps: */
-BMPFile *gamelib_bmp_new      (unsigned width, unsigned height) {return NULL;}
-void     gamelib_bmp_set_pixel(BMPFile *f, unsigned x, unsigned y, Color c) {}
+BMPFile *gamelib_bmp_new      (int width, int height) {return NULL;}
+void     gamelib_bmp_set_pixel(BMPFile *f, int x, int y, Color c) {}
 void     gamelib_bmp_finalize (BMPFile *f, char *filename) {}
 

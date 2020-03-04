@@ -7,11 +7,11 @@
 #ifdef _MEM_STATS
 
 	/* Oh, god, this is *SO* not thread-safe: */
-	static unsigned __TOTAL_MEMORY_ALLOCATED = 0;
-	static unsigned __MAX_MEMORY_ALLOCATED = 0;
+	static int __TOTAL_MEMORY_ALLOCATED = 0;
+	static int __MAX_MEMORY_ALLOCATED = 0;
 
-	void *__get_mem(unsigned ammount, char *file, unsigned line) {
-		unsigned *out = (unsigned *) malloc(ammount + sizeof(unsigned));
+	void *__get_mem(int ammount, char *file, int line) {
+		int *out = (int *) malloc(ammount + sizeof(int));
 		if(!out) {
 			gamelib_error("%s(%u): ", file, line);
 			gamelib_error("Failed to allocate %u bytes.\n", ammount);
@@ -27,7 +27,7 @@
 	}
 
 	void free_mem(void *ptr) {
-		unsigned *t = ((unsigned*)ptr - 1);
+		int *t = ((int*)ptr - 1);
 		
 		if(t && ptr) {
 			__TOTAL_MEMORY_ALLOCATED -= t[0];
@@ -44,7 +44,7 @@
 
 #else /* ! _MEM_STATS */
 
-	void *__get_mem(unsigned ammount, char *file, unsigned line) {
+	void *__get_mem(int ammount, char *file, int line) {
 		void *out = (void *) malloc( ammount );
 		if(!out) {
 			gamelib_error("%s(%d): ", file, line);

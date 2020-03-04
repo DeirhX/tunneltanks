@@ -31,7 +31,7 @@ static void add_rock_lines(Level *lvl, Side s) {
 	int xstep = 0, ystep = 0;
 	Vector cur, prev;
 	int is_rare, needs_flip = 0;
-	unsigned x, y, minx = 0, maxx = 0, miny = 0, maxy = 0;
+	int x, y, minx = 0, maxx = 0, miny = 0, maxy = 0;
 	
 	/* Configuration based on what side the rock is on: */
 	if(s == SIDE_TOP) {
@@ -104,7 +104,7 @@ static void add_rock_lines(Level *lvl, Side s) {
 
 
 static void add_spawns(Level *lvl) {
-	unsigned i, j;
+	int i, j;
 	
 	lvl->spawn[0] = pt_rand(lvl->width, lvl->height, BORDER);
 	

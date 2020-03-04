@@ -58,12 +58,12 @@ Color color_tank[8][3] = {
  *       central array, and the pixel data will simply be 1-byte indexes. */
 struct DrawBuffer {
 	Color *pixel_data;
-	unsigned w, h;
+	int w, h;
 	Color default_color;
 };
 
 
-DrawBuffer *drawbuffer_new(unsigned w, unsigned h) {
+DrawBuffer *drawbuffer_new(int w, int h) {
 	DrawBuffer *out = get_object(DrawBuffer);
 	out->pixel_data = static_cast<Color*>(get_mem(sizeof(Color) * w * h));
 	out->w = w; out->h = h;
@@ -84,12 +84,12 @@ void drawbuffer_set_default(DrawBuffer *b, Color color) {
 	b->default_color = color;
 }
 
-void drawbuffer_set_pixel(DrawBuffer *b, unsigned x, unsigned y, Color color) {
+void drawbuffer_set_pixel(DrawBuffer *b, int x, int y, Color color) {
 	if(x >= b->w || y >= b->h) return;
 	b->pixel_data[ y * b->w + x ] = color;
 }
 
-Color drawbuffer_get_pixel(DrawBuffer *b, unsigned x, unsigned y) {
+Color drawbuffer_get_pixel(DrawBuffer *b, int x, int y) {
 	if(x >= b->w || y >= b->h) return b->default_color;
 	return b->pixel_data[ y * b->w + x ];
 }

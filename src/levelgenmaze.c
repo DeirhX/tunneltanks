@@ -26,7 +26,7 @@ typedef struct Cell {
 
 typedef struct Maze {
 	Cell *data;
-	unsigned w, h;
+	int w, h;
 } Maze;
 
 typedef enum Dir {
@@ -38,9 +38,9 @@ typedef enum Dir {
 } Dir;
 
 
-static Dir pick_dir(Maze *m, unsigned x, unsigned y) {
+static Dir pick_dir(Maze *m, int x, int y) {
 	Dir      list[4];
-	unsigned i = 0;
+	int i = 0;
 	
 	/* Which directions could we go from here? */
 	if(x != 0      && !m->data[y*m->w + (x-1)].used) list[i++] = DIR_LEFT;
@@ -49,11 +49,11 @@ static Dir pick_dir(Maze *m, unsigned x, unsigned y) {
 	if(y != m->h-1 && !m->data[(y+1)*m->w + x].used) list[i++] = DIR_DOWN;
 	
 	/* Pick one: */
-	return (i==0) ? DIR_INVALID : list[rand_int(0u,i-1)];
+	return (i==0) ? DIR_INVALID : list[rand_int(0,i-1)];
 }
 
 /* Note: this doesn't do range checking, so make sure that dir is valid: */
-static void remove_wall(Maze *m, Dir d, unsigned x, unsigned y) {
+static void remove_wall(Maze *m, Dir d, int x, int y) {
 	if     (d==DIR_LEFT)  m->data[y*m->w + x-1].right = 0;
 	else if(d==DIR_RIGHT) m->data[y*m->w + x].right = 0;
 	else if(d==DIR_UP)    m->data[y*m->w + x].up = 0;
@@ -61,7 +61,7 @@ static void remove_wall(Maze *m, Dir d, unsigned x, unsigned y) {
 }
 
 /* No range checking here, either: */
-static void move_dir(Dir d, unsigned *x, unsigned *y) {
+static void move_dir(Dir d, int *x, int *y) {
 	if     (d==DIR_LEFT)  (*x)--;
 	else if(d==DIR_RIGHT) (*x)++;
 	else if(d==DIR_UP)    (*y)--;
@@ -70,7 +70,7 @@ static void move_dir(Dir d, unsigned *x, unsigned *y) {
 
 /* TODO: Use a vector to store the x/y values? */
 static void maze_populate(Maze *m) {
-	unsigned i, x, y;
+	int i, x, y;
 	Queue *q;
 	
 	q = queue_new(64);
@@ -82,7 +82,7 @@ static void maze_populate(Maze *m) {
 	}
 	
 	/* Now, pick a random cell: */
-	x = rand_int(0u, m->w-1); y = rand_int(0u, m->h-1);
+	x = rand_int(0, m->w-1); y = rand_int(0, m->h-1);
 	
 	do {
 		Dir d = DIR_INVALID;
@@ -112,7 +112,7 @@ static void maze_populate(Maze *m) {
 
 /*
 static void maze_dump(Maze *m) {
-	unsigned x, y;
+	int x, y;
 	
 	for(y=0; y<m->h; y++) {
 		printf("|");
@@ -131,7 +131,7 @@ static void maze_dump(Maze *m) {
 }
 */
 
-static Maze *maze_new(unsigned w, unsigned h) {
+static Maze *maze_new(int w, int h) {
 	Maze *m = get_object(Maze);
 	m->w = w; m->h = h;
 	m->data = static_cast<Cell*>(get_mem(sizeof(Cell) * w * h));
@@ -151,14 +151,14 @@ static void maze_free(Maze *m) {
 /* LEVEL-BUILDING LOGIC: */
 
 static void invert_all(Level *lvl) {
-	unsigned i;
+	int i;
 	for(i=0; i<lvl->width * lvl->height; i++)
 		lvl->array[i] = !lvl->array[i];
 }
 
 
 void maze_generator(Level *lvl) {
-	unsigned i, x, y;
+	int i, x, y;
 	Maze *m = maze_new(lvl->width/CELL_SIZE, lvl->height/CELL_SIZE);
 	
 	/* Reset all of the 'used' flags back to zero: */
@@ -204,7 +204,7 @@ void maze_generator(Level *lvl) {
 		
 		/* Pick a random spot for the base: */
 		do {
-			x = rand_int(0u, m->w-1); y = rand_int(0u, m->h-1);
+			x = rand_int(0, m->w-1); y = rand_int(0, m->h-1);
 		} while(m->data[y*m->w+x].used);
 		
 		/* Mark our spot, and the ones around it as well: */

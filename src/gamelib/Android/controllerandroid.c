@@ -4,7 +4,7 @@
 #include "androiddata.h"
 #include "require_android.h"
 
-static void android_controller(PublicTankInfo *i, void *d, int *vx, int *vy, unsigned *s) {
+static void android_controller(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
 	*vx = _DATA.c_dir.x;
 	*vy = _DATA.c_dir.y;
 	*s  = _DATA.c_button;

@@ -16,7 +16,7 @@ typedef struct AndroidData {
 	
 	/* Four controller variables: */
 	Vector c_touch, c_dir;
-	unsigned c_button, c_is_touching;
+	int c_button, c_is_touching;
 	
 	/* We store the current java environment + bitmap jobject here: */
 	JNIEnv *env;
@@ -26,10 +26,10 @@ typedef struct AndroidData {
 	GameData *gd;
 	
 	/* Whether this was initialized: */
-	unsigned was_init;
+	int was_init;
 	
 	/* Used to cache bitmap information: */
-	unsigned bmpW, bmpH, bmpStride;
+	int bmpW, bmpH, bmpStride;
 	void *pixels;
 	
 } AndroidData;

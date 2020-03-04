@@ -29,7 +29,7 @@ typedef struct Cell {
 
 typedef struct Braid {
 	Cell *data;
-	unsigned w, h;
+	int w, h;
 } Braid;
 
 typedef enum Dir {
@@ -41,13 +41,13 @@ typedef enum Dir {
 } Dir;
 
 typedef struct Wall {
-	unsigned x, y;
+	int x, y;
 	Dir      d;
 } Wall;
 
 
 /* This is a recursive function used by braid_is_connected: */
-static void flood_fill(Braid *b, unsigned x, unsigned y) {
+static void flood_fill(Braid *b, int x, int y) {
 	
 	/* Skip if we've already been filled: */
 	if(b->data[y*b->w + x].flag) return;
@@ -81,7 +81,7 @@ static int braid_is_connected(Braid *b) {
 }
 
 /* This will check to see if adding a wall will make a node a dead end: */
-static int braid_node_dead_end(Braid *b, unsigned x, unsigned y, Dir d) {
+static int braid_node_dead_end(Braid *b, int x, int y, Dir d) {
 	int up, down, left, right;
 	
 	/* Check for all of the walls: */
@@ -95,7 +95,7 @@ static int braid_node_dead_end(Braid *b, unsigned x, unsigned y, Dir d) {
 }
 
 /* This will COMPLETELY check to see if a new wall makes a dead end: */
-static int braid_makes_dead_end(Braid *b, unsigned x, unsigned y, Dir d) {
+static int braid_makes_dead_end(Braid *b, int x, int y, Dir d) {
 	/* See if it causes a dead end on this node: */
 	if(braid_node_dead_end(b,x,y,d)) return 1;
 	
@@ -116,12 +116,12 @@ static int braid_makes_dead_end(Braid *b, unsigned x, unsigned y, Dir d) {
 }
 
 /* This will shuffle a list of walls: */
-static void wall_shuffle(Wall *w, unsigned int len) {
-	unsigned i;
+static void wall_shuffle(Wall *w, int len) {
+	int i;
 	
 	/* Run through the list once, shuffling everything: */
 	for(i=0; i<len; i++) {
-		unsigned new_index = rand_int(0u,len-1);
+		int new_index = rand_int(0,len-1);
 		Wall temp = w[i];
 		w[i] = w[new_index];
 		w[new_index] = temp;
@@ -131,8 +131,8 @@ static void wall_shuffle(Wall *w, unsigned int len) {
 /* Fills in a Braid object with a braid maze: */
 static void braid_populate(Braid *b) {
 	Wall *w;
-	unsigned i;
-	unsigned x, y;
+	int i;
+	int x, y;
 	
 	/* Set all walls to empty: */
 	for(i=0; i<b->w * b->h; i++)
@@ -180,7 +180,7 @@ static void braid_populate(Braid *b) {
 	free_mem(w);
 }
 
-static Braid *braid_new(unsigned w, unsigned h) {
+static Braid *braid_new(int w, int h) {
 	Braid *b = get_object(Braid);
 	b->w = w; b->h = h;
 	b->data = static_cast<Cell*>(get_mem(sizeof(Cell) * w * h));
@@ -200,14 +200,14 @@ static void braid_free(Braid *b) {
 /* LEVEL-BUILDING LOGIC: */
 
 static void invert_all(Level *lvl) {
-	unsigned i;
+	int i;
 	for(i=0; i<lvl->width * lvl->height; i++)
 		lvl->array[i] = !lvl->array[i];
 }
 
 
 void braid_generator(Level *lvl) {
-	unsigned i, x, y;
+	int i, x, y;
 	Braid *b = braid_new(lvl->width/CELL_SIZE, lvl->height/CELL_SIZE);
 	
 	/* Reset all of the 'used' flags back to zero: */
@@ -256,7 +256,7 @@ void braid_generator(Level *lvl) {
 		
 		/* Pick a random spot for the base: */
 		do {
-			x = rand_int(0u, b->w-1); y = rand_int(0u, b->h-1);
+			x = rand_int(0, b->w-1); y = rand_int(0, b->h-1);
 		} while(b->data[y*b->w+x].flag);
 		
 		/* Mark our spot, and the ones around it as well: */

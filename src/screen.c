@@ -20,8 +20,8 @@ typedef enum ScreenDrawMode {
 typedef struct Window {
 	Rect     r;
 	Tank    *t;
-	unsigned counter;
-	unsigned showing_static;
+	int counter;
+	int showing_static;
 } Window;
 
 typedef struct StatusBar {
@@ -46,22 +46,22 @@ struct Screen {
 	bool	 is_fullscreen;
 	
 	/* Various variables for the current resolution: */
-	unsigned width, height, xstart, ystart, pixelw, pixelh, xskips, yskips;
+	int width, height, xstart, ystart, pixelw, pixelh, xskips, yskips;
 	
 	/* Window shit: */
-	unsigned  window_count;
+	int  window_count;
 	Window    window[SCREEN_MAX_WINDOWS];
 
 	/* Status bar shit: */
-	unsigned  status_count;
+	int  status_count;
 	StatusBar status[SCREEN_MAX_STATUS];
 
 	/* Bitmap shit: */
-	unsigned  bitmap_count;
+	int  bitmap_count;
 	Bitmap    bitmap[SCREEN_MAX_BITMAPS];
 	
 	/* GUI Controller shit: */
-	unsigned controller_count;
+	int controller_count;
 	GUIController controller;
 	/* Variables used for drawing: */
 	ScreenDrawMode mode;
@@ -89,7 +89,7 @@ static void fill_background() {
 	}
 }
 
-void screen_draw_pixel(Screen *s, unsigned x, unsigned y, Color color) {
+void screen_draw_pixel(Screen *s, int x, int y, Color color) {
 	int w, h, xs, ys;
 	Rect r;
 	
@@ -129,7 +129,7 @@ int  screen_map_y(Screen *s, int y) {
 static void screen_draw_static(Screen *s, Window *w) {
 	int x, y;
 	int health, energy;
-	unsigned black_counter, drawing_black;
+	int black_counter, drawing_black;
 	
 	tank_get_stats(w->t, &energy, &health);
 
@@ -140,7 +140,7 @@ static void screen_draw_static(Screen *s, Window *w) {
 	}
 
 	if(!w->counter) {
-		unsigned intensity = 1000 * energy / STATIC_THRESHOLD;
+		int intensity = 1000 * energy / STATIC_THRESHOLD;
 		w->showing_static = !rand_bool(intensity);
 		w->counter = rand_int(GAME_FPS/16, GAME_FPS/8) * w->showing_static ? 1u : 4u;
 
@@ -198,7 +198,7 @@ static void screen_draw_window(Screen *s, Window *w) {
 	
 	for(y=0; y < w->r.h; y++) {
 		for(x=0; x < w->r.w; x++) {
-			unsigned screenx = x + w->r.x, screeny = y + w->r.y;
+			int screenx = x + w->r.x, screeny = y + w->r.y;
 			Color c = drawbuffer_get_pixel(b, x + tx - w->r.w/2, y + ty - w->r.h/2);
 			screen_draw_pixel(s, screenx, screeny, c);
 		}
@@ -289,7 +289,7 @@ static void screen_draw_status(Screen *s, StatusBar *b) {
 }
 
 static void screen_draw_bitmap(Screen *s, Bitmap *b) {
-	unsigned x, y, i;
+	int x, y, i;
 
 	for(x=y=i=0; i < (b->r.w * b->r.h); i++) {
 		if(b->data[i]) screen_draw_pixel(s, x + b->r.x, y + b->r.y, *b->color);
@@ -298,7 +298,7 @@ static void screen_draw_bitmap(Screen *s, Bitmap *b) {
 }
 
 static void screen_draw_level(Screen *s) {
-	unsigned i;
+	int i;
 	
 	for(i=0; i<s->window_count; i++) screen_draw_window(s, &s->window[i]);
 	for(i=0; i<s->status_count; i++) screen_draw_status(s, &s->status[i]);
@@ -355,9 +355,9 @@ void screen_set_fullscreen(Screen *s, bool is_fullscreen) {
 
 
 /* Returns 0 if successful, 1 if failed: */
-int screen_resize(Screen *s, unsigned width, unsigned height) {
+int screen_resize(Screen *s, int width, int height) {
 	
-	unsigned pixelw, pixelh, xskips, yskips, xstart, ystart, vw, vh, a, b;
+	int pixelw, pixelh, xskips, yskips, xstart, ystart, vw, vh, a, b;
 	Rect temp_rect;
 	
 	/* Make sure that we aren't scaling to something too small: */

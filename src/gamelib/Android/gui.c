@@ -17,8 +17,8 @@
 Rect gamelib_gui_get_size() { return RECT(0,0,24,24); }
 
 /* Way too simple: */
-unsigned rounded_sqrt(unsigned val) {
-	unsigned i, array[] = { 0, 2, 6, 12, 20, 30, 42, 56, 72, 90, 110, 132, 156,
+int rounded_sqrt(int val) {
+	int i, array[] = { 0, 2, 6, 12, 20, 30, 42, 56, 72, 90, 110, 132, 156,
 		182, 210, 240, 272, 306, 342, 380, 420, 462, 506, 552, 600, 650, 702,
 		756, 812, 870, 930, 992 };
 	
@@ -26,11 +26,11 @@ unsigned rounded_sqrt(unsigned val) {
 	return i;
 }
 
-void draw_circle(Screen *s, unsigned x, unsigned y, int radius, Color c) {
+void draw_circle(Screen *s, int x, int y, int radius, Color c) {
 	int tx, ty;
 	
 	for(ty=-radius; ty<=radius; ty++) {
-		unsigned number = radius * radius - ty * ty;
+		int number = radius * radius - ty * ty;
 		int row = rounded_sqrt(number);
 		
 		for(tx=-row+1; tx<row; tx++) {

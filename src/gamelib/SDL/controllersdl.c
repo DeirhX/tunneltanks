@@ -17,7 +17,7 @@ typedef struct KeyboardPrivateData {
 	SDLKey left, right, up, down, shoot;
 } KeyboardPrivateData;
 
-static void keyboard_controller(PublicTankInfo *i, void *d, int *vx, int *vy, unsigned *s) {
+static void keyboard_controller(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
 	KeyboardPrivateData *data = static_cast<KeyboardPrivateData*>(d);
 	Uint8 *keys = SDL_GetKeyState( NULL );
 	
@@ -54,7 +54,7 @@ typedef struct JoystickPrivateData {
  * interpretted as going in that direction: */
 #define CUTOFF (10000)
 
-static void joystick_controller(PublicTankInfo *i, void *d, int *vx, int *vy, unsigned *s) {
+static void joystick_controller(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
 	JoystickPrivateData *data = static_cast<JoystickPrivateData*>(d);
 	Sint32 jx, jy;
 	Uint32 dist;

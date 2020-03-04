@@ -12,11 +12,11 @@
 /* Return a mem-alloced copy of the string, with all surrounding spaces removed.
  * Returns NULL if that string is empty: */
 static char *strip_string_copy(char *str) {
-	unsigned len = strlen(str);
+	int len = strlen(str);
 	char *end, *out;
 	
 	/* Eat from the front: */
-	while(*str && isspace((unsigned char)*str)) {
+	while(*str && isspace((int char)*str)) {
 		str++;
 		len--;
 	}
@@ -29,7 +29,7 @@ static char *strip_string_copy(char *str) {
 	while(*end) end++;
 	
 	/* Eat from the back: */
-	while(isspace((unsigned char)*(--end))) len--;
+	while(isspace((int char)*(--end))) len--;
 	
 	/* Get the new string, and copy the stuff in: */
 	out = get_mem(sizeof(char)*(len+1));

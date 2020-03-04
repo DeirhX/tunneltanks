@@ -11,9 +11,9 @@
 #include <level_defn.h>
 
 
-Level *level_new(DrawBuffer *b, unsigned w, unsigned h) {
+Level *level_new(DrawBuffer *b, int w, int h) {
 	Level *lvl;
-	unsigned i;
+	int i;
 	
 	lvl = get_object(Level);
 	lvl->width  = w;
@@ -32,12 +32,12 @@ void level_destroy(Level *lvl) {
 	free_mem(lvl);
 }
 
-void level_set(Level *lvl, unsigned x, unsigned y, char data) {
+void level_set(Level *lvl, int x, int y, char data) {
 	lvl->array[ y*lvl->width + x ] = data;
 	level_draw_pixel(lvl, lvl->b, x, y);
 }
 
-char level_get(Level *lvl, unsigned x, unsigned y) {
+char level_get(Level *lvl, int x, int y) {
 	if(x>=lvl->width || y>=lvl->height) return ROCK;
 	return lvl->array[ y*lvl->width + x ];
 }
@@ -53,7 +53,7 @@ void level_decorate(Level *lvl) {
 		}
 }
 
-static void make_base(Level *lvl, unsigned bx, unsigned by, unsigned color) {
+static void make_base(Level *lvl, int bx, int by, int color) {
 	int x, y;
 	
 	if(color >= MAX_TANKS) return;
@@ -73,18 +73,18 @@ static void make_base(Level *lvl, unsigned bx, unsigned by, unsigned color) {
 /* TODO: Rethink the method for adding bases, as the current method DEMANDS that
  *       you use MAX_TANKS tanks. */
 void level_make_bases(Level *lvl) {
-	unsigned i;
+	int i;
 	for(i=0; i<MAX_TANKS; i++)
 		/*level_dig_hole(lvl, lvl->spawn[i].x, lvl->spawn[i].y);*/
 		make_base(lvl, lvl->spawn[i].x, lvl->spawn[i].y, i);
 }
 
-Vector level_get_spawn(Level *lvl, unsigned i) {
+Vector level_get_spawn(Level *lvl, int i) {
 	return lvl->spawn[i];
 }
 
-int level_dig_hole(Level *lvl, unsigned x, unsigned y) {
-	unsigned tx, ty;
+int level_dig_hole(Level *lvl, int x, int y) {
+	int tx, ty;
 	int did_dig = 0;
 	
 	for(ty=y-3; ty<=y+3; ty++)
@@ -109,8 +109,8 @@ int level_dig_hole(Level *lvl, unsigned x, unsigned y) {
 }
 
 void level_draw_all(Level *lvl, DrawBuffer *b) {
-	unsigned x, y;
-	unsigned color;
+	int x, y;
+	int color;
 	
 	for(y=0; y<lvl->height; y++)
 		for(x=0; x<lvl->width; x++) {
@@ -129,8 +129,8 @@ void level_draw_all(Level *lvl, DrawBuffer *b) {
 }
 
 
-void level_draw_pixel(Level *lvl, DrawBuffer *b, unsigned x, unsigned y) {
-	unsigned color;
+void level_draw_pixel(Level *lvl, DrawBuffer *b, int x, int y) {
+	int color;
 	char val = lvl->array[y*lvl->width + x];
 	
 	switch(val) {
@@ -149,11 +149,11 @@ void level_draw_pixel(Level *lvl, DrawBuffer *b, unsigned x, unsigned y) {
 /* TODO: This needs to be done in a different way, as this approach will take 
  * MAX_TANKS^2 time to do all collision checks for all tanks. It should only
  * take MAX_TANKS time. */
-BaseCollision level_check_base_collision(Level *lvl, unsigned x, unsigned y, unsigned color) {
-	unsigned id;
+BaseCollision level_check_base_collision(Level *lvl, int x, int y, int color) {
+	int id;
 	
 	for(id=0; id < MAX_TANKS; id++) {
-		if(/*std::abs*/(lvl->spawn[id].x - x) < BASE_SIZE/2 && /*std::abs*/(lvl->spawn[id].y - y) < BASE_SIZE/2) {
+		if(std::abs(lvl->spawn[id].x - x) < BASE_SIZE/2 && std::abs(lvl->spawn[id].y - y) < BASE_SIZE/2) {
 			if(id == color)
 				return BASE_COLLISION_YOURS;
 			return BASE_COLLISION_ENEMY;
@@ -166,7 +166,7 @@ BaseCollision level_check_base_collision(Level *lvl, unsigned x, unsigned y, uns
 
 /* Dumps a level into a BMP file: */
 void level_dump_bmp(Level *lvl, char *filename) {
-	unsigned x, y;
+	int x, y;
 	BMPFile *f = gamelib_bmp_new(lvl->width, lvl->height);
 	
 	for(y=0; y<lvl->height; y++)

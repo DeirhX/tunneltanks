@@ -21,12 +21,12 @@
 #define TREESIZE  150
 
 typedef struct Pairing {
-	unsigned dist, a, b;
+	int dist, a, b;
 } Pairing;
 
 #ifdef _TESTING
 static void level_draw_ascii(Level *lvl) {
-	unsigned x,y;
+	int x,y;
 	
 	for(y=0; y<lvl->height; y++) {
 		for(x=0; x<lvl->width; x++)
@@ -45,13 +45,13 @@ static int pairing_cmp(const void *a, const void *b) {
 }
 
 static void generate_tree(Level *lvl) {
-	unsigned *dsets, paircount;
-	unsigned i, j, k;
+	int *dsets, paircount;
+	int i, j, k;
 	Vector *points;
 	Pairing *pairs;
 	
 	/* Get an array of disjoint set IDs: */
-	dsets = static_cast<unsigned*>(get_mem( sizeof(unsigned) * TREESIZE ));
+	dsets = static_cast<int*>(get_mem( sizeof(int) * TREESIZE ));
 	for(i=0; i<TREESIZE; i++) dsets[i] = i;
 	
 	/* Randomly generate all points: */
@@ -86,7 +86,7 @@ static void generate_tree(Level *lvl) {
 		}
 	qsort(pairs, paircount, sizeof(Pairing), pairing_cmp);
 	for(i=j=0; i<paircount; i++) {
-		unsigned aset, bset;
+		int aset, bset;
 		
 		/* Trees only have |n|-1 edges, so call it quits if we've selected that
 		 * many: */
@@ -114,7 +114,7 @@ static void generate_tree(Level *lvl) {
  *----------------------------------------------------------------------------*/
 
 /* Some cast-to-int tricks here may be fun... ;) */
-static int has_neighbor(Level *lvl, unsigned x, unsigned y) {
+static int has_neighbor(Level *lvl, int x, int y) {
 	if(!lvl->array[ (y-1)*lvl->width + (x-1) ]) return 1;
 	if(!lvl->array[ (y-1)*lvl->width + (x  ) ]) return 1;
 	if(!lvl->array[ (y-1)*lvl->width + (x+1) ]) return 1;
@@ -127,8 +127,8 @@ static int has_neighbor(Level *lvl, unsigned x, unsigned y) {
 }
 
 static void set_outside(Level *lvl, char val) {
-	unsigned i;
-	unsigned w = lvl->width, h = lvl->height;
+	int i;
+	int w = lvl->width, h = lvl->height;
 	
 	for(i=0; i<w; i++)   lvl->array[i]           = val;
 	for(i=0; i<w; i++)   lvl->array[(h-1)*w + i] = val;
@@ -137,7 +137,7 @@ static void set_outside(Level *lvl, char val) {
 }
 
 static void expand_init(Level *lvl, Queue *q) {
-	unsigned x, y;
+	int x, y;
 	
 	for(y=1; y<lvl->height-1; y++)
 		for(x=1; x<lvl->width-1; x++)
@@ -149,13 +149,13 @@ static void expand_init(Level *lvl, Queue *q) {
 
 #define MIN2(a,b)   ((a<b) ? a : b)
 #define MIN3(a,b,c) ((a<b) ? a : (b<c) ? b : c)
-static unsigned expand_once(Level *lvl, Queue *q) {
+static int expand_once(Level *lvl, Queue *q) {
 	Vector temp;
-	unsigned i, j, total, count = 0;
+	int i, j, total, count = 0;
 	
 	total = queue_length(q);
 	for(i=0; i<total; i++) {
-		unsigned xodds, yodds, odds;
+		int xodds, yodds, odds;
 		
 		temp = queue_dequeue(q);
 		
@@ -170,7 +170,7 @@ static unsigned expand_once(Level *lvl, Queue *q) {
 			/* Now, queue up any neighbors that qualify: */
 			for(j=0; j<9; j++) {
 				char *c;
-				unsigned tx, ty;
+				int tx, ty;
 				
 				if(j==4) continue;
 				
@@ -189,7 +189,7 @@ static unsigned expand_once(Level *lvl, Queue *q) {
 }
 
 static void expand_cleanup(Level *lvl) {
-	unsigned x, y;
+	int x, y;
 	
 	for(y=0; y<lvl->height; y++)
 		for(x=0; x<lvl->width; x++)
@@ -197,7 +197,7 @@ static void expand_cleanup(Level *lvl) {
 }
 
 static void randomly_expand(Level *lvl) {
-	unsigned cur = 0, goal = lvl->width * lvl->height * FILLRATIO / 100;
+	int cur = 0, goal = lvl->width * lvl->height * FILLRATIO / 100;
 	Queue *q;
 	
 	/* Experimentally, the queue never grew to larger than 3/50ths of the level
@@ -216,8 +216,8 @@ static void randomly_expand(Level *lvl) {
  * STAGE 3: Smooth out the graph with a cellular automaton                    *
  *----------------------------------------------------------------------------*/
 
-static int count_neighbors(Level *lvl, unsigned x, unsigned y) {
-	unsigned w = lvl->width;
+static int count_neighbors(Level *lvl, int x, int y) {
+	int w = lvl->width;
 	return lvl->array[ (y-1)*w + (x-1) ] +
 	       lvl->array[ (y-1)*w + (x  ) ] +
 	       lvl->array[ (y-1)*w + (x+1) ] +
@@ -230,8 +230,8 @@ static int count_neighbors(Level *lvl, unsigned x, unsigned y) {
 
 #define MIN2(a,b)   ((a<b) ? a : b)
 #define MIN3(a,b,c) ((a<b) ? a : (b<c) ? b : c)
-static unsigned smooth_once(Level *lvl) {
-	unsigned x, y, count = 0;
+static int smooth_once(Level *lvl) {
+	int x, y, count = 0;
 	
 	for(y=1; y<lvl->height-1; y++)
 		for(x=1; x<lvl->width-1; x++) {
@@ -268,7 +268,7 @@ void toast_generator(Level *lvl) {
 int main() {
 	clock_t t, all;
 	Level lvl;
-	unsigned i;
+	int i;
 	
 	rand_seed();
 	

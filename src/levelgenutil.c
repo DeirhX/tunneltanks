@@ -9,7 +9,7 @@
 
 
 void fill_all(Level *lvl, char c) {
-	unsigned i;
+	int i;
 	
 	for(i=0; i<lvl->width * lvl->height; i++) {
 		lvl->array[i] = c;
@@ -17,7 +17,7 @@ void fill_all(Level *lvl, char c) {
 }
 
 void rough_up(Level *lvl) {
-	unsigned x, y;
+	int x, y;
 	
 	/* Sanitize our input: */
 	for(x=0; x<lvl->width * lvl->height; x++)
@@ -26,7 +26,7 @@ void rough_up(Level *lvl) {
 	/* Mark all spots that are blank, but next to spots that are marked: */
 	for(x=0; x<lvl->width; x++) {
 		for(y=0; y<lvl->height; y++) {
-			unsigned t = 0;
+			int t = 0;
 			
 			if(lvl->array[y*lvl->width + x]) continue;
 			
@@ -45,7 +45,7 @@ void rough_up(Level *lvl) {
 			lvl->array[x] = rand_bool(500);
 }
 
-Vector pt_rand(unsigned w, unsigned h, unsigned border) {
+Vector pt_rand(int w, int h, int border) {
 	Vector out;
 	out.x = rand_int(border, w - border);
 	out.y = rand_int(border, h - border);
@@ -54,17 +54,17 @@ Vector pt_rand(unsigned w, unsigned h, unsigned border) {
 
 /* Actually returns the distance^2, but points should still remain in the same
  * order, and this doesn't require a call to sqrt(): */
-unsigned pt_dist(Vector a, Vector b) {
+int pt_dist(Vector a, Vector b) {
 	return (a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y);
 }
 
 /* Used for point drawing: */
-static void set_point(Level *lvl, unsigned x, unsigned y, char value) {
+static void set_point(Level *lvl, int x, int y, char value) {
 	if(x >= lvl->width || y >= lvl->height) return;
 	lvl->array[y*lvl->width+x] = value;
 }
 
-void set_circle(Level *lvl, unsigned x, unsigned y, char value) {
+void set_circle(Level *lvl, int x, int y, char value) {
 	int tx, ty;
 	for(ty=-3; ty<=3; ty++) {
 		for(tx=-3; tx<=3; tx++) {
@@ -80,16 +80,16 @@ void set_circle(Level *lvl, unsigned x, unsigned y, char value) {
 
 void draw_line(Level *dest, Vector a, Vector b, char value, int fat_line) {
 	int swap, dx, dy, error, stepy;
-	unsigned x, y;
-	void (*pt_func)(Level *, unsigned, unsigned, char) ;
+	int x, y;
+	void (*pt_func)(Level *, int, int, char) ;
 	
 	/* How is this thing getting drawn? */
 	pt_func = (fat_line) ? set_circle : set_point;
 	
 	/* Swap x and y values when the graph gets too steep to operate normally: */
-	if((swap = /*abs*/(b.y - a.y) > /*abs*/(b.x - a.x))) {
-		SWAP(unsigned, a.x, a.y);
-		SWAP(unsigned, b.x, b.y);
+	if((swap = abs(b.y - a.y) > abs(b.x - a.x))) {
+		SWAP(int, a.x, a.y);
+		SWAP(int, b.x, b.y);
 	}
 
 	/* Swap a and b so that a is to the left of b: */
@@ -117,7 +117,7 @@ void draw_line(Level *dest, Vector a, Vector b, char value, int fat_line) {
 
 /* Original DDA-based function:
 
-#define ROUND(x) ((unsigned)((x)+0.5))
+#define ROUND(x) ((int)((x)+0.5))
 #define SWAP(a,b) do { Vector t = (a); (a)=(b); (b)=t; } while(0)
 
 static void draw_line(Level *dest, Vector a, Vector b) {

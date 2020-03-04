@@ -12,13 +12,13 @@
 #include <tanklist.h>
 
 
-Tank::Tank(Level *lvl, PList *pl, unsigned x, unsigned y, unsigned color) :
+Tank::Tank(Level *lvl, PList *pl, int x, int y, int color) :
 	x(x), y(y), color(color)
 {
 	this->cached_slice = level_slice_new(lvl, this);
 	
 	/* Let's just make the starting direction random, because we can: */
-	this->direction = rand_int(0u, 7u);
+	this->direction = rand_int(0, 7);
 	if(this->direction >= 4) this->direction ++;
 	
 	this->vx = this->vy = 0; this->lvl = lvl; this->pl = pl;
@@ -47,11 +47,11 @@ void tank_get_stats(Tank *t, int *energy, int *health) {
 	*energy = t->energy; *health = t->health;
 }
 
-unsigned tank_get_dir(Tank *t) {
+int tank_get_dir(Tank *t) {
 	return t->direction;
 }
 
-unsigned Tank::get_color() const {
+int Tank::get_color() const {
 	return this->color;
 }
 
@@ -64,7 +64,7 @@ typedef enum CollisionType {
 	CT_COLLIDE  /* Hit a rock/base/tank/something we can't drive over. */
 } CollisionType;
 
-static CollisionType tank_collision(Level *lvl, unsigned dir, unsigned x, unsigned y, TankList *tl, unsigned id) {
+static CollisionType tank_collision(Level *lvl, int dir, int x, int y, TankList *tl, int id) {
 	int tx, ty;
 	CollisionType out = CT_NONE;
 	
@@ -108,7 +108,7 @@ void tank_move(Tank *t, TankList *tl) {
 	if(t->vx != 0 || t->vy != 0) {
 		CollisionType ct;
 		
-		unsigned newdir = static_cast<unsigned> ((t->vx+1) + (t->vy+1) * 3);
+		int newdir = static_cast<int> ((t->vx+1) + (t->vy+1) * 3);
 		
 		ct = tank_collision(t->lvl, newdir, t->x+t->vx, t->y+t->vy, tl, t->color);
 		/* Now, is there room to move forward in that direction? */
@@ -162,7 +162,7 @@ void tank_try_base_heal(Tank *t) {
 }
 
 void tank_draw(Tank *t, DrawBuffer *b) {
-	unsigned x, y;
+	int x, y;
 	
 	if(!t->health) return;
 	
@@ -175,7 +175,7 @@ void tank_draw(Tank *t, DrawBuffer *b) {
 }
 
 void tank_clear(Tank *t, DrawBuffer *b) {
-	unsigned x, y;
+	int x, y;
 	
 	if(!t->health) return;
 	

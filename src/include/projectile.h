@@ -14,7 +14,7 @@ PList* plist_new();
 void plist_destroy(PList* pl);
 
 void plist_push_bullet(PList* pl, Tank* t);
-void plist_push_explosion(PList* pl, unsigned x, unsigned y, unsigned count, int r, int ttl);
+void plist_push_explosion(PList* pl, int x, int y, int count, int r, int ttl);
 
 void plist_step(PList* pl, Level* b, TankList* tl);
 

@@ -13,7 +13,7 @@ struct BMPFile {
 } ;
 
 
-BMPFile *gamelib_bmp_new(unsigned width, unsigned height) {
+BMPFile *gamelib_bmp_new(int width, int height) {
 	BMPFile *out;
 	
 	out = get_object(BMPFile);
@@ -22,7 +22,7 @@ BMPFile *gamelib_bmp_new(unsigned width, unsigned height) {
 	return out;
 }
 
-void gamelib_bmp_set_pixel(BMPFile *f, unsigned x, unsigned y, Color c) {
+void gamelib_bmp_set_pixel(BMPFile *f, int x, int y, Color c) {
 	Uint8 *p;
 	Uint32 mapped_color;
 	

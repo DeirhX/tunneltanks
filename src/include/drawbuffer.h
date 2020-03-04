@@ -19,12 +19,12 @@ extern Color color_status_health;
 extern Color color_primary[8];
 extern Color color_tank[8][3];
 
-DrawBuffer *drawbuffer_new(unsigned w, unsigned h) ;
+DrawBuffer *drawbuffer_new(int w, int h) ;
 void drawbuffer_destroy(DrawBuffer *b) ;
 
 void  drawbuffer_set_default(DrawBuffer *b, Color color) ;
-void  drawbuffer_set_pixel(DrawBuffer *b, unsigned x, unsigned y, Color color) ;
-Color drawbuffer_get_pixel(DrawBuffer *b, unsigned x, unsigned y) ;
+void  drawbuffer_set_pixel(DrawBuffer *b, int x, int y, Color color) ;
+Color drawbuffer_get_pixel(DrawBuffer *b, int x, int y) ;
 
 
 #endif /* _DRAW_BUFFER_H_ */

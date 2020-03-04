@@ -35,9 +35,9 @@
 
 typedef struct GameDataConfig {
 	char *gen;
-	unsigned w, h;
+	int w, h;
 	bool is_fullscreen;
-	unsigned player_count;
+	int player_count;
 	int rand_seed;
 } GameDataConfig;
 
@@ -63,8 +63,8 @@ struct GameData {
  * This bit is used to initialize various GUIs:                               *
  *----------------------------------------------------------------------------*/
 
-static void twitch_fill(TankList *tl, Level *lvl, unsigned starting_id) {
-	unsigned i;
+static void twitch_fill(TankList *tl, Level *lvl, int starting_id) {
+	int i;
 	
 	for(i=starting_id; i<MAX_TANKS; i++) {
 		Tank *t = tanklist_add_tank(tl, i, level_get_spawn(lvl, i));
@@ -163,7 +163,7 @@ void game_set_level_gen(GameData *gd, char *gen) {
 	gd->data.config.gen = gen;
 }
 
-void game_set_level_size(GameData *gd, unsigned w, unsigned h) {
+void game_set_level_size(GameData *gd, int w, int h) {
 	ASSERT_CONFIG();
 	
 	gd->data.config.w = w; gd->data.config.h = h;
@@ -181,7 +181,7 @@ void game_set_fullscreen(GameData *gd, bool is_fullscreen) {
 	gd->data.config.is_fullscreen = is_fullscreen;
 }
 
-void game_set_player_count(GameData *gd, unsigned num) {
+void game_set_player_count(GameData *gd, int num) {
 	ASSERT_CONFIG();
 	
 	if(!num || num > gamelib_get_max_players()) {

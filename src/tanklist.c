@@ -20,22 +20,22 @@ TankList::~TankList() {
 }
 
 
-Tank *tanklist_add_tank(TankList *tl, unsigned id, Vector p) {
+Tank *tanklist_add_tank(TankList *tl, int id, Vector p) {
 	if(id >= MAX_TANKS) return NULL;
 	if(tl->list[id]) return NULL;
 	tl->list[id] = new Tank(tl->lvl, tl->pl, p.x, p.y, id);
 	return tl->list[id];
 }
 
-int tanklist_remove_tank(TankList *tl, unsigned id) {
+int tanklist_remove_tank(TankList *tl, int id) {
 	if(id >= MAX_TANKS) return 1;
 	free_mem(tl->list[id]);
 	tl->list[id] = NULL;
 	return 0;
 }
 
-Tank *tanklist_check_point(TankList *tl, unsigned x, unsigned y, unsigned ignored) {
-	unsigned i;
+Tank *tanklist_check_point(TankList *tl, int x, int y, int ignored) {
+	int i;
 	for(i=0; i<MAX_TANKS; i++) {
 		int tx, ty;
 		if(i==ignored || !tl->list[i] || tank_is_dead(tl->list[i])) continue;
@@ -50,9 +50,9 @@ Tank *tanklist_check_point(TankList *tl, unsigned x, unsigned y, unsigned ignore
 	return NULL;
 }
 
-/* Note: change that vector to two unsigned's eventually... */
-int tanklist_check_collision(TankList *tl, Vector p, unsigned pdir, unsigned ignored) {
-	unsigned i;
+/* Note: change that vector to two int's eventually... */
+int tanklist_check_collision(TankList *tl, Vector p, int pdir, int ignored) {
+	int i;
 	for(i=0; i<MAX_TANKS; i++) {
 		int x, y, dir, tx, ty, lx, ly, ux, uy;
 		
@@ -60,7 +60,7 @@ int tanklist_check_collision(TankList *tl, Vector p, unsigned pdir, unsigned ign
 		
 		/* Let's see if these two tanks are ANYWHERE near each other: */
 		tank_get_position(tl->list[i], &x, &y);
-		if(/*abs*/(p.x-x)>6 || /*abs*/(p.y-y)>6) continue;
+		if(abs(p.x-x)>6 || abs(p.y-y)>6) continue;
 		
 		/* Ok, if we're here, the two tanks are real close. Now it's time for
 		 * brute-force pixel checking: */
@@ -84,7 +84,7 @@ int tanklist_check_collision(TankList *tl, Vector p, unsigned pdir, unsigned ign
 }
 
 /* This shouldn't be needed, in theory, but that theory is a cruel mistress: */
-Tank *tanklist_get(TankList *tl, unsigned id) {
+Tank *tanklist_get(TankList *tl, int id) {
 	if(id >= MAX_TANKS) return NULL;
 	return tl->list[id];
 }

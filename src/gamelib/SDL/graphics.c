@@ -10,7 +10,7 @@
 /* Will select the best fullscreen resolution based on pixel count: */
 static SDL_Rect screen_get_best_resolution() {
 	SDL_Rect** modes;
-	unsigned i;
+	int i;
 	SDL_Rect out = {0,0,0,0};
 	int out_score = 0;
 	
@@ -58,7 +58,7 @@ int gamelib_set_fullscreen() {
 }
 
 /* Sets the display to windowed mode, with given dimensions: */
-int gamelib_set_window(unsigned w, unsigned h) {
+int gamelib_set_window(int w, int h) {
 	SDL_Surface *newsurface;
 	
 	/* Actually set the new video mode: */
@@ -81,8 +81,8 @@ int gamelib_set_window(unsigned w, unsigned h) {
 Rect gamelib_get_resolution() {
 	Rect r = {0,0,0,0};
 	if(!_DATA.s) return r;
-	r.w = static_cast<unsigned>(_DATA.s->w);
-	r.h = static_cast<unsigned>(_DATA.s->h);
+	r.w = static_cast<int>(_DATA.s->w);
+	r.h = static_cast<int>(_DATA.s->h);
 	
 	return r;
 }

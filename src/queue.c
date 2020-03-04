@@ -7,11 +7,11 @@
 
 struct Queue {
 	Vector *array;
-	unsigned i, j, l, max;
+	int i, j, l, max;
 } ;
 
 static void resize(Queue *q) {
-	unsigned i, j;
+	int i, j;
 	Vector *v;
 	
 	q->max *= 2;
@@ -27,7 +27,7 @@ static void resize(Queue *q) {
 	q->i = 0; q->j = q->l;
 }
 
-Queue *queue_new(unsigned len) {
+Queue *queue_new(int len) {
 	Queue *q = get_object(Queue);
 	q->array = static_cast<Vector*>(get_mem(sizeof(Vector) * len));
 	q->i = q->j = q->l = 0;
@@ -41,7 +41,7 @@ void queue_destroy(Queue *q) {
 	free_mem(q);
 }
 
-unsigned queue_length(Queue *q) {
+int queue_length(Queue *q) {
 	return q->l;
 }
 

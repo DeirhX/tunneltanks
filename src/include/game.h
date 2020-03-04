@@ -8,10 +8,10 @@ GameData *game_new             () ;
 
 /* Configure a game structure: */
 void      game_set_level_gen   (GameData *gd, char *gen) ;
-void      game_set_level_size  (GameData *gd, unsigned w, unsigned h) ;
+void      game_set_level_size  (GameData *gd, int w, int h) ;
 void      game_set_debug       (GameData *gd, bool is_debugging) ;
 void      game_set_fullscreen  (GameData *gd, bool is_fullscreen) ;
-void      game_set_player_count(GameData *gd, unsigned num) ;
+void      game_set_player_count(GameData *gd, int num) ;
 
 /* Ready a game structure for actual use: */
 void      game_finalize        (GameData *gd) ;

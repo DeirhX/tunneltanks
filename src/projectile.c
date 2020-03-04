@@ -15,9 +15,9 @@ struct Projectile {
 	int		oldx, oldy; /* The x,y of the 'cold' portion. (#ba0000) */
 
 	int      xstep, ystep;
-	unsigned life : 7;
+	int life : 7;
 
-	unsigned is_effect : 1;
+	int is_effect : 1;
 
 	struct Tank* tank;
 };
@@ -89,7 +89,7 @@ void plistnode_remove(PListNode* n) {
 
 
 PList* plist_new() {
-	unsigned i;
+	int i;
 	PList* out;
 
 	out = get_object(PList);
@@ -134,7 +134,7 @@ void plist_destroy(PList* pl) {
 
 void plist_push_bullet(PList* pl, Tank* t) {
 	Projectile payload;
-	unsigned dir;
+	int dir;
 
 	tank_get_position(t, &payload.x, &payload.y);
 	payload.oldx = payload.x; payload.oldy = payload.y;
@@ -150,8 +150,8 @@ void plist_push_bullet(PList* pl, Tank* t) {
 }
 
 
-void plist_push_explosion(PList* pl, unsigned x, unsigned y, unsigned count, int r, int ttl) {
-	unsigned i;
+void plist_push_explosion(PList* pl, int x, int y, int count, int r, int ttl) {
+	int i;
 
 	/* Add all of the effect particles: */
 	for (i = 0; i < count; i++) {
@@ -176,7 +176,7 @@ void plist_step(PList* pl, Level* lvl, TankList* tl) {
 
 		/* Is this a bullet, or an effect? */
 		if (n->p.is_effect) {
-			unsigned x, y;
+			int x, y;
 
 			/* Effect: */
 
@@ -203,13 +203,13 @@ void plist_step(PList* pl, Level* lvl, TankList* tl) {
 
 		}
 		else {
-			unsigned i;
+			int i;
 
 			/* Bullet: */
 
 			for (i = 0; i < n->p.life; i++) {
 				Tank* t;
-				unsigned clr;
+				int clr;
 
 				n->p.oldx = n->p.x;     n->p.oldy = n->p.y;
 				n->p.x += n->p.xstep; n->p.y += n->p.ystep;

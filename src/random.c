@@ -6,8 +6,8 @@
 #include <random.h>
 
 
-int rand_bool(unsigned odds) {
-	return rand_int(0u,999u) < odds;
+int rand_bool(int odds) {
+	return rand_int(0,999) < odds;
 }
 
 void rand_seed() {
