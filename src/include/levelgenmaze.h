@@ -3,7 +3,11 @@
 
 #include <level.h>
 
-void maze_generator(Level *lvl) ;
+namespace levelgen::maze {
+
+	void maze_generator(Level* lvl);
+
+}
 
 #endif /* _LEVEL_GEN_MAZE_H_ */
 

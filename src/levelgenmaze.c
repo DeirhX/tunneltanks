@@ -7,6 +7,7 @@
 #include <queue.h>
 #include <random.h>
 
+namespace levelgen::maze {
 
 /* REMEMBER: The bases are centered in cells, so these cells need to larger: */
 #define CELL_SIZE 60
@@ -86,23 +87,22 @@ static void maze_populate(Maze *m) {
 	
 	do {
 		Dir d = DIR_INVALID;
-		Vector v;
 		
 		/* Mark that cell as visited: */
 		m->data[y*m->w+x].used = 1;
 		
 		/* Find somewhere to continue from, backtracking if needed: */
 		while((d = pick_dir(m, x, y)) == DIR_INVALID && queue_length(q) != 0) {
-			Vector v = queue_pop(q);
-			x = v.x; y = v.y;
+			Vector vv = queue_pop(q);
+			x = vv.x; y = vv.y;
 		}
 		
 		/* If we were never able to get a direction, then we must be done: */
 		if(d == DIR_INVALID) break;
 		
 		/* Else, let's move: */
-		v = VECTOR(x, y);
-		queue_enqueue(q, &v);
+		Vector v = VECTOR(x, y);
+		queue_enqueue(q, v);
 		remove_wall(m, d, x, y);
 		move_dir(d, &x, &y);
 	} while(1);
@@ -223,3 +223,4 @@ void maze_generator(Level *lvl) {
 	maze_free(m);
 }
 
+}

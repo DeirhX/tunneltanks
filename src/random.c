@@ -6,7 +6,7 @@
 #include <random.h>
 
 
-int rand_bool(int odds) {
+bool rand_bool(int odds) {
 	return rand_int(0,999) < odds;
 }
 

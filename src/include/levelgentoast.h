@@ -3,7 +3,11 @@
 
 #include <level.h>
 
-void toast_generator(Level *lvl) ;
+namespace levelgen::toast {
+
+	void toast_generator(Level* lvl);
+
+}
 
 #endif /* _LEVEL_GEN_TOAST_H_ */
 

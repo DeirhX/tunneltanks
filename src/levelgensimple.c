@@ -9,22 +9,23 @@
 
 #include <level_defn.h>
 
+namespace levelgen::simple {
 
-#define BORDER         80
-#define STEP_MIN       2       
-#define STEP_MAX       8
-#define MAX_SLOPE      100
-#define RARE_SLOPE     600
-#define RARITY         40
+constexpr int BORDER = 80;
+constexpr int STEP_MIN = 2;
+constexpr int STEP_MAX = 8;
+constexpr int MAX_SLOPE = 100;
+constexpr int RARE_SLOPE = 600;
+constexpr int RARITY = 40;
 
 
 /* This just adds random points for now: */
-typedef enum Side {
+enum Side : char {
 	SIDE_TOP    = 2,
 	SIDE_RIGHT  = 3,
 	SIDE_BOTTOM = 4,
 	SIDE_LEFT   = 5
-} Side;
+};
 
 
 static void add_rock_lines(Level *lvl, Side s) {
@@ -73,9 +74,9 @@ static void add_rock_lines(Level *lvl, Side s) {
 		
 		/* Draw this in whatever way is needed: */
 		if(needs_flip)
-			draw_line(lvl, VECTOR(cur.y, cur.x), VECTOR(prev.y, prev.x), s, 0);
+			draw_line(lvl, VECTOR(cur.y, cur.x), VECTOR(prev.y, prev.x), static_cast<char>(s), 0);
 		else
-			draw_line(lvl, cur, prev, s, 0);
+			draw_line(lvl, cur, prev, static_cast<char>(s), 0);
 		
 		prev = cur;
 		
@@ -143,3 +144,4 @@ void simple_generator(Level *lvl) {
 	add_spawns(lvl);
 }
 
+}

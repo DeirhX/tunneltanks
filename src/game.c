@@ -67,7 +67,7 @@ static void twitch_fill(TankList *tl, Level *lvl, int starting_id) {
 	int i;
 	
 	for(i=starting_id; i<MAX_TANKS; i++) {
-		Tank *t = tanklist_add_tank(tl, i, level_get_spawn(lvl, i));
+		Tank *t = tl->AddTank(i, level_get_spawn(lvl, i));
 		controller_twitch_attach(t);
 	}
 }
@@ -86,7 +86,7 @@ static void init_single_player(Screen *s, TankList *tl, Level *lvl) {
 	gamelib_debug("XYWH: %u %u %u %u", gui.x, gui.y, gui.w, gui.h);
 	
 	/* Ready the tank! */
-	t = tanklist_add_tank(tl, 0, level_get_spawn(lvl, 0));
+	t = tl->AddTank(0, level_get_spawn(lvl, 0));
 	gamelib_tank_attach(t, 0, 1);
 	
 	screen_add_window(s, RECT(2, 2, GAME_WIDTH-4, GAME_HEIGHT-6-STATUS_HEIGHT), t);
@@ -106,13 +106,13 @@ static void init_double_player(Screen *s, TankList *tl, Level *lvl) {
 	Tank *t;
 	
 	/* Ready the tanks! */
-	t = tanklist_add_tank(tl, 0, level_get_spawn(lvl, 0));
+	t = tl->AddTank(0, level_get_spawn(lvl, 0));
 	gamelib_tank_attach(t, 0, 2);
 	screen_add_window(s, RECT(2, 2, GAME_WIDTH/2-3, GAME_HEIGHT-6-STATUS_HEIGHT), t);
 	screen_add_status(s, RECT(3, GAME_HEIGHT - 2 - STATUS_HEIGHT, GAME_WIDTH/2-5-2, STATUS_HEIGHT), t, 0);
 	
 	/* Load up two controllable tanks: */
-	t = tanklist_add_tank(tl, 1, level_get_spawn(lvl, 1));
+	t = tl->AddTank(1, level_get_spawn(lvl, 1));
 	
 	/*controller_twitch_attach(t);  << Attach a twitch to a camera tank, so we can see if they're getting smarter... */
 	gamelib_tank_attach(t, 1, 2);

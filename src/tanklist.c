@@ -20,18 +20,20 @@ TankList::~TankList() {
 }
 
 
-Tank *tanklist_add_tank(TankList *tl, int id, Vector p) {
+Tank* TankList::AddTank(int id, Vector p)
+{
 	if(id >= MAX_TANKS) return NULL;
-	if(tl->list[id]) return NULL;
-	tl->list[id] = new Tank(id, tl->lvl, tl->pl, p.x, p.y, id);
-	return tl->list[id];
+	if(this->list[id]) return NULL;
+	this->list[id] = new Tank(id, this->lvl, this->pl, p.x, p.y, id);
+	return this->list[id];
 }
 
-int tanklist_remove_tank(TankList *tl, int id) {
-	if(id >= MAX_TANKS) return 1;
-	free_mem(tl->list[id]);
-	tl->list[id] = NULL;
-	return 0;
+void TankList::RemoveTank(int id)
+{
+	if(id >= MAX_TANKS) 
+		return;
+	delete this->list[id];
+	this->list[id] = NULL;
 }
 
 Tank *tanklist_check_point(TankList *tl, int x, int y, int ignored) {

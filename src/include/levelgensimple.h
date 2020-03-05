@@ -3,7 +3,10 @@
 
 #include <level.h>
 
-void simple_generator(Level *lvl) ;
+namespace levelgen::simple {
 
+	void simple_generator(Level* lvl);
+
+}
 #endif /* _LEVEL_GEN_TUNNELER_H_ */
 

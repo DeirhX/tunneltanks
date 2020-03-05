@@ -1,7 +1,7 @@
 #ifndef _RANDOM_H_
 #define _RANDOM_H_
 
-int      rand_bool(int odds) ;
+bool     rand_bool(int odds) ;
 void     rand_seed() ;
 
 template <typename IntegerType>

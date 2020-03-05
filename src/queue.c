@@ -45,9 +45,9 @@ int queue_length(Queue *q) {
 	return q->l;
 }
 
-void queue_enqueue(Queue *q, Vector *v) {
+void queue_enqueue(Queue *q, Vector v) {
 	if(q->l == q->max) resize(q);
-	q->array[q->j++] = *v;
+	q->array[q->j++] = v;
 	if(q->j >= q->max) q->j = 0;
 	q->l++;
 }

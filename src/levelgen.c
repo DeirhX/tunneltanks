@@ -24,11 +24,11 @@ typedef struct LevelGenerator {
 /* Add an entry for every generator: */
 LevelGenerator GENERATOR_LIST[] =
 {
-	LEVEL_GENERATOR("toast",  toast_generator,  "Twisty, cavernous maps." ),
+	LEVEL_GENERATOR("toast",  levelgen::toast::toast_generator,  "Twisty, cavernous maps." ),
 	
 	LEVEL_GENERATOR("braid",  levelgen::braid::braid_generator,  "Maze-like maps with no dead ends."),
-	LEVEL_GENERATOR("maze",   maze_generator,   "Complicated maps with a maze surrounding the bases."),
-	LEVEL_GENERATOR("simple", simple_generator, "Simple rectangular maps with ragged sides."),
+	LEVEL_GENERATOR("maze",   levelgen::maze::maze_generator,   "Complicated maps with a maze surrounding the bases."),
+	LEVEL_GENERATOR("simple", levelgen::simple::simple_generator, "Simple rectangular maps with ragged sides."),
 	
 	/* This needs to be the last item in the list: */
 	LEVEL_GENERATOR(NULL, NULL, NULL)
@@ -92,9 +92,9 @@ void print_levels(FILE *out) {
 	
 	/* Get the longest ID/Description length: */
 	for(i=0; GENERATOR_LIST[i].id; i++) {
-		if(strlen(GENERATOR_LIST[i].id) > max_id)
+		if((int)strlen(GENERATOR_LIST[i].id) > max_id)
 			max_id = strlen(GENERATOR_LIST[i].id);
-		if(strlen(GENERATOR_LIST[i].desc) > max_desc)
+		if((int)strlen(GENERATOR_LIST[i].desc) > max_desc)
 			max_desc = strlen(GENERATOR_LIST[i].desc);
 	}
 	

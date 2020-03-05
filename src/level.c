@@ -62,7 +62,7 @@ static void make_base(Level *lvl, int bx, int by, int color) {
 		for(x=-BASE_SIZE/2; x<=BASE_SIZE/2; x++) {
 			if(abs(x)==BASE_SIZE/2 || abs(y)==BASE_SIZE/2) {
 				if(x>=-BASE_DOOR_SIZE/2 && x<=BASE_DOOR_SIZE/2) continue;
-				lvl->array[(by+y)*lvl->width + bx+x] = BASE + color;
+				lvl->array[(by+y)*lvl->width + bx+x] = static_cast<char>(BASE + color);
 				continue;
 			}
 			lvl->array[(by+y)*lvl->width + bx+x] = BLANK;

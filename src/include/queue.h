@@ -9,7 +9,7 @@ Queue   *queue_new(int len) ;
 void     queue_destroy(Queue *q) ;
 
 int queue_length(Queue *q) ;
-void     queue_enqueue(Queue *q, Vector *v) ;
+void     queue_enqueue(Queue *q, Vector v) ;
 Vector   queue_dequeue(Queue *q) ;
 Vector   queue_pop(Queue *q) ;
 

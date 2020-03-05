@@ -16,10 +16,10 @@ public:
 
 	TankList(Level* lvl, PList* pl);
 	~TankList();
-};
 
-Tank *tanklist_add_tank(TankList *tl, int id, Vector p) ;
-int   tanklist_remove_tank(TankList *tl, int id) ;
+	Tank* AddTank(int id, Vector p);
+	void RemoveTank(int id);
+};
 
 Tank *tanklist_check_point(TankList *tl, int x, int y, int ignored) ;
 int tanklist_check_collision(TankList *tl, Vector p, int dir, int ignored) ;

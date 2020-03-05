@@ -12,13 +12,14 @@
 
 #include <level_defn.h>
 
+namespace levelgen::toast {
 
 /* Configuration Constants: */
-#define BORDER    30
-#define FILTER    70
-#define ODDS      300
-#define FILLRATIO 65
-#define TREESIZE  150
+constexpr int BORDER = 30;
+constexpr int FILTER = 70;
+constexpr int ODDS = 300;
+constexpr int FILLRATIO = 65;
+constexpr int TREESIZE = 150;
 
 typedef struct Pairing {
 	int dist, a, b;
@@ -143,7 +144,7 @@ static void expand_init(Level *lvl, Queue *q) {
 		for(x=1; x<lvl->width-1; x++)
 			if(lvl->array[y*lvl->width+x] && has_neighbor(lvl, x, y)) {
 				lvl->array[y*lvl->width+x] = 2;
-				queue_enqueue(q, &Vector{x,y});
+				queue_enqueue(q, Vector{x,y});
 			}
 }
 
@@ -179,11 +180,11 @@ static int expand_once(Level *lvl, Queue *q) {
 				if(*c == 1) {
 					*c = 2;
 					Vector v{ tx, ty };
-					queue_enqueue(q, &v);
+					queue_enqueue(q, v);
 				}
 			}
 		} else
-			queue_enqueue(q, &temp);
+			queue_enqueue(q, temp);
 	}
 	return count;
 }
@@ -302,3 +303,4 @@ int main() {
 }
 #endif /* _TESTING */
 
+}
