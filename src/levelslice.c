@@ -10,22 +10,9 @@
 struct LevelSlice {
 	Tank  *t;
 	Level *lvl;
+
+	LevelSlice(Tank* t, Level* lvl) : t(t), lvl(lvl) {}
 };
-
-
-LevelSlice *level_slice_new(Level *lvl, Tank *t) {
-	LevelSlice *ls;
-	
-	ls = get_object(LevelSlice);
-	ls->t = t; ls->lvl = lvl;
-	
-	return ls;
-}
-
-
-void level_slice_free(LevelSlice *ls) {
-	free_mem(ls);
-}
 
 
 LevelSliceQuery level_slice_query_point(LevelSlice *ls, int x, int y) {

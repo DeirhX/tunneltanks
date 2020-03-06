@@ -16,7 +16,7 @@
 Tank::Tank(int color, Level *lvl, PList *pl, int x, int y) :
 	x(x), y(y), color(color)
 {
-	this->cached_slice.reset(level_slice_new(lvl, this));
+	this->cached_slice = std::make_shared<LevelSlice>(this, lvl);
 	
 	/* Let's just make the starting direction random, because we can: */
 	this->direction = rand_int(0, 7);
@@ -31,10 +31,6 @@ Tank::Tank(int color, Level *lvl, PList *pl, int x, int y) :
 	this->energy = TANK_STARTING_FUEL;
 	this->controller = NULL;
 	this->controller_data = NULL;
-}
-
-Tank::~Tank()
-{
 }
 
 void tank_get_position(Tank *t, int *x, int *y) {
@@ -231,10 +227,10 @@ void tank_trigger_explosion(Tank *t) {
 }
 
 /* This is meant to be called from a controller's attach function: */
-void tank_set_controller(Tank *t, TankController func, void *data) {
+void tank_set_controller(Tank *t, TankController func, std::shared_ptr<void> data) {
 	t->controller = func;
 	
-	t->controller_data.reset(data);
+	t->controller_data = data;
 }
 
 int tank_is_dead(Tank *t) {

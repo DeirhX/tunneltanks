@@ -28,9 +28,8 @@ static void keyboard_controller(PublicTankInfo *i, void *d, int *vx, int *vy, in
 
 void controller_keyboard_attach( Tank *t,
 	SDLKey left, SDLKey right, SDLKey up, SDLKey down, SDLKey shoot) {
-	
-	KeyboardPrivateData *data = get_object(KeyboardPrivateData);
-	*data = KeyboardPrivateData{left, right, up, down, shoot};
+
+	auto  data = std::make_shared<KeyboardPrivateData>(KeyboardPrivateData{ left, right, up, down, shoot });
 	
 	tank_set_controller(t, keyboard_controller, data);
 }
@@ -82,8 +81,7 @@ static void joystick_controller(PublicTankInfo *i, void *d, int *vx, int *vy, in
 }
 
 void controller_joystick_attach( Tank *t ) {
-	
-	JoystickPrivateData *data;
+
 	
 	/* Make sure that this is even a joystick to connect to: */
 	if(SDL_NumJoysticks() == 0) {
@@ -92,9 +90,8 @@ void controller_joystick_attach( Tank *t ) {
 		exit(1);
 	}
 	
-	data = get_object(JoystickPrivateData);
-	data->joystick = SDL_JoystickOpen(0);
-	
+	auto  data = std::make_shared<JoystickPrivateData>(JoystickPrivateData{ SDL_JoystickOpen(0) });
+
 	if(data->joystick) {
 		gamelib_debug("Using Joystick #0:\n");
 		gamelib_debug("  Name:    %s\n", SDL_JoystickName(0));

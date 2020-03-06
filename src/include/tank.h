@@ -45,7 +45,7 @@ public:
 
 	//Tank(Tank&& other);
 	Tank(int color, Level* lvl, PList* pl, int x, int y);
-	~Tank();
+	~Tank() = default;
 
 	int get_color() const;
 };
@@ -64,7 +64,7 @@ void tank_alter_energy(Tank *t, int diff) ;
 void tank_alter_health(Tank *t, int diff) ;
 void tank_trigger_explosion(Tank *t) ;
 
-void tank_set_controller(Tank *t, TankController func, void *data) ;
+void tank_set_controller(Tank *t, TankController func, std::shared_ptr<void> data) ;
 
 int tank_is_dead(Tank *t) ;
 

@@ -20,10 +20,6 @@ typedef enum LevelSliceQuery {
 #include <level.h>
 #include <tank.h>
 
-/* Used by tank.c to init a LevelSlice structure: */
-LevelSlice *level_slice_new(Level *lvl, Tank *t) ;
-void        level_slice_free(LevelSlice *ls) ;
-
 /* Some quick queries for use in AIs: */
 LevelSliceQuery level_slice_query_point (LevelSlice *ls, int x, int y) ;
 LevelSliceQuery level_slice_query_circle(LevelSlice *ls, int x, int y) ;
