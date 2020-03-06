@@ -20,6 +20,8 @@ public:
 
 	Tank* AddTank(int id, Vector p);
 	void RemoveTank(int id);
+	Tank* GetTankAtPoint(int x, int y, int ignored);
+	bool CheckForCollision(Tank& tank, Position atPos, int atDirection);
 
 	// iterable
 	DereferenceIterator<decltype(list)::iterator> begin() { return dereference_iterator(list.begin()); }
@@ -27,11 +29,6 @@ public:
 	DereferenceIterator<decltype(list)::const_iterator> cbegin() const { return dereference_iterator(list.cbegin()); }
 	DereferenceIterator<decltype(list)::const_iterator> cend() const { return dereference_iterator(list.cend()); }
 };
-
-Tank *tanklist_check_point(TankList *tl, int x, int y, int ignored) ;
-int tanklist_check_collision(TankList *tl, Vector p, int dir, int ignored) ;
-
-Tank *tanklist_get(TankList *tl, int id) ;
 
 template <typename TFunc>
 inline void tanklist_map(TankList& tl, TFunc&& tank_func)

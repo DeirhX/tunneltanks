@@ -24,21 +24,21 @@ TankList::~TankList()
 }
 
 
-Tank* TankList::AddTank(int id, Vector p)
+Tank* TankList::AddTank(int color, Vector p)
 {
-	auto found= std::find_if(begin(), end(), [id](auto& el) { return id == el.id; });
+	auto found= std::find_if(begin(), end(), [color](auto& el) { return color == el.color; });
 	if (found != list.end())
 		throw GameException("already exists");
 	
-	this->list.emplace_back(std::make_unique<Tank>(id, this->lvl, this->pl, p.x, p.y, id));
+	this->list.emplace_back(std::make_unique<Tank>(color, this->lvl, this->pl, p.x, p.y));
 	return this->list.back().get();
 }
 
-void TankList::RemoveTank(int id)
+void TankList::RemoveTank(int color)
 {
 	auto count = list.size();
 	// Delete all with this id
-	list.erase(std::remove_if(begin(), end(), [id](auto& el) { return id == el.id; }), list.end());
+	list.erase(std::remove_if(begin(), end(), [color](auto& el) { return color == el.color; }), list.end());
 
 	if (list.size() == count)
 		throw GameException("this id doesn't exist");
@@ -46,12 +46,13 @@ void TankList::RemoveTank(int id)
 		throw GameException("multiple entries exist");
 }
 
-Tank *tanklist_check_point(TankList *tl, int x, int y, int ignored) {
+Tank* TankList::GetTankAtPoint(int x, int y, int ignored) {
 	
-	for(Tank& tank : *tl) {
-		int tx, ty;
-		if(tank.id == ignored || tank_is_dead(&tank)) continue;
+	for(Tank& tank : *this) 
+	{
+		if(tank.color == ignored || tank_is_dead(&tank)) continue;
 		
+		int tx, ty;
 		tank_get_position(&tank, &tx, &ty);
 		tx = x - tx + 3; ty = y - ty + 3;
 		if(tx < 0 || tx > 6 || ty < 0 || ty > 6) continue;
@@ -59,38 +60,39 @@ Tank *tanklist_check_point(TankList *tl, int x, int y, int ignored) {
 		if(TANK_SPRITE[ tank_get_dir(&tank) ][ty][tx])
 			return &tank;
 	}
-	return NULL;
+	return nullptr;
 }
 
 /* Note: change that vector to two int's eventually... */
-int tanklist_check_collision(TankList *tl, Vector p, int pdir, int ignored) {
-	
-	for (Tank& tank : *tl) {
-		int x, y, dir, tx, ty, lx, ly, ux, uy;
+bool TankList::CheckForCollision(Tank& tank, Position atPos, int atDirection)
+{
+	for (Tank& otherTank : *this) 
+	{
+		int x, y, lx, ly, ux, uy;
 		
-		if( tank.id == ignored || tank_is_dead(&tank) ) continue;
+		if(otherTank.color == tank.color || tank_is_dead(&otherTank) ) continue;
 		
 		/* Let's see if these two tanks are ANYWHERE near each other: */
-		tank_get_position(&tank, &x, &y);
-		if(abs(p.x-x)>6 || abs(p.y-y)>6) continue;
+		tank_get_position(&otherTank, &x, &y);
+		if(abs(atPos.x - x)>6 || abs(atPos.y - y)>6) continue;
 		
 		/* Ok, if we're here, the two tanks are real close. Now it's time for
 		 * brute-force pixel checking: */
-		dir = tank_get_dir(&tank);
+		int dir = tank_get_dir(&otherTank);
 		
 		/* Find the bounds of the two sprite's overlap: */
-		if(x<p.x) { lx=p.x-3; ux=x+3;   }
-		else      { lx=x-3;   ux=p.x+3; }
-		if(y<p.y) { ly=p.y-3; uy=y+3;   }
-		else      { ly=y-3;   uy=p.y+3; }
+		if(x< atPos.x) { lx= atPos.x-3; ux=x+3;   }
+		else	       { lx=x-3;		ux= atPos.x+3; }
+		if(y< atPos.y) { ly= atPos.y-3; uy=y+3;   }
+		else		   { ly=y-3;		uy= atPos.y+3; }
 		
 		/* Check the overlap for collisions: */
-		for(ty=ly; ty<=uy; ty++)
-			for(tx=lx; tx<=ux; tx++)
-				if(TANK_SPRITE[dir] [ty-y+3]  [tx-x+3] &&
-				   TANK_SPRITE[pdir][ty-p.y+3][tx-p.x+3])
-					return 1;
+		for(int ty = ly; ty<=uy; ty++)
+			for(int tx = lx; tx<=ux; tx++)
+				if(TANK_SPRITE[dir] [ty-y+3] [tx-x+3] &&
+				   TANK_SPRITE[atDirection][ty- atPos.y+3][tx- atPos.x+3])
+					return true;
 	}
 	
-	return 0;
+	return false;
 }

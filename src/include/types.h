@@ -9,6 +9,10 @@ typedef struct Vector {
 } Vector;
 #define VECTOR(x,y) (Vector{(x),(y)})
 
+using Position = Vector;
+using Size = Vector;
+using Speed = Vector;
+
 /* A simple struct for quads: */
 typedef struct Rect {
 	int x, y;

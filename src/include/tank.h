@@ -26,7 +26,6 @@ typedef void (*TankController)(PublicTankInfo *, void *, int *, int *, int *) ;
 struct Tank
 {
 public:
-	int id;
 	int x, y;
 	int vx, vy; /* Velocity... ie: is it moving now? */
 	int direction;
@@ -45,7 +44,7 @@ public:
 	std::shared_ptr<LevelSlice> cached_slice;
 
 	//Tank(Tank&& other);
-	Tank(int id, Level* lvl, PList* pl, int x, int y, int color);
+	Tank(int color, Level* lvl, PList* pl, int x, int y);
 	~Tank();
 
 	int get_color() const;

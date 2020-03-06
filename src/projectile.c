@@ -216,7 +216,7 @@ void plist_step(PList* pl, Level* lvl, TankList* tl) {
 
 				/* Did we hit another tank? */
 				clr = n->p.tank->get_color();
-				t = tanklist_check_point(tl, n->p.x, n->p.y, clr);
+				t = tl->GetTankAtPoint(n->p.x, n->p.y, clr);
 				if (t) {
 					/* If we have an associated tank, return the shot: */
 					tank_return_bullet(n->p.tank);

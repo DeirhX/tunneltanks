@@ -13,8 +13,8 @@
 #include <levelslice.h>
 
 
-Tank::Tank(int id, Level *lvl, PList *pl, int x, int y, int color) :
-	id(id), x(x), y(y), color(color)
+Tank::Tank(int color, Level *lvl, PList *pl, int x, int y) :
+	x(x), y(y), color(color)
 {
 	this->cached_slice.reset(level_slice_new(lvl, this));
 	
@@ -62,7 +62,7 @@ typedef enum CollisionType {
 	CT_COLLIDE  /* Hit a rock/base/tank/something we can't drive over. */
 } CollisionType;
 
-static CollisionType tank_collision(Level *lvl, int dir, int x, int y, TankList *tl, int id) {
+static CollisionType tank_collision(Level *lvl, int dir, int x, int y, TankList *tl, Tank& tank) {
 	int tx, ty;
 	CollisionType out = CT_NONE;
 	
@@ -80,7 +80,7 @@ static CollisionType tank_collision(Level *lvl, int dir, int x, int y, TankList 
 		}
 	
 	/* Tank collisions: */
-	if(tanklist_check_collision(tl, Vector{x,y}, dir, id)) return CT_COLLIDE;
+	if(tl->CheckForCollision(tank, Vector{x,y}, dir)) return CT_COLLIDE;
 	return out;
 }
 
@@ -108,7 +108,7 @@ void tank_move(Tank *t, TankList *tl) {
 		
 		int newdir = static_cast<int> ((t->vx+1) + (t->vy+1) * 3);
 		
-		ct = tank_collision(t->lvl, newdir, t->x+t->vx, t->y+t->vy, tl, t->color);
+		ct = tank_collision(t->lvl, newdir, t->x+t->vx, t->y+t->vy, tl, *t);
 		/* Now, is there room to move forward in that direction? */
 		if( ct != CT_COLLIDE ) {
 			
