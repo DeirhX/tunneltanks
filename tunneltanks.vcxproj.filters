@@ -96,8 +96,12 @@
     <ClCompile Include="src\tanksprites.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\fix.cpp" />
-    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="src\pch.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\exceptions.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\controllersdl.h">
@@ -181,6 +185,14 @@
     <ClInclude Include="src\include\types.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="pch.h" />
+    <ClInclude Include="src\pch.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\exceptions.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\iterators.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

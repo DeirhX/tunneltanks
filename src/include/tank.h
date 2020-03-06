@@ -1,5 +1,6 @@
 #ifndef _TANK_H_
 #define _TANK_H_
+#include <memory>
 
 
 typedef struct Tank Tank;
@@ -37,12 +38,13 @@ public:
 	int health, energy;
 
 	TankController controller;
-	void* controller_data;
+	std::shared_ptr<void> controller_data;
 
 	Level* lvl;
 	PList* pl;
-	LevelSlice* cached_slice;
+	std::shared_ptr<LevelSlice> cached_slice;
 
+	//Tank(Tank&& other);
 	Tank(int id, Level* lvl, PList* pl, int x, int y, int color);
 	~Tank();
 

@@ -38,19 +38,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="pch.cpp" />
     <ClCompile Include="src\aitwitch.c" />
     <ClCompile Include="src\drawbuffer.c" />
-    <ClCompile Include="src\fix.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsCpp</CompileAs>
-    </ClCompile>
+    <ClCompile Include="src\exceptions.cpp" />
     <ClCompile Include="src\game.c" />
     <ClCompile Include="src\gamelib\SDL\bitmap.c" />
     <ClCompile Include="src\gamelib\SDL\control.c" />
@@ -71,6 +61,7 @@
     <ClCompile Include="src\levelslice.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\memalloc.c" />
+    <ClCompile Include="src\pch.cpp" />
     <ClCompile Include="src\projectile.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">CompileAsCpp</CompileAs>
@@ -98,7 +89,7 @@
     <ClCompile Include="src\tanksprites.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pch.h" />
+    <ClInclude Include="src\exceptions.h" />
     <ClInclude Include="src\gamelib\SDL\controllersdl.h" />
     <ClInclude Include="src\gamelib\SDL\require_sdl.h" />
     <ClInclude Include="src\gamelib\SDL\sdldata.h" />
@@ -107,6 +98,7 @@
     <ClInclude Include="src\include\game.h" />
     <ClInclude Include="src\include\gamelib.h" />
     <ClInclude Include="src\include\guisprites.h" />
+    <ClInclude Include="src\include\iterators.h" />
     <ClInclude Include="src\include\level.h" />
     <ClInclude Include="src\include\levelgen.h" />
     <ClInclude Include="src\include\levelgenbraid.h" />
@@ -126,6 +118,7 @@
     <ClInclude Include="src\include\tanksprites.h" />
     <ClInclude Include="src\include\tweak.h" />
     <ClInclude Include="src\include\types.h" />
+    <ClInclude Include="src\pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="sdl\VisualC\SDLmain\SDLmain.vcxproj">

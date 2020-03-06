@@ -9,64 +9,74 @@
 #include <tweak.h>
 #include <tanksprites.h>
 #include <vector>
+#include <cassert>
+#include <ranges>
 
+#include "exceptions.h"
+#include <algorithm>
 
 TankList::TankList(Level *lvl, PList *pl): lvl(lvl), pl(pl)
 {
-	list.resize(MAX_TANKS);
 }
 
-TankList::~TankList() {
+TankList::~TankList()
+{
 }
 
 
 Tank* TankList::AddTank(int id, Vector p)
 {
-	if(id >= MAX_TANKS) return NULL;
-	if(this->list[id]) return NULL;
-	this->list[id] = new Tank(id, this->lvl, this->pl, p.x, p.y, id);
-	return this->list[id];
+	auto found= std::find_if(begin(), end(), [id](auto& el) { return id == el.id; });
+	if (found != list.end())
+		throw GameException("already exists");
+	
+	this->list.emplace_back(std::make_unique<Tank>(id, this->lvl, this->pl, p.x, p.y, id));
+	return this->list.back().get();
 }
 
 void TankList::RemoveTank(int id)
 {
-	if(id >= MAX_TANKS) 
-		return;
-	delete this->list[id];
-	this->list[id] = NULL;
+	auto count = list.size();
+	// Delete all with this id
+	list.erase(std::remove_if(begin(), end(), [id](auto& el) { return id == el.id; }), list.end());
+
+	if (list.size() == count)
+		throw GameException("this id doesn't exist");
+	if (list.size() != count - 1)
+		throw GameException("multiple entries exist");
 }
 
 Tank *tanklist_check_point(TankList *tl, int x, int y, int ignored) {
-	int i;
-	for(i=0; i<MAX_TANKS; i++) {
+	
+	for(Tank& tank : *tl) {
 		int tx, ty;
-		if(i==ignored || !tl->list[i] || tank_is_dead(tl->list[i])) continue;
+		if(tank.id == ignored || tank_is_dead(&tank)) continue;
 		
-		tank_get_position(tl->list[i], &tx, &ty);
+		tank_get_position(&tank, &tx, &ty);
 		tx = x - tx + 3; ty = y - ty + 3;
 		if(tx < 0 || tx > 6 || ty < 0 || ty > 6) continue;
 		
-		if(TANK_SPRITE[ tank_get_dir(tl->list[i]) ][ty][tx])
-			return tl->list[i];
+		if(TANK_SPRITE[ tank_get_dir(&tank) ][ty][tx])
+			return &tank;
 	}
 	return NULL;
 }
 
 /* Note: change that vector to two int's eventually... */
 int tanklist_check_collision(TankList *tl, Vector p, int pdir, int ignored) {
-	int i;
-	for(i=0; i<MAX_TANKS; i++) {
+	
+	for (Tank& tank : *tl) {
 		int x, y, dir, tx, ty, lx, ly, ux, uy;
 		
-		if( i==ignored || !tl->list[i] || tank_is_dead(tl->list[i]) ) continue;
+		if( tank.id == ignored || tank_is_dead(&tank) ) continue;
 		
 		/* Let's see if these two tanks are ANYWHERE near each other: */
-		tank_get_position(tl->list[i], &x, &y);
+		tank_get_position(&tank, &x, &y);
 		if(abs(p.x-x)>6 || abs(p.y-y)>6) continue;
 		
 		/* Ok, if we're here, the two tanks are real close. Now it's time for
 		 * brute-force pixel checking: */
-		dir = tank_get_dir(tl->list[i]);
+		dir = tank_get_dir(&tank);
 		
 		/* Find the bounds of the two sprite's overlap: */
 		if(x<p.x) { lx=p.x-3; ux=x+3;   }
@@ -84,10 +94,3 @@ int tanklist_check_collision(TankList *tl, Vector p, int pdir, int ignored) {
 	
 	return 0;
 }
-
-/* This shouldn't be needed, in theory, but that theory is a cruel mistress: */
-Tank *tanklist_get(TankList *tl, int id) {
-	if(id >= MAX_TANKS) return NULL;
-	return tl->list[id];
-}
-

@@ -10,12 +10,13 @@
 #include <projectile.h>
 #include <random.h>
 #include <tanklist.h>
+#include <levelslice.h>
 
 
 Tank::Tank(int id, Level *lvl, PList *pl, int x, int y, int color) :
 	id(id), x(x), y(y), color(color)
 {
-	this->cached_slice = level_slice_new(lvl, this);
+	this->cached_slice.reset(level_slice_new(lvl, this));
 	
 	/* Let's just make the starting direction random, because we can: */
 	this->direction = rand_int(0, 7);
@@ -32,11 +33,8 @@ Tank::Tank(int id, Level *lvl, PList *pl, int x, int y, int color) :
 	this->controller_data = NULL;
 }
 
-
 Tank::~Tank()
 {
-	level_slice_free(this->cached_slice);
-	free_mem(this->controller_data);
 }
 
 void tank_get_position(Tank *t, int *x, int *y) {
@@ -100,8 +98,8 @@ void tank_move(Tank *t, TankList *tl) {
 			.energy = t->energy,
 			.x      = static_cast<int>(t->x - base.x),
 			.y      = static_cast<int>(t->y - base.y),
-			.slice  = t->cached_slice};
-		t->controller(&i, t->controller_data, &t->vx, &t->vy, &t->is_shooting);
+			.slice  = t->cached_slice.get()};
+		t->controller(&i, t->controller_data.get(), &t->vx, &t->vy, &t->is_shooting);
 	}
 	
 	/* Calculate the direction: */
@@ -236,8 +234,7 @@ void tank_trigger_explosion(Tank *t) {
 void tank_set_controller(Tank *t, TankController func, void *data) {
 	t->controller = func;
 	
-	if(t->controller_data) free_mem(t->controller_data);
-	t->controller_data = data;
+	t->controller_data.reset(data);
 }
 
 int tank_is_dead(Tank *t) {
