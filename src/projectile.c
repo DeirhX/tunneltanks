@@ -221,10 +221,10 @@ void plist_step(PList* pl, Level* lvl, TankList* tl) {
 				t = tl->GetTankAtPoint(n->p.pos.x, n->p.pos.y, clr);
 				if (t) {
 					/* If we have an associated tank, return the shot: */
-					tank_return_bullet(n->p.tank);
+					n->p.tank->ReturnBullet();
 
 					/* Hurt the tank we hit: */
-					tank_alter_health(t, TANK_SHOT_DAMAGE);
+					t->AlterHealth(TANK_SHOT_DAMAGE);
 
 					/* Add all of the effect particles: */
 					plist_push_explosion(pl, n->p.pos_old.x, n->p.pos_old.y,
@@ -242,7 +242,7 @@ void plist_step(PList* pl, Level* lvl, TankList* tl) {
 				c = level_get(lvl, n->p.pos.x, n->p.pos.y);
 				if (c != BLANK) {
 					/* If we have an associated tank, return the shot: */
-					tank_return_bullet(n->p.tank);
+					n->p.tank->ReturnBullet();
 
 					/* Add all of the effect particles: */
 					plist_push_explosion(pl, n->p.pos_old.x, n->p.pos_old.y,

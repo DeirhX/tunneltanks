@@ -270,22 +270,22 @@ int game_step(void *input) {
 	}
 	
 	/* Clear everything: */
-	tanklist_map(*gd->data.active.tl, [=](Tank* t) {tank_clear(t, gd->data.active.b); });
+	for_each_tank(*gd->data.active.tl, [=](Tank* t) {t->Clear(gd->data.active.b); });
 	plist_clear (gd->data.active.pl, gd->data.active.b);
 
 	/* Charge a small bit of energy for life: */
-	tanklist_map(*gd->data.active.tl, [=](Tank* t) {tank_alter_energy(t, TANK_IDLE_COST); });
+	for_each_tank(*gd->data.active.tl, [=](Tank* t) {t->AlterEnergy(TANK_IDLE_COST); });
 
 	/* See if we need to be healed: */
-	tanklist_map(*gd->data.active.tl, [=](Tank* t) {tank_try_base_heal(t); });
+	for_each_tank(*gd->data.active.tl, [=](Tank* t) {t->TryBaseHeal(); });
 	
 	/* Move everything: */
 	plist_step  (gd->data.active.pl, gd->data.active.lvl, gd->data.active.tl);
-	tanklist_map(*gd->data.active.tl, [=](Tank* t) {tank_move(t, gd->data.active.tl); });
+	for_each_tank(*gd->data.active.tl, [=](Tank* t) {t->DoMove(gd->data.active.tl); });
 	
 	/* Draw everything: */
 	plist_draw  (gd->data.active.pl, gd->data.active.b);
-	tanklist_map(*gd->data.active.tl, [=](Tank* t) {tank_draw(t, gd->data.active.b); });
+	for_each_tank(*gd->data.active.tl, [=](Tank* t) {t->Draw(gd->data.active.b); });
 	screen_draw (gd->data.active.s);
 	
 	return 0;

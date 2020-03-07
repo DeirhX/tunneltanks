@@ -162,6 +162,6 @@ void controller_twitch_attach( Tank *t ) {
 	auto  data = std::make_shared<TwitchPrivateData>();
 	data->mode = TWITCH_START;
 	
-	tank_set_controller(t, twitch_controller, std::static_pointer_cast<void>(data));
+	t->SetController(twitch_controller, std::static_pointer_cast<void>(data));
 }
 

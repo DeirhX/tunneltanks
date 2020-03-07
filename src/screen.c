@@ -128,11 +128,10 @@ int  screen_map_y(Screen *s, int y) {
  * static was drawn: */
 static void screen_draw_static(Screen *s, Window *w) {
 	int x, y;
-	int health, energy;
+	//int health = w->t->GetHealth();
+    int energy = w->t->GetEnergy();
 	int black_counter, drawing_black;
 	
-	tank_get_stats(w->t, &energy, &health);
-
 	/* Don't do static if we have a lot of energy: */
 	if(energy > STATIC_THRESHOLD) {
 		w->counter = w->showing_static = 0;
@@ -220,10 +219,10 @@ static void screen_draw_status(Screen *s, StatusBar *b) {
 	int mid_h = (b->r.size.y % 2) ? 1u : 2u;
 	
 	/* How many pixels are filled in? */
-	int energy_filled, health_filled, half_energy_pixel;
-	half_energy_pixel = TANK_STARTING_FUEL/((b->r.size.x - STATUS_BORDER*2)*2);
+	int energy_filled = b->t->GetEnergy();
+    int health_filled = b->t->GetHealth();
+    int half_energy_pixel = TANK_STARTING_FUEL/((b->r.size.x - STATUS_BORDER*2)*2);
 	
-	tank_get_stats(b->t, &energy_filled, &health_filled);
 	energy_filled += half_energy_pixel;
 	
 	energy_filled *= (b->r.size.x - STATUS_BORDER*2);

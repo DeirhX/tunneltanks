@@ -31,7 +31,7 @@ void controller_keyboard_attach( Tank *t,
 
 	auto  data = std::make_shared<KeyboardPrivateData>(KeyboardPrivateData{ left, right, up, down, shoot });
 	
-	tank_set_controller(t, keyboard_controller, data);
+	t->SetController(keyboard_controller, data);
 }
 
 
@@ -104,6 +104,6 @@ void controller_joystick_attach( Tank *t ) {
 		exit(1);
 	}
 	
-	tank_set_controller(t, joystick_controller, data);
+	t->SetController(joystick_controller, data);
 }
 

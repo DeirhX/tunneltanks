@@ -31,7 +31,7 @@ public:
 };
 
 template <typename TFunc>
-inline void tanklist_map(TankList& tl, TFunc&& tank_func)
+inline void for_each_tank(TankList& tl, TFunc&& tank_func)
 {
 	for(auto& tank : tl)
 		tank_func(&tank);

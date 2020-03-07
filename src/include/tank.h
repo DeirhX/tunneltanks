@@ -45,27 +45,29 @@ public:
 
 	Tank(int color, Level* lvl, PList* pl, Position pos);
 	~Tank() = default;
+	void SetController(TankController func, std::shared_ptr<void> data);
 
 	[[nodiscard]] Position GetPosition() const { return this->pos; }
 	[[nodiscard]] int GetColor() const { return this->color; }
 	[[nodiscard]] int GetDirection() const { return this->direction; }
+
+	[[nodiscard]] bool IsDead() const;
+	[[nodiscard]] int GetEnergy() const { return this->energy; }
+	[[nodiscard]] int GetHealth() const { return this->health; }
+	void AlterEnergy(int diff);
+	void AlterHealth(int diff);
+
+    void DoMove(struct TankList* tl);
+	void TryBaseHeal();
+
+	void Clear(DrawBuffer* b) const;
+	void Draw(DrawBuffer* b) const;
+
+	void ReturnBullet();
+	void TriggerExplosion() const;
 };
 
-void tank_get_stats(Tank *t, int *energy, int *health) ;
-void tank_move(Tank *t, struct TankList *tl) ;
-void tank_try_base_heal(Tank *t) ;
 
-void tank_clear(Tank *t, DrawBuffer *b) ;
-void tank_draw(Tank *t, DrawBuffer *b) ;
-
-void tank_return_bullet(Tank *t) ;
-void tank_alter_energy(Tank *t, int diff) ;
-void tank_alter_health(Tank *t, int diff) ;
-void tank_trigger_explosion(Tank *t) ;
-
-void tank_set_controller(Tank *t, TankController func, std::shared_ptr<void> data) ;
-
-int tank_is_dead(Tank *t) ;
 
 #endif /* _TANK_H_ */
 
