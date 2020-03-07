@@ -12,7 +12,7 @@
 template <typename T>
 concept Invalidable = requires { { true } -> bool; };
 
-template <typename TElement>
+template <Invalidable TElement>
 class ValueContainer
 {
 	using Container = std::deque<TElement>;  // As long we grow/shrink on start/end, element references are valid forever
@@ -57,6 +57,7 @@ public:
 	void Remove(TElement& item)
 	{	// O(n) search is not really needed here. Just flag it destroyed and it will be recycled later, maybe.
 		item.Destroy();
+		Shrink();
 	}
 	void Shrink()
 	{	// Slice out dead objects on the beginning and end of deque. Don't invalidate references.
