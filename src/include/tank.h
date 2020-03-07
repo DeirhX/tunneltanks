@@ -48,6 +48,7 @@ public:
 	[[nodiscard]] int GetDirection() const { return this->direction; }
 
 	[[nodiscard]] bool IsDead() const;
+	[[nodiscard]] bool IsValid() const { return this->is_valid; } // For ValueContainer
 	[[nodiscard]] bool IsInvalid() const { return !this->is_valid; } // For ValueContainer
 	[[nodiscard]] int GetEnergy() const { return this->energy; }
 	[[nodiscard]] int GetHealth() const { return this->health; }

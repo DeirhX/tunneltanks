@@ -217,5 +217,5 @@ void Tank::SetController(TankController func, std::shared_ptr<void> data) {
 
 bool Tank::IsDead() const
 {
-	return this->health > 0;
+	return this->health <= 0;
 }

@@ -10,7 +10,8 @@
 //  to minimum.
 // Iterator and foreach support - skips over dead elements 
 template <typename T>
-concept Invalidable = requires { { true } -> bool; };
+concept Invalidable = requires(T t) { { t.IsInvalid() } -> bool;  { t.IsValid() } -> bool; }
+                   || requires(T t) { { t->IsInvalid() } -> bool; { t->IsValid() } -> bool; };
 
 template <Invalidable TElement>
 class ValueContainer
@@ -20,8 +21,8 @@ class ValueContainer
 	// Various ways to get to IsInvalid - value type vs. pointer type
 	template <typename TArgument, std::enable_if_t<std::is_class<TArgument>::value, int> = 0>
 	static bool IsInvalid(TArgument val) { return val.IsInvalid(); }
-	template <typename TArgument, std::enable_if_t<std::is_reference<TArgument>::value, int> = 0>
-	static bool IsInvalid(TArgument val) { return val.IsInvalid(); }
+	//template <typename TArgument, std::enable_if_t<std::is_reference<TArgument>::value, int> = 0>
+	//static bool IsInvalid(TArgument val) { return val.IsInvalid(); }
 	template <typename TArgument, std::enable_if_t<std::is_pointer<TArgument>::value, int> = 0>
 	static bool IsInvalid(TArgument val) { return val->IsInvalid(); }
 public:
