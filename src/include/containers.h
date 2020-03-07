@@ -12,28 +12,30 @@
 template <typename T>
 concept Invalidable = requires { { true } -> bool; };
 
-template <Invalidable TElement>
+template <typename TElement>
 class ValueContainer
 {
 	using Container = std::deque<TElement>;  // As long we grow/shrink on start/end, element references are valid forever
 
-	// Various ways to get to IsDestroyed - value type vs. pointer type
-	template <typename T, typename std::enable_if_t<!std::is_pointer<T>::value> * = 0>
-	static bool IsDestroyed(T val) { return val.IsDestroyed(); }
-	template <typename T, typename std::enable_if_t<std::is_pointer<T>::value> * = 0>
-	static bool IsDestroyed(T val) { return val->IsDestroyed(); }
-
+	// Various ways to get to IsInvalid - value type vs. pointer type
+	template <typename TArgument, std::enable_if_t<std::is_class<TArgument>::value, int> = 0>
+	static bool IsInvalid(TArgument val) { return val.IsInvalid(); }
+	template <typename TArgument, std::enable_if_t<std::is_reference<TArgument>::value, int> = 0>
+	static bool IsInvalid(TArgument val) { return val.IsInvalid(); }
+	template <typename TArgument, std::enable_if_t<std::is_pointer<TArgument>::value, int> = 0>
+	static bool IsInvalid(TArgument val) { return val->IsInvalid(); }
+public:
 	class iterator
 	{
-		Container& container;
+		Container* container;
 		typename Container::iterator it;
 	public:
-		iterator(Container& container, typename Container::iterator it) : container(container), it(it) {}
-		TElement& operator*() const { return *it; }
+		iterator(Container& container, typename Container::iterator it) : container(&container), it(it) {}
+		typename TElement& operator*() const { return *it; }
 		bool operator!= (iterator other) { return it != other.it; }
 		iterator operator++() // prefix increment
 		{	// Advance over dead elements
-			while (++it != container.end() && IsDestroyed(*it)) {};
+			while (++it != container->end() && ValueContainer::IsInvalid(*it)) {};
 			return *this;
 		}
 	};
@@ -45,7 +47,7 @@ public:
 
 	TElement& Add(TElement item)
 	{
-		auto& dead_item = std::find_if(container.begin(), container.end(), [this](auto val) { return IsDestroyed(val); });
+		auto dead_item = std::find_if(container.begin(), container.end(), [this](auto val) { return IsInvalid(val); });
 		if (dead_item != container.end()) {
 			*dead_item = item;
 			return *dead_item;
@@ -59,9 +61,9 @@ public:
 	void Shrink()
 	{	// Slice out dead objects on the beginning and end of deque. Don't invalidate references.
 		auto size_before = container.size();
-	    while (!container.empty() && ValueContainer::IsDestroyed(container.front()))
+	    while (!container.empty() && ValueContainer::IsInvalid(container.front()))
 			container.pop_front();
-		while (!container.empty() && ValueContainer::IsDestroyed(container.back()))
+		while (!container.empty() && ValueContainer::IsInvalid(container.back()))
 			container.pop_back();
 
 		if (container.size() != size_before) {
@@ -72,7 +74,7 @@ public:
 	iterator begin()
 	{	// Skip dead elements at the start
 		auto it = iterator(container, container.begin());
-		while (it != end() && IsDestroyed(*it))
+		while (it != end() && ValueContainer::IsInvalid(*it))
 			++it;
 		return it;
 	}

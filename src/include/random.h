@@ -1,4 +1,6 @@
 #pragma once
+#include <random>
+
 bool     rand_bool(int odds) ;
 void     rand_seed() ;
 
@@ -10,7 +12,7 @@ IntegerType rand_int(IntegerType min, IntegerType max) {
 
 	/* I know that using the % isn't entirely accurate, but it only uses
 	 * integers, so w/e: */
-	return (rand() % range) + min;
+	return (std::rand() % range) + min;
 }
 
 

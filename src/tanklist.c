@@ -29,21 +29,15 @@ Tank* TankList::AddTank(int color, Vector p)
 	auto found= std::find_if(begin(), end(), [color](auto& el) { return color == el.color; });
 	if (found != list.end())
 		throw GameException("already exists");
-	
-	this->list.emplace_back(std::make_unique<Tank>(color, this->lvl, this->pl, Position{p.x, p.y}));
-	return this->list.back().get();
+
+	return &this->list.Add(Tank(color, this->lvl, this->pl, Position{p.x, p.y}));
+	//return this->list.Add(std::make_unique<Tank>(color, this->lvl, this->pl, Position{p.x, p.y}));
 }
 
 void TankList::RemoveTank(int color)
 {
-	auto count = list.size();
-	// Delete all with this id
-	list.erase(std::remove_if(begin(), end(), [color](auto& el) { return color == el.color; }), list.end());
-
-	if (list.size() == count)
-		throw GameException("this id doesn't exist");
-	if (list.size() != count - 1)
-		throw GameException("multiple entries exist");
+	auto found = std::find_if(begin(), end(), [color](auto& el) { return color == el.color; });
+	(*found).Invalidate();
 }
 
 Tank* TankList::GetTankAtPoint(int x, int y, int ignored) {

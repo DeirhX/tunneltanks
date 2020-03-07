@@ -1,8 +1,13 @@
 #pragma once
 #include <memory>
-
 /* For the controllers/AIs: */
-#include <levelslice.h>
+//#include <levelslice.h>
+#include <level.h>
+#include <screen.h>
+#include <drawbuffer.h>
+#include <projectile.h>
+
+struct LevelSlice;
 
 /* Put inside a structure, so we are protected from casual AI cheating: */
 typedef struct PublicTankInfo {
@@ -13,15 +18,10 @@ typedef struct PublicTankInfo {
 
 typedef void (*TankController)(PublicTankInfo *, void *, int *, int *, int *) ;
 
-
-#include <level.h>
-#include <screen.h>
-#include <drawbuffer.h>
-#include <projectile.h>
-
 struct Tank
 {
 public:
+	bool is_valid = true;
 	Position pos;
 	Speed speed; /* Velocity... ie: is it moving now? */
 	int direction;
@@ -40,7 +40,7 @@ public:
 	std::shared_ptr<LevelSlice> cached_slice;
 
 	Tank(int color, Level* lvl, PList* pl, Position pos);
-	~Tank() = default;
+	//~Tank() = default;
 	void SetController(TankController func, std::shared_ptr<void> data);
 
 	[[nodiscard]] Position GetPosition() const { return this->pos; }
@@ -48,9 +48,10 @@ public:
 	[[nodiscard]] int GetDirection() const { return this->direction; }
 
 	[[nodiscard]] bool IsDead() const;
-	[[nodiscard]] bool IsInvalid() const { return true; } // For ValueContainer
+	[[nodiscard]] bool IsInvalid() const { return !this->is_valid; } // For ValueContainer
 	[[nodiscard]] int GetEnergy() const { return this->energy; }
 	[[nodiscard]] int GetHealth() const { return this->health; }
+	void Invalidate() { this->is_valid = false; }
     void AlterEnergy(int diff);
 	void AlterHealth(int diff);
 

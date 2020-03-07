@@ -5,6 +5,7 @@
 #include <memalloc.h>
 #include <random.h>
 #include <tweak.h>
+#include "levelslice.h"
 
 
 /* Used when seeking a base entrance: */
