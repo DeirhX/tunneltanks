@@ -7,9 +7,9 @@
 
 
 typedef struct LevelGenerator {
-	char              *id;
+	const char         *id;
 	LevelGeneratorFunc gen;
-	char              *desc;
+	const char         *desc;
 } LevelGenerator;
 #define LEVEL_GENERATOR(id, gen, desc) {(id), (gen), (desc)}
 
@@ -46,7 +46,7 @@ LevelGenerator GENERATOR_LIST[] =
 
 /* Linear search is ok here, since there aren't many level generators: */
 
-void generate_level(Level *lvl, char *id) {
+void generate_level(Level *lvl, const char *id) {
 	LevelGeneratorFunc func = NULL;
 	int i;
 	clock_t t;

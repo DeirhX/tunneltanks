@@ -9,7 +9,7 @@
 typedef void (*LevelGeneratorFunc)(Level *lvl);
 
 /* Generate a level based on an id: */
-void generate_level(Level *lvl, char *id) ;
+void generate_level(Level *lvl, const char *id) ;
 void print_levels(FILE *out) ;
 
 #endif /* _CAVEGEN_H_ */

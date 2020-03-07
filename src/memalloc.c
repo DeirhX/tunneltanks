@@ -10,7 +10,7 @@
 	static int __TOTAL_MEMORY_ALLOCATED = 0;
 	static int __MAX_MEMORY_ALLOCATED = 0;
 
-	void *__get_mem(int ammount, char *file, int line) {
+	void *__get_mem(int ammount, const char *file, int line) {
 		int *out = (int *) malloc(ammount + sizeof(int));
 		if(!out) {
 			gamelib_error("%s(%u): ", file, line);

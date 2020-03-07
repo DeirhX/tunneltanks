@@ -36,7 +36,7 @@ typedef enum BaseCollision {
 BaseCollision level_check_base_collision(Level *lvl, int x, int y, int color) ;
 
 /* Dumps a decorated level into a color bmp file: */
-void level_dump_bmp(Level *lvl, char *filename) ;
+void level_dump_bmp(Level *lvl, const char *filename) ;
 
 #endif /* _LEVEL_H_ */
 

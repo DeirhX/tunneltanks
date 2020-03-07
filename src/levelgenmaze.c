@@ -4,8 +4,8 @@
 #include <level_defn.h>
 #include <levelgenutil.h>
 #include <memalloc.h>
-#include <queue.h>
 #include <random.h>
+#include <queue>
 
 namespace levelgen::maze {
 
@@ -72,9 +72,7 @@ static void move_dir(Dir d, int *x, int *y) {
 /* TODO: Use a vector to store the x/y values? */
 static void maze_populate(Maze *m) {
 	int i, x, y;
-	Queue *q;
-	
-	q = queue_new(64);
+	auto queue = std::deque<Vector>(64);
 	
 	/* Quickly go through the maze, and add in all the walls: */
 	for(i=0; i<m->w * m->h; i++) {
@@ -92,8 +90,9 @@ static void maze_populate(Maze *m) {
 		m->data[y*m->w+x].used = 1;
 		
 		/* Find somewhere to continue from, backtracking if needed: */
-		while((d = pick_dir(m, x, y)) == DIR_INVALID && queue_length(q) != 0) {
-			Vector vv = queue_pop(q);
+		while((d = pick_dir(m, x, y)) == DIR_INVALID && !queue.empty()) {
+			Vector vv = queue.front();
+			queue.pop_front();
 			x = vv.x; y = vv.y;
 		}
 		
@@ -102,12 +101,11 @@ static void maze_populate(Maze *m) {
 		
 		/* Else, let's move: */
 		Vector v = Vector(x, y);
-		queue_enqueue(q, v);
+		queue.push_back(v);
 		remove_wall(m, d, x, y);
 		move_dir(d, &x, &y);
 	} while(1);
-	
-	queue_destroy(q);
+
 }
 
 /*

@@ -8,9 +8,9 @@
 #include <level.h>
 #include <memalloc.h>
 #include <random.h>
-#include <queue.h>
 
 #include <level_defn.h>
+#include <deque>
 
 namespace levelgen::toast {
 
@@ -137,29 +137,30 @@ static void set_outside(Level *lvl, char val) {
 	for(i=1; i<h-1; i++) lvl->array[i*w + w - 1] = val;
 }
 
-static void expand_init(Level *lvl, Queue *q) {
+static void expand_init(Level *lvl, std::deque<Vector>& q) {
 	int x, y;
 	
 	for(y=1; y<lvl->height-1; y++)
 		for(x=1; x<lvl->width-1; x++)
 			if(lvl->array[y*lvl->width+x] && has_neighbor(lvl, x, y)) {
 				lvl->array[y*lvl->width+x] = 2;
-				queue_enqueue(q, Vector{x,y});
+				q.emplace_back(x,y);
 			}
 }
 
 #define MIN2(a,b)   ((a<b) ? a : b)
 #define MIN3(a,b,c) ((a<b) ? a : (b<c) ? b : c)
-static int expand_once(Level *lvl, Queue *q) {
+static int expand_once(Level *lvl, std::deque<Vector>& q) {
 	Vector temp;
 	int i, j, total, count = 0;
 	
-	total = queue_length(q);
+	total = q.size();
 	for(i=0; i<total; i++) {
 		int xodds, yodds, odds;
 		
-		temp = queue_dequeue(q);
-		
+		temp = q.front();
+		q.pop_front();
+
 		xodds = ODDS * MIN2(lvl->width - temp.x,  temp.x) / FILTER;
 		yodds = ODDS * MIN2(lvl->height - temp.y, temp.y) / FILTER;
 		odds  = MIN3(xodds, yodds, ODDS);
@@ -179,12 +180,11 @@ static int expand_once(Level *lvl, Queue *q) {
 				c = &lvl->array[ty*lvl->width + tx];
 				if(*c == 1) {
 					*c = 2;
-					Vector v{ tx, ty };
-					queue_enqueue(q, v);
+					q.emplace_back(Vector{ tx, ty });
 				}
 			}
 		} else
-			queue_enqueue(q, temp);
+			q.emplace_back(temp);
 	}
 	return count;
 }
@@ -199,17 +199,14 @@ static void expand_cleanup(Level *lvl) {
 
 static void randomly_expand(Level *lvl) {
 	int cur = 0, goal = lvl->width * lvl->height * FILLRATIO / 100;
-	Queue *q;
 	
 	/* Experimentally, the queue never grew to larger than 3/50ths of the level
 	 * size, so we can use that to save quite a bit of memory: */
-	q = queue_new(lvl->width * lvl->height * 3 / 50);
+	auto queue = std::deque<Vector>(lvl->width * lvl->height * 3 / 50);
 	
-	expand_init(lvl, q);
-	while( (cur += expand_once(lvl, q)) < goal );
+	expand_init(lvl, queue);
+	while( (cur += expand_once(lvl, queue)) < goal );
 	expand_cleanup(lvl);
-	
-	queue_destroy(q);
 }
 
 

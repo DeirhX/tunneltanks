@@ -78,9 +78,6 @@
     <ClCompile Include="src\projectile.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\queue.c">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\random.c">
       <Filter>src</Filter>
     </ClCompile>
@@ -161,9 +158,6 @@
     <ClInclude Include="src\include\projectile.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\include\queue.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\include\random.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -192,6 +186,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\include\iterators.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\containers.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

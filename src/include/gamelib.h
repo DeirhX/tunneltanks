@@ -60,12 +60,12 @@ int  gamelib_draw_box(Rect *rect, Color c) ;
 typedef struct BMPFile BMPFile;
 BMPFile *gamelib_bmp_new      (int width, int height) ;
 void     gamelib_bmp_set_pixel(BMPFile *f, int x, int y, Color c) ;
-void     gamelib_bmp_finalize (BMPFile *f, char *filename) ;
+void     gamelib_bmp_finalize (BMPFile *f, const char *filename) ;
 
 /* A few outputting commands: */
-void     gamelib_print (char *str, ...) ;
-void     gamelib_debug (char *str, ...) ;
-void     gamelib_error (char *str, ...) ;
+void     gamelib_print (const char *str, ...) ;
+void     gamelib_debug (const char *str, ...) ;
+void     gamelib_error (const char *str, ...) ;
 
 /* Gamelib needs to be able to tell the outside that it needs a control GUI: */
 Rect     gamelib_gui_get_size() ;

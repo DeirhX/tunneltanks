@@ -41,7 +41,7 @@ void gamelib_bmp_set_pixel(BMPFile *f, int x, int y, Color c) {
 	if(SDL_MUSTLOCK(f->s)) SDL_UnlockSurface(f->s);	
 }
 
-void gamelib_bmp_finalize(BMPFile *f, char *filename) {
+void gamelib_bmp_finalize(BMPFile *f, const char *filename) {
 	/* It's just save... */
 	SDL_SaveBMP(f->s, filename);
 	

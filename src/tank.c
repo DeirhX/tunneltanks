@@ -95,11 +95,9 @@ void Tank::DoMove(TankList *tl) {
 			/* If so, then we can move: */
 			if( ct == CT_DIRT ) {
 				level_dig_hole(this->lvl, this->pos.x+this->speed.x, this->pos.y+this->speed.y);
-				if(this->is_shooting) goto shooting_speedup;
-			
-			} else {
-				
-shooting_speedup:				
+			}
+			if (ct != CT_DIRT || this->is_shooting)
+            {
 				/* We will only move/rotate if we were able to get here without
 				 * digging, so we can avoid certain bizarre bugs: */
 				this->direction = newdir;

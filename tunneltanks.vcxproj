@@ -72,7 +72,6 @@
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">CompileAsCpp</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsCpp</CompileAs>
     </ClCompile>
-    <ClCompile Include="src\queue.c" />
     <ClCompile Include="src\random.c" />
     <ClCompile Include="src\screen.c" />
     <ClCompile Include="src\tank.c">
@@ -93,6 +92,7 @@
     <ClInclude Include="src\gamelib\SDL\controllersdl.h" />
     <ClInclude Include="src\gamelib\SDL\require_sdl.h" />
     <ClInclude Include="src\gamelib\SDL\sdldata.h" />
+    <ClInclude Include="src\include\containers.h" />
     <ClInclude Include="src\include\controller.h" />
     <ClInclude Include="src\include\drawbuffer.h" />
     <ClInclude Include="src\include\game.h" />
@@ -110,7 +110,6 @@
     <ClInclude Include="src\include\level_defn.h" />
     <ClInclude Include="src\include\memalloc.h" />
     <ClInclude Include="src\include\projectile.h" />
-    <ClInclude Include="src\include\queue.h" />
     <ClInclude Include="src\include\random.h" />
     <ClInclude Include="src\include\screen.h" />
     <ClInclude Include="src\include\tank.h" />
@@ -272,7 +271,6 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <AdditionalOptions>%(AdditionalOptions) -g -ansi -O3</AdditionalOptions>
-      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <CompileAs>CompileAsCpp</CompileAs>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -283,10 +281,13 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>USE_SDL_GAMELIB; _CRT_SECURE_NO_WARNINGS;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <PreprocessorDefinitions>USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_AMD64_;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DisableSpecificWarnings>5045;4514;4820;4706;4100</DisableSpecificWarnings>
+      <ConformanceMode>true</ConformanceMode>
+      <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <EnableModules>true</EnableModules>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_DEBUG;USE_SDL_GAMELIB;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -328,9 +329,13 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>USE_SDL_GAMELIB; _CRT_SECURE_NO_WARNINGS;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_X86_;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DisableSpecificWarnings>5045;4514;4820;4706;4100</DisableSpecificWarnings>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <ConformanceMode>true</ConformanceMode>
+      <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
+      <EnableModules>true</EnableModules>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_DEBUG;USE_SDL_GAMELIB;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -361,7 +366,6 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalOptions>%(AdditionalOptions) -g -ansi -O3</AdditionalOptions>
-      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -370,12 +374,15 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>USE_SDL_GAMELIB; _CRT_SECURE_NO_WARNINGS;NDEBUG;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <PreprocessorDefinitions>USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_AMD64_;NDEBUG;CMAKE_INTDIR="Release";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>
       </DebugInformationFormat>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DisableSpecificWarnings>5045;4514;4820;4706;4100</DisableSpecificWarnings>
+      <ConformanceMode>true</ConformanceMode>
+      <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <EnableModules>true</EnableModules>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;USE_SDL_GAMELIB;NDEBUG;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -415,11 +422,15 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>USE_SDL_GAMELIB; _CRT_SECURE_NO_WARNINGS;NDEBUG;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_X86_;NDEBUG;CMAKE_INTDIR="Release";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>
       </DebugInformationFormat>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DisableSpecificWarnings>5045;4514;4820;4706;4100</DisableSpecificWarnings>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <ConformanceMode>true</ConformanceMode>
+      <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
+      <EnableModules>true</EnableModules>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;USE_SDL_GAMELIB;NDEBUG;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -450,7 +461,6 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
     <ClCompile>
       <AdditionalOptions>%(AdditionalOptions) -g -ansi -O3</AdditionalOptions>
-      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
@@ -459,12 +469,15 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>USE_SDL_GAMELIB; _CRT_SECURE_NO_WARNINGS;NDEBUG;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <PreprocessorDefinitions>USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_AMD64_;NDEBUG;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>
       </DebugInformationFormat>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DisableSpecificWarnings>5045;4514;4820;4706;4100</DisableSpecificWarnings>
+      <ConformanceMode>true</ConformanceMode>
+      <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <EnableModules>true</EnableModules>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;USE_SDL_GAMELIB;NDEBUG;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -504,11 +517,15 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>USE_SDL_GAMELIB; _CRT_SECURE_NO_WARNINGS;NDEBUG;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_X86_;NDEBUG;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>
       </DebugInformationFormat>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DisableSpecificWarnings>5045;4514;4820;4706;4100</DisableSpecificWarnings>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <ConformanceMode>true</ConformanceMode>
+      <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
+      <EnableModules>true</EnableModules>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;USE_SDL_GAMELIB;NDEBUG;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -539,7 +556,6 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <ClCompile>
       <AdditionalOptions>%(AdditionalOptions) -g -ansi -O3</AdditionalOptions>
-      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -549,10 +565,13 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>USE_SDL_GAMELIB; _CRT_SECURE_NO_WARNINGS;NDEBUG;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <PreprocessorDefinitions>USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_AMD64_;NDEBUG;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DisableSpecificWarnings>5045;4514;4820;4706;4100</DisableSpecificWarnings>
+      <ConformanceMode>true</ConformanceMode>
+      <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <EnableModules>true</EnableModules>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;USE_SDL_GAMELIB;NDEBUG;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -593,9 +612,13 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>USE_SDL_GAMELIB; _CRT_SECURE_NO_WARNINGS;NDEBUG;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_X86_;NDEBUG;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DisableSpecificWarnings>5045;4514;4820;4706;4100</DisableSpecificWarnings>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <ConformanceMode>true</ConformanceMode>
+      <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
+      <EnableModules>true</EnableModules>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;USE_SDL_GAMELIB;NDEBUG;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>

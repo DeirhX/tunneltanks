@@ -1,7 +1,8 @@
 #ifndef _SCREEN_H_
 #define _SCREEN_H_
 
-typedef struct Screen Screen;
+struct Screen;
+struct Tank;
 
 #include <level.h>
 #include <types.h>

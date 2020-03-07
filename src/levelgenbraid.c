@@ -4,7 +4,7 @@
 #include <level_defn.h>
 #include <levelgenutil.h>
 #include <memalloc.h>
-#include <queue.h>
+#include <queue>
 #include <random.h>
 
 namespace levelgen::braid

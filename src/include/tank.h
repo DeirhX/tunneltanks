@@ -2,9 +2,6 @@
 #define _TANK_H_
 #include <memory>
 
-
-typedef struct Tank Tank;
-
 /* For the controllers/AIs: */
 #include <levelslice.h>
 
@@ -52,9 +49,10 @@ public:
 	[[nodiscard]] int GetDirection() const { return this->direction; }
 
 	[[nodiscard]] bool IsDead() const;
+	[[nodiscard]] bool IsInvalid() const { return true; } // For ValueContainer
 	[[nodiscard]] int GetEnergy() const { return this->energy; }
 	[[nodiscard]] int GetHealth() const { return this->health; }
-	void AlterEnergy(int diff);
+    void AlterEnergy(int diff);
 	void AlterHealth(int diff);
 
     void DoMove(struct TankList* tl);

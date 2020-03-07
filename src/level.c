@@ -165,13 +165,13 @@ BaseCollision level_check_base_collision(Level *lvl, int x, int y, int color) {
 
 
 /* Dumps a level into a BMP file: */
-void level_dump_bmp(Level *lvl, char *filename) {
+void level_dump_bmp(Level *lvl, const char *filename) {
 	int x, y;
 	BMPFile *f = gamelib_bmp_new(lvl->width, lvl->height);
 	
 	for(y=0; y<lvl->height; y++)
 		for(x=0; x<lvl->width; x++) {
-			Color color = COLOR(0,0,0);
+			Color color = Color(0,0,0);
 			
 			char val = lvl->array[y*lvl->width + x];
 			
