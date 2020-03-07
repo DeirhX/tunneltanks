@@ -101,7 +101,7 @@ static void maze_populate(Maze *m) {
 		if(d == DIR_INVALID) break;
 		
 		/* Else, let's move: */
-		Vector v = VECTOR(x, y);
+		Vector v = Vector(x, y);
 		queue_enqueue(q, v);
 		remove_wall(m, d, x, y);
 		move_dir(d, &x, &y);
@@ -171,18 +171,18 @@ void maze_generator(Level *lvl) {
 			Cell c = m->data[y*m->w+x];
 			if(c.up)
 				draw_line(lvl,
-					VECTOR(x*CELL_SIZE,     y*CELL_SIZE), 
-					VECTOR((x+1)*CELL_SIZE, y*CELL_SIZE), 0, 1);
+					Vector(x*CELL_SIZE,     y*CELL_SIZE), 
+					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), 0, 1);
 			
 			if(c.right)
 				draw_line(lvl,
-					VECTOR((x+1)*CELL_SIZE, y*CELL_SIZE), 
-					VECTOR((x+1)*CELL_SIZE, (y+1)*CELL_SIZE), 0, 1);
+					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), 
+					Vector((x+1)*CELL_SIZE, (y+1)*CELL_SIZE), 0, 1);
 		}
 	}
 	
 	/* Draw a line up the left, so you can see the texture there too: */
-	draw_line(lvl, VECTOR(0,0), VECTOR(0,m->h*CELL_SIZE), 0, 1);
+	draw_line(lvl, Vector(0,0), Vector(0,m->h*CELL_SIZE), 0, 1);
 	
 	/* Fill in the unused space left behind on the right/bottom: */
 	/* TODO: Have a fill_box() in levelgenutil.c? */
@@ -214,7 +214,7 @@ void maze_generator(Level *lvl) {
 					m->data[(y+ty)*m->w+(x+tx)].used = 1;
 		
 		/* Now, add it to the level: */
-		lvl->spawn[i] = VECTOR(
+		lvl->spawn[i] = Vector(
 			x * CELL_SIZE + CELL_SIZE/2,
 			y * CELL_SIZE + CELL_SIZE/2
 		);

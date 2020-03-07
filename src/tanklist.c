@@ -30,7 +30,7 @@ Tank* TankList::AddTank(int color, Vector p)
 	if (found != list.end())
 		throw GameException("already exists");
 	
-	this->list.emplace_back(std::make_unique<Tank>(color, this->lvl, this->pl, p.x, p.y));
+	this->list.emplace_back(std::make_unique<Tank>(color, this->lvl, this->pl, Position{p.x, p.y}));
 	return this->list.back().get();
 }
 
@@ -52,45 +52,44 @@ Tank* TankList::GetTankAtPoint(int x, int y, int ignored) {
 	{
 		if(tank.color == ignored || tank_is_dead(&tank)) continue;
 		
-		int tx, ty;
-		tank_get_position(&tank, &tx, &ty);
-		tx = x - tx + 3; ty = y - ty + 3;
-		if(tx < 0 || tx > 6 || ty < 0 || ty > 6) continue;
+		Position pos = tank.GetPosition();
+		pos.x = x - pos.x + 3; pos.y = y - pos.y + 3;
+		if(pos.x < 0 || pos.x > 6 || pos.y < 0 || pos.y > 6) continue;
 		
-		if(TANK_SPRITE[ tank_get_dir(&tank) ][ty][tx])
+		if(TANK_SPRITE[ tank.GetDirection() ][pos.y][pos.x])
 			return &tank;
 	}
 	return nullptr;
 }
 
 /* Note: change that vector to two int's eventually... */
-bool TankList::CheckForCollision(Tank& tank, Position atPos, int atDirection)
+bool TankList::CheckForCollision(Tank& tank, Position testPos, int testDirection)
 {
 	for (Tank& otherTank : *this) 
 	{
-		int x, y, lx, ly, ux, uy;
+		int lx, ly, ux, uy;
 		
 		if(otherTank.color == tank.color || tank_is_dead(&otherTank) ) continue;
 		
 		/* Let's see if these two tanks are ANYWHERE near each other: */
-		tank_get_position(&otherTank, &x, &y);
-		if(abs(atPos.x - x)>6 || abs(atPos.y - y)>6) continue;
+		Position pos = otherTank.GetPosition();
+		if(abs(testPos.x - pos.x)>6 || abs(testPos.y - pos.y)>6) continue;
 		
 		/* Ok, if we're here, the two tanks are real close. Now it's time for
 		 * brute-force pixel checking: */
-		int dir = tank_get_dir(&otherTank);
+		int dir = otherTank.GetDirection();
 		
 		/* Find the bounds of the two sprite's overlap: */
-		if(x< atPos.x) { lx= atPos.x-3; ux=x+3;   }
-		else	       { lx=x-3;		ux= atPos.x+3; }
-		if(y< atPos.y) { ly= atPos.y-3; uy=y+3;   }
-		else		   { ly=y-3;		uy= atPos.y+3; }
+		if(pos.x< testPos.x) { lx= testPos.x-3; ux= pos.x+3;   }
+		else	       { lx= pos.x-3;		ux= testPos.x+3; }
+		if(pos.y< testPos.y) { ly= testPos.y-3; uy= pos.y+3;   }
+		else		   { ly= pos.y-3;		uy= testPos.y+3; }
 		
 		/* Check the overlap for collisions: */
 		for(int ty = ly; ty<=uy; ty++)
 			for(int tx = lx; tx<=ux; tx++)
-				if(TANK_SPRITE[dir] [ty-y+3] [tx-x+3] &&
-				   TANK_SPRITE[atDirection][ty- atPos.y+3][tx- atPos.x+3])
+				if(TANK_SPRITE[dir] [ty- pos.y+3] [tx- pos.x+3] &&
+				   TANK_SPRITE[testDirection][ty- testPos.y+3][tx- testPos.x+3])
 					return true;
 	}
 	

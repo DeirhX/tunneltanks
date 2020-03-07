@@ -26,8 +26,8 @@ typedef void (*TankController)(PublicTankInfo *, void *, int *, int *, int *) ;
 struct Tank
 {
 public:
-	int x, y;
-	int vx, vy; /* Velocity... ie: is it moving now? */
+	Position pos;
+	Speed speed; /* Velocity... ie: is it moving now? */
 	int direction;
 
 	int color;
@@ -43,16 +43,15 @@ public:
 	PList* pl;
 	std::shared_ptr<LevelSlice> cached_slice;
 
-	//Tank(Tank&& other);
-	Tank(int color, Level* lvl, PList* pl, int x, int y);
+	Tank(int color, Level* lvl, PList* pl, Position pos);
 	~Tank() = default;
 
-	int get_color() const;
+	[[nodiscard]] Position GetPosition() const { return this->pos; }
+	[[nodiscard]] int GetColor() const { return this->color; }
+	[[nodiscard]] int GetDirection() const { return this->direction; }
 };
 
-int tank_get_dir(Tank *t) ;
 void tank_get_stats(Tank *t, int *energy, int *health) ;
-void tank_get_position(Tank *t, int *x, int *y) ;
 void tank_move(Tank *t, struct TankList *tl) ;
 void tank_try_base_heal(Tank *t) ;
 

@@ -16,13 +16,12 @@ struct LevelSlice {
 
 
 LevelSliceQuery level_slice_query_point(LevelSlice *ls, int x, int y) {
-	int tx, ty;
 	char c;
-	
-	tank_get_position(ls->t, &tx, &ty);
+
+	Position pos = ls->t->GetPosition();
 	
 	if(abs(x) >= LS_WIDTH/2 || abs(y) >= LS_HEIGHT/2) return LSQ_OUT_OF_BOUNDS;
-	c = level_get(ls->lvl, tx+x, ty+y);
+	c = level_get(ls->lvl, pos.x+x, pos.y+y);
 
 	if(c==DIRT_HI || c==DIRT_LO || c==BLANK) return LSQ_OPEN;
 	return LSQ_COLLIDE;
@@ -48,13 +47,13 @@ LevelSliceQuery level_slice_query_circle(LevelSlice *ls, int x, int y) {
 
 
 void level_slice_copy(LevelSlice *ls, LevelSliceCopy *lsc) {
-	int tx, ty;
+	
 	int x, y;
 	
-	tank_get_position(ls->t, &tx, &ty);
+	Position pos = ls->t->GetPosition();
 	
 	for(y=-LS_HEIGHT/2; y<=LS_HEIGHT/2; y++)
 		for(x=-LS_WIDTH/2; x<=LS_WIDTH/2; x++)
-			lsc->data[y*LS_WIDTH+x] = level_get(ls->lvl, tx+x, ty+y);
+			lsc->data[y*LS_WIDTH+x] = level_get(ls->lvl, pos.x+x, pos.y+y);
 }
 

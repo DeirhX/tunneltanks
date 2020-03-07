@@ -13,8 +13,8 @@
 #include <levelslice.h>
 
 
-Tank::Tank(int color, Level *lvl, PList *pl, int x, int y) :
-	x(x), y(y), color(color)
+Tank::Tank(int color, Level *lvl, PList *pl, Position pos) :
+	pos(pos), color(color)
 {
 	this->cached_slice = std::make_shared<LevelSlice>(this, lvl);
 	
@@ -22,7 +22,7 @@ Tank::Tank(int color, Level *lvl, PList *pl, int x, int y) :
 	this->direction = rand_int(0, 7);
 	if(this->direction >= 4) this->direction ++;
 	
-	this->vx = this->vy = 0; this->lvl = lvl; this->pl = pl;
+	this->lvl = lvl; this->pl = pl;
 	 
 	this->bullet_timer = TANK_BULLET_DELAY;
 	this->bullets_left = TANK_BULLET_MAX;
@@ -33,20 +33,9 @@ Tank::Tank(int color, Level *lvl, PList *pl, int x, int y) :
 	this->controller_data = NULL;
 }
 
-void tank_get_position(Tank *t, int *x, int *y) {
-	*x = t->x; *y = t->y;
-}
 
 void tank_get_stats(Tank *t, int *energy, int *health) {
 	*energy = t->energy; *health = t->health;
-}
-
-int tank_get_dir(Tank *t) {
-	return t->direction;
-}
-
-int Tank::get_color() const {
-	return this->color;
 }
 
 /* We don't use the Tank structure in this function, since we are checking the
@@ -92,25 +81,25 @@ void tank_move(Tank *t, TankList *tl) {
 		PublicTankInfo i = {
 			.health = t->health,
 			.energy = t->energy,
-			.x      = static_cast<int>(t->x - base.x),
-			.y      = static_cast<int>(t->y - base.y),
+			.x      = static_cast<int>(t->pos.x - base.x),
+			.y      = static_cast<int>(t->pos.y - base.y),
 			.slice  = t->cached_slice.get()};
-		t->controller(&i, t->controller_data.get(), &t->vx, &t->vy, &t->is_shooting);
+		t->controller(&i, t->controller_data.get(), &t->speed.x, &t->speed.y, &t->is_shooting);
 	}
 	
 	/* Calculate the direction: */
-	if(t->vx != 0 || t->vy != 0) {
+	if(t->speed.x != 0 || t->speed.y != 0) {
 		CollisionType ct;
 		
-		int newdir = static_cast<int> ((t->vx+1) + (t->vy+1) * 3);
+		int newdir = static_cast<int> ((t->speed.x+1) + (t->speed.y+1) * 3);
 		
-		ct = tank_collision(t->lvl, newdir, t->x+t->vx, t->y+t->vy, tl, *t);
+		ct = tank_collision(t->lvl, newdir, t->pos.x+t->speed.x, t->pos.y+t->speed.y, tl, *t);
 		/* Now, is there room to move forward in that direction? */
 		if( ct != CT_COLLIDE ) {
 			
 			/* If so, then we can move: */
 			if( ct == CT_DIRT ) {
-				level_dig_hole(t->lvl, t->x+t->vx, t->y+t->vy);
+				level_dig_hole(t->lvl, t->pos.x+t->speed.x, t->pos.y+t->speed.y);
 				if(t->is_shooting) goto shooting_speedup;
 			
 			} else {
@@ -119,7 +108,7 @@ shooting_speedup:
 				/* We will only move/rotate if we were able to get here without
 				 * digging, so we can avoid certain bizarre bugs: */
 				t->direction = newdir;
-				t->x += t->vx; t->y += t->vy;
+				t->pos.x += t->speed.x; t->pos.y += t->speed.y;
 
 				/* Well, we moved, so let's charge ourselves: */
 				tank_alter_energy(t, TANK_MOVE_COST);
@@ -146,7 +135,7 @@ shooting_speedup:
 void tank_try_base_heal(Tank *t) {
 	BaseCollision c;
 
-	c = level_check_base_collision(t->lvl, t->x, t->y, t->color);
+	c = level_check_base_collision(t->lvl, t->pos.x, t->pos.y, t->color);
 	if(c == BASE_COLLISION_YOURS) {
 		tank_alter_energy(t, TANK_HOME_CHARGE);
 		tank_alter_health(t, TANK_HOME_HEAL);
@@ -164,7 +153,7 @@ void tank_draw(Tank *t, DrawBuffer *b) {
 		for(x=0; x<7; x++) {
 			char val = TANK_SPRITE[t->direction][y][x];
 			if(val)
-				drawbuffer_set_pixel(b, t->x + x-3, t->y + y-3, color_tank[t->color][val-1]);
+				drawbuffer_set_pixel(b, t->pos.x + x-3, t->pos.y + y-3, color_tank[t->color][val-1]);
 		}
 }
 
@@ -176,7 +165,7 @@ void tank_clear(Tank *t, DrawBuffer *b) {
 	for(y=0; y<7; y++)
 		for(x=0; x<7; x++)
 			if(TANK_SPRITE[t->direction][y][x])
-				drawbuffer_set_pixel(b, t->x + x-3, t->y + y-3, color_blank);
+				drawbuffer_set_pixel(b, t->pos.x + x-3, t->pos.y + y-3, color_blank);
 }
 
 void tank_return_bullet(Tank *t) {
@@ -219,7 +208,7 @@ void tank_alter_health(Tank *t, int diff) {
 
 void tank_trigger_explosion(Tank *t) {
 	plist_push_explosion(t->pl,
-		t->x, t->y,
+		t->pos.x, t->pos.y,
 		EXPLOSION_DEATH_COUNT,
 		EXPLOSION_DEATH_RADIUS,
 		EXPLOSION_DEATH_TTL

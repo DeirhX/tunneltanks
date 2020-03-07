@@ -81,8 +81,8 @@ static void fill_background() {
 	dim = gamelib_get_resolution();
 	
 	gamelib_draw_box(NULL, color_bg);
-	for(y=0; y<dim.h; y++) {
-		for(x=(y%2)*2; x<dim.w; x+=4) {
+	for(y=0; y<dim.size.y; y++) {
+		for(x=(y%2)*2; x<dim.size.x; x+=4) {
 			Rect r = {(int)x, (int)y, 1, 1};
 			gamelib_draw_box(&r, color_bg_dot);
 		}
@@ -102,7 +102,7 @@ void screen_draw_pixel(Screen *s, int x, int y, Color color) {
 	w = s->pixelw + (xs!=((x+1)*s->xskips/GAME_WIDTH));
 	h = s->pixelh + (ys!=((y+1)*s->yskips/GAME_HEIGHT));
 	
-	r = RECT(static_cast<int>(x), static_cast<int>(y),w, h);
+	r = Rect(static_cast<int>(x), static_cast<int>(y),w, h);
 	gamelib_draw_box(&r, color);
 }
 
@@ -148,7 +148,7 @@ static void screen_draw_static(Screen *s, Window *w) {
 	
 	if(!w->showing_static) return;
 
-#define _BLACK_BAR_RAND rand_int(1, w->r.w*w->r.h * STATIC_BLACK_BAR_SIZE/1000)
+#define _BLACK_BAR_RAND rand_int(1, w->r.size.x*w->r.size.y * STATIC_BLACK_BAR_SIZE/1000)
 #define _RAND_COLOR     color_primary[rand_int(0,7)]
 
 	/* Should we draw a black bar in the image? */
@@ -156,12 +156,12 @@ static void screen_draw_static(Screen *s, Window *w) {
 	drawing_black = black_counter && rand_bool(STATIC_BLACK_BAR_ODDS);
 	
 	/* Develop a static thing image for the window: */
-	for(y=0; y<w->r.h; y++)
-		for(x=0; x<w->r.w; x++) {
+	for(y=0; y<w->r.size.y; y++)
+		for(x=0; x<w->r.size.x; x++) {
 			Color color;
 
 			if(!energy) {
-				screen_draw_pixel(s, x + w->r.x, y + w->r.y, _RAND_COLOR);
+				screen_draw_pixel(s, x + w->r.pos.x, y + w->r.pos.y, _RAND_COLOR);
 				continue;
 			}
 
@@ -179,7 +179,7 @@ static void screen_draw_static(Screen *s, Window *w) {
 
 			/* Finally, select a color (either black or random) and draw: */
 			color = drawing_black ? color_blank : _RAND_COLOR;
-			screen_draw_pixel(s, x + w->r.x, y + w->r.y, color);
+			screen_draw_pixel(s, x + w->r.pos.x, y + w->r.pos.y, color);
 		}
 
 	return;
@@ -192,14 +192,13 @@ static void screen_draw_static(Screen *s, Window *w) {
 static void screen_draw_window(Screen *s, Window *w) {
 	DrawBuffer *b = s->drawing.level.b;
 	int x, y;
-	int tx, ty;
 
-	tank_get_position(w->t, &tx, &ty);
+	Position pos = w->t->GetPosition();
 	
-	for(y=0; y < w->r.h; y++) {
-		for(x=0; x < w->r.w; x++) {
-			int screenx = x + w->r.x, screeny = y + w->r.y;
-			Color c = drawbuffer_get_pixel(b, x + tx - w->r.w/2, y + ty - w->r.h/2);
+	for(y=0; y < w->r.size.y; y++) {
+		for(x=0; x < w->r.size.x; x++) {
+			int screenx = x + w->r.pos.x, screeny = y + w->r.pos.y;
+			Color c = drawbuffer_get_pixel(b, x + pos.x - w->r.size.x/2, y + pos.y - w->r.size.y/2);
 			screen_draw_pixel(s, screenx, screeny, c);
 		}
 	}
@@ -215,27 +214,27 @@ static void screen_draw_status(Screen *s, StatusBar *b) {
 	int x, y;
 	
 	/* At what y value does the median divider start: */
-	int mid_y = (b->r.h - 1) / 2;
+	int mid_y = (b->r.size.y - 1) / 2;
 	
 	/* How many pixels high is the median divider: */
-	int mid_h = (b->r.h % 2) ? 1u : 2u;
+	int mid_h = (b->r.size.y % 2) ? 1u : 2u;
 	
 	/* How many pixels are filled in? */
 	int energy_filled, health_filled, half_energy_pixel;
-	half_energy_pixel = TANK_STARTING_FUEL/((b->r.w - STATUS_BORDER*2)*2);
+	half_energy_pixel = TANK_STARTING_FUEL/((b->r.size.x - STATUS_BORDER*2)*2);
 	
 	tank_get_stats(b->t, &energy_filled, &health_filled);
 	energy_filled += half_energy_pixel;
 	
-	energy_filled *= (b->r.w - STATUS_BORDER*2);
+	energy_filled *= (b->r.size.x - STATUS_BORDER*2);
 	energy_filled /= TANK_STARTING_FUEL;
-	health_filled *= (b->r.w - STATUS_BORDER*2);
+	health_filled *= (b->r.size.x - STATUS_BORDER*2);
 	health_filled /= TANK_STARTING_SHIELD;
 
 	/* If we are decreasing to the right, we need to invert those values: */
 	if(!b->decreases_to_left) {
-		energy_filled = b->r.w - STATUS_BORDER - energy_filled;
-		health_filled = b->r.w - STATUS_BORDER - health_filled;
+		energy_filled = b->r.size.x - STATUS_BORDER - energy_filled;
+		health_filled = b->r.size.x - STATUS_BORDER - health_filled;
 		
 	/* Else, we still need to shift it to the right by STATUS_BORDER: */
 	} else {
@@ -244,22 +243,22 @@ static void screen_draw_status(Screen *s, StatusBar *b) {
 	}
 	
 	/* Ok, lets draw this thing: */
-	for(y=0; y < b->r.h; y++) {
-		for(x=0; x < b->r.w; x++) {
+	for(y=0; y < b->r.size.y; y++) {
+		for(x=0; x < b->r.size.x; x++) {
 			Color c;
 
 			/* We round the corners of the status box: */
-			if((x == 0 || x == b->r.w - 1) && (y == 0 || y == b->r.h - 1))
+			if((x == 0 || x == b->r.size.x - 1) && (y == 0 || y == b->r.size.y - 1))
 				continue;
 			
 			/* Outer border draws background: */
-			else if(y < STATUS_BORDER || y >= b->r.h-STATUS_BORDER ||
-			   x < STATUS_BORDER || x >= b->r.w-STATUS_BORDER)
+			else if(y < STATUS_BORDER || y >= b->r.size.y-STATUS_BORDER ||
+			   x < STATUS_BORDER || x >= b->r.size.x-STATUS_BORDER)
 				c = color_status_bg;
 
 			/* We round the corners here a little bit too: */
-			else if((x == STATUS_BORDER || x == b->r.w - STATUS_BORDER - 1) &&
-			        (y == STATUS_BORDER || y == b->r.h - STATUS_BORDER - 1))
+			else if((x == STATUS_BORDER || x == b->r.size.x - STATUS_BORDER - 1) &&
+			        (y == STATUS_BORDER || y == b->r.size.y - STATUS_BORDER - 1))
 				c = color_status_bg;
 
 			/* Middle seperator draws as backround, as well: */
@@ -283,7 +282,7 @@ static void screen_draw_status(Screen *s, StatusBar *b) {
 			else
 				c = color_blank;
 
-			screen_draw_pixel(s, x + b->r.x, y + b->r.y, c);
+			screen_draw_pixel(s, x + b->r.pos.x, y + b->r.pos.y, c);
 		}
 	}
 }
@@ -291,9 +290,9 @@ static void screen_draw_status(Screen *s, StatusBar *b) {
 static void screen_draw_bitmap(Screen *s, Bitmap *b) {
 	int x, y, i;
 
-	for(x=y=i=0; i < (b->r.w * b->r.h); i++) {
-		if(b->data[i]) screen_draw_pixel(s, x + b->r.x, y + b->r.y, *b->color);
-		if(++x >= b->r.w) { y++; x=0; }
+	for(x=y=i=0; i < (b->r.size.x * b->r.size.y); i++) {
+		if(b->data[i]) screen_draw_pixel(s, x + b->r.pos.x, y + b->r.pos.y, *b->color);
+		if(++x >= b->r.size.x) { y++; x=0; }
 	}
 }
 
@@ -369,7 +368,7 @@ int screen_resize(Screen *s, int width, int height) {
 	else                 gamelib_set_window    (width, height);
 	
 	temp_rect = gamelib_get_resolution();
-	width = temp_rect.w; height = temp_rect.h;
+	width = temp_rect.size.x; height = temp_rect.size.y;
 	
 	s->is_fullscreen = gamelib_get_fullscreen();
 	
@@ -430,7 +429,7 @@ void screen_add_status(Screen *s, Rect r, Tank *t, int decreases_to_left) {
 	if(s->status_count >= SCREEN_MAX_STATUS) return;
 
 	/* Make sure that this status bar isn't too small: */
-	if(r.w <= 2 || r.h <= 4) return;
+	if(r.size.x <= 2 || r.size.y <= 4) return;
 	
 	s->status[ s->status_count++ ] = StatusBar {r, t, decreases_to_left};
 }

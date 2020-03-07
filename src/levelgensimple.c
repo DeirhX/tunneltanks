@@ -52,7 +52,7 @@ static void add_rock_lines(Level *lvl, Side s) {
 	}
 	
 	/* Let's get this party started: */
-	prev = cur = VECTOR(minx, rand_int(miny, maxy));
+	prev = cur = Vector(minx, rand_int(miny, maxy));
 	
 	do {
 		/* Advance the current x position so it doesn't go over the edge: */
@@ -74,7 +74,7 @@ static void add_rock_lines(Level *lvl, Side s) {
 		
 		/* Draw this in whatever way is needed: */
 		if(needs_flip)
-			draw_line(lvl, VECTOR(cur.y, cur.x), VECTOR(prev.y, prev.x), static_cast<char>(s), 0);
+			draw_line(lvl, Vector(cur.y, cur.x), Vector(prev.y, prev.x), static_cast<char>(s), 0);
 		else
 			draw_line(lvl, cur, prev, static_cast<char>(s), 0);
 		

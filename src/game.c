@@ -81,22 +81,22 @@ static void init_single_player(Screen *s, TankList *tl, Level *lvl) {
 	
 	/* Account for the GUI Controller: */
 	gui = gamelib_gui_get_size();
-	gui_shift = gui.w + !!gui.w * 15; /* << Shift out of way of thumb... */
+	gui_shift = gui.size.x + !!gui.size.x * 15; /* << Shift out of way of thumb... */
 	
-	gamelib_debug("XYWH: %u %u %u %u", gui.x, gui.y, gui.w, gui.h);
+	gamelib_debug("XYWH: %u %u %u %u", gui.pos.x, gui.pos.y, gui.size.x, gui.size.y);
 	
 	/* Ready the tank! */
 	t = tl->AddTank(0, level_get_spawn(lvl, 0));
 	gamelib_tank_attach(t, 0, 1);
 	
-	screen_add_window(s, RECT(2, 2, GAME_WIDTH-4, GAME_HEIGHT-6-STATUS_HEIGHT), t);
-	screen_add_status(s, RECT(9 + gui_shift, GAME_HEIGHT - 2 - STATUS_HEIGHT, GAME_WIDTH-12 - gui_shift, STATUS_HEIGHT), t, 1);
+	screen_add_window(s, Rect{ Position{ 2, 2 }, Size {GAME_WIDTH - 4, GAME_HEIGHT - 6 - STATUS_HEIGHT} }, t);
+	screen_add_status(s, Rect(9 + gui_shift, GAME_HEIGHT - 2 - STATUS_HEIGHT, GAME_WIDTH-12 - gui_shift, STATUS_HEIGHT), t, 1);
 	if(gui_shift)
-		screen_add_controller(s, RECT(3, GAME_HEIGHT - 5 - static_cast<int>(gui.h), gui.w, gui.h));
+		screen_add_controller(s, Rect(3, GAME_HEIGHT - 5 - static_cast<int>(gui.size.y), gui.size.x, gui.size.y));
 	
 	/* Add the GUI bitmaps: */
-	screen_add_bitmap(s, RECT(3 + gui_shift, GAME_HEIGHT - 2 - STATUS_HEIGHT    , 4, 5), GUI_ENERGY, &color_status_energy);
-	screen_add_bitmap(s, RECT(3 + gui_shift, GAME_HEIGHT - 2 - STATUS_HEIGHT + 6, 4, 5), GUI_HEALTH, &color_status_health);
+	screen_add_bitmap(s, Rect(3 + gui_shift, GAME_HEIGHT - 2 - STATUS_HEIGHT    , 4, 5), GUI_ENERGY, &color_status_energy);
+	screen_add_bitmap(s, Rect(3 + gui_shift, GAME_HEIGHT - 2 - STATUS_HEIGHT + 6, 4, 5), GUI_HEALTH, &color_status_health);
 	
 	/* Fill up the rest of the slots with Twitches: */
 	twitch_fill(tl, lvl, 1);
@@ -108,20 +108,20 @@ static void init_double_player(Screen *s, TankList *tl, Level *lvl) {
 	/* Ready the tanks! */
 	t = tl->AddTank(0, level_get_spawn(lvl, 0));
 	gamelib_tank_attach(t, 0, 2);
-	screen_add_window(s, RECT(2, 2, GAME_WIDTH/2-3, GAME_HEIGHT-6-STATUS_HEIGHT), t);
-	screen_add_status(s, RECT(3, GAME_HEIGHT - 2 - STATUS_HEIGHT, GAME_WIDTH/2-5-2, STATUS_HEIGHT), t, 0);
+	screen_add_window(s, Rect(2, 2, GAME_WIDTH/2-3, GAME_HEIGHT-6-STATUS_HEIGHT), t);
+	screen_add_status(s, Rect(3, GAME_HEIGHT - 2 - STATUS_HEIGHT, GAME_WIDTH/2-5-2, STATUS_HEIGHT), t, 0);
 	
 	/* Load up two controllable tanks: */
 	t = tl->AddTank(1, level_get_spawn(lvl, 1));
 	
 	/*controller_twitch_attach(t);  << Attach a twitch to a camera tank, so we can see if they're getting smarter... */
 	gamelib_tank_attach(t, 1, 2);
-	screen_add_window(s, RECT(GAME_WIDTH/2+1, 2, GAME_WIDTH/2-3, GAME_HEIGHT-6-STATUS_HEIGHT), t);
-	screen_add_status(s, RECT(GAME_WIDTH/2+2+2, GAME_HEIGHT - 2 - STATUS_HEIGHT, GAME_WIDTH/2-5-3, STATUS_HEIGHT), t, 1);
+	screen_add_window(s, Rect(GAME_WIDTH/2+1, 2, GAME_WIDTH/2-3, GAME_HEIGHT-6-STATUS_HEIGHT), t);
+	screen_add_status(s, Rect(GAME_WIDTH/2+2+2, GAME_HEIGHT - 2 - STATUS_HEIGHT, GAME_WIDTH/2-5-3, STATUS_HEIGHT), t, 1);
 
 	/* Add the GUI bitmaps: */
-	screen_add_bitmap(s, RECT(GAME_WIDTH/2-2, GAME_HEIGHT - 2 - STATUS_HEIGHT    , 4, 5), GUI_ENERGY, &color_status_energy);
-	screen_add_bitmap(s, RECT(GAME_WIDTH/2-2, GAME_HEIGHT - 2 - STATUS_HEIGHT + 6, 4, 5), GUI_HEALTH, &color_status_health);
+	screen_add_bitmap(s, Rect(GAME_WIDTH/2-2, GAME_HEIGHT - 2 - STATUS_HEIGHT    , 4, 5), GUI_ENERGY, &color_status_energy);
+	screen_add_bitmap(s, Rect(GAME_WIDTH/2-2, GAME_HEIGHT - 2 - STATUS_HEIGHT + 6, 4, 5), GUI_HEALTH, &color_status_health);
 	
 	/* Fill up the rest of the slots with Twitches: */
 	twitch_fill(tl, lvl, 2);
@@ -254,7 +254,7 @@ int game_step(void *input) {
 		/* Trying to resize the window? */
 		if(temp == GAME_EVENT_RESIZE) {
 			Rect r = gamelib_event_resize_get_size();
-			screen_resize(gd->data.active.s, r.w, r.h);
+			screen_resize(gd->data.active.s, r.size.x, r.size.y);
 		
 		/* Trying to toggle fullscreen? */
 		} else if(temp == GAME_EVENT_TOGGLE_FULLSCREEN) {

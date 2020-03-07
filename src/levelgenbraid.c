@@ -220,13 +220,13 @@ void braid_generator(Level *lvl) {
 			Cell c = b->data[y*b->w+x];
 			if(c.up)
 				draw_line(lvl,
-					VECTOR(x*CELL_SIZE,     y*CELL_SIZE), 
-					VECTOR((x+1)*CELL_SIZE, y*CELL_SIZE), 0, 1);
+					Vector(x*CELL_SIZE,     y*CELL_SIZE), 
+					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), 0, 1);
 			
 			if(c.right)
 				draw_line(lvl,
-					VECTOR((x+1)*CELL_SIZE, y*CELL_SIZE), 
-					VECTOR((x+1)*CELL_SIZE, (y+1)*CELL_SIZE), 0, 1);
+					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), 
+					Vector((x+1)*CELL_SIZE, (y+1)*CELL_SIZE), 0, 1);
 			
 			if(!c.up && !c.right)
 				set_circle(lvl, (x+1)*CELL_SIZE, y*CELL_SIZE, 0);
@@ -234,7 +234,7 @@ void braid_generator(Level *lvl) {
 	}
 	
 	/* Draw a line up the left, so you can see the texture there too: */
-	draw_line(lvl, VECTOR(0,0), VECTOR(0,b->h*CELL_SIZE), 0, 1);
+	draw_line(lvl, Vector(0,0), Vector(0,b->h*CELL_SIZE), 0, 1);
 	
 	/* Fill in the unused space left behind on the right/bottom: */
 	/* TODO: Have a fill_box() in levelgenutil.c? */
@@ -266,7 +266,7 @@ void braid_generator(Level *lvl) {
 					b->data[(y+ty)*b->w+(x+tx)].flag = 1;
 		
 		/* Now, add it to the level: */
-		lvl->spawn[i] = VECTOR(
+		lvl->spawn[i] = Vector(
 			x * CELL_SIZE + CELL_SIZE/2,
 			y * CELL_SIZE + CELL_SIZE/2
 		);

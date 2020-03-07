@@ -81,8 +81,8 @@ int gamelib_set_window(int w, int h) {
 Rect gamelib_get_resolution() {
 	Rect r = {0,0,0,0};
 	if(!_DATA.s) return r;
-	r.w = static_cast<int>(_DATA.s->w);
-	r.h = static_cast<int>(_DATA.s->h);
+	r.size.x = static_cast<int>(_DATA.s->w);
+	r.size.y = static_cast<int>(_DATA.s->h);
 	
 	return r;
 }
@@ -97,7 +97,7 @@ int gamelib_draw_box(Rect *rect, Color color) {
 	Uint32 c = SDL_MapRGB(_DATA.s->format, color.r, color.g, color.b);
 	
 	if(rect) {
-		auto r = SDL_Rect{(Sint16)rect->x, (Sint16)rect->y, (Uint16)rect->w, (Uint16)rect->h};
+		auto r = SDL_Rect{(Sint16)rect->pos.x, (Sint16)rect->pos.y, (Uint16)rect->size.x, (Uint16)rect->size.y};
 		SDL_FillRect(_DATA.s, &r, c);
 		return 0;
 	}

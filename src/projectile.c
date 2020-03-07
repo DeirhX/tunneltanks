@@ -11,8 +11,8 @@
 #include <tanklist.h>
 
 struct Projectile {
-	int		x, y;       /* The x,y of the 'hot' portion.  (#ff3408) */
-	int		oldx, oldy; /* The x,y of the 'cold' portion. (#ba0000) */
+	Position pos;       /* The x,y of the 'hot' portion.  (#ff3408) */
+	Position pos_old;   /* The x,y of the 'cold' portion. (#ba0000) */
 
 	int      xstep, ystep;
 	int life : 7;
@@ -46,7 +46,7 @@ static PListNode* plistnode_new(PList* parent, Projectile payload) {
 /* Push a new projectile, and return a pointer to it: */
 static Projectile* plist_activate(PList* pl) {
 	PListNode* n;
-	Projectile payload = { 0, 0, 0, 0, 0, 0, 0, 0, NULL };
+	Projectile payload = { {0, 0}, {0, 0}, 0, 0, 0, 0, NULL };
 
 	/* If there is something in the 'dead' list... */
 	if (pl->dead) {
@@ -97,7 +97,7 @@ PList* plist_new() {
 
 	/* Throw in a bunch of dead objects: */
 	for (i = 0; i < PROJECTILE_BUFFER_START_SIZE; i++) {
-		Projectile p = { 0, 0, 0, 0, 0, 0, 0, 0, NULL };
+		Projectile p = { {0, 0}, {0, 0}, 0, 0, 0, 0, NULL };
 		PListNode* n = plistnode_new(out, p);
 
 		if (out->dead) out->dead->prev = n;
@@ -133,13 +133,15 @@ void plist_destroy(PList* pl) {
 
 
 void plist_push_bullet(PList* pl, Tank* t) {
-	Projectile payload;
+	Position pos = t->GetPosition();
 	int dir;
 
-	tank_get_position(t, &payload.x, &payload.y);
-	payload.oldx = payload.x; payload.oldy = payload.y;
+	Projectile payload;
+    payload.pos = pos;
+	payload.pos_old.x = payload.pos.x;
+    payload.pos_old.y = payload.pos.y;
 
-	dir = tank_get_dir(t);
+	dir = t->GetDirection();
 	payload.xstep = static_cast<int>(dir) % 3 - 1;
 	payload.ystep = static_cast<int>(dir) / 3 - 1;
 	payload.life = TANK_BULLET_SPEED;
@@ -155,7 +157,7 @@ void plist_push_explosion(PList* pl, int x, int y, int count, int r, int ttl) {
 
 	/* Add all of the effect particles: */
 	for (i = 0; i < count; i++) {
-		Projectile p = { x * 16 + 8, y * 16 + 8, x, y,
+		Projectile p = { Position{x * 16 + 8, y * 16 + 8}, Position{x, y},
 			rand_int(0,r) - r / 2, rand_int(0,r) - r / 2, rand_int(0,ttl), 1, NULL };
 		*plist_activate(pl) = p;
 	}
@@ -188,8 +190,8 @@ void plist_step(PList* pl, Level* lvl, TankList* tl) {
 
 			/* Move the effect: */
 			n->p.life--;
-			n->p.x += n->p.xstep; n->p.y += n->p.ystep;
-			x = n->p.x / 16; y = n->p.y / 16;
+			n->p.pos.x += n->p.xstep; n->p.pos.y += n->p.ystep;
+			x = n->p.pos.x / 16; y = n->p.pos.y / 16;
 
 			/* Make sure we didn't hit a level detail: */
 			c = level_get(lvl, x, y);
@@ -211,12 +213,12 @@ void plist_step(PList* pl, Level* lvl, TankList* tl) {
 				Tank* t;
 				int clr;
 
-				n->p.oldx = n->p.x;     n->p.oldy = n->p.y;
-				n->p.x += n->p.xstep; n->p.y += n->p.ystep;
+				n->p.pos_old.x = n->p.pos.x;     n->p.pos_old.y = n->p.pos.y;
+				n->p.pos.x += n->p.xstep;		 n->p.pos.y += n->p.ystep;
 
 				/* Did we hit another tank? */
-				clr = n->p.tank->get_color();
-				t = tl->GetTankAtPoint(n->p.x, n->p.y, clr);
+				clr = n->p.tank->GetColor();
+				t = tl->GetTankAtPoint(n->p.pos.x, n->p.pos.y, clr);
 				if (t) {
 					/* If we have an associated tank, return the shot: */
 					tank_return_bullet(n->p.tank);
@@ -225,7 +227,7 @@ void plist_step(PList* pl, Level* lvl, TankList* tl) {
 					tank_alter_health(t, TANK_SHOT_DAMAGE);
 
 					/* Add all of the effect particles: */
-					plist_push_explosion(pl, n->p.oldx, n->p.oldy,
+					plist_push_explosion(pl, n->p.pos_old.x, n->p.pos_old.y,
 						EXPLOSION_HURT_COUNT,
 						EXPLOSION_HURT_RADIUS,
 						EXPLOSION_HURT_TTL);
@@ -237,13 +239,13 @@ void plist_step(PList* pl, Level* lvl, TankList* tl) {
 				}
 
 				/* Else, did we hit something in the level? */
-				c = level_get(lvl, n->p.x, n->p.y);
+				c = level_get(lvl, n->p.pos.x, n->p.pos.y);
 				if (c != BLANK) {
 					/* If we have an associated tank, return the shot: */
 					tank_return_bullet(n->p.tank);
 
 					/* Add all of the effect particles: */
-					plist_push_explosion(pl, n->p.oldx, n->p.oldy,
+					plist_push_explosion(pl, n->p.pos_old.x, n->p.pos_old.y,
 						EXPLOSION_DIRT_COUNT,
 						EXPLOSION_DIRT_RADIUS,
 						EXPLOSION_DIRT_TTL);
@@ -266,10 +268,10 @@ void plist_clear(PList* pl, DrawBuffer* b) {
 		next = n->next;
 
 		if (n->p.is_effect)
-			drawbuffer_set_pixel(b, n->p.x / 16, n->p.y / 16, color_blank);
+			drawbuffer_set_pixel(b, n->p.pos.x / 16, n->p.pos.y / 16, color_blank);
 		else {
-			drawbuffer_set_pixel(b, n->p.x, n->p.y, color_blank);
-			drawbuffer_set_pixel(b, n->p.oldx, n->p.oldy, color_blank);
+			drawbuffer_set_pixel(b, n->p.pos.x, n->p.pos.y, color_blank);
+			drawbuffer_set_pixel(b, n->p.pos_old.x, n->p.pos_old.y, color_blank);
 		}
 	}
 }
@@ -282,10 +284,10 @@ void plist_draw(PList* pl, DrawBuffer* b) {
 		next = n->next;
 
 		if (n->p.is_effect)
-			drawbuffer_set_pixel(b, n->p.x / 16, n->p.y / 16, color_fire_hot);
+			drawbuffer_set_pixel(b, n->p.pos.x / 16, n->p.pos.y / 16, color_fire_hot);
 		else {
-			drawbuffer_set_pixel(b, n->p.x, n->p.y, color_fire_hot);
-			drawbuffer_set_pixel(b, n->p.oldx, n->p.oldy, color_fire_cold);
+			drawbuffer_set_pixel(b, n->p.pos.x, n->p.pos.y, color_fire_hot);
+			drawbuffer_set_pixel(b, n->p.pos_old.x, n->p.pos_old.y, color_fire_cold);
 		}
 	}
 }

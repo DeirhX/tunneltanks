@@ -21,7 +21,7 @@ public:
 	Tank* AddTank(int id, Vector p);
 	void RemoveTank(int id);
 	Tank* GetTankAtPoint(int x, int y, int ignored);
-	bool CheckForCollision(Tank& tank, Position atPos, int atDirection);
+	bool CheckForCollision(Tank& tank, Position testPos, int testDirection);
 
 	// iterable
 	DereferenceIterator<decltype(list)::iterator> begin() { return dereference_iterator(list.begin()); }

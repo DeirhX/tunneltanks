@@ -39,7 +39,7 @@ static void check_for_event() {
 		/* Resize event: */
 		if(e.type == SDL_VIDEORESIZE) {
 			cur_event.type = GAME_EVENT_RESIZE;
-			cur_event.dim = RECT(0,0, e.resize.w, e.resize.h);
+			cur_event.dim = Rect(0,0, e.resize.w, e.resize.h);
 		
 		/* Keyboard events: */
 		} else if(e.type == SDL_KEYDOWN) {
@@ -65,7 +65,7 @@ EventType gamelib_event_get_type() {
 Rect gamelib_event_resize_get_size() {
 	check_for_event();
 	
-	if(cur_event.type != GAME_EVENT_RESIZE) return RECT(0,0,0,0);
+	if(cur_event.type != GAME_EVENT_RESIZE) return Rect(0,0,0,0);
 	return cur_event.dim;
 }
 
