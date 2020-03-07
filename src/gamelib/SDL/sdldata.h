@@ -1,6 +1,4 @@
-#ifndef _SDL_DATA_H_
-#define _SDL_DATA_H_
-
+#pragma once
 #include <SDL.h>
 
 #define SDL_OPTIONS    (SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_RESIZABLE)
@@ -12,5 +10,3 @@ typedef struct SDLData {
 } SDLData;
 
 extern SDLData _DATA;
-
-#endif 

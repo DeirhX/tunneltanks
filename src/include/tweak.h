@@ -1,6 +1,4 @@
-#ifndef _TWEAK_H_
-#define _TWEAK_H_
-
+#pragma once
 /*
  * Most of the game engine's arbitrary limits are stored in here:
  */
@@ -97,4 +95,4 @@
 #define _MEM_STATS
 #endif
 
-#endif /* _TWEAK_H_ */
+

@@ -1,6 +1,4 @@
-#ifndef _LEVEL_DEFINITION_H_
-#define _LEVEL_DEFINITION_H_
-
+#pragma once
 #include <tweak.h>
 #include <types.h>
 #include <drawbuffer.h>
@@ -14,4 +12,4 @@ struct Level {
 };
 
 
-#endif /* _LEVEL_DEFINITION_H_ */
+

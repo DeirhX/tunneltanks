@@ -1,6 +1,4 @@
-#ifndef _GAME_LIB_H_
-#define _GAME_LIB_H_
-
+#pragma once
 /* This file defines an interface that is implemented by one of this folder's
  * subdirectories. Most functions in here are normally provided by SDL, but are
  * abstracted so that this game can be used in non-SDL environments. (Namely:
@@ -72,5 +70,5 @@ Rect     gamelib_gui_get_size() ;
 void     gamelib_gui_draw(Screen *s, Rect r) ;
 
 
-#endif /* _GAME_LIB_H_ */
+
 

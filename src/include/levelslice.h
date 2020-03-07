@@ -1,6 +1,4 @@
-#ifndef _LEVEL_SLICE_H_
-#define _LEVEL_SLICE_H_
-
+#pragma once
 #define LS_WIDTH  159
 #define LS_HEIGHT 99
 
@@ -28,5 +26,5 @@ LevelSliceQuery level_slice_query_circle(LevelSlice *ls, int x, int y) ;
  * resolution: */
 void level_slice_copy(LevelSlice *ls, LevelSliceCopy *lsc) ;
 
-#endif /* _LEVEL_SLICE_H_ */
+
 

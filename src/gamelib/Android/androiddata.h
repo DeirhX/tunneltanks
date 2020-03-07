@@ -1,5 +1,3 @@
-#ifndef _ANDROID_DATA_H_
-#define _ANDROID_DATA_H_
 
 #include <jni.h>
 
@@ -36,5 +34,5 @@ typedef struct AndroidData {
 
 extern AndroidData _DATA;
 
-#endif /* _ANDROID_DATA_H_ */
+
 

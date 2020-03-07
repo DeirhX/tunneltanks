@@ -1,6 +1,4 @@
-#ifndef _LEVEL_GEN_UTIL_H_
-#define _LEVEL_GEN_UTIL_H_
-
+#pragma once
 #include <level.h>
 #include <types.h>
 
@@ -11,5 +9,5 @@ int pt_dist   (Vector a, Vector b) ;
 void     set_circle(Level *lvl, int x, int y, char value) ;
 void     draw_line (Level *dest, Vector a, Vector b, char value, int fat_line) ;
 
-#endif /* _LEVEL_GEN_UTIL_H_ */
+
 

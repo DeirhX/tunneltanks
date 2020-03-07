@@ -1,6 +1,4 @@
-#ifndef _GAME_H_
-#define _GAME_H_
-
+#pragma once
 typedef struct GameData GameData;
 
 /* Create a default game structure: */
@@ -22,5 +20,5 @@ int       game_step            (void *gd) ;
 /* Done with a game structure: */
 void      game_free            (GameData *gd) ;
 
-#endif /* _GAME_H_ */
+
 

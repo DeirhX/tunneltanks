@@ -1,6 +1,4 @@
-#ifndef _LEVEL_GEN_H_
-#define _LEVEL_GEN_H_
-
+#pragma once
 #include <cstdio>
 
 #include <level.h>
@@ -12,5 +10,5 @@ typedef void (*LevelGeneratorFunc)(Level *lvl);
 void generate_level(Level *lvl, const char *id) ;
 void print_levels(FILE *out) ;
 
-#endif /* _CAVEGEN_H_ */
+
 

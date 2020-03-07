@@ -1,5 +1,4 @@
-#ifndef _TANK_LIST_H_
-#define _TANK_LIST_H_
+#pragma once
 #include <vector>
 
 typedef struct TankList TankList;
@@ -59,4 +58,4 @@ inline void for_each_tank(TankList& tl, TFunc&& tank_func)
 		tank_func(&tank);
 }
 
-#endif /* _TANK_LIST_H_ */
+

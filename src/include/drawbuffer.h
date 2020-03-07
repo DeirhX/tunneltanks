@@ -1,6 +1,4 @@
-#ifndef _DRAW_BUFFER_H_
-#define _DRAW_BUFFER_H_
-
+#pragma once
 typedef struct DrawBuffer DrawBuffer;
 
 #include <types.h>
@@ -27,5 +25,5 @@ void  drawbuffer_set_pixel(DrawBuffer *b, int x, int y, Color color) ;
 Color drawbuffer_get_pixel(DrawBuffer *b, int x, int y) ;
 
 
-#endif /* _DRAW_BUFFER_H_ */
+
 

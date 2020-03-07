@@ -1,6 +1,4 @@
-#ifndef _RANDOM_H_
-#define _RANDOM_H_
-
+#pragma once
 bool     rand_bool(int odds) ;
 void     rand_seed() ;
 
@@ -15,5 +13,5 @@ IntegerType rand_int(IntegerType min, IntegerType max) {
 	return (rand() % range) + min;
 }
 
-#endif /* _RANDOM_H_ */
+
 

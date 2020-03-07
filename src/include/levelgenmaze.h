@@ -1,6 +1,4 @@
-#ifndef _LEVEL_GEN_MAZE_H_
-#define _LEVEL_GEN_MAZE_H_
-
+#pragma once
 #include <level.h>
 
 namespace levelgen::maze {
@@ -9,5 +7,5 @@ namespace levelgen::maze {
 
 }
 
-#endif /* _LEVEL_GEN_MAZE_H_ */
+
 

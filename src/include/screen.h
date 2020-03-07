@@ -1,8 +1,5 @@
-#ifndef _SCREEN_H_
-#define _SCREEN_H_
-
+#pragma once
 struct Screen;
-struct Tank;
 
 #include <level.h>
 #include <types.h>
@@ -32,8 +29,8 @@ int  screen_map_y(Screen *s, int y) ;
 
 /* Window creation/removal: */
 
-void screen_add_window(Screen *s, Rect r, Tank *t) ;
-void screen_add_status(Screen *s, Rect r, Tank *t, int decreases_to_left) ;
+void screen_add_window(Screen *s, Rect r, struct Tank *t) ;
+void screen_add_status(Screen *s, Rect r, struct Tank *t, int decreases_to_left) ;
 void screen_add_bitmap(Screen *s, Rect r, char *bitmap, Color *color) ;
 void screen_add_controller(Screen *s, Rect r) ;
 
@@ -43,5 +40,5 @@ void     screen_remove_window(Screen *s, WindowID id) ;
 /* Draw the structure: */
 void screen_draw(Screen *s) ;
 
-#endif /* _SCREEN_H_ */
+
 

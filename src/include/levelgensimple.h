@@ -1,6 +1,4 @@
-#ifndef _LEVEL_GEN_TUNNELER_H_
-#define _LEVEL_GEN_TUNNELER_H_
-
+#pragma once
 #include <level.h>
 
 namespace levelgen::simple {
@@ -8,5 +6,5 @@ namespace levelgen::simple {
 	void simple_generator(Level* lvl);
 
 }
-#endif /* _LEVEL_GEN_TUNNELER_H_ */
+
 

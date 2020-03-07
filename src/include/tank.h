@@ -1,5 +1,4 @@
-#ifndef _TANK_H_
-#define _TANK_H_
+#pragma once
 #include <memory>
 
 /* For the controllers/AIs: */
@@ -67,5 +66,5 @@ public:
 
 
 
-#endif /* _TANK_H_ */
+
 
