@@ -139,12 +139,10 @@ void Tank::TryBaseHeal() {
 
 void Tank::Draw(DrawBuffer *b) const
 {
-	int x, y;
-	
 	if(!this->health) return;
 	
-	for(y=0; y<7; y++)
-		for(x=0; x<7; x++) {
+	for(int y=0; y<7; y++)
+		for(int x=0; x<7; x++) {
 			char val = TANK_SPRITE[this->direction][y][x];
 			if(val)
 				drawbuffer_set_pixel(b, this->pos.x + x-3, this->pos.y + y-3, color_tank[this->color][val-1]);
@@ -153,19 +151,17 @@ void Tank::Draw(DrawBuffer *b) const
 
 void Tank::Clear(DrawBuffer *b) const
 {
-	int x, y;
-	
 	if(!this->health) return;
 	
-	for(y=0; y<7; y++)
-		for(x=0; x<7; x++)
+	for(int y=0; y<7; y++)
+		for(int x=0; x<7; x++)
 			if(TANK_SPRITE[this->direction][y][x])
 				drawbuffer_set_pixel(b, this->pos.x + x-3, this->pos.y + y-3, color_blank);
 }
 
 void Tank::ReturnBullet()
 {
-	this->bullets_left ++;
+	this->bullets_left++;
 }
 
 void Tank::AlterEnergy(int diff) {

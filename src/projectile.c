@@ -10,17 +10,6 @@
 #include <drawbuffer.h>
 #include <tanklist.h>
 
-struct Projectile {
-	Position pos;       /* The x,y of the 'hot' portion.  (#ff3408) */
-	Position pos_old;   /* The x,y of the 'cold' portion. (#ba0000) */
-
-	int      xstep, ystep;
-	int life : 7;
-
-	int is_effect : 1;
-
-	struct Tank* tank;
-};
 
 struct PListNode {
 	Projectile p;
@@ -46,7 +35,7 @@ static PListNode* plistnode_new(PList* parent, Projectile payload) {
 /* Push a new projectile, and return a pointer to it: */
 static Projectile* plist_activate(PList* pl) {
 	PListNode* n;
-	Projectile payload = { {0, 0}, {0, 0}, 0, 0, 0, 0, NULL };
+	Projectile payload = { };
 
 	/* If there is something in the 'dead' list... */
 	if (pl->dead) {
@@ -97,7 +86,7 @@ PList* plist_new() {
 
 	/* Throw in a bunch of dead objects: */
 	for (i = 0; i < PROJECTILE_BUFFER_START_SIZE; i++) {
-		Projectile p = { {0, 0}, {0, 0}, 0, 0, 0, 0, NULL };
+		Projectile p = {};
 		PListNode* n = plistnode_new(out, p);
 
 		if (out->dead) out->dead->prev = n;
@@ -142,8 +131,8 @@ void plist_push_bullet(PList* pl, Tank* t) {
     payload.pos_old.y = payload.pos.y;
 
 	dir = t->GetDirection();
-	payload.xstep = static_cast<int>(dir) % 3 - 1;
-	payload.ystep = static_cast<int>(dir) / 3 - 1;
+	payload.step.x = static_cast<int>(dir) % 3 - 1;
+	payload.step.y = static_cast<int>(dir) / 3 - 1;
 	payload.life = TANK_BULLET_SPEED;
 	payload.is_effect = 0;
 	payload.tank = t;
@@ -157,8 +146,11 @@ void plist_push_explosion(PList* pl, int x, int y, int count, int r, int ttl) {
 
 	/* Add all of the effect particles: */
 	for (i = 0; i < count; i++) {
-		Projectile p = { Position{x * 16 + 8, y * 16 + 8}, Position{x, y},
-			rand_int(0,r) - r / 2, rand_int(0,r) - r / 2, rand_int(0,ttl), 1, NULL };
+		Projectile p = {
+		    Position{x * 16 + 8, y * 16 + 8},
+		    Position{x, y},
+			Speed { rand_int(0,r) - r / 2, rand_int(0,r) - r / 2},
+		    rand_int(0,ttl), 1, nullptr };
 		*plist_activate(pl) = p;
 	}
 }
@@ -190,7 +182,7 @@ void plist_step(PList* pl, Level* lvl, TankList* tl) {
 
 			/* Move the effect: */
 			n->p.life--;
-			n->p.pos.x += n->p.xstep; n->p.pos.y += n->p.ystep;
+			n->p.pos.x += n->p.step.x; n->p.pos.y += n->p.step.y;
 			x = n->p.pos.x / 16; y = n->p.pos.y / 16;
 
 			/* Make sure we didn't hit a level detail: */
@@ -214,7 +206,7 @@ void plist_step(PList* pl, Level* lvl, TankList* tl) {
 				int clr;
 
 				n->p.pos_old.x = n->p.pos.x;     n->p.pos_old.y = n->p.pos.y;
-				n->p.pos.x += n->p.xstep;		 n->p.pos.y += n->p.ystep;
+				n->p.pos.x += n->p.step.x;		 n->p.pos.y += n->p.step.y;
 
 				/* Did we hit another tank? */
 				clr = n->p.tank->GetColor();
@@ -290,4 +282,18 @@ void plist_draw(PList* pl, DrawBuffer* b) {
 			drawbuffer_set_pixel(b, n->p.pos_old.x, n->p.pos_old.y, color_fire_cold);
 		}
 	}
+}
+
+Projectile::Projectile(Position position, Position origin, Speed speed, int life, bool is_effect, Tank* tank)
+    : pos(position), pos_old(origin), step(speed), life(life), is_effect(is_effect), tank(tank), is_alive(true)
+{
+
+}
+
+void ProjectileList::Advance(Level* level, TankList* tankList)
+{
+}
+
+void ProjectileList::Draw(DrawBuffer* drawBuffer)
+{
 }
