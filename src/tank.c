@@ -14,16 +14,17 @@
 #include <algorithm>
 
 
-Tank::Tank(int color, Level *lvl, PList *pl, Position pos) :
+Tank::Tank(int color, Level *lvl, ProjectileList*pl, Position pos) :
 	pos(pos), color(color)
 {
-	this->cached_slice = std::make_shared<LevelSlice>(this, lvl);
+	// this->cached_slice = std::make_shared<LevelSlice>(this, lvl);
 	
 	/* Let's just make the starting direction random, because we can: */
 	this->direction = rand_int(0, 7);
 	if(this->direction >= 4) this->direction ++;
 	
-	this->lvl = lvl; this->pl = pl;
+	this->lvl = lvl;
+    this->pl = pl;
 	 
 	this->bullet_timer = TANK_BULLET_DELAY;
 	this->bullets_left = TANK_BULLET_MAX;
@@ -78,7 +79,7 @@ void Tank::DoMove(TankList *tl) {
 			.energy = this->energy,
 			.x      = static_cast<int>(this->pos.x - base.x),
 			.y      = static_cast<int>(this->pos.y - base.y),
-			.slice  = this->cached_slice.get()};
+			.slice  = LevelSlice(this, this->lvl)};
 		this->controller(&i, this->controller_data.get(), &this->speed.x, &this->speed.y, &this->is_shooting);
 	}
 	
@@ -113,7 +114,7 @@ void Tank::DoMove(TankList *tl) {
 	if(this->bullet_timer == 0) {
 		if(this->is_shooting && this->bullets_left > 0) {
 			
-			plist_push_bullet(this->pl, this);
+			this->pl->Add(Projectile::CreateBullet(this));
 
 			/* We just fired. Let's charge ourselves: */
 			this->AlterEnergy(TANK_SHOOT_COST);
@@ -197,12 +198,12 @@ void Tank::AlterHealth(int diff) {
 
 void Tank::TriggerExplosion() const
 {
-	plist_push_explosion(this->pl,
-		this->pos.x, this->pos.y,
+	this->pl->Add(Projectile::CreateExplosion(
+		this->pos,
 		EXPLOSION_DEATH_COUNT,
 		EXPLOSION_DEATH_RADIUS,
 		EXPLOSION_DEATH_TTL
-	);
+	));
 }
 
 /* This is meant to be called from a controller's attach function: */

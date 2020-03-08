@@ -10,8 +10,8 @@
 //  to minimum.
 // Iterator and foreach support - skips over dead elements 
 template <typename T>
-concept Invalidable = requires(T t) { { t.IsInvalid() } -> bool;  { t.IsValid() } -> bool; }
-                   || requires(T t) { { t->IsInvalid() } -> bool; { t->IsValid() } -> bool; };
+concept Invalidable = requires(T t) { { t.IsInvalid() } -> bool; { t.Invalidate() }; }
+                   || requires(T t) { { t->IsInvalid() } -> bool; { t->Invalidate() }; };
 
 template <Invalidable TElement>
 class ValueContainer
@@ -57,8 +57,7 @@ public:
 	}
 	void Remove(TElement& item)
 	{	// O(n) search is not really needed here. Just flag it destroyed and it will be recycled later, maybe.
-		item.Destroy();
-		Shrink();
+		item.Invalidate();
 	}
 	void Shrink()
 	{	// Slice out dead objects on the beginning and end of deque. Don't invalidate references.
@@ -68,8 +67,10 @@ public:
 		while (!container.empty() && ValueContainer::IsInvalid(container.back()))
 			container.pop_back();
 
-		if (container.size() != size_before) {
-			OutputDebugString(std::printf("Shrunk %d items, now size: %d", size_before - container.size(), container.size()));
+		if (container.size() != size_before && size_before >= 50) {
+			char buff[50];
+			std::sprintf(buff, "Shrunk %d items, now size: %d\r\n", size_before - container.size(), container.size());
+			OutputDebugString(buff);
 		}
 	}
 

@@ -15,7 +15,7 @@
 #include "exceptions.h"
 #include <algorithm>
 
-TankList::TankList(Level *lvl, PList *pl): lvl(lvl), pl(pl)
+TankList::TankList(Level *lvl, ProjectileList *pl): lvl(lvl), pl(pl)
 {
 }
 

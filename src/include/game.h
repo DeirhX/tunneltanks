@@ -1,5 +1,5 @@
 #pragma once
-typedef struct GameData GameData;
+struct GameData;
 
 /* Create a default game structure: */
 GameData *game_new             () ;

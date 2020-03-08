@@ -6,6 +6,7 @@
 #include <screen.h>
 #include <drawbuffer.h>
 #include <projectile.h>
+#include <levelslice.h>
 
 struct LevelSlice;
 
@@ -13,7 +14,7 @@ struct LevelSlice;
 typedef struct PublicTankInfo {
 	int health, energy;
 	int x, y; /* relative from home base */
-	LevelSlice *slice;
+	LevelSlice slice;
 } PublicTankInfo;
 
 typedef void (*TankController)(PublicTankInfo *, void *, int *, int *, int *) ;
@@ -36,10 +37,10 @@ public:
 	std::shared_ptr<void> controller_data;
 
 	Level* lvl;
-	PList* pl;
-	std::shared_ptr<LevelSlice> cached_slice;
+	ProjectileList* pl;
+	//std::shared_ptr<LevelSlice> cached_slice;
 
-	Tank(int color, Level* lvl, PList* pl, Position pos);
+	Tank(int color, Level* lvl, ProjectileList* pl, Position pos);
 	//~Tank() = default;
 	void SetController(TankController func, std::shared_ptr<void> data);
 

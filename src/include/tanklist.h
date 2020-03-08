@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 
-typedef struct TankList TankList;
+struct TankList;
 
 #include <iterators.h>
 #include <tank.h>
@@ -13,9 +13,9 @@ struct TankList {
 public:
 	ValueContainer<Tank> list;
 	Level* lvl;
-	PList* pl;
+	ProjectileList* pl;
 
-	TankList(Level* lvl, PList* pl);
+	TankList(Level* lvl, ProjectileList* pl);
 	~TankList();
 
 	Tank* AddTank(int id, Vector p);

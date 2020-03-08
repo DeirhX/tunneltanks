@@ -45,7 +45,7 @@ typedef struct GameDataActive {
 	Level      *lvl;
 	TankList   *tl;
 	DrawBuffer *b;
-	PList      *pl;
+	ProjectileList *pl;
 	Screen     *s;
 } GameDataActive;
 
@@ -198,14 +198,14 @@ void game_finalize(GameData *gd) {
 	Level      *lvl;
 	TankList   *tl;
 	DrawBuffer *b;
-	PList      *pl;
+	ProjectileList *pl;
 	Screen     *s;
 	
 	ASSERT_CONFIG();
 	
 	/* Initialize most of the structures: */
 	s   = screen_new    (gd->data.config.is_fullscreen);
-	pl  = plist_new     ();
+	pl  = new ProjectileList();
 	b   = drawbuffer_new(gd->data.config.w, gd->data.config.h);
 	lvl = level_new     (b, gd->data.config.w, gd->data.config.h);
 	tl  = new TankList(lvl, pl);
@@ -271,7 +271,7 @@ int game_step(void *input) {
 	
 	/* Clear everything: */
 	for_each_tank(*gd->data.active.tl, [=](Tank* t) {t->Clear(gd->data.active.b); });
-	plist_clear (gd->data.active.pl, gd->data.active.b);
+	gd->data.active.pl->Erase(gd->data.active.b);
 
 	/* Charge a small bit of energy for life: */
 	for_each_tank(*gd->data.active.tl, [=](Tank* t) {t->AlterEnergy(TANK_IDLE_COST); });
@@ -280,11 +280,11 @@ int game_step(void *input) {
 	for_each_tank(*gd->data.active.tl, [=](Tank* t) {t->TryBaseHeal(); });
 	
 	/* Move everything: */
-	plist_step  (gd->data.active.pl, gd->data.active.lvl, gd->data.active.tl);
+	gd->data.active.pl->Advance(gd->data.active.lvl, gd->data.active.tl);
 	for_each_tank(*gd->data.active.tl, [=](Tank* t) {t->DoMove(gd->data.active.tl); });
 	
 	/* Draw everything: */
-	plist_draw  (gd->data.active.pl, gd->data.active.b);
+	gd->data.active.pl->Draw(gd->data.active.b);
 	for_each_tank(*gd->data.active.tl, [=](Tank* t) {t->Draw(gd->data.active.b); });
 	screen_draw (gd->data.active.s);
 	
@@ -301,7 +301,7 @@ void game_free(GameData *gd) {
 			level_dump_bmp(gd->data.active.lvl, "debug_end.bmp");
 		
 		drawbuffer_destroy(gd->data.active.b);
-		plist_destroy     (gd->data.active.pl);
+		delete			  (gd->data.active.pl);
 		delete			  (gd->data.active.tl);
 		level_destroy     (gd->data.active.lvl);
 		screen_destroy    (gd->data.active.s);
