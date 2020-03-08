@@ -4,6 +4,7 @@
 
 #include <gamelib.h>
 #include <levelgen.h>
+#include <algorithm>
 
 
 typedef struct LevelGenerator {
@@ -82,20 +83,20 @@ generate_level:
 }
 
 /* Will print a specified number of spaces to the file: */
-static void put_chars(int i, char c) {
-	while( i --> 0 )
+static void put_chars(size_t i, char c) {
+	while( i-- )
 		gamelib_print("%c", c);
 }
 
 void print_levels(FILE *out) {
-	int i, max_id = 7, max_desc = strlen("Description:");
+	int i;
+	size_t max_id = 7;
+	size_t max_desc = strlen("Description:");
 	
 	/* Get the longest ID/Description length: */
 	for(i=0; GENERATOR_LIST[i].id; i++) {
-		if((int)strlen(GENERATOR_LIST[i].id) > max_id)
-			max_id = strlen(GENERATOR_LIST[i].id);
-		if((int)strlen(GENERATOR_LIST[i].desc) > max_desc)
-			max_desc = strlen(GENERATOR_LIST[i].desc);
+		max_id = std::max(max_id, strlen(GENERATOR_LIST[i].id));
+		max_desc = std::max(max_desc, strlen(GENERATOR_LIST[i].desc));
 	}
 	
 	/* Print the header: */

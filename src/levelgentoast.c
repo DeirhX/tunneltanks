@@ -152,10 +152,10 @@ static void expand_init(Level *lvl, std::deque<Vector>& q) {
 #define MIN3(a,b,c) ((a<b) ? a : (b<c) ? b : c)
 static int expand_once(Level *lvl, std::deque<Vector>& q) {
 	Vector temp;
-	int i, j, total, count = 0;
+	int j, count = 0;
 	
-	total = q.size();
-	for(i=0; i<total; i++) {
+	size_t total = q.size();
+	for(size_t i=0; i<total; i++) {
 		int xodds, yodds, odds;
 		
 		temp = q.front();
