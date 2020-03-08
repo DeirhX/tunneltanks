@@ -28,10 +28,20 @@ void Level::SetVoxel(Position pos, LevelVoxel voxel)
 	CommitPixel(pos);
 }
 
+void Level::SetVoxelRaw(Position pos, LevelVoxel voxel)
+{
+	this->array.get()[pos.y * this->size.x + pos.x] = voxel;
+}
+
 LevelVoxel& Level::Voxel(Position pos)
 {
 	if (!IsInBounds(pos))
 		throw GameException("Invalid position");
+	return this->array.get()[pos.y * this->size.x + pos.x];
+}
+
+LevelVoxel& Level::VoxelRaw(Position pos)
+{
 	return this->array.get()[pos.y * this->size.x + pos.x];
 }
 
@@ -40,6 +50,11 @@ LevelVoxel Level::GetVoxel(Position pos) const
 	if (!IsInBounds(pos))
 		return ROCK;
 	return this->array.get()[ pos.y * this->size.x + pos.x ];
+}
+
+LevelVoxel Level::GetVoxelRaw(Position pos) const
+{
+	return this->array.get()[pos.y * this->size.x + pos.x];
 }
 
 void Level::CreateDirtAndRocks()

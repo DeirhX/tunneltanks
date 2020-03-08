@@ -29,9 +29,14 @@ public:
 	Level(Size size, DrawBuffer* db);
 
 	Size GetSize() const { return size; };
+
 	void SetVoxel(Position pos, LevelVoxel voxel);
 	LevelVoxel GetVoxel(Position pos) const;
 	LevelVoxel& Voxel(Position pos);
+
+	void SetVoxelRaw(Position pos, LevelVoxel voxel);
+	LevelVoxel GetVoxelRaw(Position pos) const;
+	LevelVoxel& VoxelRaw(Position pos);
 
 	// Level generate
 	void CreateDirtAndRocks();

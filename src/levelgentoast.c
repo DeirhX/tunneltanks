@@ -118,14 +118,14 @@ static void generate_tree(Level *lvl) {
 
 /* Some cast-to-int tricks here may be fun... ;) */
 static int has_neighbor(Level *lvl, int x, int y) {
-	if (!lvl->GetVoxel({ x - 1, y - 1})) return 1;
-	if (!lvl->GetVoxel({ x,    y - 1 })) return 1;
-	if (!lvl->GetVoxel({ x + 1, y - 1 })) return 1;
-	if (!lvl->GetVoxel({ x - 1, y  })) return 1;
-	if (!lvl->GetVoxel({ x + 1, y  })) return 1;
-	if (!lvl->GetVoxel({ x - 1, y + 1 })) return 1;
-	if (!lvl->GetVoxel({ x,     y + 1 })) return 1;
-	if (!lvl->GetVoxel({ x + 1, y + 1 })) return 1;
+	if (!lvl->GetVoxelRaw({ x - 1, y - 1})) return 1;
+	if (!lvl->GetVoxelRaw({ x,    y - 1 })) return 1;
+	if (!lvl->GetVoxelRaw({ x + 1, y - 1 })) return 1;
+	if (!lvl->GetVoxelRaw({ x - 1, y  })) return 1;
+	if (!lvl->GetVoxelRaw({ x + 1, y  })) return 1;
+	if (!lvl->GetVoxelRaw({ x - 1, y + 1 })) return 1;
+	if (!lvl->GetVoxelRaw({ x,     y + 1 })) return 1;
+	if (!lvl->GetVoxelRaw({ x + 1, y + 1 })) return 1;
 	return 0;
 }
 
@@ -133,10 +133,10 @@ static void set_outside(Level *lvl, char val) {
 	int i;
 	Size size = lvl->GetSize();
 	
-	for (i = 0; i < size.x;   i++) lvl->Voxel({ i, 0 }) = val;
-	for (i = 0; i < size.x;   i++) lvl->Voxel({ i, size.y - 1 }) = val;
-	for (i = 1; i < size.y-1; i++) lvl->Voxel({ 0, i }) = val;
-	for (i = 1; i < size.y-1; i++) lvl->Voxel({ size.x - 1, i }) = val;
+	for (i = 0; i < size.x;   i++) lvl->VoxelRaw({ i, 0 }) = val;
+	for (i = 0; i < size.x;   i++) lvl->VoxelRaw({ i, size.y - 1 }) = val;
+	for (i = 1; i < size.y-1; i++) lvl->VoxelRaw({ 0, i }) = val;
+	for (i = 1; i < size.y-1; i++) lvl->VoxelRaw({ size.x - 1, i }) = val;
 }
 
 static void expand_init(Level *lvl, std::deque<Position>& q) {
@@ -144,8 +144,8 @@ static void expand_init(Level *lvl, std::deque<Position>& q) {
 	
 	for(y=1; y<lvl->GetSize().y-1; y++)
 		for(x=1; x<lvl->GetSize().x-1; x++)
-			if (lvl->GetVoxel({ x, y }) && has_neighbor(lvl, x, y)) {
-				lvl->SetVoxel({ x, y }, 2);
+			if (lvl->GetVoxelRaw({ x, y }) && has_neighbor(lvl, x, y)) {
+				lvl->SetVoxelRaw({ x, y }, 2);
 				q.emplace_back(x,y);
 			}
 }
@@ -168,7 +168,7 @@ static int expand_once(Level *lvl, std::deque<Position>& q) {
 		odds  = MIN3(xodds, yodds, ODDS);
 		
 		if(Random::Bool(odds)) {
-			lvl->SetVoxel(temp, 0);
+			lvl->SetVoxelRaw(temp, 0);
 			count++;
 			
 			/* Now, queue up any neighbors that qualify: */
@@ -179,7 +179,7 @@ static int expand_once(Level *lvl, std::deque<Position>& q) {
 				if(j==4) continue;
 				
 				tx = temp.x + (j%3) - 1; ty = temp.y + (j/3) - 1;
-				c = &lvl->Voxel({ tx, ty });
+				c = &lvl->VoxelRaw({ tx, ty });
 				if(*c == 1) {
 					*c = 2;
 					q.emplace_back(Position{ tx, ty });
@@ -214,14 +214,14 @@ static void randomly_expand(Level *lvl) {
  *----------------------------------------------------------------------------*/
 
 static int count_neighbors(Level* lvl, int x, int y) {
-	return lvl->GetVoxel({ x - 1, y - 1 }) +
-		lvl->GetVoxel({ x,   y - 1 }) +
-		lvl->GetVoxel({ x + 1, y - 1 }) +
-		lvl->GetVoxel({ x - 1, y }) +
-		lvl->GetVoxel({ x + 1, y }) +
-		lvl->GetVoxel({ x - 1, y + 1 }) +
-		lvl->GetVoxel({ x,   y + 1 }) +
-		lvl->GetVoxel({ x + 1, y + 1 });
+	return lvl->GetVoxelRaw({ x - 1, y - 1 }) +
+		lvl->GetVoxelRaw({ x,   y - 1 }) +
+		lvl->GetVoxelRaw({ x + 1, y - 1 }) +
+		lvl->GetVoxelRaw({ x - 1, y }) +
+		lvl->GetVoxelRaw({ x + 1, y }) +
+		lvl->GetVoxelRaw({ x - 1, y + 1 }) +
+		lvl->GetVoxelRaw({ x,   y + 1 }) +
+		lvl->GetVoxelRaw({ x + 1, y + 1 });
 }
 	
 #define MIN2(a,b)   ((a<b) ? a : b)
@@ -233,12 +233,12 @@ static int smooth_once(Level *lvl) {
 	for(y=1; y<size.y-1; y++)
 		for(x=1; x<size.x-1; x++) {
 			int n;
-			LevelVoxel oldbit = lvl->GetVoxel({ x, y });
+			LevelVoxel oldbit = lvl->GetVoxelRaw({ x, y });
 			
 			n = count_neighbors(lvl, x, y);
-			lvl->SetVoxel({ x, y }, oldbit ? (n >= 3) : (n > 4));
+			lvl->SetVoxelRaw({ x, y }, oldbit ? (n >= 3) : (n > 4));
 			
-			count += lvl->GetVoxel({ x, y }) != oldbit;
+			count += lvl->GetVoxelRaw({ x, y }) != oldbit;
 		}
 	return count;
 }

@@ -238,11 +238,11 @@ void braid_generator(Level *lvl) {
 	/* TODO: Have a fill_box() in levelgenutil.c? */
 	for(y=0; y<lvl->GetSize().y; y++)
 		for(x=b->size.x*CELL_SIZE; x<lvl->GetSize().x; x++)
-			lvl->SetVoxel({x, y}, 0);
+			lvl->SetVoxelRaw({x, y}, 0);
 	
 	for(y=b->size.y*CELL_SIZE; y<lvl->GetSize().y; y++)
 		for(x=0; x<b->size.x*CELL_SIZE; x++)
-			lvl->SetVoxel({x, y}, 0);
+			lvl->SetVoxelRaw({x, y}, 0);
 	
 	/* Rough it up a little, and invert: */
 	rough_up(lvl);
