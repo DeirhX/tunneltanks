@@ -211,7 +211,10 @@ void game_finalize(GameData *gd) {
 	tl  = new TankList(lvl, pl);
 	
 	/* Generate our random level: */
-	generate_level(lvl, gd->data.config.gen);
+	for (int i = 20; i-- > 0; ) {
+		lvl = level_new(b, gd->data.config.w, gd->data.config.h);
+		generate_level(lvl, gd->data.config.gen);
+	}
 	level_decorate(lvl);
 	level_make_bases(lvl);
 	
