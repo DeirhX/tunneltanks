@@ -62,7 +62,7 @@ static CollisionType tank_collision(Level *lvl, int dir, int x, int y, TankList 
 		}
 	
 	/* Tank collisions: */
-	if(tl->CheckForCollision(tank, Vector{x,y}, dir)) return CT_COLLIDE;
+	if(tl->CheckForCollision(tank, Position{x,y}, dir)) return CT_COLLIDE;
 	return out;
 }
 
