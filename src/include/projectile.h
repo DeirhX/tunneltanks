@@ -30,12 +30,15 @@ struct Projectile {
 	int		 life;
 
 	bool	is_effect;
-	bool	is_alive;
+	bool	is_alive = false;
 
 	struct Tank* tank;
 
+private:
+	Projectile() = default; // Never use manually. Will be used inside intrusive containers
 public:
-	Projectile() = default;
+	static Projectile Invalid() { return Projectile(); }
+public:
     Projectile(Position position, Position origin, Speed speed, int life, bool is_effect, Tank* tank);
 
 	static std::vector<Projectile> CreateExplosion(Position pos, int count, int r, int ttl);
@@ -51,7 +54,7 @@ class ProjectileList
 {
     ValueContainer<Projectile> container;
 public:
-	Projectile& Add(Projectile projectile = {});
+	Projectile& Add(Projectile projectile);
 	void Add(std::vector<Projectile> projectiles);
 	void Remove(Projectile& projectile) { projectile.Invalidate(); }
 	void Shrink() { container.Shrink(); }

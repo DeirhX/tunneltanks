@@ -22,7 +22,7 @@ typedef void (*TankController)(PublicTankInfo *, void *, int *, int *, int *) ;
 struct Tank
 {
 public:
-	bool is_valid = true;
+	bool is_valid = false;
 	Position pos;
 	Speed speed; /* Velocity... ie: is it moving now? */
 	int direction;
@@ -39,6 +39,11 @@ public:
 	Level* lvl;
 	ProjectileList* pl;
 	//std::shared_ptr<LevelSlice> cached_slice;
+
+private:
+	Tank() = default; // Never use manually. Will be used inside intrusive containers
+public:
+	static Tank Invalid() { return Tank(); }
 
 	Tank(int color, Level* lvl, ProjectileList* pl, Position pos);
 	//~Tank() = default;
