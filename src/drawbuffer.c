@@ -90,7 +90,7 @@ void drawbuffer_set_pixel(DrawBuffer *b, int x, int y, Color color) {
 }
 
 Color drawbuffer_get_pixel(DrawBuffer *b, int x, int y) {
-	if(x >= b->w || y >= b->h) return b->default_color;
+	if(x < 0 || y < 0 || x >= b->w || y >= b->h) return b->default_color;
 	return b->pixel_data[ y * b->w + x ];
 }
 
