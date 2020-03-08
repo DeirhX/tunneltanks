@@ -30,7 +30,7 @@ Tank* TankList::AddTank(int color, Vector p)
 	if (found != list.end())
 		throw GameException("already exists");
 
-	return &this->list.Add(Tank(color, this->lvl, this->pl, Position{p.x, p.y}));
+	return &this->list.ConstructElement(color, this->lvl, this->pl, Position{p.x, p.y});
 	//return this->list.Add(std::make_unique<Tank>(color, this->lvl, this->pl, Position{p.x, p.y}));
 }
 
