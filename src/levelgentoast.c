@@ -165,7 +165,7 @@ static int expand_once(Level *lvl, std::deque<Vector>& q) {
 		yodds = ODDS * MIN2(lvl->height - temp.y, temp.y) / FILTER;
 		odds  = MIN3(xodds, yodds, ODDS);
 		
-		if(rand_bool(odds)) {
+		if(Random::Bool(odds)) {
 			lvl->array[ temp.y*lvl->width + temp.x ] = 0;
 			count++;
 			

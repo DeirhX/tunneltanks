@@ -42,13 +42,13 @@ void rough_up(Level *lvl) {
 	/* For every marked spot, randomly fill it: */
 	for(x=0; x<lvl->width * lvl->height; x++)
 		if(lvl->array[x] == 2)
-			lvl->array[x] = rand_bool(500);
+			lvl->array[x] = Random::Bool(500);
 }
 
 Vector pt_rand(int w, int h, int border) {
 	Vector out;
-	out.x = rand_int(border, w - border);
-	out.y = rand_int(border, h - border);
+	out.x = Random::Int(border, w - border);
+	out.y = Random::Int(border, h - border);
 	return out;
 }
 

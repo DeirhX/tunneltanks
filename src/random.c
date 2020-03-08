@@ -1,33 +1,35 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include <cstdio>
+#include <ctime>
+#include <cstdlib>
 
-#include <gamelib.h>
 #include <random.h>
+#include <gamelib.h>
 
 
-bool rand_bool(int odds) {
-	return rand_int(0,999) < odds;
-}
-
-void rand_seed() {
-	int seed = 0;
-	FILE *urand;
-	
+void Random::Seed()
+{
 	/* Try to load out of /dev/urandom, but it isn't fatal if we can't: */
-	urand = NULL;
-	urand = fopen("/dev/urandom", "r");
-	if(urand) {
-		if(fread(&seed, sizeof(seed), 1, urand) != 1) seed = 0;
+	int seed = 0;
+	FILE* urand = fopen("/dev/urandom", "r");
+	if (urand) {
+		if (fread(&seed, sizeof(seed), 1, urand) != 1) seed = 0;
 		fclose(urand);
 	}
-	
+
 	/* Throw in the time, so that computers w/o the urandom source don't get
 	 * screwed... plus... it doesn't hurt. :) */
-	seed ^= time(NULL);
-	
+	seed ^= time(nullptr);
+	Seed(seed);
+}
+
+void Random::Seed(int seed)
+{
 	gamelib_print("Using seed: %d\n", seed);
-	
 	srand(seed);
+	is_seeded = true;
+}
+
+bool Random::Bool(int odds) {
+	return Random::Int(0,999) < odds;
 }
 

@@ -49,7 +49,7 @@ void level_decorate(Level *lvl) {
 		for(x=0; x<lvl->width; x++) {
 			char *spot = &lvl->array[ y*lvl->width + x ];
 			if(*spot) *spot = ROCK;
-			else      *spot = rand_bool(500) ? DIRT_LO : DIRT_HI;
+			else      *spot = Random::Bool(500) ? DIRT_LO : DIRT_HI;
 		}
 }
 

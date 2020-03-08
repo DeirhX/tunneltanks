@@ -26,8 +26,8 @@ std::vector<Projectile> Projectile::CreateExplosion(Position pos, int count, int
 		items.emplace_back(Projectile{
 			Position{pos.x * 16 + 8, pos.y * 16 + 8},
 			Position{pos.x, pos.y},
-			Speed { rand_int(0,r) - r / 2, rand_int(0,r) - r / 2},
-			rand_int(0,ttl), 1, nullptr });
+			Speed { Random::Int(0,r) - r / 2, Random::Int(0,r) - r / 2},
+			Random::Int(0,ttl), 1, nullptr });
 	}
 	return items;
 }

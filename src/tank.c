@@ -20,7 +20,7 @@ Tank::Tank(int color, Level *lvl, ProjectileList*pl, Position pos) :
 	// this->cached_slice = std::make_shared<LevelSlice>(this, lvl);
 	
 	/* Let's just make the starting direction random, because we can: */
-	this->direction = rand_int(0, 7);
+	this->direction = Random::Int(0, 7);
 	if(this->direction >= 4) this->direction ++;
 	
 	this->lvl = lvl;

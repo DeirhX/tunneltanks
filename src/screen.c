@@ -140,19 +140,19 @@ static void screen_draw_static(Screen *s, Window *w) {
 
 	if(!w->counter) {
 		int intensity = 1000 * energy / STATIC_THRESHOLD;
-		w->showing_static = !rand_bool(intensity);
-		w->counter = rand_int(GAME_FPS/16, GAME_FPS/8) * w->showing_static ? 1u : 4u;
+		w->showing_static = !Random::Bool(intensity);
+		w->counter = Random::Int(GAME_FPS/16, GAME_FPS/8) * w->showing_static ? 1u : 4u;
 
 	} else w->counter--;
 	
 	if(!w->showing_static) return;
 
-#define _BLACK_BAR_RAND rand_int(1, w->r.size.x*w->r.size.y * STATIC_BLACK_BAR_SIZE/1000)
-#define _RAND_COLOR     color_primary[rand_int(0,7)]
+#define _BLACK_BAR_RAND Random::Int(1, w->r.size.x*w->r.size.y * STATIC_BLACK_BAR_SIZE/1000)
+#define _RAND_COLOR     color_primary[Random::Int(0,7)]
 
 	/* Should we draw a black bar in the image? */
-	black_counter = rand_bool(STATIC_BLACK_BAR_ODDS) ? _BLACK_BAR_RAND : 0;
-	drawing_black = black_counter && rand_bool(STATIC_BLACK_BAR_ODDS);
+	black_counter = Random::Bool(STATIC_BLACK_BAR_ODDS) ? _BLACK_BAR_RAND : 0;
+	drawing_black = black_counter && Random::Bool(STATIC_BLACK_BAR_ODDS);
 	
 	/* Develop a static thing image for the window: */
 	for(y=0; y<w->r.size.y; y++)
@@ -174,7 +174,7 @@ static void screen_draw_static(Screen *s, Window *w) {
 			}
 
 			/* Make this semi-transparent: */
-			if(rand_bool(STATIC_TRANSPARENCY)) continue;
+			if(Random::Bool(STATIC_TRANSPARENCY)) continue;
 
 			/* Finally, select a color (either black or random) and draw: */
 			color = drawing_black ? color_blank : _RAND_COLOR;
