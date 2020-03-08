@@ -1,7 +1,6 @@
 #include <cstdio>
 
 #include <level.h>
-#include <level_defn.h>
 #include <levelgenutil.h>
 #include <memalloc.h>
 #include <random.h>
@@ -129,10 +128,10 @@ static void maze_dump(Maze *m) {
 }
 */
 
-static Maze *maze_new(int w, int h) {
+static Maze *maze_new(Size size) {
 	Maze *m = get_object(Maze);
-	m->w = w; m->h = h;
-	m->data = static_cast<Cell*>(get_mem(sizeof(Cell) * w * h));
+	m->w = size.x; m->h = size.y;
+	m->data = static_cast<Cell*>(get_mem(sizeof(Cell) * size.x * size.y));
 	
 	maze_populate(m);
 	
@@ -148,16 +147,15 @@ static void maze_free(Maze *m) {
 
 /* LEVEL-BUILDING LOGIC: */
 
-static void invert_all(Level *lvl) {
-	int i;
-	for(i=0; i<lvl->width * lvl->height; i++)
-		lvl->array[i] = !lvl->array[i];
+static void invert_all(Level *lvl)
+{
+	lvl->ForEachVoxel([](LevelVoxel& voxel) { voxel = !voxel; });
 }
 
 
 void maze_generator(Level *lvl) {
 	int i, x, y;
-	Maze *m = maze_new(lvl->width/CELL_SIZE, lvl->height/CELL_SIZE);
+	Maze *m = maze_new(lvl->GetSize()/CELL_SIZE);
 	
 	/* Reset all of the 'used' flags back to zero: */
 	for(i=0; i<m->w * m->h; i++)
@@ -184,13 +182,13 @@ void maze_generator(Level *lvl) {
 	
 	/* Fill in the unused space left behind on the right/bottom: */
 	/* TODO: Have a fill_box() in levelgenutil.c? */
-	for(y=0; y<lvl->height; y++)
-		for(x=m->w*CELL_SIZE; x<lvl->width; x++)
-			lvl->array[y*lvl->width+x] = 0;
+	for(y=0; y<lvl->GetSize().y; y++)
+		for(x=m->w*CELL_SIZE; x<lvl->GetSize().x; x++)
+			lvl->SetVoxel({ x, y }, 0);
 	
-	for(y=m->h*CELL_SIZE; y<lvl->height; y++)
+	for(y=m->h*CELL_SIZE; y<lvl->GetSize().y; y++)
 		for(x=0; x<m->w*CELL_SIZE; x++)
-			lvl->array[y*lvl->width+x] = 0;
+			lvl->SetVoxel({ x, y }, 0);
 	
 	/* Rough it up a little, and invert: */
 	rough_up(lvl);
@@ -212,10 +210,10 @@ void maze_generator(Level *lvl) {
 					m->data[(y+ty)*m->w+(x+tx)].used = 1;
 		
 		/* Now, add it to the level: */
-		lvl->spawn[i] = Vector(
-			x * CELL_SIZE + CELL_SIZE/2,
-			y * CELL_SIZE + CELL_SIZE/2
-		);
+		lvl->SetSpawn(i, Position{
+			x * CELL_SIZE + CELL_SIZE / 2,
+			y * CELL_SIZE + CELL_SIZE / 2
+			});
 	}
 	
 	maze_free(m);

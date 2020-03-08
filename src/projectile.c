@@ -62,8 +62,6 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 	{
 		/* Is this a bullet, or an effect? */
 		if (p.is_effect) {
-			int x, y;
-
 			/* Effect: */
 
 			/* Did this expire? */
@@ -75,17 +73,17 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 			/* Move the effect: */
 			p.life--;
 			p.pos.x += p.step.x; p.pos.y += p.step.y;
-			x = p.pos.x / 16; y = p.pos.y / 16;
+			Position pos = { p.pos.x / 16, p.pos.y / 16 };
 
 			/* Make sure we didn't hit a level detail: */
-			char c = level_get(level, x, y);
+			LevelVoxel c = level->GetVoxel( pos);
 			if (c != DIRT_HI && c != DIRT_LO && c != BLANK) {
 				Remove(p);
 				continue;
 			}
 
 			/* Effects blank everything out in their paths: */
-			level_set(level, x, y, BLANK);
+			level->SetVoxel(pos, BLANK);
 
 		}
 		else {
@@ -127,7 +125,7 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 				}
 
 				/* Else, did we hit something in the level? */
-				char c = level_get(level, p.pos.x, p.pos.y);
+				LevelVoxel c = level->GetVoxel(p.pos);
 				if (c != BLANK) {
 					/* If we have an associated tank, return the shot: */
 					p.tank->ReturnBullet();

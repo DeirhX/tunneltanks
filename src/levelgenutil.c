@@ -5,50 +5,44 @@
 #include <types.h>
 #include <random.h>
 
-#include <level_defn.h>
-
-
-void fill_all(Level *lvl, char c) {
-	int i;
-	
-	for(i=0; i<lvl->width * lvl->height; i++) {
-		lvl->array[i] = c;
-	}
+void fill_all(Level *lvl, LevelVoxel c) {
+	lvl->ForEachVoxel([c](LevelVoxel& voxel) { voxel = c; });
 }
 
 void rough_up(Level *lvl) {
 	int x, y;
 	
 	/* Sanitize our input: */
-	for(x=0; x<lvl->width * lvl->height; x++)
-		lvl->array[x] = !!lvl->array[x];
+	lvl->ForEachVoxel([](LevelVoxel& voxel) { voxel = !!voxel; });
 	
 	/* Mark all spots that are blank, but next to spots that are marked: */
-	for(x=0; x<lvl->width; x++) {
-		for(y=0; y<lvl->height; y++) {
+	for(x=0; x<lvl->GetSize().x; x++) {
+		for(y=0; y<lvl->GetSize().y; y++) {
 			int t = 0;
 			
-			if(lvl->array[y*lvl->width + x]) continue;
+			if (lvl->GetVoxel({ x, y })) continue;
 			
-			t += (x!=0            ) && lvl->array[y*lvl->width + x - 1] == 1;
-			t += (x!=lvl->width-1 ) && lvl->array[y*lvl->width + x + 1] == 1;
-			t += (y!=0            ) && lvl->array[(y-1)*lvl->width + x] == 1;
-			t += (y!=lvl->height-1) && lvl->array[(y+1)*lvl->width + x] == 1;
+			t += (x!=0            )       && lvl->GetVoxel({ x - 1, y }) == 1;
+			t += (x!=lvl->GetSize().x-1 ) && lvl->GetVoxel({ x + 1, y }) == 1;
+			t += (y!=0            )       && lvl->GetVoxel({ x, y - 1 }) == 1;
+			t += (y!=lvl->GetSize().y-1)  && lvl->GetVoxel({ x, y + 1 }) == 1;
 
-			if(t) lvl->array[y*lvl->width + x] = 2;
+			if(t) lvl->Voxel({ x, y }) = 2;
 		}
 	}
 	
 	/* For every marked spot, randomly fill it: */
-	for(x=0; x<lvl->width * lvl->height; x++)
-		if(lvl->array[x] == 2)
-			lvl->array[x] = Random::Bool(500);
+	lvl->ForEachVoxel([](LevelVoxel& voxel)
+	{
+		if (voxel == 2)
+			voxel = Random::Bool(500);
+	});
 }
 
-Vector pt_rand(int w, int h, int border) {
-	Vector out;
-	out.x = Random::Int(border, w - border);
-	out.y = Random::Int(border, h - border);
+Position pt_rand(Size size, int border) {
+	Position out;
+	out.x = Random::Int(border, size.x - border);
+	out.y = Random::Int(border, size.y - border);
 	return out;
 }
 
@@ -60,8 +54,8 @@ int pt_dist(Vector a, Vector b) {
 
 /* Used for point drawing: */
 static void set_point(Level *lvl, int x, int y, char value) {
-	if(x >= lvl->width || y >= lvl->height) return;
-	lvl->array[y*lvl->width+x] = value;
+	if(x >= lvl->GetSize().x || y >= lvl->GetSize().y) return;
+	lvl->Voxel({ x, y }) = value;
 }
 
 void set_circle(Level *lvl, int x, int y, char value) {

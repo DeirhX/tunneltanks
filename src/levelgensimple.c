@@ -7,8 +7,6 @@
 #include <random.h>
 #include <types.h>
 
-#include <level_defn.h>
-
 namespace levelgen::simple {
 
 constexpr int BORDER = 80;
@@ -36,18 +34,18 @@ static void add_rock_lines(Level *lvl, Side s) {
 	
 	/* Configuration based on what side the rock is on: */
 	if(s == SIDE_TOP) {
-		minx = 0; maxx = lvl->width - 1;
+		minx = 0; maxx = lvl->GetSize().x - 1;
 		miny = 0; maxy = BORDER;
 	} else if(s == SIDE_BOTTOM) {
-		minx = 0; maxx = lvl->width - 1;
-		miny = lvl->height - BORDER - 1; maxy = lvl->height - 1;
+		minx = 0; maxx = lvl->GetSize().x - 1;
+		miny = lvl->GetSize().y - BORDER - 1; maxy = lvl->GetSize().y - 1;
 	} else if(s == SIDE_LEFT) {
-		minx = 0; maxx = lvl->height - 1;
+		minx = 0; maxx = lvl->GetSize().y - 1;
 		miny = 0; maxy = BORDER;
 		needs_flip = 1;
 	} else if(s == SIDE_RIGHT) {
-		minx = 0; maxx = lvl->height - 1;
-		miny = lvl->width - BORDER - 1; maxy = lvl->width - 1;
+		minx = 0; maxx = lvl->GetSize().y - 1;
+		miny = lvl->GetSize().x - BORDER - 1; maxy = lvl->GetSize().x - 1;
 		needs_flip = 1;
 	}
 	
@@ -83,22 +81,22 @@ static void add_rock_lines(Level *lvl, Side s) {
 	} while(cur.x != maxx);
 	
 	/* Do the correct fill sequence, based on side: */
-	#define _LOOKUP_ ((lvl)->array[(y)*(lvl)->width + (x)])
+	#define _LOOKUP_ ((lvl)->Voxel({x, y}))
 	
 	if(s == SIDE_TOP)
-		for(x=0; x<lvl->width; x++)
+		for(x=0; x<lvl->GetSize().x; x++)
 			for(y=0; _LOOKUP_ != s; y++) _LOOKUP_ = 1;
 	
 	else if(s == SIDE_RIGHT)
-		for(y=0; y<lvl->height; y++)
-			for(x=lvl->width-1; _LOOKUP_ != s; x--) _LOOKUP_ = 1;
+		for(y=0; y<lvl->GetSize().y; y++)
+			for(x=lvl->GetSize().x-1; _LOOKUP_ != s; x--) _LOOKUP_ = 1;
 	
 	else if(s == SIDE_BOTTOM)
-		for(x=0; x<lvl->width; x++)
-			for(y=lvl->height-1; _LOOKUP_ != s; y--) _LOOKUP_ = 1;
+		for(x=0; x<lvl->GetSize().x; x++)
+			for(y=lvl->GetSize().y-1; _LOOKUP_ != s; y--) _LOOKUP_ = 1;
 	
 	else if(s == SIDE_LEFT)
-		for(y=0; y<lvl->height; y++)
+		for(y=0; y<lvl->GetSize().y; y++)
 			for(x=0; _LOOKUP_ != s; x++) _LOOKUP_ = 1;
 }
 #undef _LOOKUP_
@@ -107,17 +105,17 @@ static void add_rock_lines(Level *lvl, Side s) {
 static void add_spawns(Level *lvl) {
 	int i, j;
 	
-	lvl->spawn[0] = pt_rand(lvl->width, lvl->height, BORDER);
+	lvl->SetSpawn(0, pt_rand(lvl->GetSize(), BORDER));
 	
 	for(i=1; i<MAX_TANKS; i++) {
 		int done = 0;
 		while(!done) {
 			/* Try adding a new point: */
-			lvl->spawn[i] = pt_rand(lvl->width, lvl->height, BORDER);
+			lvl->SetSpawn(i, pt_rand(lvl->GetSize(), BORDER));
 			
 			/* Make sure that point isn't too close to others: */
 			for(j=0; j<i; j++) {
-				if(pt_dist(lvl->spawn[i],lvl->spawn[j]) < MIN_SPAWN_DIST*MIN_SPAWN_DIST)
+				if(pt_dist(lvl->GetSpawn(i),lvl->GetSpawn(j)) < MIN_SPAWN_DIST*MIN_SPAWN_DIST)
 					break;
 			}
 			

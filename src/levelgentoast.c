@@ -9,7 +9,6 @@
 #include <memalloc.h>
 #include <random.h>
 
-#include <level_defn.h>
 #include <deque>
 
 namespace levelgen::toast {
@@ -47,8 +46,9 @@ static int pairing_cmp(const void *a, const void *b) {
 
 static void generate_tree(Level *lvl) {
 	int *dsets, paircount;
-	int i, j, k;
-	Vector *points;
+	int i, j;
+	int k;
+	Position *points;
 	Pairing *pairs;
 	
 	/* Get an array of disjoint set IDs: */
@@ -56,19 +56,19 @@ static void generate_tree(Level *lvl) {
 	for(i=0; i<TREESIZE; i++) dsets[i] = i;
 	
 	/* Randomly generate all points: */
-	points = static_cast<Vector*>(get_mem( sizeof(Vector) * TREESIZE ));
-	for(i=0; i<TREESIZE; i++) points[i] = pt_rand(lvl->width, lvl->height, BORDER);
+	points = static_cast<Position*>(get_mem( sizeof(Position) * TREESIZE ));
+	for(i=0; i<TREESIZE; i++) points[i] = pt_rand(lvl->GetSize(), BORDER);
 	
 	/* While we're here, copy in some of those points: */
-	lvl->spawn[0] = points[0];
+	lvl->SetSpawn(0, points[0]);
 	for(i=1,j=1; i<TREESIZE && j<MAX_TANKS; i++) {
 		for(k=0; k<j; k++) {
-			if(pt_dist(points[i],lvl->spawn[k]) < MIN_SPAWN_DIST*MIN_SPAWN_DIST)
+			if(pt_dist(points[i],lvl->GetSpawn(k)) < MIN_SPAWN_DIST*MIN_SPAWN_DIST)
 				break;
 		}
 		
 		if(k!=j) continue;
-		lvl->spawn[j++] = points[i];
+		lvl->SetSpawn(j++, points[i]);
 	}
 	if(j!=MAX_TANKS) {
 		/* TODO: More robust error handling. */
@@ -99,7 +99,9 @@ static void generate_tree(Level *lvl) {
 		/* Else, these points are in different disjoint sets. "Join" them by
 		 * drawing them, and merging the two sets: */
 		j+=1;
-		for(k=0; k<TREESIZE; k++) if(dsets[k] == bset) dsets[k] = aset;
+		for(k=0; k<TREESIZE; k++) 
+			if(dsets[k] == bset) 
+				dsets[k] = aset;
 		draw_line(lvl, points[pairs[i].a], points[pairs[i].b], 0, 0);
 	}
 	
@@ -116,42 +118,42 @@ static void generate_tree(Level *lvl) {
 
 /* Some cast-to-int tricks here may be fun... ;) */
 static int has_neighbor(Level *lvl, int x, int y) {
-	if(!lvl->array[ (y-1)*lvl->width + (x-1) ]) return 1;
-	if(!lvl->array[ (y-1)*lvl->width + (x  ) ]) return 1;
-	if(!lvl->array[ (y-1)*lvl->width + (x+1) ]) return 1;
-	if(!lvl->array[ (y  )*lvl->width + (x-1) ]) return 1;
-	if(!lvl->array[ (y  )*lvl->width + (x+1) ]) return 1;
-	if(!lvl->array[ (y+1)*lvl->width + (x-1) ]) return 1;
-	if(!lvl->array[ (y+1)*lvl->width + (x  ) ]) return 1;
-	if(!lvl->array[ (y+1)*lvl->width + (x+1) ]) return 1;
+	if (!lvl->GetVoxel({ x - 1, y - 1})) return 1;
+	if (!lvl->GetVoxel({ x,    y - 1 })) return 1;
+	if (!lvl->GetVoxel({ x + 1, y - 1 })) return 1;
+	if (!lvl->GetVoxel({ x - 1, y  })) return 1;
+	if (!lvl->GetVoxel({ x + 1, y  })) return 1;
+	if (!lvl->GetVoxel({ x - 1, y + 1 })) return 1;
+	if (!lvl->GetVoxel({ x,     y + 1 })) return 1;
+	if (!lvl->GetVoxel({ x + 1, y + 1 })) return 1;
 	return 0;
 }
 
 static void set_outside(Level *lvl, char val) {
 	int i;
-	int w = lvl->width, h = lvl->height;
+	Size size = lvl->GetSize();
 	
-	for(i=0; i<w; i++)   lvl->array[i]           = val;
-	for(i=0; i<w; i++)   lvl->array[(h-1)*w + i] = val;
-	for(i=1; i<h-1; i++) lvl->array[i*w]         = val;
-	for(i=1; i<h-1; i++) lvl->array[i*w + w - 1] = val;
+	for (i = 0; i < size.x;   i++) lvl->Voxel({ i, 0 }) = val;
+	for (i = 0; i < size.x;   i++) lvl->Voxel({ i, size.y - 1 }) = val;
+	for (i = 1; i < size.y-1; i++) lvl->Voxel({ 0, i }) = val;
+	for (i = 1; i < size.y-1; i++) lvl->Voxel({ size.x - 1, i }) = val;
 }
 
-static void expand_init(Level *lvl, std::deque<Vector>& q) {
+static void expand_init(Level *lvl, std::deque<Position>& q) {
 	int x, y;
 	
-	for(y=1; y<lvl->height-1; y++)
-		for(x=1; x<lvl->width-1; x++)
-			if(lvl->array[y*lvl->width+x] && has_neighbor(lvl, x, y)) {
-				lvl->array[y*lvl->width+x] = 2;
+	for(y=1; y<lvl->GetSize().y-1; y++)
+		for(x=1; x<lvl->GetSize().x-1; x++)
+			if (lvl->GetVoxel({ x, y }) && has_neighbor(lvl, x, y)) {
+				lvl->SetVoxel({ x, y }, 2);
 				q.emplace_back(x,y);
 			}
 }
 
 #define MIN2(a,b)   ((a<b) ? a : b)
 #define MIN3(a,b,c) ((a<b) ? a : (b<c) ? b : c)
-static int expand_once(Level *lvl, std::deque<Vector>& q) {
-	Vector temp;
+static int expand_once(Level *lvl, std::deque<Position>& q) {
+	Position temp;
 	int j, count = 0;
 	
 	size_t total = q.size();
@@ -161,12 +163,12 @@ static int expand_once(Level *lvl, std::deque<Vector>& q) {
 		temp = q.front();
 		q.pop_front();
 
-		xodds = ODDS * MIN2(lvl->width - temp.x,  temp.x) / FILTER;
-		yodds = ODDS * MIN2(lvl->height - temp.y, temp.y) / FILTER;
+		xodds = ODDS * MIN2(lvl->GetSize().x - temp.x, temp.x) / FILTER;
+		yodds = ODDS * MIN2(lvl->GetSize().y - temp.y, temp.y) / FILTER;
 		odds  = MIN3(xodds, yodds, ODDS);
 		
 		if(Random::Bool(odds)) {
-			lvl->array[ temp.y*lvl->width + temp.x ] = 0;
+			lvl->SetVoxel(temp, 0);
 			count++;
 			
 			/* Now, queue up any neighbors that qualify: */
@@ -177,10 +179,10 @@ static int expand_once(Level *lvl, std::deque<Vector>& q) {
 				if(j==4) continue;
 				
 				tx = temp.x + (j%3) - 1; ty = temp.y + (j/3) - 1;
-				c = &lvl->array[ty*lvl->width + tx];
+				c = &lvl->Voxel({ tx, ty });
 				if(*c == 1) {
 					*c = 2;
-					q.emplace_back(Vector{ tx, ty });
+					q.emplace_back(Position{ tx, ty });
 				}
 			}
 		} else
@@ -190,19 +192,16 @@ static int expand_once(Level *lvl, std::deque<Vector>& q) {
 }
 
 static void expand_cleanup(Level *lvl) {
-	int x, y;
-	
-	for(y=0; y<lvl->height; y++)
-		for(x=0; x<lvl->width; x++)
-			lvl->array[y*lvl->width+x] = !! lvl->array[y*lvl->width+x];
+
+	lvl->ForEachVoxel([](LevelVoxel& voxel) { voxel = !!voxel; });
 }
 
 static void randomly_expand(Level *lvl) {
-	int cur = 0, goal = lvl->width * lvl->height * FILLRATIO / 100;
+	int cur = 0, goal = lvl->GetSize().x * lvl->GetSize().y * FILLRATIO / 100;
 	
 	/* Experimentally, the queue never grew to larger than 3/50ths of the level
 	 * size, so we can use that to save quite a bit of memory: */
-	auto queue = std::deque<Vector>(lvl->width * lvl->height * 3 / 50);
+	auto queue = std::deque<Position>(lvl->GetSize().x * lvl->GetSize().y * 3 / 50);
 	
 	expand_init(lvl, queue);
 	while( (cur += expand_once(lvl, queue)) < goal );
@@ -214,32 +213,32 @@ static void randomly_expand(Level *lvl) {
  * STAGE 3: Smooth out the graph with a cellular automaton                    *
  *----------------------------------------------------------------------------*/
 
-static int count_neighbors(Level *lvl, int x, int y) {
-	int w = lvl->width;
-	return lvl->array[ (y-1)*w + (x-1) ] +
-	       lvl->array[ (y-1)*w + (x  ) ] +
-	       lvl->array[ (y-1)*w + (x+1) ] +
-	       lvl->array[ (y  )*w + (x-1) ] +
-	       lvl->array[ (y  )*w + (x+1) ] +
-	       lvl->array[ (y+1)*w + (x-1) ] +
-	       lvl->array[ (y+1)*w + (x  ) ] +
-	       lvl->array[ (y+1)*w + (x+1) ];
+static int count_neighbors(Level* lvl, int x, int y) {
+	return lvl->GetVoxel({ x - 1, y - 1 }) +
+		lvl->GetVoxel({ x,   y - 1 }) +
+		lvl->GetVoxel({ x + 1, y - 1 }) +
+		lvl->GetVoxel({ x - 1, y }) +
+		lvl->GetVoxel({ x + 1, y }) +
+		lvl->GetVoxel({ x - 1, y + 1 }) +
+		lvl->GetVoxel({ x,   y + 1 }) +
+		lvl->GetVoxel({ x + 1, y + 1 });
 }
-
+	
 #define MIN2(a,b)   ((a<b) ? a : b)
 #define MIN3(a,b,c) ((a<b) ? a : (b<c) ? b : c)
 static int smooth_once(Level *lvl) {
 	int x, y, count = 0;
-	
-	for(y=1; y<lvl->height-1; y++)
-		for(x=1; x<lvl->width-1; x++) {
+
+	Size size = lvl->GetSize();
+	for(y=1; y<size.y-1; y++)
+		for(x=1; x<size.x-1; x++) {
 			int n;
-			char oldbit = lvl->array[ y*lvl->width + x ];
+			LevelVoxel oldbit = lvl->GetVoxel({ x, y });
 			
 			n = count_neighbors(lvl, x, y);
-			lvl->array[ y*lvl->width + x ] = oldbit ? (n>=3) : (n>4);
+			lvl->SetVoxel({ x, y }, oldbit ? (n >= 3) : (n > 4));
 			
-			count += lvl->array[ y*lvl->width + x ] != oldbit;
+			count += lvl->GetVoxel({ x, y }) != oldbit;
 		}
 	return count;
 }

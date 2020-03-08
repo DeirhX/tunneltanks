@@ -8,140 +8,154 @@
 #include <drawbuffer.h>
 #include <gamelib.h>
 
-#include <level_defn.h>
+#include "exceptions.h"
+#include <cassert>
 
-
-Level *level_new(DrawBuffer *b, int w, int h) {
-	Level *lvl;
-	int i;
-	
-	lvl = get_object(Level);
-	lvl->width  = w;
-	lvl->height = h;
-	lvl->b = b;
-	
-	lvl->array = static_cast<char*>(get_mem( sizeof(char) * w * h ));
-	for(i=0; i<w*h; i++) lvl->array[i] = 1;
-	
-	return lvl;
+Level::Level(Size size, DrawBuffer* b)
+	: size(size), drawBuffer (b)
+{
+	this->array.reset(new LevelVoxel[size.x * size.y]);
+	for (int i = 0; i < size.x * size.y; ++i)
+		this->array.get()[i] = 1;
 }
 
-void level_destroy(Level *lvl) {
-	if(!lvl) return;
-	free_mem(lvl->array);
-	free_mem(lvl);
+void Level::SetVoxel(Position pos, LevelVoxel voxel)
+{
+	if (!IsInBounds(pos))
+		throw GameException("Invalid position");
+	this->array.get()[ pos.y*this->size.x + pos.x ] = voxel;
+
+	CommitPixel(pos);
 }
 
-void level_set(Level *lvl, int x, int y, char data) {
-	lvl->array[ y*lvl->width + x ] = data;
-	level_draw_pixel(lvl, lvl->b, x, y);
+LevelVoxel& Level::Voxel(Position pos)
+{
+	if (!IsInBounds(pos))
+		throw GameException("Invalid position");
+	return this->array.get()[pos.y * this->size.x + pos.x];
 }
 
-char level_get(Level *lvl, int x, int y) {
-	if(x>=lvl->width || y>=lvl->height) return ROCK;
-	return lvl->array[ y*lvl->width + x ];
+LevelVoxel Level::GetVoxel(Position pos) const
+{
+	if (!IsInBounds(pos))
+		return ROCK;
+	return this->array.get()[ pos.y * this->size.x + pos.x ];
 }
 
-void level_decorate(Level *lvl) {
-	int x, y;
-	
-	for(y=0; y<lvl->height; y++)
-		for(x=0; x<lvl->width; x++) {
-			char *spot = &lvl->array[ y*lvl->width + x ];
-			if(*spot) *spot = ROCK;
-			else      *spot = Random::Bool(500) ? DIRT_LO : DIRT_HI;
+void Level::CreateDirtAndRocks()
+{
+	for(int y = 0; y<this->size.y; y++)
+		for(int x = 0; x<this->size.x; x++) {
+			char& spot = this->Voxel({ x, y });
+			if(spot)  spot = ROCK;
+			else      spot = Random::Bool(500) ? DIRT_LO : DIRT_HI;
 		}
 }
 
-static void make_base(Level *lvl, int bx, int by, int color) {
-	int x, y;
+void Level::CreateBase(Position pos, TankColor color)
+{
+	if(color >= MAX_TANKS) 
+		return;
 	
-	if(color >= MAX_TANKS) return;
-	
-	for(y=-BASE_SIZE/2; y<=BASE_SIZE/2; y++) {
-		for(x=-BASE_SIZE/2; x<=BASE_SIZE/2; x++) {
-			if(abs(x)==BASE_SIZE/2 || abs(y)==BASE_SIZE/2) {
-				if(x>=-BASE_DOOR_SIZE/2 && x<=BASE_DOOR_SIZE/2) continue;
-				lvl->array[(by+y)*lvl->width + bx+x] = static_cast<char>(BASE + color);
-				continue;
+	for(int y = -BASE_SIZE / 2; y<=BASE_SIZE/2; y++) {
+		for(int x = -BASE_SIZE / 2; x<=BASE_SIZE/2; x++) 
+		{
+			Position pix = pos + Offset{ x, y };
+			if(abs(x) == BASE_SIZE/2 || abs(y) == BASE_SIZE/2) 
+			{	// Outline
+				if(x >= -BASE_DOOR_SIZE/2 && x <= BASE_DOOR_SIZE/2) 
+					continue;
+
+				SetVoxel(pix, static_cast<char>(BASE + color));
 			}
-			lvl->array[(by+y)*lvl->width + bx+x] = BLANK;
+			else
+				SetVoxel(pix, BLANK);
 		}
 	}
 }
 
 /* TODO: Rethink the method for adding bases, as the current method DEMANDS that
  *       you use MAX_TANKS tanks. */
-void level_make_bases(Level *lvl) {
-	int i;
-	for(i=0; i<MAX_TANKS; i++)
-		/*level_dig_hole(lvl, lvl->spawn[i].x, lvl->spawn[i].y);*/
-		make_base(lvl, lvl->spawn[i].x, lvl->spawn[i].y, i);
+void Level::CreateBases()
+{
+	for (TankColor i = 0; i < MAX_TANKS; i++) {
+		CreateBase({ this->spawn[i].x, this->spawn[i].y }, i);
+	}
 }
 
-Vector level_get_spawn(Level *lvl, int i) {
-	return lvl->spawn[i];
+Position Level::GetSpawn(TankColor color) const
+{
+	assert(color >= 0 && color < this->spawn.size());
+	return this->spawn[color];
 }
 
-int level_dig_hole(Level *lvl, int x, int y) {
-	int tx, ty;
-	int did_dig = 0;
+void Level::SetSpawn(TankColor color, Position pos)
+{
+	assert(color >= 0 && color < this->spawn.size());
+	this->spawn[color] = pos;
+}
+
+bool Level::DigHole(Position pos)
+{
+	bool did_dig = false;
 	
-	for(ty=y-3; ty<=y+3; ty++)
-		for(tx=x-3; tx<=x+3; tx++) {
-			char oldcolor;
-			
+	for(int ty = pos.y - 3; ty<= pos.y+3; ty++)
+		for(int tx = pos.x - 3; tx<= pos.x+3; tx++) {
 			/* Don't go out-of-bounds: */
-			if(tx >= lvl->width || ty >= lvl->height) continue;
+			LevelVoxel voxel = GetVoxel({ tx, ty });
+			if (voxel != DIRT_HI && voxel != DIRT_LO) 
+				continue;
 			
 			/* Don't take out the corners: */
-			if((tx==x-3 || tx==x+3) && (ty==y-3 || ty==y+3)) continue;
+			if((tx==pos.x-3 || tx== pos.x+3) && (ty== pos.y-3 || ty== pos.y+3)) 
+				continue;
 			
-			/* Only take out dirt: */
-			oldcolor = lvl->array[ty*lvl->width + tx];
-			if(oldcolor != DIRT_HI && oldcolor != DIRT_LO) continue;
-			
-			level_set(lvl, tx, ty, BLANK);
-			did_dig = 1;
+			SetVoxel({ tx, ty }, BLANK);
+			did_dig = true;
 		}
 	
 	return did_dig;
 }
 
-void level_draw_all(Level *lvl, DrawBuffer *b) {
-	int x, y;
-	int color;
-	
-	for(y=0; y<lvl->height; y++)
-		for(x=0; x<lvl->width; x++) {
-			char val = lvl->array[y*lvl->width + x];
+void Level::CommitAll() const
+{
+	for(int y=0; y<this->size.y; y++)
+		for(int x=0; x<this->size.x; x++) {
+			char val = this->GetVoxel({ x, y });
 			switch(val) {
-				case ROCK:    drawbuffer_set_pixel(b, x, y, color_rock); break;
-				case DIRT_HI: drawbuffer_set_pixel(b, x, y, color_dirt_hi); break;
-				case DIRT_LO: drawbuffer_set_pixel(b, x, y, color_dirt_lo); break;
-				case BLANK:   drawbuffer_set_pixel(b, x, y, color_blank); break;
+				case ROCK:    drawbuffer_set_pixel(drawBuffer, x, y, color_rock); break;
+				case DIRT_HI: drawbuffer_set_pixel(drawBuffer, x, y, color_dirt_hi); break;
+				case DIRT_LO: drawbuffer_set_pixel(drawBuffer, x, y, color_dirt_lo); break;
+				case BLANK:   drawbuffer_set_pixel(drawBuffer, x, y, color_blank); break;
 				default:
 					/* Else, this is most likely a base: */
-					if((color=val-BASE) < MAX_TANKS)
-						drawbuffer_set_pixel(b, x, y, color_tank[color][0]); break;
+					int color = val - BASE;
+					if(color < MAX_TANKS)
+						drawbuffer_set_pixel(drawBuffer, x, y, color_tank[color][0]); break;
 			}
 		}
 }
 
+bool Level::IsInBounds(Position pos) const
+{
+	return !(pos.x < 0 || pos.y < 0 || pos.x >= this->size.x || pos.y >= this->size.y);
+}
 
-void level_draw_pixel(Level *lvl, DrawBuffer *b, int x, int y) {
-	int color;
-	char val = lvl->array[y*lvl->width + x];
+
+void Level::CommitPixel(Position pos) const
+{
+	char val = this->GetVoxel(pos);
 	
 	switch(val) {
-		case ROCK:    drawbuffer_set_pixel(b, x, y, color_rock); break;
-		case DIRT_HI: drawbuffer_set_pixel(b, x, y, color_dirt_hi); break;
-		case DIRT_LO: drawbuffer_set_pixel(b, x, y, color_dirt_lo); break;
-		case BLANK:   drawbuffer_set_pixel(b, x, y, color_blank); break;
+		case ROCK:    drawbuffer_set_pixel(drawBuffer, pos.x, pos.y, color_rock); break;
+		case DIRT_HI: drawbuffer_set_pixel(drawBuffer, pos.x, pos.y, color_dirt_hi); break;
+		case DIRT_LO: drawbuffer_set_pixel(drawBuffer, pos.x, pos.y, color_dirt_lo); break;
+		case BLANK:   drawbuffer_set_pixel(drawBuffer, pos.x, pos.y, color_blank); break;
 		default:
 			/* Else, this is most likely a base: */
-			if((color=val-BASE) < MAX_TANKS)
-				drawbuffer_set_pixel(b, x, y, color_tank[color][0]); break;
+			int color = val - BASE;
+			if(color < MAX_TANKS)
+				drawbuffer_set_pixel(drawBuffer, pos.x, pos.y, color_tank[color][0]); break;
 	}
 }
 
@@ -149,31 +163,29 @@ void level_draw_pixel(Level *lvl, DrawBuffer *b, int x, int y) {
 /* TODO: This needs to be done in a different way, as this approach will take 
  * MAX_TANKS^2 time to do all collision checks for all tanks. It should only
  * take MAX_TANKS time. */
-BaseCollision level_check_base_collision(Level *lvl, int x, int y, int color) {
-	int id;
-	
-	for(id=0; id < MAX_TANKS; id++) {
-		if(std::abs(lvl->spawn[id].x - x) < BASE_SIZE/2 && std::abs(lvl->spawn[id].y - y) < BASE_SIZE/2) {
-			if(id == color)
-				return BASE_COLLISION_YOURS;
-			return BASE_COLLISION_ENEMY;
+BaseCollision Level::CheckBaseCollision(Position pos, TankColor color)
+{
+	for(TankColor id = 0; id < MAX_TANKS; id++) {
+		if(std::abs(this->spawn[id].x - pos.x) < BASE_SIZE/2 && std::abs(this->spawn[id].y - pos.y) < BASE_SIZE/2) {
+			if (id == color)
+				return BaseCollision::Yours;
+			return BaseCollision::Enemy;
 		}
 	}
 	
-	return BASE_COLLISION_NONE;
+	return BaseCollision::None;
 }
 
 
 /* Dumps a level into a BMP file: */
-void level_dump_bmp(Level *lvl, const char *filename) {
-	int x, y;
-	BMPFile *f = gamelib_bmp_new(lvl->width, lvl->height);
+void Level::DumpBitmap(const char *filename) {
+	BMPFile *f = gamelib_bmp_new(this->size.x, this->size.y);
 	
-	for(y=0; y<lvl->height; y++)
-		for(x=0; x<lvl->width; x++) {
+	for(int y = 0; y< this->size.y; y++)
+		for(int x = 0; x< this->size.x; x++) {
 			Color color = Color(0,0,0);
 			
-			char val = lvl->array[y*lvl->width + x];
+			char val = this->GetVoxel({ x, y });
 			
 			if     (val == DIRT_HI) color = color_dirt_hi;
 			else if(val == DIRT_LO) color = color_dirt_lo;

@@ -1,40 +1,92 @@
 #pragma once
-typedef struct Level Level;
 
 #include <drawbuffer.h>
 #include <types.h>
+#include "tweak.h"
+#include <memory>
+#include <array>
 
+enum class BaseCollision
+{
+	None,
+	Yours,
+	Enemy,
+};
 
-/* (Con|De)structor: */
-Level *level_new(DrawBuffer *b, int w, int h) ;
-void   level_destroy(Level *lvl) ;
+using LevelVoxel = char;
 
-/* Exposes the level data: */
-void level_set(Level *lvl, int x, int y, char data) ;
-char level_get(Level *lvl, int x, int y) ;
+class Level
+{
+public:
+	
+private:
+	std::unique_ptr<LevelVoxel>  array;
+	Size    size;
+	DrawBuffer* drawBuffer;
+	std::array<Position, MAX_TANKS> spawn;
 
-/* Decorates a level for drawing. Should be called by level generators: */
-void level_decorate(Level *lvl) ;
-void level_make_bases(Level *lvl) ;
+public:
+	Level(Size size, DrawBuffer* db);
 
-Vector level_get_spawn(Level *lvl, int i);
+	Size GetSize() const { return size; };
+	void SetVoxel(Position pos, LevelVoxel voxel);
+	LevelVoxel GetVoxel(Position pos) const;
+	LevelVoxel& Voxel(Position pos);
 
-int level_dig_hole(Level *lvl, int x, int y) ;
+	// Level generate
+	void CreateDirtAndRocks();
+	void CreateBases();
+	 template <typename VoxelFunc>
+	void ForEachVoxel(VoxelFunc func);
 
-void level_draw_all(Level *lvl, DrawBuffer *b) ;
-void level_draw_pixel(Level *lvl, DrawBuffer *b, int x, int y) ;
+	Position GetSpawn(TankColor color) const;
+	void SetSpawn(TankColor color, Position pos);
+	bool DigHole(Position pos);
+	BaseCollision CheckBaseCollision(Position pos, TankColor color);
 
-/* Will return a value indicating coll: */
-typedef enum BaseCollision {
-	BASE_COLLISION_NONE,
-	BASE_COLLISION_YOURS,
-	BASE_COLLISION_ENEMY
-} BaseCollision;
+	void CommitPixel(Position pos) const;
+	void CommitAll() const;
+	void DumpBitmap(const char* filename);
+private:
+	bool IsInBounds(Position pos) const;
+	
+	void CreateBase(Position pos, TankColor color);
+};
 
-BaseCollision level_check_base_collision(Level *lvl, int x, int y, int color) ;
+template <typename VoxelFunc>
+void Level::ForEachVoxel(VoxelFunc voxelFunc)
+{
+	for (int x = 0; x < this->GetSize().x; ++x)
+		for (int y = 0; y < this->GetSize().y; ++y)
+		{
+			voxelFunc(this->Voxel({ x, y }));
+		}
+}
 
-/* Dumps a decorated level into a color bmp file: */
-void level_dump_bmp(Level *lvl, const char *filename) ;
-
-
-
+///* (Con|De)structor: */
+//Level *level_new(DrawBuffer *b, int w, int h) ;
+//void   level_destroy(Level *lvl) ;
+//
+///* Exposes the level data: */
+//void level_set(Level *lvl, int x, int y, char data) ;
+//char level_get(Level *lvl, int x, int y) ;
+//
+///* Decorates a level for drawing. Should be called by level generators: */
+//void level_decorate(Level *lvl) ;
+//void level_make_bases(Level *lvl) ;
+//
+//Vector level_get_spawn(Level *lvl, int i);
+//
+//int level_dig_hole(Level *lvl, int x, int y) ;
+//
+//void level_draw_all(Level *lvl, DrawBuffer *b) ;
+//void level_draw_pixel(Level *lvl, DrawBuffer *b, int x, int y) ;
+//
+///* Will return a value indicating coll: */
+//
+//
+///* Dumps a decorated level into a color bmp file: */
+//void level_dump_bmp(Level *lvl, const char *filename) ;
+//
+//
+//

@@ -54,7 +54,7 @@ static CollisionType tank_collision(Level *lvl, int dir, int x, int y, TankList 
 			char c = TANK_SPRITE[dir][3+ty][3+tx];
 			if(!c) continue;
 			
-			c = level_get(lvl, x+tx, y+ty);
+			c = lvl->GetVoxel({ x + tx, y + ty });
 			
 			if(c==DIRT_HI || c==DIRT_LO) out = CT_DIRT;
 			
@@ -73,7 +73,7 @@ void Tank::DoMove(TankList *tl) {
 	
 	/* Calculate all of our motion: */
 	if(this->controller) {
-		Vector         base = level_get_spawn(this->lvl, this->color);
+		Vector         base = this->lvl->GetSpawn(this->color);
 		PublicTankInfo i = {
 			.health = this->health,
 			.energy = this->energy,
@@ -95,7 +95,7 @@ void Tank::DoMove(TankList *tl) {
 			
 			/* If so, then we can move: */
 			if( ct == CT_DIRT ) {
-				level_dig_hole(this->lvl, this->pos.x+this->speed.x, this->pos.y+this->speed.y);
+				this->lvl->DigHole(this->pos + (1 * this->speed));
 			}
 			if (ct != CT_DIRT || this->is_shooting)
             {
@@ -126,15 +126,13 @@ void Tank::DoMove(TankList *tl) {
 }
 
 /* Check to see if we're in any bases, and heal based on that: */
-void Tank::TryBaseHeal() {
-	BaseCollision c;
-
-	c = level_check_base_collision(this->lvl, this->pos.x, this->pos.y, this->color);
-	if(c == BASE_COLLISION_YOURS) {
+void Tank::TryBaseHeal()
+{
+	BaseCollision c = this->lvl->CheckBaseCollision({this->pos.x, this->pos.y}, this->color);
+	if(c == BaseCollision::Yours) {
 		this->AlterEnergy(TANK_HOME_CHARGE);
 		this->AlterHealth(TANK_HOME_HEAL);
-
-	} else if(c == BASE_COLLISION_ENEMY)
+	} else if(c == BaseCollision::Enemy)
 		this->AlterEnergy(TANK_ENEMY_CHARGE);
 }
 

@@ -67,7 +67,7 @@ static void twitch_fill(TankList *tl, Level *lvl, int starting_id) {
 	int i;
 	
 	for(i=starting_id; i<MAX_TANKS; i++) {
-		Tank *t = tl->AddTank(i, level_get_spawn(lvl, i));
+		Tank *t = tl->AddTank(i, lvl->GetSpawn(i));
 		controller_twitch_attach(t);
 	}
 }
@@ -86,7 +86,7 @@ static void init_single_player(Screen *s, TankList *tl, Level *lvl) {
 	gamelib_debug("XYWH: %u %u %u %u", gui.pos.x, gui.pos.y, gui.size.x, gui.size.y);
 	
 	/* Ready the tank! */
-	t = tl->AddTank(0, level_get_spawn(lvl, 0));
+	t = tl->AddTank(0, lvl->GetSpawn(0));
 	gamelib_tank_attach(t, 0, 1);
 	
 	screen_add_window(s, Rect{ Position{ 2, 2 }, Size {GAME_WIDTH - 4, GAME_HEIGHT - 6 - STATUS_HEIGHT} }, t);
@@ -106,13 +106,13 @@ static void init_double_player(Screen *s, TankList *tl, Level *lvl) {
 	Tank *t;
 	
 	/* Ready the tanks! */
-	t = tl->AddTank(0, level_get_spawn(lvl, 0));
+	t = tl->AddTank(0, lvl->GetSpawn(0));
 	gamelib_tank_attach(t, 0, 2);
 	screen_add_window(s, Rect(2, 2, GAME_WIDTH/2-3, GAME_HEIGHT-6-STATUS_HEIGHT), t);
 	screen_add_status(s, Rect(3, GAME_HEIGHT - 2 - STATUS_HEIGHT, GAME_WIDTH/2-5-2, STATUS_HEIGHT), t, 0);
 	
 	/* Load up two controllable tanks: */
-	t = tl->AddTank(1, level_get_spawn(lvl, 1));
+	t = tl->AddTank(1, lvl->GetSpawn(1));
 	
 	/*controller_twitch_attach(t);  << Attach a twitch to a camera tank, so we can see if they're getting smarter... */
 	gamelib_tank_attach(t, 1, 2);
@@ -207,21 +207,21 @@ void game_finalize(GameData *gd) {
 	s   = screen_new    (gd->data.config.is_fullscreen);
 	pl  = new ProjectileList();
 	b   = drawbuffer_new(gd->data.config.w, gd->data.config.h);
-	lvl = level_new     (b, gd->data.config.w, gd->data.config.h);
+	lvl = new Level(Size{ gd->data.config.w, gd->data.config.h }, b);
 	tl  = new TankList(lvl, pl);
 	
 	/* Generate our random level: */
 	generate_level(lvl, gd->data.config.gen);
-	level_decorate(lvl);
-	level_make_bases(lvl);
+	lvl->CreateDirtAndRocks();
+	lvl->CreateBases();
 	
 	/* Debug the starting data, if we're debugging: */
 	if(gd->is_debug)
-		level_dump_bmp(lvl, "debug_start.bmp");
+		lvl->DumpBitmap("debug_start.bmp");
 	
 	/* Start drawing! */
 	drawbuffer_set_default(b, color_rock);
-	level_draw_all(lvl, b);
+	lvl->CommitAll();
 	screen_set_mode_level(s, b);
 	
 	/* Set up the players/GUI: */
@@ -298,12 +298,12 @@ void game_free(GameData *gd) {
 	if(gd->is_active) {
 		/* Debug if we need to: */
 		if(gd->is_debug)
-			level_dump_bmp(gd->data.active.lvl, "debug_end.bmp");
+			gd->data.active.lvl->DumpBitmap("debug_end.bmp");
 		
 		drawbuffer_destroy(gd->data.active.b);
 		delete			  (gd->data.active.pl);
 		delete			  (gd->data.active.tl);
-		level_destroy     (gd->data.active.lvl);
+		delete			  (gd->data.active.lvl);
 		screen_destroy    (gd->data.active.s);
 	}
 	

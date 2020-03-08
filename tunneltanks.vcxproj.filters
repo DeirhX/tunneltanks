@@ -128,9 +128,6 @@
     <ClInclude Include="src\include\level.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\include\level_defn.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\include\levelgen.h">
       <Filter>src</Filter>
     </ClInclude>

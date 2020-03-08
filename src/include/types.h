@@ -45,9 +45,13 @@ struct Offset : public Vector
 inline Vector operator+(Vector v, Vector o) { return { v.x + o.x, v.y + o.y }; }
 inline Vector operator-(Vector v, Vector o) { return { v.x - o.x, v.y - o.y }; }
 inline Offset operator*(Speed s, int t) { return { s.x * t, s.y * t }; }
+inline Offset operator*(int t, Speed s) { return { s.x * t, s.y * t }; }
 inline Size operator*(Size s, int t) { return { s.x * t, s.y * t }; }
+inline Size operator*(int t, Size s) { return { s.x * t, s.y * t }; }
+inline Size operator/(Size s, int t) { return { s.x / t, s.y / t }; }
 inline Offset operator-(Position p, Position o) { return { p.x - o.x, p.y - o.y }; }
 inline Position operator+(Position v, Offset o) { return { v.x + o.x, v.y + o.y }; }
+inline Position operator+(Position v, Size o) { return { v.x + o.x, v.y + o.y }; }
 
 
 /* A simple struct for quads: */
@@ -66,7 +70,7 @@ struct Color {
     Color(unsigned char r, unsigned char g, unsigned char b) : r(r), g(g), b(b) { }
 };
 
-
+using TankColor = char;
 
 
 

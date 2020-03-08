@@ -41,7 +41,7 @@ public:
 	void Remove(Projectile& projectile) { projectile.Invalidate(); }
 	void Shrink() { container.Shrink(); }
 
-	void Advance(struct Level* level, struct TankList* tankList);
+	void Advance(class Level* level, struct TankList* tankList);
 	void Erase(struct DrawBuffer* drawBuffer);
     void Draw(struct DrawBuffer* drawBuffer);
 };

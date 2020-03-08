@@ -27,7 +27,7 @@ public:
 	Speed speed; /* Velocity... ie: is it moving now? */
 	int direction;
 
-	int color;
+	TankColor color;
 
 	int bullet_timer, bullets_left, is_shooting;
 

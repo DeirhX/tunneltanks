@@ -8,7 +8,7 @@ struct LevelView
 	constexpr static int Height = 99;
 
 	struct Tank* tank;
-	struct Level* lvl;
+	class Level* lvl;
 public:
 	enum class QueryResult {
 		Open,

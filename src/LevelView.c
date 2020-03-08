@@ -11,7 +11,7 @@ LevelView::QueryResult LevelView::QueryPoint(Offset offset)
 	Position pos = tank->GetPosition();
 
 	if (abs(offset.x) >= Width / 2 || abs(offset.y) >= Height / 2) return QueryResult::OutOfBounds;
-	char c = level_get(this->lvl, pos.x + offset.x, pos.y + offset.y);
+	char c = this->lvl->GetVoxel(pos + offset);
 
 	if (c == DIRT_HI || c == DIRT_LO || c == BLANK) return QueryResult::Open;
 	return QueryResult::Collide;

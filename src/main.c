@@ -105,15 +105,15 @@ int main(int argc, char *argv[]) {
 	
 	/* If we're only writing the generated level to file, then just do that: */
 	if(outfile_name) {
-		Level *lvl = level_new(NULL, width, height);
+		auto lvl = std::make_unique<Level>(Size{ width, height }, nullptr);
 	
 		/* Generate our random level: */
-		generate_level(lvl, id);
-		level_decorate(lvl);
-		level_make_bases(lvl);
+		generate_level(lvl.get(), id);
+		lvl->CreateDirtAndRocks();
+		lvl->CreateBases();
 		
 		/* Dump it out, and exit: */
-		level_dump_bmp(lvl, outfile_name);
+		lvl->DumpBitmap(outfile_name);
 
 		gamelib_exit();
 		return 0;
