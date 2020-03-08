@@ -58,7 +58,7 @@
     <ClCompile Include="src\levelgensimple.c" />
     <ClCompile Include="src\levelgentoast.c" />
     <ClCompile Include="src\levelgenutil.c" />
-    <ClCompile Include="src\levelslice.c" />
+    <ClCompile Include="src\LevelView.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\memalloc.c" />
     <ClCompile Include="src\pch.cpp" />
@@ -106,7 +106,7 @@
     <ClInclude Include="src\include\levelgensimple.h" />
     <ClInclude Include="src\include\levelgentoast.h" />
     <ClInclude Include="src\include\levelgenutil.h" />
-    <ClInclude Include="src\include\levelslice.h" />
+    <ClInclude Include="src\include\LevelView.h" />
     <ClInclude Include="src\include\level_defn.h" />
     <ClInclude Include="src\include\memalloc.h" />
     <ClInclude Include="src\include\projectile.h" />

@@ -4,24 +4,6 @@
 #include "types.h"
 #include <vector>
 
-
-struct Projectile;
-struct PList;
-struct PListNode;
-
-/*
-PList* plist_new();
-void plist_destroy(PList* pl);
-
-void plist_push_bullet(PList* pl, struct Tank* t);
-void plist_push_explosion(PList* pl, int x, int y, int count, int r, int ttl);
-
-void plist_step(PList* pl, struct Level* b, struct TankList* tl);
-
-void plist_clear(PList* pl, struct DrawBuffer* b);
-void plist_draw(PList* pl, struct DrawBuffer* b);
-*/
-
 struct Projectile {
 	Position pos;       /* The x,y of the 'hot' portion.  (#ff3408) */
 	Position pos_old;   /* The x,y of the 'cold' portion. (#ba0000) */
@@ -44,8 +26,8 @@ public:
 	static std::vector<Projectile> CreateExplosion(Position pos, int count, int r, int ttl);
 	static Projectile CreateBullet(Tank* t);
 
-	bool IsInvalid() { return !is_alive; }
-	bool IsValid() { return is_alive; }
+	bool IsInvalid() const { return !is_alive; }
+	bool IsValid() const { return is_alive; }
 	void Invalidate() { is_alive = false; }
 };
 

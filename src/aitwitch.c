@@ -5,7 +5,7 @@
 #include <memalloc.h>
 #include <random.h>
 #include <tweak.h>
-#include "levelslice.h"
+#include "LevelView.h"
 
 
 /* Used when seeking a base entrance: */
@@ -35,8 +35,8 @@ static void do_start(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
 	TwitchPrivateData *data = static_cast<TwitchPrivateData*>(d);
 	int no_up, no_down;
 	
-	no_up   = level_slice_query_circle(i->slice, 0, -OUTSIDE+1) == LSQ_COLLIDE;
-	no_down = level_slice_query_circle(i->slice, 0,  OUTSIDE-1) == LSQ_COLLIDE;
+	no_up = i->level_view.QueryCircle(Offset{ 0, -OUTSIDE + 1 }) == LevelView::QueryResult::Collide;
+	no_down = i->level_view.QueryCircle(Offset{ 0,  OUTSIDE - 1 }) == LevelView::QueryResult::Collide;
 	
 	if(no_up && no_down) {
 		/* TODO: Make it so that this condition isn't possible... */

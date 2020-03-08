@@ -10,14 +10,14 @@
 #include <projectile.h>
 #include <random.h>
 #include <tanklist.h>
-#include <levelslice.h>
+#include <LevelView.h>
 #include <algorithm>
 
 
 Tank::Tank(int color, Level *lvl, ProjectileList*pl, Position pos) :
 	pos(pos), color(color), is_valid(true)
 {
-	// this->cached_slice = std::make_shared<LevelSlice>(this, lvl);
+	// this->cached_slice = std::make_shared<LevelView>(this, lvl);
 	
 	/* Let's just make the starting direction random, because we can: */
 	this->direction = Random::Int(0, 7);
@@ -79,7 +79,7 @@ void Tank::DoMove(TankList *tl) {
 			.energy = this->energy,
 			.x      = static_cast<int>(this->pos.x - base.x),
 			.y      = static_cast<int>(this->pos.y - base.y),
-			.slice  = LevelSlice(this, this->lvl)};
+			.level_view  = LevelView(this, this->lvl)};
 		this->controller(&i, this->controller_data.get(), &this->speed.x, &this->speed.y, &this->is_shooting);
 	}
 	

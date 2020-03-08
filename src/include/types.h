@@ -7,11 +7,19 @@ struct Vector {
 	int x = 0, y = 0;
 	Vector() {}
 	Vector(int x, int y) : x(x), y(y) { }
+
+	//Vector operator+(Vector other) { return Vector{ x + other.x, y + other.y }; }
 };
 
 using Position = Vector;
 using Size = Vector;
 using Speed = Vector;
+//using Offset = Vector;
+struct Offset : Vector
+{
+	Offset(int dx, int dy) : Vector(dx, dy) {}
+};
+inline Position operator+(Position v, Offset o) { return Vector{ v.x + o.x, v.y + o.y }; }
 
 /* A simple struct for quads: */
 struct Rect {

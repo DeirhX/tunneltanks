@@ -66,9 +66,6 @@
     <ClCompile Include="src\levelgenutil.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\levelslice.c">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\main.c">
       <Filter>src</Filter>
     </ClCompile>
@@ -97,6 +94,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\exceptions.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LevelView.c">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -149,9 +149,6 @@
     <ClInclude Include="src\include\levelgenutil.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\include\levelslice.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\include\memalloc.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -189,6 +186,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\include\containers.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\LevelView.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

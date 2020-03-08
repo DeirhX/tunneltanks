@@ -6,15 +6,15 @@
 #include <screen.h>
 #include <drawbuffer.h>
 #include <projectile.h>
-#include <levelslice.h>
+#include <LevelView.h>
 
-struct LevelSlice;
+struct LevelView;
 
 /* Put inside a structure, so we are protected from casual AI cheating: */
 typedef struct PublicTankInfo {
 	int health, energy;
 	int x, y; /* relative from home base */
-	LevelSlice slice;
+	LevelView level_view;
 } PublicTankInfo;
 
 typedef void (*TankController)(PublicTankInfo *, void *, int *, int *, int *) ;
@@ -38,7 +38,7 @@ public:
 
 	Level* lvl;
 	ProjectileList* pl;
-	//std::shared_ptr<LevelSlice> cached_slice;
+	//std::shared_ptr<LevelView> cached_slice;
 
 private:
 	Tank() = default; // Never use manually. Will be used inside intrusive containers
