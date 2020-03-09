@@ -16,3 +16,4 @@ tunneltanks
 /obj/
 *.vcxproj.user
 **/.vs/
+/packages/
