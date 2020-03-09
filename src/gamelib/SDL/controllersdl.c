@@ -17,12 +17,12 @@ typedef struct KeyboardPrivateData {
 	SDLKey left, right, up, down, shoot;
 } KeyboardPrivateData;
 
-static void keyboard_controller(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
+static void keyboard_controller(PublicTankInfo *i, void *d, Speed *spd, int *s) {
 	KeyboardPrivateData *data = static_cast<KeyboardPrivateData*>(d);
 	Uint8 *keys = SDL_GetKeyState( NULL );
 	
-	*vx = keys[data->right] - keys[data->left];
-	*vy = keys[data->down]  - keys[data->up];
+	spd->x = keys[data->right] - keys[data->left];
+	spd->y = keys[data->down]  - keys[data->up];
 	*s  = keys[data->shoot];
 }
 
@@ -53,7 +53,7 @@ typedef struct JoystickPrivateData {
  * interpretted as going in that direction: */
 #define CUTOFF (10000)
 
-static void joystick_controller(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
+static void joystick_controller(PublicTankInfo *i, void *d, Speed *spd, int *s) {
 	JoystickPrivateData *data = static_cast<JoystickPrivateData*>(d);
 	Sint32 jx, jy;
 	Uint32 dist;
@@ -65,7 +65,7 @@ static void joystick_controller(PublicTankInfo *i, void *d, int *vx, int *vy, in
 	/* Don't do jack if the joystick is too close to its orgin: */
 	dist = jx*jx + jy*jy;
 	if(dist < CUTOFF * CUTOFF) {
-		*vx = *vy = 0;
+		spd->x = spd->y = 0;
 		
 	/* Else, find out what direction the joystick is closest to: */
 	} else {
@@ -74,8 +74,8 @@ static void joystick_controller(PublicTankInfo *i, void *d, int *vx, int *vy, in
 		tx = (jx==0) ? 0 : ( abs(jy * 1000 / jx) < 2000 );
 		ty = (jx==0) ? 1 : ( abs(jy * 1000 / jx) > 500 );
 		
-		*vx = tx * (jx > 0 ? 1 : -1);
-		*vy = ty * (jy > 0 ? 1 : -1);
+		spd->x = tx * (jx > 0 ? 1 : -1);
+		spd->y = ty * (jy > 0 ? 1 : -1);
 	}
 	*s  = SDL_JoystickGetButton(data->joystick, 0);
 }

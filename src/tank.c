@@ -80,7 +80,7 @@ void Tank::DoMove(TankList *tl) {
 			.x      = static_cast<int>(this->pos.x - base.x),
 			.y      = static_cast<int>(this->pos.y - base.y),
 			.level_view  = LevelView(this, this->lvl)};
-		this->controller(&i, this->controller_data.get(), &this->speed.x, &this->speed.y, &this->is_shooting);
+		this->controller(&i, this->controller_data.get(), &this->speed, &this->is_shooting);
 	}
 	
 	/* Calculate the direction: */

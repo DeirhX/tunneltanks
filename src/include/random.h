@@ -16,8 +16,8 @@ public:
 template <typename IntegerType>
 IntegerType Random::Int(IntegerType min, IntegerType max)
 {
-	if (!is_seeded)
-		Seed();
+	//if (!is_seeded)
+	//	Seed();
 	
 	IntegerType range = max - min + 1;
 

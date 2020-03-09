@@ -117,17 +117,32 @@ static void generate_tree(Level *lvl) {
  *----------------------------------------------------------------------------*/
 
 /* Some cast-to-int tricks here may be fun... ;) */
-static int has_neighbor(Level *lvl, int x, int y) {
-	if (!lvl->GetVoxelRaw({ x - 1, y - 1})) return 1;
-	if (!lvl->GetVoxelRaw({ x,    y - 1 })) return 1;
-	if (!lvl->GetVoxelRaw({ x + 1, y - 1 })) return 1;
-	if (!lvl->GetVoxelRaw({ x - 1, y  })) return 1;
-	if (!lvl->GetVoxelRaw({ x + 1, y  })) return 1;
-	if (!lvl->GetVoxelRaw({ x - 1, y + 1 })) return 1;
-	if (!lvl->GetVoxelRaw({ x,     y + 1 })) return 1;
-	if (!lvl->GetVoxelRaw({ x + 1, y + 1 })) return 1;
+//static int has_neighbor(Level *lvl, int x, int y) {
+//	if (!lvl->GetVoxelRaw({ x - 1, y - 1})) return 1;
+//	if (!lvl->GetVoxelRaw({ x,    y - 1 })) return 1;
+//	if (!lvl->GetVoxelRaw({ x + 1, y - 1 })) return 1;
+//	if (!lvl->GetVoxelRaw({ x - 1, y  })) return 1;
+//	if (!lvl->GetVoxelRaw({ x + 1, y  })) return 1;
+//	if (!lvl->GetVoxelRaw({ x - 1, y + 1 })) return 1;
+//	if (!lvl->GetVoxelRaw({ x,     y + 1 })) return 1;
+//	if (!lvl->GetVoxelRaw({ x + 1, y + 1 })) return 1;
+//	return 0;
+//}
+//
+//
+// Much less instructions. Optimizer cannot see it through and fold it :(
+static int has_neighbor(Level* lvl, int x, int y) {
+	if (!lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y - 1) })) return 1;
+	if (!lvl->GetVoxelRaw({ x + lvl->GetSize().x * (y - 1) })) return 1;
+	if (!lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y - 1) })) return 1;
+	if (!lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y) })) return 1;
+	if (!lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y) })) return 1;
+	if (!lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y + 1) })) return 1;
+	if (!lvl->GetVoxelRaw({ x + lvl->GetSize().x * (y + 1) })) return 1;
+	if (!lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y + 1) })) return 1;
 	return 0;
 }
+
 
 static void set_outside(Level *lvl, char val) {
 	int i;
@@ -140,14 +155,14 @@ static void set_outside(Level *lvl, char val) {
 }
 
 static void expand_init(Level *lvl, std::deque<Position>& q) {
-	int x, y;
-	
-	for(y=1; y<lvl->GetSize().y-1; y++)
-		for(x=1; x<lvl->GetSize().x-1; x++)
-			if (lvl->GetVoxelRaw({ x, y }) && has_neighbor(lvl, x, y)) {
-				lvl->SetVoxelRaw({ x, y }, 2);
-				q.emplace_back(x,y);
+	for(int y = 1; y<lvl->GetSize().y-1; y++)
+		for (int x = 1; x < lvl->GetSize().x - 1; x++) {
+			int offset = x + y * lvl->GetSize().x;
+			if (lvl->GetVoxelRaw(offset) && has_neighbor(lvl, x, y)) {
+				lvl->SetVoxelRaw(offset, 2);
+				q.emplace_back(x, y);
 			}
+		}
 }
 
 #define MIN2(a,b)   ((a<b) ? a : b)
@@ -201,7 +216,8 @@ static void randomly_expand(Level *lvl) {
 	
 	/* Experimentally, the queue never grew to larger than 3/50ths of the level
 	 * size, so we can use that to save quite a bit of memory: */
-	auto queue = std::deque<Position>(lvl->GetSize().x * lvl->GetSize().y * 3 / 50);
+	auto queue = std::deque<Position>();
+	//queue.resize(lvl->GetSize().x * lvl->GetSize().y * 3 / 50);
 	
 	expand_init(lvl, queue);
 	while( (cur += expand_once(lvl, queue)) < goal );
@@ -213,16 +229,29 @@ static void randomly_expand(Level *lvl) {
  * STAGE 3: Smooth out the graph with a cellular automaton                    *
  *----------------------------------------------------------------------------*/
 
+
 static int count_neighbors(Level* lvl, int x, int y) {
-	return lvl->GetVoxelRaw({ x - 1, y - 1 }) +
-		lvl->GetVoxelRaw({ x,   y - 1 }) +
-		lvl->GetVoxelRaw({ x + 1, y - 1 }) +
-		lvl->GetVoxelRaw({ x - 1, y }) +
-		lvl->GetVoxelRaw({ x + 1, y }) +
-		lvl->GetVoxelRaw({ x - 1, y + 1 }) +
-		lvl->GetVoxelRaw({ x,   y + 1 }) +
-		lvl->GetVoxelRaw({ x + 1, y + 1 });
+	return lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y - 1) }) +
+		lvl->GetVoxelRaw({ x + lvl->GetSize().x * (y - 1) }) +
+		lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y - 1) }) +
+		lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y) }) +
+		lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y) }) +
+		lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y + 1) }) +
+		lvl->GetVoxelRaw({ x + lvl->GetSize().x * (y + 1) }) +
+		lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y + 1) });
 }
+
+//static int count_neighbors(Level* lvl, int x, int y) {
+//	return lvl->GetVoxelRaw({ x - 1, y - 1 }) +
+//		lvl->GetVoxelRaw({ x,   y - 1 }) +
+//		lvl->GetVoxelRaw({ x + 1, y - 1 }) +
+//		lvl->GetVoxelRaw({ x - 1, y }) +
+//		lvl->GetVoxelRaw({ x + 1, y }) +
+//		lvl->GetVoxelRaw({ x - 1, y + 1 }) +
+//		lvl->GetVoxelRaw({ x,   y + 1 }) +
+//		lvl->GetVoxelRaw({ x + 1, y + 1 });
+//}
+//
 	
 #define MIN2(a,b)   ((a<b) ? a : b)
 #define MIN3(a,b,c) ((a<b) ? a : (b<c) ? b : c)

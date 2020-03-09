@@ -35,7 +35,9 @@ public:
 	LevelVoxel& Voxel(Position pos);
 
 	void SetVoxelRaw(Position pos, LevelVoxel voxel);
+	void SetVoxelRaw(int offset, LevelVoxel voxel);
 	LevelVoxel GetVoxelRaw(Position pos) const;
+	LevelVoxel GetVoxelRaw(int offset) const;
 	LevelVoxel& VoxelRaw(Position pos);
 
 	// Level generate

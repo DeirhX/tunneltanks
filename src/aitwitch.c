@@ -31,7 +31,7 @@ typedef struct TwitchPrivateData {
 } TwitchPrivateData;
 
 
-static void do_start(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
+static void do_start(PublicTankInfo *i, void *d, Speed *spd, int *s) {
 	TwitchPrivateData *data = static_cast<TwitchPrivateData*>(d);
 	int no_up, no_down;
 	
@@ -49,10 +49,10 @@ static void do_start(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
 		data->mode = Random::Bool(500) ? TWITCH_EXIT_UP : TWITCH_EXIT_DOWN;
 }
 
-static void do_exit_up(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
+static void do_exit_up(PublicTankInfo *i, void *d, Speed* spd, int *s) {
 	TwitchPrivateData *data = static_cast<TwitchPrivateData*>(d);
 	
-	*vx = *vy = 0;
+	spd->x = spd->y = 0;
 	*s = 0;
 	
 	if(i->y < -OUTSIDE) { /* Some point outside the base. */
@@ -61,13 +61,13 @@ static void do_exit_up(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
 		return;
 	}
 	
-	*vy = -1;
+	spd->y = -1;
 }
 
-static void do_exit_down(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
+static void do_exit_down(PublicTankInfo *i, void *d, Speed* spd, int *s) {
 	TwitchPrivateData *data = static_cast<TwitchPrivateData*>(d);
 	
-	*vx = *vy = 0;
+	spd->x = spd->y = 0;
 	*s = 0;
 	
 	if(i->y > OUTSIDE) {
@@ -76,10 +76,10 @@ static void do_exit_down(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
 		return;
 	}
 	
-	*vy = 1;	
+	spd->y = 1;	
 }
 
-static void do_twitch(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
+static void do_twitch(PublicTankInfo *i, void *d, Speed* spd, int *s) {
 	TwitchPrivateData *data = static_cast<TwitchPrivateData*>(d);
 	
 	if(i->health < TANK_STARTING_SHIELD/2 || i->energy < TANK_STARTING_FUEL/3 ||
@@ -96,13 +96,13 @@ static void do_twitch(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
 	}
 	
 	data->time_to_change--;
-	*vx = data->vx;
-	*vy = data->vy;
+	spd->x = data->vx;
+	spd->y = data->vy;
 	*s  = data->s;
 }
 
 /* Make a simple effort to get back to your base: */
-static void do_return(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
+static void do_return(PublicTankInfo *i, void *d, Speed* spd, int *s) {
 	TwitchPrivateData *data = static_cast<TwitchPrivateData*>(d);
 	
 	/* Seek to the closest entrance: */
@@ -112,7 +112,7 @@ static void do_return(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
 	if((i->x == 0 && i->y == targety) || 
 	   (abs(i->x)<BASE_SIZE/2 && abs(i->y)<BASE_SIZE/2)) {
 		*s = 0;
-		*vx = *vy = 0;
+		spd->x = spd->y = 0;
 		data->mode = TWITCH_RECHARGE;
 		return;
 	}
@@ -120,18 +120,18 @@ static void do_return(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
 	/* If we are close to the base, we need to navigate around the walls: */
 	if( abs(i->x) <= OUTSIDE && abs(i->y) < OUTSIDE ) {
 		*s = 0;
-		*vx = 0;
-		*vy = (i->y < targety) * 2 - 1;
+		spd->x = 0;
+		spd->y = (i->y < targety) * 2 - 1;
 		return;
 	}
 	
 	/* Else, we will very simply seek to the correct point: */
 	*s = 0;
-	*vx = i->x != 0       ? ((i->x < 0) * 2 - 1) : 0;
-	*vy = i->y != targety ? ((i->y < targety) * 2 - 1) : 0;
+	spd->x = i->x != 0       ? ((i->x < 0) * 2 - 1) : 0;
+	spd->y = i->y != targety ? ((i->y < targety) * 2 - 1) : 0;
 }
 
-static void do_recharge(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
+static void do_recharge(PublicTankInfo *i, void *d, Speed* spd, int *s) {
 	TwitchPrivateData *data = static_cast<TwitchPrivateData*>(d);
 	
 	/* Check to see if we're fully charged/healed: */
@@ -142,20 +142,20 @@ static void do_recharge(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
 	
 	/* Else, seek to the base's origin, and wait: */
 	*s = 0;
-	*vx = i->x ? ((i->x < 0) * 2 - 1) : 0;
-	*vy = i->y ? ((i->y < 0) * 2 - 1) : 0;
+	spd->x = i->x ? ((i->x < 0) * 2 - 1) : 0;
+	spd->y = i->y ? ((i->y < 0) * 2 - 1) : 0;
 }
 
-static void twitch_controller(PublicTankInfo *i, void *d, int *vx, int *vy, int *s) {
+static void twitch_controller(PublicTankInfo *i, void *d, Speed *spd, int *s) {
 	TwitchPrivateData *data = static_cast<TwitchPrivateData*>(d);
 	
 	switch(data->mode) {
-		case TWITCH_START:     do_start    (i, d, vx, vy, s); return;
-		case TWITCH_EXIT_UP:   do_exit_up  (i, d, vx, vy, s); return;
-		case TWITCH_EXIT_DOWN: do_exit_down(i, d, vx, vy, s); return;
-		case TWITCH_TWITCH:    do_twitch   (i, d, vx, vy, s); return;
-		case TWITCH_RETURN:    do_return   (i, d, vx, vy, s); return;
-		case TWITCH_RECHARGE:  do_recharge (i, d, vx, vy, s); return;
+		case TWITCH_START:     do_start    (i, d, spd, s); return;
+		case TWITCH_EXIT_UP:   do_exit_up  (i, d, spd, s); return;
+		case TWITCH_EXIT_DOWN: do_exit_down(i, d, spd, s); return;
+		case TWITCH_TWITCH:    do_twitch   (i, d, spd, s); return;
+		case TWITCH_RETURN:    do_return   (i, d, spd, s); return;
+		case TWITCH_RECHARGE:  do_recharge (i, d, spd, s); return;
 	}
 }
 

@@ -33,6 +33,11 @@ void Level::SetVoxelRaw(Position pos, LevelVoxel voxel)
 	this->array.get()[pos.y * this->size.x + pos.x] = voxel;
 }
 
+void Level::SetVoxelRaw(int offset, LevelVoxel voxel)
+{
+	this->array.get()[offset] = voxel;
+}
+
 LevelVoxel& Level::Voxel(Position pos)
 {
 	if (!IsInBounds(pos))
@@ -55,6 +60,11 @@ LevelVoxel Level::GetVoxel(Position pos) const
 LevelVoxel Level::GetVoxelRaw(Position pos) const
 {
 	return this->array.get()[pos.y * this->size.x + pos.x];
+}
+
+LevelVoxel Level::GetVoxelRaw(int address) const
+{
+	return this->array.get()[address];
 }
 
 void Level::CreateDirtAndRocks()

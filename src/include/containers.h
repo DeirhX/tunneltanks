@@ -3,6 +3,7 @@
 #pragma once
 #include <deque>
 #include <debugapi.h>
+#include <vector>
 
 // Effective container for storing in-place, cache-local objects - deleting does not shift, dead objects can be reused later
 //  and references to live objects are valid forever.
@@ -106,4 +107,29 @@ public:
 		return it;
 	}
 	iterator end() { return iterator(container, container.end()); }
+};
+
+
+template <typename TValue>
+class GrowingDeque
+{
+	using Container = std::vector<TValue>;
+	Container cont;
+	typename Container::iterator front;
+public:
+	TValue pop_front()
+	{
+		TValue val = (*front);
+		++front;
+		return val;
+	}
+
+	size_t size() { return cont.size(); }
+	void push_back(TValue val) { cont.push_back(val); }
+
+	template <class... TArgs>
+	void emplace_back(TArgs&&... args)
+	{
+		cont.emplace_back(std::forward<TArgs>(args)...);
+	}
 };

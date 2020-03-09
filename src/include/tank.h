@@ -17,7 +17,7 @@ typedef struct PublicTankInfo {
 	LevelView level_view;
 } PublicTankInfo;
 
-typedef void (*TankController)(PublicTankInfo *, void *, int *, int *, int *) ;
+typedef void (*TankController)(PublicTankInfo *, void *, Speed *, int *) ;
 
 struct Tank
 {
