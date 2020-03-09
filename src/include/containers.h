@@ -2,6 +2,7 @@
 
 #pragma once
 #include <deque>
+#include <assert.h>
 #include <debugapi.h>
 #include <vector>
 
@@ -115,12 +116,19 @@ class GrowingDeque
 {
 	using Container = std::vector<TValue>;
 	Container cont;
-	typename Container::iterator front;
+	int front_index = 0;
 public:
+	GrowingDeque(int reservedCapacity = 0)
+	{
+		if (reservedCapacity)
+			cont.reserve(reservedCapacity);
+	}
+	
 	TValue pop_front()
 	{
-		TValue val = (*front);
-		++front;
+		assert(front_index < size());
+		TValue val = cont[front_index];
+		++front_index;
 		return val;
 	}
 

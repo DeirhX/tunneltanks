@@ -24,6 +24,8 @@ typedef struct Pairing {
 	int dist, a, b;
 } Pairing;
 
+using PositionQueue = std::deque<Position>;
+	
 #ifdef _TESTING
 static void level_draw_ascii(Level *lvl) {
 	int x,y;
@@ -154,7 +156,7 @@ static void set_outside(Level *lvl, char val) {
 	for (i = 1; i < size.y-1; i++) lvl->VoxelRaw({ size.x - 1, i }) = val;
 }
 
-static void expand_init(Level *lvl, std::deque<Position>& q) {
+static void expand_init(Level *lvl, PositionQueue& q) {
 	for(int y = 1; y<lvl->GetSize().y-1; y++)
 		for (int x = 1; x < lvl->GetSize().x - 1; x++) {
 			int offset = x + y * lvl->GetSize().x;
@@ -167,7 +169,7 @@ static void expand_init(Level *lvl, std::deque<Position>& q) {
 
 #define MIN2(a,b)   ((a<b) ? a : b)
 #define MIN3(a,b,c) ((a<b) ? a : (b<c) ? b : c)
-static int expand_once(Level *lvl, std::deque<Position>& q) {
+static int expand_once(Level *lvl, PositionQueue& q) {
 	Position temp;
 	int j, count = 0;
 	
@@ -216,7 +218,7 @@ static void randomly_expand(Level *lvl) {
 	
 	/* Experimentally, the queue never grew to larger than 3/50ths of the level
 	 * size, so we can use that to save quite a bit of memory: */
-	auto queue = std::deque<Position>();
+	auto queue = PositionQueue();
 	//queue.resize(lvl->GetSize().x * lvl->GetSize().y * 3 / 50);
 	
 	expand_init(lvl, queue);
