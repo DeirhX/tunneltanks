@@ -40,13 +40,13 @@ static void do_start(PublicTankInfo *i, void *d, Speed *spd, int *s) {
 	
 	if(no_up && no_down) {
 		/* TODO: Make it so that this condition isn't possible... */
-		data->mode = Random::Bool(500) ? TWITCH_EXIT_UP : TWITCH_EXIT_DOWN;
+		data->mode = Random.Bool(500) ? TWITCH_EXIT_UP : TWITCH_EXIT_DOWN;
 	} else if(no_up) {
 		data->mode = TWITCH_EXIT_DOWN;
 	} else if(no_down) {
 		data->mode = TWITCH_EXIT_UP;
 	} else
-		data->mode = Random::Bool(500) ? TWITCH_EXIT_UP : TWITCH_EXIT_DOWN;
+		data->mode = Random.Bool(500) ? TWITCH_EXIT_UP : TWITCH_EXIT_DOWN;
 }
 
 static void do_exit_up(PublicTankInfo *i, void *d, Speed* spd, int *s) {
@@ -89,10 +89,10 @@ static void do_twitch(PublicTankInfo *i, void *d, Speed* spd, int *s) {
 	}
 	
 	if(!data->time_to_change) {
-		data->time_to_change = Random::Int(10u, 30u);
-		data->vx = Random::Int(0,2) - 1;
-		data->vy = Random::Int(0,2) - 1;
-		data->s  = Random::Bool(300);
+		data->time_to_change = Random.Int(10u, 30u);
+		data->vx = Random.Int(0,2) - 1;
+		data->vy = Random.Int(0,2) - 1;
+		data->s  = Random.Bool(300);
 	}
 	
 	data->time_to_change--;

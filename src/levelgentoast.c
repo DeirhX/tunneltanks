@@ -172,7 +172,7 @@ static void expand_init(Level *lvl, PositionQueue& q) {
 		}
 }
 
-static int expand_once(Level *lvl, queue_adaptor<Position>& q) {
+static int expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomGenerator Random) {
 	Position temp;
 	int j, count = 0;
 	
@@ -186,7 +186,7 @@ static int expand_once(Level *lvl, queue_adaptor<Position>& q) {
 		yodds = ODDS * std::min(lvl->GetSize().y - temp.y, temp.y) / FILTER;
 		odds  = std::min(std::min(xodds, yodds), ODDS);
 		
-		if(Random::Bool(odds)) {
+		if(Random.Bool(odds)) {
 			lvl->SetVoxelRaw(temp, 0);
 			count++;
 			
@@ -213,13 +213,13 @@ static int expand_once(Level *lvl, queue_adaptor<Position>& q) {
 static void expand_process(Level* lvl, PositionQueue& q) {
 	std::atomic<int> cur = 0;
 	int goal = lvl->GetSize().x * lvl->GetSize().y * FILLRATIO / 100;
-	constexpr int Workers = 8;
+	constexpr int Workers = 1;
 
 	/* Split into one queue per worker */
 	/* TODO: Split per position quadrants */
-	auto workerQueues = std::vector<queue_adaptor<Position>>();
+	auto workerQueues = std::vector<circular_buffer_adaptor<Position>>();
 	for (int i = 0; i < Workers; ++i) {
-		workerQueues.emplace_back(/* Queue constructor */); 
+		workerQueues.emplace_back(20000/* Queue constructor */); 
 	}
 	int worker = 0;
 	while (q.size()) {
@@ -239,7 +239,7 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 	int min_pass = -1;
 	int max_pass = 0;
 
-	auto expand_loop = [&](queue_adaptor<Position>* qq) {
+	auto expand_loop = [&](circular_buffer_adaptor<Position>* qq, RandomGenerator random) {
 		
 		int curr_pass = 0;
 		while (!done) {
@@ -250,7 +250,11 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 				cv_threads_waiting.notify_all();
 			}
 			
-			cur += expand_once(lvl, *qq);
+			cur += expand_once(lvl, *qq, random);
+			//cur += expand_once(lvl, *qq, random);
+			//cur += expand_once(lvl, *qq, random);
+			//cur += expand_once(lvl, *qq, random);
+			//cur += expand_once(lvl, *qq, random);
 			
 			{
 				std::unique_lock lock(mutex_threads_waiting);
@@ -271,7 +275,7 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 	threads_waiting = Workers;
 	auto workers = std::vector<std::thread>();
 	for (int i = 0; i < Workers; ++i) {
-		workers.push_back(std::thread(expand_loop, &workerQueues[i]));
+		workers.push_back(std::thread(expand_loop, &workerQueues[i], Random));
 	}
 
 	while (cur < goal) {

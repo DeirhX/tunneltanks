@@ -100,8 +100,8 @@ int main(int argc, char *argv[]) {
 	}
 	
 	/* Seed if necessary: */
-	if(manual_seed) Random::Seed(seed);
-	else            Random::Seed();
+	if(manual_seed) Random.Seed(seed);
+	else            Random.Seed();
 	
 	/* If we're only writing the generated level to file, then just do that: */
 	if(outfile_name) {

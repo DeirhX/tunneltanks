@@ -1,21 +1,23 @@
 #pragma once
 #include <random>
 
-class Random
+class RandomGenerator
 {
-	inline static bool is_seeded = false;
-	inline static std::mt19937 gen;
+	bool is_seeded = false;
+	std::mt19937 gen;
 public:
-	static void Seed();
-	static void Seed(int seed);
+	void Seed();
+	void Seed(int seed);
 
-	static bool Bool(int odds_of_off_1000);
+	bool Bool(int odds_of_off_1000);
 	 template <typename IntegerType>
-	static IntegerType Int(IntegerType min, IntegerType max);
+	IntegerType Int(IntegerType min, IntegerType max);
 };
 
+extern RandomGenerator Random;
+
 template <typename IntegerType>
-IntegerType Random::Int(IntegerType min, IntegerType max)
+IntegerType RandomGenerator::Int(IntegerType min, IntegerType max)
 {
 	//if (!is_seeded)
 	//	Seed();

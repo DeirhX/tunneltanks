@@ -73,7 +73,7 @@ void Level::CreateDirtAndRocks()
 		for(int x = 0; x<this->size.x; x++) {
 			char& spot = this->Voxel({ x, y });
 			if(spot)  spot = ROCK;
-			else      spot = Random::Bool(500) ? DIRT_LO : DIRT_HI;
+			else      spot = Random.Bool(500) ? DIRT_LO : DIRT_HI;
 		}
 }
 

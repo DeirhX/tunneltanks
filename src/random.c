@@ -5,8 +5,9 @@
 #include <random.h>
 #include <gamelib.h>
 
+RandomGenerator Random;
 
-void Random::Seed()
+void RandomGenerator::Seed()
 {
 	/* Try to load out of /dev/urandom, but it isn't fatal if we can't: */
 	int seed = 0;
@@ -22,14 +23,14 @@ void Random::Seed()
 	Seed(seed);
 }
 
-void Random::Seed(int seed)
+void RandomGenerator::Seed(int seed)
 {
 	gamelib_print("Using seed: %d\n", seed);
 	gen.seed(seed);
 	is_seeded = true;
 }
 
-bool Random::Bool(int odds) {
-	return Random::Int(0,999) < odds;
+bool RandomGenerator::Bool(int odds) {
+	return Int(0,999) < odds;
 }
 

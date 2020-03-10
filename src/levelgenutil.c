@@ -35,14 +35,14 @@ void rough_up(Level *lvl) {
 	lvl->ForEachVoxel([](LevelVoxel& voxel)
 	{
 		if (voxel == 2)
-			voxel = Random::Bool(500);
+			voxel = Random.Bool(500);
 	});
 }
 
 Position pt_rand(Size size, int border) {
 	Position out;
-	out.x = Random::Int(border, size.x - border);
-	out.y = Random::Int(border, size.y - border);
+	out.x = Random.Int(border, size.x - border);
+	out.y = Random.Int(border, size.y - border);
 	return out;
 }
 

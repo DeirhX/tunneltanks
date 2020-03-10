@@ -50,21 +50,21 @@ static void add_rock_lines(Level *lvl, Side s) {
 	}
 	
 	/* Let's get this party started: */
-	prev = cur = Vector(minx, Random::Int(miny, maxy));
+	prev = cur = Vector(minx, Random.Int(miny, maxy));
 	
 	do {
 		/* Advance the current x position so it doesn't go over the edge: */
-		cur.x += (xstep = Random::Int(STEP_MIN, STEP_MAX));
+		cur.x += (xstep = Random.Int(STEP_MIN, STEP_MAX));
 		if(cur.x > maxx) {
 			xstep = cur.x - maxx;
 			cur.x = maxx;
 		}
 		
 		/* Advance the y position so that it is within bounds: */
-		is_rare = Random::Bool(RARITY);
+		is_rare = Random.Bool(RARITY);
 		do {
 			int slope = is_rare ? RARE_SLOPE : MAX_SLOPE;
-			ystep =  (Random::Int(0, slope*2) - slope) * xstep;
+			ystep =  (Random.Int(0, slope*2) - slope) * xstep;
 			ystep /= 100;
 		} while( (cur.y + ystep) < miny || (cur.y + ystep) > maxy );
 		

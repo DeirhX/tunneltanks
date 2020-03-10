@@ -120,7 +120,7 @@ static void wall_shuffle(Wall *w, int len) {
 	
 	/* Run through the list once, shuffling everything: */
 	for(i=0; i<len; i++) {
-		int new_index = Random::Int(0,len-1);
+		int new_index = Random.Int(0,len-1);
 		Wall temp = w[i];
 		w[i] = w[new_index];
 		w[new_index] = temp;
@@ -254,7 +254,7 @@ void braid_generator(Level *lvl) {
 		
 		/* Pick a random spot for the base: */
 		do {
-			x = Random::Int(0, b->size.x-1); y = Random::Int(0, b->size.y-1);
+			x = Random.Int(0, b->size.x-1); y = Random.Int(0, b->size.y-1);
 		} while(b->data[y*b->size.x+x].flag);
 		
 		/* Mark our spot, and the ones around it as well: */
