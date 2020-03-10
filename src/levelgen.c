@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
-
+#include <chrono>
 #include <gamelib.h>
 #include <levelgen.h>
 #include <algorithm>
@@ -37,17 +37,20 @@ LevelGenerator GENERATOR_LIST[] =
 
 /* ========================================================================== */
 
-#define TIMER_START(t) \
-	(t) = clock()
+struct Stopwatch
+{
+	clock_t t;
+	Stopwatch() : t(clock()) { }
+	//~Stopwatch() { }
 
-#define TIMER_STOP(t) do { \
-	int temp = ((clock() - (t)) * 1000) / CLOCKS_PER_SEC; \
-	gamelib_print("%u.%03u sec\n", temp/1000, temp%1000); \
-} while(0)
+	std::chrono::milliseconds GetElapsed()
+	{
+		return  std::chrono::milliseconds((clock() - t));
+	}
+};
 
 /* Linear search is ok here, since there aren't many level generators: */
-
-void generate_level(Level *lvl, const char *id) {
+std::chrono::milliseconds generate_level(Level *lvl, const char *id) {
 	LevelGeneratorFunc func = NULL;
 	int i;
 	clock_t t;
@@ -73,13 +76,18 @@ void generate_level(Level *lvl, const char *id) {
 	
 generate_level:
 
-	TIMER_START(t);
-	
-	/* Ok, now generate the level: */
-	func(lvl);
-	
-	gamelib_print("Level generated in: ");
-	TIMER_STOP(t);
+	{
+		Stopwatch s;
+
+		/* Ok, now generate the level: */
+		func(lvl);
+
+		gamelib_print("Level generated in: ");
+		auto msecs = s.GetElapsed();
+		gamelib_print("%u.%03u sec\n", msecs / 1000, msecs % 1000);
+
+		return std::chrono::milliseconds{ s.GetElapsed() };
+	}
 }
 
 /* Will print a specified number of spaces to the file: */

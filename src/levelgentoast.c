@@ -184,9 +184,9 @@ static int expand_once(Level *lvl, PositionQueue& q) {
 		temp = q.front();
 		q.pop_front();
 
-		xodds = ODDS * MIN2(lvl->GetSize().x - temp.x, temp.x) / FILTER;
-		yodds = ODDS * MIN2(lvl->GetSize().y - temp.y, temp.y) / FILTER;
-		odds  = MIN3(xodds, yodds, ODDS);
+		xodds = ODDS * std::min(lvl->GetSize().x - temp.x, temp.x) / FILTER;
+		yodds = ODDS * std::min(lvl->GetSize().y - temp.y, temp.y) / FILTER;
+		odds  = std::min(std::min(xodds, yodds), ODDS);
 		
 		if(Random::Bool(odds)) {
 			lvl->SetVoxelRaw(temp, 0);
@@ -262,8 +262,8 @@ static int count_neighbors(Level* lvl, int x, int y) {
 #define MIN2(a,b)   ((a<b) ? a : b)
 #define MIN3(a,b,c) ((a<b) ? a : (b<c) ? b : c)
 static int smooth_once(Level *lvl) {
-	int count = 0;
 
+	/* Smooth surfaces. Require at least 3 neighbors to keep alive. Spawn new at 5 neighbors. */
 	auto smooth_step = [lvl](int from_y, int until_y) {
 		int count = 0;
 		Size size = lvl->GetSize();
@@ -280,10 +280,12 @@ static int smooth_once(Level *lvl) {
 		return count;
 	};
 
+	/* Parallelize the process using std::async and slicing jobs vertically by [y] */
 	constexpr int Tasks = 8;
 	auto tasks = std::vector<std::future<int>>();
 	tasks.reserve(Tasks);
-	int first = 1, last = lvl->GetSize().y - 2;
+	const int first = 1;
+	const int last = lvl->GetSize().y - 2;
 	int curr = first;
 	for (int i = 0; i < Tasks; ++i) {
 		if (curr <= last) {
@@ -292,6 +294,8 @@ static int smooth_once(Level *lvl) {
 			curr = until + 1;
 		}
 	}
+	/* Wait for everything done and sum the results */
+	int count = 0;
 	for (auto& task : tasks) {
 		count += task.get();
 	}

@@ -13,6 +13,7 @@
 #include <memalloc.h>
 #include <tweak.h>
 #include <gamelib.h>
+#include <chrono>
 
 
 /*#define ERR_OUT(msg) fprintf(stderr, "PROGRAMMING ERROR: " msg "\n")*/
@@ -214,13 +215,19 @@ void game_finalize(GameData *gd) {
 #ifdef _DEBUG
 	TestIterations = 3;
 #endif
+	std::chrono::milliseconds time_taken = {};
 	for (int i = TestIterations; i-- > 0; ) {
 		lvl = new Level(Size{ gd->data.config.w, gd->data.config.h }, b);
-		generate_level(lvl, gd->data.config.gen);
+		 time_taken += generate_level(lvl, gd->data.config.gen);
 	}
+	auto average_time = time_taken / TestIterations;
+	gamelib_print("***\r\nAverage level time: %u.%03u sec\n", average_time / 1000, average_time % 1000);
+	
 	tl = new TankList(lvl, pl);
 	lvl->CreateDirtAndRocks();
 	lvl->CreateBases();
+
+
 	
 	/* Debug the starting data, if we're debugging: */
 	if(gd->is_debug)
