@@ -146,6 +146,7 @@
     <PlatformToolset>v142</PlatformToolset>
     <EnableUnitySupport>true</EnableUnitySupport>
     <UseDebugLibraries>true</UseDebugLibraries>
+    <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -153,18 +154,21 @@
     <PlatformToolset>v142</PlatformToolset>
     <EnableUnitySupport>true</EnableUnitySupport>
     <UseDebugLibraries>true</UseDebugLibraries>
+    <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
     <EnableUnitySupport>true</EnableUnitySupport>
+    <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
     <EnableUnitySupport>true</EnableUnitySupport>
+    <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
