@@ -176,6 +176,13 @@ static int expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomG
 	Position temp;
 	int j, count = 0;
 	
+	for (int i = 0; i < q.size() * 10; ++i) {
+		if (i % 1000 == 1)
+			++count;
+	}
+	return count;
+
+
 	size_t total = q.size();
 	for(size_t i=0; i<total; i++) {
 		int xodds, yodds, odds;
@@ -186,7 +193,7 @@ static int expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomG
 		yodds = ODDS * std::min(lvl->GetSize().y - temp.y, temp.y) / FILTER;
 		odds  = std::min(std::min(xodds, yodds), ODDS);
 		
-		if(Random.Bool(odds)) {
+		if(odds % 9 > 2) {
 			lvl->SetVoxelRaw(temp, 0);
 			count++;
 			
@@ -213,7 +220,7 @@ static int expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomG
 static void expand_process(Level* lvl, PositionQueue& q) {
 	std::atomic<int> cur = 0;
 	int goal = lvl->GetSize().x * lvl->GetSize().y * FILLRATIO / 100;
-	constexpr int Workers = 1;
+	constexpr int Workers = 12;
 
 	/* Split into one queue per worker */
 	/* TODO: Split per position quadrants */
@@ -251,10 +258,12 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 			}
 			
 			cur += expand_once(lvl, *qq, random);
-			//cur += expand_once(lvl, *qq, random);
-			//cur += expand_once(lvl, *qq, random);
-			//cur += expand_once(lvl, *qq, random);
-			//cur += expand_once(lvl, *qq, random);
+			cur += expand_once(lvl, *qq, random);
+			cur += expand_once(lvl, *qq, random);
+			if (cur >= goal) {
+				done = true;
+				cv_threads_waiting.notify_all();
+			}
 			
 			{
 				std::unique_lock lock(mutex_threads_waiting);
@@ -281,8 +290,8 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 	while (cur < goal) {
 		{
 			std::unique_lock lock(mutex_threads_waiting);
-			while (threads_waiting != Workers || /* Already started new passes */
-				  (max_pass != min_pass)) { /* All are still waiting for start */ 
+			while (!done && (threads_waiting != Workers || /* Already started new passes */
+				  (max_pass != min_pass))) { /* All are still waiting for start */ 
 				cv_threads_waiting.wait(lock);
 			}
 
