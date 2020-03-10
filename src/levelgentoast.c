@@ -10,10 +10,10 @@
 #include <random.h>
 
 #include <deque>
-#include <boost/circular_buffer.hpp>
 #include <atomic>
 #include <thread>
 #include <future>
+//#include <concurrency>
 
 namespace levelgen::toast {
 
@@ -28,7 +28,8 @@ typedef struct Pairing {
 	int dist, a, b;
 } Pairing;
 
-using PositionQueue = boost::circular_buffer<Position>;
+
+using PositionQueue = circular_buffer_adaptor<Position>;
 	
 #ifdef _TESTING
 static void level_draw_ascii(Level *lvl) {
@@ -166,13 +167,11 @@ static void expand_init(Level *lvl, PositionQueue& q) {
 			int offset = x + y * lvl->GetSize().x;
 			if (lvl->GetVoxelRaw(offset) && has_neighbor(lvl, x, y)) {
 				lvl->SetVoxelRaw(offset, 2);
-				q.push_back({ x, y });
+				q.push({ x, y });
 			}
 		}
 }
 
-#define MIN2(a,b)   ((a<b) ? a : b)
-#define MIN3(a,b,c) ((a<b) ? a : (b<c) ? b : c)
 static int expand_once(Level *lvl, PositionQueue& q) {
 	Position temp;
 	int j, count = 0;
@@ -181,8 +180,7 @@ static int expand_once(Level *lvl, PositionQueue& q) {
 	for(size_t i=0; i<total; i++) {
 		int xodds, yodds, odds;
 		
-		temp = q.front();
-		q.pop_front();
+		q.pop(temp);
 
 		xodds = ODDS * std::min(lvl->GetSize().x - temp.x, temp.x) / FILTER;
 		yodds = ODDS * std::min(lvl->GetSize().y - temp.y, temp.y) / FILTER;
@@ -203,13 +201,21 @@ static int expand_once(Level *lvl, PositionQueue& q) {
 				c = &lvl->VoxelRaw({ tx, ty });
 				if(*c == 1) {
 					*c = 2;
-					q.push_back({ tx, ty });
+					q.push({ tx, ty });
 				}
 			}
 		} else
-			q.push_back(temp);
+			q.push(temp);
 	}
 	return count;
+}
+
+static void expand_process(Level* lvl, PositionQueue& q) {
+	int cur = 0;
+	int goal = lvl->GetSize().x * lvl->GetSize().y * FILLRATIO / 100;
+	do {
+		cur += expand_once(lvl, q);
+	} while (cur < goal);
 }
 
 static void expand_cleanup(Level *lvl) {
@@ -218,7 +224,6 @@ static void expand_cleanup(Level *lvl) {
 }
 
 static void randomly_expand(Level *lvl) {
-	int cur = 0, goal = lvl->GetSize().x * lvl->GetSize().y * FILLRATIO / 100;
 	
 	/* Experimentally, the queue never grew to larger than 3/50ths of the level
 	 * size, so we can use that to save quite a bit of memory: */
@@ -226,7 +231,7 @@ static void randomly_expand(Level *lvl) {
 	//queue.resize(lvl->GetSize().x * lvl->GetSize().y * 3 / 50);
 	
 	expand_init(lvl, queue);
-	while( (cur += expand_once(lvl, queue)) < goal );
+	expand_process(lvl, queue);
 	expand_cleanup(lvl);
 }
 

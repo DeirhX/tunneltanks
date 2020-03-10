@@ -5,6 +5,8 @@
 #include <assert.h>
 #include <debugapi.h>
 #include <vector>
+#include <boost/circular_buffer.hpp>
+#include <boost/lockfree/queue.hpp>
 
 // Effective container for storing in-place, cache-local objects - deleting does not shift, dead objects can be reused later
 //  and references to live objects are valid forever.
@@ -136,5 +138,42 @@ public:
 	void emplace_back(TArgs&&... args)
 	{
 		cont.emplace_back(std::forward<TArgs>(args)...);
+	}
+};
+
+template <typename Value>
+class counted_lockfree_queue : private boost::lockfree::queue<Value> {
+	using parent = boost::lockfree::queue<Value>;
+	std::atomic<int> count = 0;
+public:
+	counted_lockfree_queue(int capacity) : parent(capacity) {}
+	bool pop(Value& val) {
+		count.fetch_sub(1, std::memory_order::memory_order_relaxed);
+		return parent::pop(val);
+	}
+	bool push(const Value& val) {
+		count.fetch_add(1, std::memory_order::memory_order_relaxed);
+		return parent::push(val);
+	}
+	int size() {
+		return count;
+	}
+};
+
+template <typename Value>
+struct circular_buffer_adaptor : private boost::circular_buffer<Value> {
+	using parent = boost::circular_buffer<Value>;
+	circular_buffer_adaptor(int capacity) : parent(capacity) {}
+	bool pop(Value& val) {
+		val = parent::front();
+		parent::pop_front();
+		return true;
+	}
+	bool push(const Value& val) {
+		parent::push_back(val);
+		return true;
+	}
+	int size() {
+		return parent::size();
 	}
 };
