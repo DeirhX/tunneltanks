@@ -25,7 +25,7 @@ void Random::Seed()
 void Random::Seed(int seed)
 {
 	gamelib_print("Using seed: %d\n", seed);
-	srand(seed);
+	gen.seed(seed);
 	is_seeded = true;
 }
 

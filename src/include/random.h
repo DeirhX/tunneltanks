@@ -4,6 +4,7 @@
 class Random
 {
 	inline static bool is_seeded = false;
+	inline static std::mt19937 gen;
 public:
 	static void Seed();
 	static void Seed(int seed);
@@ -26,5 +27,5 @@ IntegerType Random::Int(IntegerType min, IntegerType max)
 
 	/* I know that using the % isn't entirely accurate, but it only uses
 	 * integers, so w/e: */
-	return (std::rand() % range) + min;
+	return (gen() % range) + min;
 }
