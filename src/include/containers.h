@@ -30,14 +30,14 @@ public:
 	class iterator
 	{
 		Container* container;
-		typename Container::iterator it;
+		int index;
 	public:
-		iterator(Container& container, typename Container::iterator it) : container(&container), it(it) {}
-		typename TElement& operator*() const { return *it; }
-		bool operator!= (iterator other) { return it != other.it; }
+		iterator(Container& container, int index) : container(&container), index(index) {}
+		typename TElement& operator*() const { return (*container)[index]; }
+		bool operator!= (iterator other) { return index != other.index; }
 		iterator operator++() // prefix increment
 		{	// Advance over dead elements
-			while (++it != container->end() && ValueContainer::IsInvalid(*it)) {};
+			while (++index < container->size() && ValueContainer::IsInvalid((*container)[index])) {};
 			return *this;
 		}
 	};
@@ -63,10 +63,7 @@ public:
 		}
 
 		/* If not, we need to grow with an invalid item, then in-place construct it */
-		TElement& new_alloc = container.emplace_back(TElement::Invalid());
-		/* Now we got the real, final address. In-place construct it and return reference */
-		new_alloc.~TElement(); /* Destroy placeholder */
-		new (&new_alloc) TElement(std::forward<ConstructionArgs>(args)...);
+		TElement& new_alloc = container.emplace_back(std::forward<ConstructionArgs>(args)...);
 		return new_alloc;
 	}
 	/* Copying construction */
@@ -101,13 +98,13 @@ public:
 
 	iterator begin()
 	{	
-		auto it = iterator(container, container.begin());
+		auto it = iterator(container, 0);
 		// Skip also dead elements at the start
 		while (it != end() && ValueContainer::IsInvalid(*it))
 			++it;
 		return it;
 	}
-	iterator end() { return iterator(container, container.end()); }
+	iterator end() { return iterator(container, container.size()); }
 };
 
 
