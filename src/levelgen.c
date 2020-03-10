@@ -41,8 +41,8 @@ LevelGenerator GENERATOR_LIST[] =
 	(t) = clock()
 
 #define TIMER_STOP(t) do { \
-	int temp = ((clock() - (t)) * 100) / CLOCKS_PER_SEC; \
-	gamelib_print("%u.%02u sec\n", temp/100, temp%100); \
+	int temp = ((clock() - (t)) * 1000) / CLOCKS_PER_SEC; \
+	gamelib_print("%u.%03u sec\n", temp/1000, temp%1000); \
 } while(0)
 
 /* Linear search is ok here, since there aren't many level generators: */

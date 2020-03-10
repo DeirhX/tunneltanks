@@ -208,13 +208,17 @@ void game_finalize(GameData *gd) {
 	pl  = new ProjectileList();
 	b   = drawbuffer_new(gd->data.config.w, gd->data.config.h);
 	lvl = new Level(Size{ gd->data.config.w, gd->data.config.h }, b);
-	tl  = new TankList(lvl, pl);
 	
 	/* Generate our random level: */
-	for (int i = 50; i-- > 0; ) {
+	int TestIterations = 50;
+#ifdef _DEBUG
+	TestIterations = 3;
+#endif
+	for (int i = TestIterations; i-- > 0; ) {
 		lvl = new Level(Size{ gd->data.config.w, gd->data.config.h }, b);
 		generate_level(lvl, gd->data.config.gen);
 	}
+	tl = new TankList(lvl, pl);
 	lvl->CreateDirtAndRocks();
 	lvl->CreateBases();
 	

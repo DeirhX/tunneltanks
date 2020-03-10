@@ -10,6 +10,10 @@
 #include <random.h>
 
 #include <deque>
+#include <boost/circular_buffer.hpp>
+#include <atomic>
+#include <thread>
+#include <future>
 
 namespace levelgen::toast {
 
@@ -24,7 +28,7 @@ typedef struct Pairing {
 	int dist, a, b;
 } Pairing;
 
-using PositionQueue = std::deque<Position>;
+using PositionQueue = boost::circular_buffer<Position>;
 	
 #ifdef _TESTING
 static void level_draw_ascii(Level *lvl) {
@@ -162,7 +166,7 @@ static void expand_init(Level *lvl, PositionQueue& q) {
 			int offset = x + y * lvl->GetSize().x;
 			if (lvl->GetVoxelRaw(offset) && has_neighbor(lvl, x, y)) {
 				lvl->SetVoxelRaw(offset, 2);
-				q.emplace_back(x, y);
+				q.push_back({ x, y });
 			}
 		}
 }
@@ -199,11 +203,11 @@ static int expand_once(Level *lvl, PositionQueue& q) {
 				c = &lvl->VoxelRaw({ tx, ty });
 				if(*c == 1) {
 					*c = 2;
-					q.emplace_back(Position{ tx, ty });
+					q.push_back({ tx, ty });
 				}
 			}
 		} else
-			q.emplace_back(temp);
+			q.push_back(temp);
 	}
 	return count;
 }
@@ -218,7 +222,7 @@ static void randomly_expand(Level *lvl) {
 	
 	/* Experimentally, the queue never grew to larger than 3/50ths of the level
 	 * size, so we can use that to save quite a bit of memory: */
-	auto queue = PositionQueue();
+	auto queue = PositionQueue(50000);
 	//queue.resize(lvl->GetSize().x * lvl->GetSize().y * 3 / 50);
 	
 	expand_init(lvl, queue);
@@ -258,19 +262,39 @@ static int count_neighbors(Level* lvl, int x, int y) {
 #define MIN2(a,b)   ((a<b) ? a : b)
 #define MIN3(a,b,c) ((a<b) ? a : (b<c) ? b : c)
 static int smooth_once(Level *lvl) {
-	int x, y, count = 0;
+	int count = 0;
 
-	Size size = lvl->GetSize();
-	for(y=1; y<size.y-1; y++)
-		for(x=1; x<size.x-1; x++) {
-			int n;
-			LevelVoxel oldbit = lvl->GetVoxelRaw({ x, y });
-			
-			n = count_neighbors(lvl, x, y);
-			lvl->SetVoxelRaw({ x, y }, oldbit ? (n >= 3) : (n > 4));
-			
-			count += lvl->GetVoxelRaw({ x, y }) != oldbit;
+	auto smooth_step = [lvl](int from_y, int until_y) {
+		int count = 0;
+		Size size = lvl->GetSize();
+		for (int y = from_y; y <= until_y; y++)
+			for (int x = 1; x < size.x - 1; x++) {
+				int n;
+				LevelVoxel oldbit = lvl->GetVoxelRaw({ x, y });
+
+				n = count_neighbors(lvl, x, y);
+				lvl->SetVoxelRaw({ x, y }, oldbit ? (n >= 3) : (n > 4));
+
+				count += lvl->GetVoxelRaw({ x, y }) != oldbit;
+			}
+		return count;
+	};
+
+	constexpr int Tasks = 8;
+	auto tasks = std::vector<std::future<int>>();
+	tasks.reserve(Tasks);
+	int first = 1, last = lvl->GetSize().y - 2;
+	int curr = first;
+	for (int i = 0; i < Tasks; ++i) {
+		if (curr <= last) {
+			int until = curr + (last - first) / Tasks;
+			tasks.emplace_back(std::async(std::launch::async, smooth_step, curr, std::min(last, until)));
+			curr = until + 1;
 		}
+	}
+	for (auto& task : tasks) {
+		count += task.get();
+	}
 	return count;
 }
 
