@@ -14,7 +14,6 @@
 #include <thread>
 #include <future>
 #include <queue>
-//#include <concurrency>
 
 namespace levelgen::toast {
 
@@ -212,9 +211,9 @@ static int expand_once(Level *lvl, queue_adaptor<Position>& q) {
 }
 
 static void expand_process(Level* lvl, PositionQueue& q) {
-	int cur = 0;
+	std::atomic<int> cur = 0;
 	int goal = lvl->GetSize().x * lvl->GetSize().y * FILLRATIO / 100;
-	constexpr int Workers = 1;
+	constexpr int Workers = 8;
 
 	/* Split into one queue per worker */
 	/* TODO: Split per position quadrants */
@@ -230,23 +229,72 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 		worker = (worker + 1) % Workers;
 	}
 
-	auto expand_step = [lvl](queue_adaptor<Position>* qq) {
-		return expand_once(lvl, *qq);
+
+	std::atomic<bool> done = false;
+	std::mutex mutex_threads_waiting;
+	std::condition_variable cv_threads_waiting;
+	int threads_waiting = 0;
+	//std::mutex mutex_continue_thread;
+	std::condition_variable cv_continue_thread;
+	int min_pass = -1;
+	int max_pass = 0;
+
+	auto expand_loop = [&](queue_adaptor<Position>* qq) {
+		
+		int curr_pass = 0;
+		while (!done) {
+			{
+				std::unique_lock lock(mutex_threads_waiting);
+				--threads_waiting;
+				min_pass = std::max(min_pass, curr_pass);
+				cv_threads_waiting.notify_all();
+			}
+			
+			cur += expand_once(lvl, *qq);
+			
+			{
+				std::unique_lock lock(mutex_threads_waiting);
+				++threads_waiting;
+				cv_threads_waiting.notify_all();
+			//}
+			//{
+				//std::unique_lock lock(cv_threads_waiting);
+				while (curr_pass >= max_pass)
+					cv_continue_thread.wait(lock);
+			}
+			++curr_pass;
+		}
 	};
 
-	do 
-	{
-		/* Launch workers on their own queues */
-		auto workers = std::vector<std::future<int>>();
-		for (int i = 0; i < Workers; ++i) {
-			workers.push_back(std::async(std::launch::async, expand_step, &workerQueues[i]));
+	
+	/* Launch workers on their own queues */
+	threads_waiting = Workers;
+	auto workers = std::vector<std::thread>();
+	for (int i = 0; i < Workers; ++i) {
+		workers.push_back(std::thread(expand_loop, &workerQueues[i]));
+	}
+
+	while (cur < goal) {
+		{
+			std::unique_lock lock(mutex_threads_waiting);
+			while (threads_waiting != Workers || /* Already started new passes */
+				  (max_pass != min_pass)) { /* All are still waiting for start */ 
+				cv_threads_waiting.wait(lock);
+			}
+
+			if (cur >= goal) {
+				done = true;
+			}
+
+			max_pass = min_pass + 10;
+			cv_continue_thread.notify_all();
 		}
-		/* Collect results */
-		for (int i = 0; i < Workers; ++i) {
-			cur += workers[i].get();
-		}
-		
-	} while (cur < goal);
+	}
+
+	/* End threadses */
+	for (int i = 0; i < Workers; ++i) {
+		workers[i].join();
+	}
 }
 
 static void expand_cleanup(Level *lvl) {
