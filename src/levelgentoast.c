@@ -13,6 +13,7 @@
 #include <atomic>
 #include <thread>
 #include <future>
+#include <queue>
 //#include <concurrency>
 
 namespace levelgen::toast {
@@ -172,7 +173,7 @@ static void expand_init(Level *lvl, PositionQueue& q) {
 		}
 }
 
-static int expand_once(Level *lvl, PositionQueue& q) {
+static int expand_once(Level *lvl, queue_adaptor<Position>& q) {
 	Position temp;
 	int j, count = 0;
 	
@@ -213,8 +214,38 @@ static int expand_once(Level *lvl, PositionQueue& q) {
 static void expand_process(Level* lvl, PositionQueue& q) {
 	int cur = 0;
 	int goal = lvl->GetSize().x * lvl->GetSize().y * FILLRATIO / 100;
-	do {
-		cur += expand_once(lvl, q);
+	constexpr int Workers = 1;
+
+	/* Split into one queue per worker */
+	/* TODO: Split per position quadrants */
+	auto workerQueues = std::vector<queue_adaptor<Position>>();
+	for (int i = 0; i < Workers; ++i) {
+		workerQueues.emplace_back(/* Queue constructor */); 
+	}
+	int worker = 0;
+	while (q.size()) {
+		Position pos;
+		q.pop(pos);
+		workerQueues[worker].push(pos);
+		worker = (worker + 1) % Workers;
+	}
+
+	auto expand_step = [lvl](queue_adaptor<Position>* qq) {
+		return expand_once(lvl, *qq);
+	};
+
+	do 
+	{
+		/* Launch workers on their own queues */
+		auto workers = std::vector<std::future<int>>();
+		for (int i = 0; i < Workers; ++i) {
+			workers.push_back(std::async(std::launch::async, expand_step, &workerQueues[i]));
+		}
+		/* Collect results */
+		for (int i = 0; i < Workers; ++i) {
+			cur += workers[i].get();
+		}
+		
 	} while (cur < goal);
 }
 

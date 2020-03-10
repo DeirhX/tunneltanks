@@ -1,6 +1,7 @@
 #pragma once
 
 #pragma once
+#include <queue>
 #include <deque>
 #include <assert.h>
 #include <debugapi.h>
@@ -157,6 +158,25 @@ public:
 	}
 	int size() {
 		return count;
+	}
+};
+
+template <typename Value>
+class queue_adaptor : private std::queue<Value> {
+	using parent = std::queue<Value>;
+public:
+	queue_adaptor() : parent() {}
+	bool pop(Value& val) {
+		val = parent::front();
+		parent::pop();
+		return true;
+	}
+	bool push(const Value& val) {
+		parent::push(val);
+		return true;
+	}
+	int size() {
+		return parent::size();
 	}
 };
 
