@@ -205,16 +205,15 @@ static void invert_all(Level *lvl)
 
 
 void braid_generator(Level *lvl) {
-	int i, x, y;
 	Braid *b = braid_new(lvl->GetSize() / CELL_SIZE);
 	
 	/* Reset all of the 'used' flags back to zero: */
-	for(i=0; i<b->size.x * b->size.y; i++)
+	for(int i=0; i<b->size.x * b->size.y; i++)
 		b->data[i].flag = 0;
 	
 	/* Draw the maze: */
-	for(y=0; y<b->size.y; y++) {
-		for(x=0; x<b->size.x; x++) {
+	for(int y=0; y<b->size.y; y++) {
+		for(int x=0; x<b->size.x; x++) {
 			Cell c = b->data[y*b->size.x+x];
 			if(c.up)
 				draw_line(lvl,
@@ -236,12 +235,12 @@ void braid_generator(Level *lvl) {
 	
 	/* Fill in the unused space left behind on the right/bottom: */
 	/* TODO: Have a fill_box() in levelgenutil.c? */
-	for(y=0; y<lvl->GetSize().y; y++)
-		for(x=b->size.x*CELL_SIZE; x<lvl->GetSize().x; x++)
+	for(int y=0; y<lvl->GetSize().y; y++)
+		for(int x=b->size.x*CELL_SIZE; x<lvl->GetSize().x; x++)
 			lvl->SetVoxelRaw({x, y}, 0);
 	
-	for(y=b->size.y*CELL_SIZE; y<lvl->GetSize().y; y++)
-		for(x=0; x<b->size.x*CELL_SIZE; x++)
+	for(int y=b->size.y*CELL_SIZE; y<lvl->GetSize().y; y++)
+		for(int x=0; x<b->size.x*CELL_SIZE; x++)
 			lvl->SetVoxelRaw({x, y}, 0);
 	
 	/* Rough it up a little, and invert: */
@@ -249,12 +248,13 @@ void braid_generator(Level *lvl) {
 	invert_all(lvl);
 	
 	/* Add in the bases: */
-	for(i=0; i<MAX_TANKS; i++) {
+	for(TankColor i=0; i<MAX_TANKS; i++) {
 		int tx, ty;
-		
+		int x, y;
 		/* Pick a random spot for the base: */
 		do {
-			x = Random.Int(0, b->size.x-1); y = Random.Int(0, b->size.y-1);
+			x = Random.Int(0, b->size.x-1); 
+			y = Random.Int(0, b->size.y-1);
 		} while(b->data[y*b->size.x+x].flag);
 		
 		/* Mark our spot, and the ones around it as well: */

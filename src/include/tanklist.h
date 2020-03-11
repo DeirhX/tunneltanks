@@ -18,8 +18,8 @@ public:
 	TankList(Level* lvl, ProjectileList* pl);
 	~TankList();
 
-	Tank* AddTank(int id, Vector p);
-	void RemoveTank(int id);
+	Tank* AddTank(TankColor id, Vector p);
+	void RemoveTank(TankColor id);
 	Tank* GetTankAtPoint(int x, int y, int ignored);
 	bool CheckForCollision(Tank& tank, Position testPos, int testDirection);
 

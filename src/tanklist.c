@@ -24,7 +24,7 @@ TankList::~TankList()
 }
 
 
-Tank* TankList::AddTank(int color, Vector p)
+Tank* TankList::AddTank(TankColor color, Vector p)
 {
 	auto found= std::find_if(begin(), end(), [color](auto& el) { return color == el.color; });
 	if (found != list.end())
@@ -34,7 +34,7 @@ Tank* TankList::AddTank(int color, Vector p)
 	//return this->list.Add(std::make_unique<Tank>(color, this->lvl, this->pl, Position{p.x, p.y}));
 }
 
-void TankList::RemoveTank(int color)
+void TankList::RemoveTank(TankColor color)
 {
 	auto found = std::find_if(begin(), end(), [color](auto& el) { return color == el.color; });
 	(*found).Invalidate();

@@ -154,11 +154,11 @@ static void invert_all(Level *lvl)
 
 
 void maze_generator(Level *lvl) {
-	int i, x, y;
+	int x, y;
 	Maze *m = maze_new(lvl->GetSize()/CELL_SIZE);
 	
 	/* Reset all of the 'used' flags back to zero: */
-	for(i=0; i<m->w * m->h; i++)
+	for(int i=0; i<m->w * m->h; i++)
 		m->data[i].used = 0;
 	
 	/* Draw the maze: */
@@ -195,7 +195,7 @@ void maze_generator(Level *lvl) {
 	invert_all(lvl);
 	
 	/* Add in the bases: */
-	for(i=0; i<MAX_TANKS; i++) {
+	for(TankColor i=0; i<MAX_TANKS; i++) {
 		int tx, ty;
 		
 		/* Pick a random spot for the base: */

@@ -14,7 +14,7 @@
 #include <algorithm>
 
 
-Tank::Tank(int color, Level *lvl, ProjectileList*pl, Position pos) :
+Tank::Tank(TankColor color, Level *lvl, ProjectileList*pl, Position pos) :
 	pos(pos), color(color), is_valid(true)
 {
 	// this->cached_slice = std::make_shared<LevelView>(this, lvl);

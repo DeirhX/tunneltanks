@@ -33,9 +33,9 @@ public:
 	class iterator
 	{
 		Container* container;
-		int index;
+		size_t index;
 	public:
-		iterator(Container& container, int index) : container(&container), index(index) {}
+		iterator(Container& container, size_t index) : container(&container), index(index) {}
 		typename TElement& operator*() const { return (*container)[index]; }
 		bool operator!= (iterator other) { return index != other.index; }
 		iterator operator++() // prefix increment
@@ -154,7 +154,7 @@ public:
 		count.fetch_add(1, std::memory_order::memory_order_relaxed);
 		return parent::push(val);
 	}
-	int size() {
+	size_t size() {
 		return count;
 	}
 };
@@ -173,7 +173,7 @@ public:
 		parent::push(val);
 		return true;
 	}
-	int size() {
+	size_t size() {
 		return parent::size();
 	}
 };
@@ -194,7 +194,7 @@ struct circular_buffer_adaptor : private boost::circular_buffer<Value> {
 		parent::push_back(val);
 		return true;
 	}
-	int size() {
+	size_t size() {
 		return parent::size();
 	}
 };

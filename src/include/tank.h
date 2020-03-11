@@ -45,7 +45,7 @@ private:
 public:
 	static Tank Invalid() { return Tank(); }
 
-	Tank(int color, Level* lvl, ProjectileList* pl, Position pos);
+	Tank(TankColor color, Level* lvl, ProjectileList* pl, Position pos);
 	//~Tank() = default;
 	void SetController(TankController func, std::shared_ptr<void> data);
 

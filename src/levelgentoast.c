@@ -74,12 +74,12 @@ static void generate_tree(Level *lvl) {
 	lvl->SetSpawn(0, points[0]);
 	for(i=1,j=1; i<TREESIZE && j<MAX_TANKS; i++) {
 		for(k=0; k<j; k++) {
-			if(pt_dist(points[i],lvl->GetSpawn(k)) < MIN_SPAWN_DIST*MIN_SPAWN_DIST)
+			if (pt_dist(points[i], lvl->GetSpawn(TankColor( k ))) < MIN_SPAWN_DIST * MIN_SPAWN_DIST)
 				break;
 		}
 		
 		if(k!=j) continue;
-		lvl->SetSpawn(j++, points[i]);
+		lvl->SetSpawn(TankColor(j++), points[i]);
 	}
 	if(j!=MAX_TANKS) {
 		/* TODO: More robust error handling. */
@@ -177,7 +177,7 @@ static void expand_init(Level *lvl, PositionQueue& q) {
 		}
 }
 
-static int expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomGenerator Random) {
+static int expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomGenerator random) {
 	Position temp;
 	int j, count = 0;
 	
@@ -198,7 +198,7 @@ static int expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomG
 		yodds = ODDS * std::min(lvl->GetSize().y - temp.y, temp.y) / FILTER;
 		odds  = std::min(std::min(xodds, yodds), ODDS);
 		
-		if(Random.Bool(odds)) {
+		if(random.Bool(odds)) {
 			lvl->SetVoxelRaw(temp, 0);
 			count++;
 			
@@ -255,7 +255,7 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 	std::atomic<int> waits_main = 0;
 	std::atomic<int> threads_notify = 0;
 	std::atomic<int> waits_continue = 0;
-	std::atomic<int> expand_pure_time_ms = 0;
+	std::atomic<std::int64_t> expand_pure_time_ms = 0;
 
 	auto expand_loop = [&](circular_buffer_adaptor<Position>* qq, RandomGenerator random) {
 

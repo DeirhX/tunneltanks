@@ -64,10 +64,9 @@ struct GameData {
  * This bit is used to initialize various GUIs:                               *
  *----------------------------------------------------------------------------*/
 
-static void twitch_fill(TankList *tl, Level *lvl, int starting_id) {
-	int i;
+static void twitch_fill(TankList *tl, Level *lvl, TankColor starting_id) {
 	
-	for(i=starting_id; i<MAX_TANKS; i++) {
+	for(TankColor i=starting_id; i<MAX_TANKS; i++) {
 		Tank *t = tl->AddTank(i, lvl->GetSpawn(i));
 		controller_twitch_attach(t);
 	}

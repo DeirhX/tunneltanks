@@ -41,14 +41,12 @@ LevelGenerator GENERATOR_LIST[] =
 /* Linear search is ok here, since there aren't many level generators: */
 std::chrono::milliseconds generate_level(Level *lvl, const char *id) {
 	LevelGeneratorFunc func = NULL;
-	int i;
-	clock_t t;
 	
 	/* If 'id' is null, go with the default: */
 	if(!id) id = GENERATOR_LIST[0].id;
 	
 	/* Look for the id: */
-	for(i=0; GENERATOR_LIST[i].id; i++) {
+	for(int i=0; GENERATOR_LIST[i].id; i++) {
 		if(!strcmp(id, GENERATOR_LIST[i].id)) {
 			gamelib_print("Using level generator: '%s'\n", GENERATOR_LIST[i].id);
 			func = GENERATOR_LIST[i].gen;
