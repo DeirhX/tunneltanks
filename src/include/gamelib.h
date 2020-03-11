@@ -65,6 +65,22 @@ void     gamelib_print (const char *str, ...) ;
 void     gamelib_debug (const char *str, ...) ;
 void     gamelib_error (const char *str, ...) ;
 
+
+
+
+/* debug_level <= DEBUG_TRACE_LEVEL */
+template <int debug_level, typename... TPrintfArgs, typename std::enable_if_t<(debug_level <= DEBUG_TRACE_LEVEL), int> = 0 >
+void DebugTrace(TPrintfArgs&&... args)
+{
+    char debug_buff[1024];
+    std::sprintf(debug_buff, std::forward<TPrintfArgs>(args)...);
+    gamelib_debug(debug_buff);
+}
+template <int debug_level, typename... TPrintfArgs, typename std::enable_if_t<(debug_level > DEBUG_TRACE_LEVEL), int> = 0 >
+void DebugTrace(TPrintfArgs&&... args)
+{
+}
+
 /* Gamelib needs to be able to tell the outside that it needs a control GUI: */
 Rect     gamelib_gui_get_size() ;
 void     gamelib_gui_draw(Screen *s, Rect r) ;

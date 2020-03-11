@@ -222,7 +222,7 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 
 	std::atomic<int> cur = 0;
 	int goal = lvl->GetSize().x * lvl->GetSize().y * FILLRATIO / 100;
-	constexpr int Workers = 12;
+	int Workers = std::thread::hardware_concurrency();
 
 	/* Split into one queue per worker */
 	/* TODO: Split per position quadrants */
@@ -254,11 +254,11 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 
 	auto expand_loop = [&](circular_buffer_adaptor<Position>* qq, RandomGenerator random) {
 		
+		Stopwatch thread_time;
+		Stopwatch wait_time;
 		int curr_pass = 0;
 		int added_items_pass = 0;
 		bool no_more_work = false;
-		Stopwatch thread_time;
-		Stopwatch wait_time;
 		while (!done && !no_more_work) {
 			{
 				std::unique_lock lock(mutex_threads_waiting);
@@ -303,16 +303,18 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 		}
 		auto elapsed = thread_time.GetElapsed();
 		auto waited = wait_time.GetElapsed();
-		gamelib_print("thread took: %d.%03dms (%d.%03dms wait time) to add %d items \r\n", elapsed / 1000, elapsed % 1000, waited / 1000, waited % 1000, added_items_pass);
+		
+		DebugTrace<3>("thread took: %lld.%03lldms (%lld.%03lldms wait time) to add %d items \r\n",
+			elapsed.count() / 1000, elapsed.count() % 1000, waited.count() / 1000, waited.count() % 1000, added_items_pass);
 	};
 
 	Stopwatch time_thread_create;
 
 	/* Launch workers on their own queues */
 	threads_waiting = Workers;
-	auto workers = std::vector<std::thread>();
+	auto workers = std::vector<std::future<void>>();
 	for (int i = 0; i < Workers; ++i) {
-		workers.push_back(std::thread(expand_loop, &workerQueues[i], Random));
+		workers.push_back(std::async(std::launch::async, expand_loop, &workerQueues[i], Random));
 	}
 	
 	time_thread_create.Stop();
@@ -335,18 +337,23 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 			cv_continue_thread.notify_all();
 		}
 	}
-
+	time_workers.Stop();
+	Stopwatch time_join;
 	/* End threadses */
 	for (int i = 0; i < Workers; ++i) {
-		workers[i].join();
+		workers[i].get();
 	}
-	gamelib_print("expand_whole took %u.%03u ms, %u.%03u ms thread create, %u.%03u ms thread run, %u.%03u ms worker time (%u us per thread) \n",
-		time_whole.GetElapsed() / 1000, time_whole.GetElapsed() % 1000,
-		time_thread_create.GetElapsed() / 1000, time_thread_create.GetElapsed() % 1000,
-		time_workers.GetElapsed() / 1000, time_workers.GetElapsed() % 1000,
+	time_join.Stop();
+	time_whole.Stop();
+
+	DebugTrace<2>("expand_whole took %lld.%03lld ms, %lld.%03lld ms thread create, %lld.%03lld ms thread run, %lld.%03lld ms thread join, %d.%03d ms worker time (%u us per thread) \n",
+		time_whole.GetElapsed().count() / 1000, time_whole.GetElapsed().count() % 1000,
+		time_thread_create.GetElapsed().count() / 1000, time_thread_create.GetElapsed().count() % 1000,
+		time_workers.GetElapsed().count() / 1000, time_workers.GetElapsed().count() % 1000,
+		time_join.GetElapsed().count() / 1000, time_join.GetElapsed().count() % 1000,
 		expand_pure_time_ms.load() / 1000, expand_pure_time_ms.load() % 1000,
 		expand_pure_time_ms.load() / Workers);
-	gamelib_print("waits_continue: %d waits_main: %d threads_notify: %d \r\n", waits_continue.load(), waits_main.load(), threads_notify.load());
+	DebugTrace<2>("waits_continue: %d waits_main: %d threads_notify: %d \r\n", waits_continue.load(), waits_main.load(), threads_notify.load());
 }
 
 static void expand_cleanup(Level *lvl) {
@@ -401,6 +408,7 @@ static int smooth_once(Level *lvl) {
 
 	/* Smooth surfaces. Require at least 3 neighbors to keep alive. Spawn new at 5 neighbors. */
 	auto smooth_step = [lvl](int from_y, int until_y) {
+		Stopwatch time_step;
 		int count = 0;
 		Size size = lvl->GetSize();
 		for (int y = from_y; y <= until_y; y++)
@@ -413,11 +421,16 @@ static int smooth_once(Level *lvl) {
 
 				count += lvl->GetVoxelRaw({ x, y }) != oldbit;
 			}
+
+		time_step.Stop();
+		DebugTrace<3>("smooth_step thread took %lld.%03lld ms \n",
+			time_step.GetElapsed().count() / 1000, time_step.GetElapsed().count() % 1000);
 		return count;
 	};
 
+	Stopwatch time_whole;
 	/* Parallelize the process using std::async and slicing jobs vertically by [y] */
-	constexpr int Tasks = 8;
+	int Tasks = std::thread::hardware_concurrency() / 4;
 	auto tasks = std::vector<std::future<int>>();
 	tasks.reserve(Tasks);
 	const int first = 1;
@@ -435,6 +448,11 @@ static int smooth_once(Level *lvl) {
 	for (auto& task : tasks) {
 		count += task.get();
 	}
+
+	time_whole.Stop();
+	DebugTrace<2>("smooth_once total took %lld.%03lld ms \n",
+		time_whole.GetElapsed().count() / 1000, time_whole.GetElapsed().count() % 1000);
+
 	return count;
 }
 
