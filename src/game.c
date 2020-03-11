@@ -211,7 +211,7 @@ void game_finalize(GameData *gd) {
 	lvl = new Level(Size{ gd->data.config.w, gd->data.config.h }, b);
 	
 	/* Generate our random level: */
-	int TestIterations = 50;
+	int TestIterations = 30;
 #ifdef _DEBUG
 	TestIterations = 3;
 #endif

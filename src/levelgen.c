@@ -37,18 +37,6 @@ LevelGenerator GENERATOR_LIST[] =
 
 /* ========================================================================== */
 
-struct Stopwatch
-{
-	clock_t t;
-	Stopwatch() : t(clock()) { }
-	//~Stopwatch() { }
-
-	std::chrono::milliseconds GetElapsed()
-	{
-		return  std::chrono::milliseconds((clock() - t));
-	}
-};
-
 /* Linear search is ok here, since there aren't many level generators: */
 std::chrono::milliseconds generate_level(Level *lvl, const char *id) {
 	LevelGeneratorFunc func = NULL;
@@ -77,7 +65,7 @@ std::chrono::milliseconds generate_level(Level *lvl, const char *id) {
 generate_level:
 
 	{
-		Stopwatch s;
+		Stopwatch<std::chrono::milliseconds> s;
 
 		/* Ok, now generate the level: */
 		func(lvl);
@@ -86,7 +74,7 @@ generate_level:
 		auto msecs = s.GetElapsed();
 		gamelib_print("%u.%03u sec\n", msecs / 1000, msecs % 1000);
 
-		return std::chrono::milliseconds{ s.GetElapsed() };
+		return { std::chrono::duration_cast<std::chrono::milliseconds>(msecs)};
 	}
 }
 

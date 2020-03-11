@@ -176,12 +176,12 @@ static int expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomG
 	Position temp;
 	int j, count = 0;
 	
-	for (int i = 0; i < q.size() * 10; ++i) {
+	/*for (int i = 0; i < q.size() * 100; ++i) {
 		if (i % 1000 == 1)
 			++count;
 	}
-	return count;
-
+	return count;*/
+	
 
 	size_t total = q.size();
 	for(size_t i=0; i<total; i++) {
@@ -218,15 +218,17 @@ static int expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomG
 }
 
 static void expand_process(Level* lvl, PositionQueue& q) {
+	Stopwatch<std::chrono::milliseconds> time_whole;
+
 	std::atomic<int> cur = 0;
 	int goal = lvl->GetSize().x * lvl->GetSize().y * FILLRATIO / 100;
-	constexpr int Workers = 12;
+	constexpr int Workers = 8;
 
 	/* Split into one queue per worker */
 	/* TODO: Split per position quadrants */
 	auto workerQueues = std::vector<circular_buffer_adaptor<Position>>();
 	for (int i = 0; i < Workers; ++i) {
-		workerQueues.emplace_back(20000/* Queue constructor */); 
+		workerQueues.emplace_back(50000 / Workers/* Queue constructor */); 
 	}
 	int worker = 0;
 	while (q.size()) {
@@ -235,7 +237,6 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 		workerQueues[worker].push(pos);
 		worker = (worker + 1) % Workers;
 	}
-
 
 	std::atomic<bool> done = false;
 	std::mutex mutex_threads_waiting;
@@ -246,6 +247,11 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 	int min_pass = -1;
 	int max_pass = 0;
 
+	std::atomic<int> waits_main = 0;
+	std::atomic<int> threads_notify = 0;
+	std::atomic<int> waits_continue = 0;
+	std::atomic<int> expand_pure_time_ms = 0;
+
 	auto expand_loop = [&](circular_buffer_adaptor<Position>* qq, RandomGenerator random) {
 		
 		int curr_pass = 0;
@@ -255,25 +261,31 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 				--threads_waiting;
 				min_pass = std::max(min_pass, curr_pass);
 				cv_threads_waiting.notify_all();
+				threads_notify.fetch_add(1, std::memory_order_relaxed);
 			}
+
+			Stopwatch s;
+			cur.fetch_add(expand_once(lvl, *qq, random), std::memory_order_relaxed);
+			expand_pure_time_ms.fetch_add(std::chrono::duration_cast<std::chrono::microseconds>(s.GetElapsed()).count(), std::memory_order_relaxed);
 			
-			cur += expand_once(lvl, *qq, random);
-			cur += expand_once(lvl, *qq, random);
-			cur += expand_once(lvl, *qq, random);
 			if (cur >= goal) {
 				done = true;
 				cv_threads_waiting.notify_all();
+				threads_notify.fetch_add(1, std::memory_order_relaxed);
 			}
 			
 			{
 				std::unique_lock lock(mutex_threads_waiting);
 				++threads_waiting;
 				cv_threads_waiting.notify_all();
+				threads_notify.fetch_add(1, std::memory_order_relaxed);
 			//}
 			//{
 				//std::unique_lock lock(cv_threads_waiting);
-				while (curr_pass >= max_pass)
+				while (curr_pass >= max_pass) {
 					cv_continue_thread.wait(lock);
+					waits_continue.fetch_add(1, std::memory_order_relaxed);
+				}
 			}
 			++curr_pass;
 		}
@@ -292,6 +304,7 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 			std::unique_lock lock(mutex_threads_waiting);
 			while (!done && (threads_waiting != Workers || /* Already started new passes */
 				  (max_pass != min_pass))) { /* All are still waiting for start */ 
+				waits_main.fetch_add(1, std::memory_order_relaxed);
 				cv_threads_waiting.wait(lock);
 			}
 
@@ -299,7 +312,7 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 				done = true;
 			}
 
-			max_pass = min_pass + 10;
+			max_pass = min_pass + 100;
 			cv_continue_thread.notify_all();
 		}
 	}
@@ -308,6 +321,9 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 	for (int i = 0; i < Workers; ++i) {
 		workers[i].join();
 	}
+	auto msecs = time_whole.GetElapsed();
+	gamelib_print("expand_whole took %u.%03u sec, %u us pure time (%u us per thread) \n", msecs / 1000, msecs % 1000, expand_pure_time_ms.load(), expand_pure_time_ms.load() / Workers);
+	gamelib_print("waits_continue: %d waits_main: %d threads_notify: %d \r\n", waits_continue.load(), waits_main.load(), threads_notify.load());
 }
 
 static void expand_cleanup(Level *lvl) {
