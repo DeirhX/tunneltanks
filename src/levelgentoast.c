@@ -227,7 +227,7 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 
 	std::atomic<int> cur = 0;
 	int goal = lvl->GetSize().x * lvl->GetSize().y * FILLRATIO / 100;
-	int Workers = std::thread::hardware_concurrency();
+	int Workers = tweak::parallelism_degree;
 
 	/* Split into one queue per worker */
 	/* TODO: Split per position quadrants */
@@ -434,7 +434,7 @@ static int smooth_once(Level *lvl) {
 
 	Stopwatch time_whole;
 	/* Parallelize the process using std::async and slicing jobs vertically by [y] */
-	int Tasks = std::thread::hardware_concurrency() / 4;
+	int Tasks = tweak::parallelism_degree / 4;
 	auto tasks = std::vector<std::future<int>>();
 	tasks.reserve(Tasks);
 	const int first = 1;

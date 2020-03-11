@@ -1,4 +1,7 @@
 #pragma once
+
+#include <thread>
+#include <algorithm>
 /*
  * Most of the game engine's arbitrary limits are stored in here:
  */
@@ -95,4 +98,9 @@
 #define _MEM_STATS
 #endif
 
-
+namespace tweak {
+    constexpr int parallelism_divisor = 1;
+    constexpr int parallelism_multiplier = 1;
+    
+    inline unsigned int parallelism_degree = std::max(1u, std::thread::hardware_concurrency() * parallelism_multiplier / parallelism_divisor);
+}
