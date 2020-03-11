@@ -224,34 +224,39 @@ static int expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomG
 
 static void expand_process(Level* lvl, PositionQueue& q) {
 	auto measure_function = MeasureFunction<3>{ __FUNCTION__ };
+	/* Want to generate at least goal_generated */
+	const int goal_generated = lvl->GetSize().x * lvl->GetSize().y * FILLRATIO / 100;
+	std::atomic<int> items_generated_global = 0;
 
-	std::atomic<int> cur = 0;
-	int goal = lvl->GetSize().x * lvl->GetSize().y * FILLRATIO / 100;
-	int Workers = tweak::parallelism_degree;
-
-	/* Split into one queue per worker */
-	/* TODO: Split per position quadrants */
-	auto workerQueues = std::vector<circular_buffer_adaptor<Position>>();
-	for (int i = 0; i < Workers; ++i) {
-		workerQueues.emplace_back(50000 / Workers/* Queue constructor */);
+	/* Prepare worker pool */
+	const int worker_count = tweak::parallelism_degree;
+	auto workerQueues = std::vector<circular_buffer_adaptor<Position>>(); 	/* TODO: circular buffer can overflow */
+	for (int i = 0; i < worker_count; ++i) {
+		workerQueues.emplace_back(50000 / worker_count /* Queue constructor */ );
 	}
+
+	/* TODO: Split per position quadrants */
+	/* Split into one queue per worker. This is relatively cheap. */
 	int worker = 0;
+	auto measure_queue_expand = MeasureFunction<4>{ "expand_process: prepare per-worker queues" };
 	while (q.size()) {
 		Position pos;
 		q.pop(pos);
 		workerQueues[worker].push(pos);
-		worker = (worker + 1) % Workers;
+		worker = (worker + 1) % worker_count;
 	}
+	measure_queue_expand.Finish();
 
-	std::atomic<bool> done = false;
+	/* Set up threading controls */
 	std::mutex mutex_threads_waiting;
 	std::condition_variable cv_threads_waiting;
 	int threads_waiting = 0;
-	//std::mutex mutex_continue_thread;
 	std::condition_variable cv_continue_thread;
-	int min_pass = -1;
-	int max_pass = 0;
+	std::atomic<bool> done = false;
+	int reached_pass = -1; /* Current maximum iteration threads have reached */
+	int max_pass = 0; /* Current maximum iteration threads should process */
 
+	/* Performance statistics */
 	std::atomic<int> waits_main = 0;
 	std::atomic<int> threads_notify = 0;
 	std::atomic<int> waits_continue = 0;
@@ -259,104 +264,109 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 
 	auto expand_loop = [&](circular_buffer_adaptor<Position>* qq, RandomGenerator random) {
 
-		Stopwatch thread_time;
-		Stopwatch wait_time;
+		Stopwatch perf_thread_time;
+		Stopwatch perf_wait_time;
+
 		int curr_pass = 0;
-		int added_items_pass = 0;
+		int items_generated_thread = 0;
 		bool no_more_work = false;
 		while (!done && !no_more_work) {
-			{
+			{	/* Signal thread is entering work state */
 				std::unique_lock lock(mutex_threads_waiting);
 				--threads_waiting;
-				min_pass = std::max(min_pass, curr_pass);
+				reached_pass = std::max(reached_pass, curr_pass);
 				cv_threads_waiting.notify_all();
 				threads_notify.fetch_add(1, std::memory_order_relaxed);
 			}
 
-			wait_time.Stop();
+			perf_wait_time.Stop();
+
+			/* Call the function doing actual work */
 			Stopwatch expand_time;
 			int added = expand_once(lvl, *qq, random);
 			if (!added) {
-				//no_more_work = true;
-
+				//no_more_work = true;  /* Do we want to quit early? */
 			}
-			wait_time.Start();
-			cur.fetch_add(added, std::memory_order_relaxed);
-			added_items_pass += added;
-			expand_pure_time_ms.fetch_add(std::chrono::duration_cast<std::chrono::microseconds>(expand_time.GetElapsed()).count(), std::memory_order_relaxed);
+			items_generated_thread += added;
+			items_generated_global.fetch_add(added, std::memory_order_relaxed);
+			expand_pure_time_ms.fetch_add(expand_time.GetElapsed().count(), std::memory_order_relaxed);
 
-			if (cur >= goal) {
+			perf_wait_time.Start();
+
+			/* Early exit if enough results were generates */
+			if (items_generated_global >= goal_generated) {
 				done = true;
 				cv_threads_waiting.notify_all();
 				threads_notify.fetch_add(1, std::memory_order_relaxed);
 			}
 
-			{
+			{	/* Signal thread is leaving work state */
 				std::unique_lock lock(mutex_threads_waiting);
 				++threads_waiting;
 				cv_threads_waiting.notify_all();
 				threads_notify.fetch_add(1, std::memory_order_relaxed);
-				//}
-				//{
-					//std::unique_lock lock(cv_threads_waiting);
 				while (curr_pass >= max_pass) {
+					/* Wait if not allowed to do next pass yet */
 					cv_continue_thread.wait(lock);
 					waits_continue.fetch_add(1, std::memory_order_relaxed);
 				}
 			}
 			++curr_pass;
 		}
-		auto elapsed = thread_time.GetElapsed();
-		auto waited = wait_time.GetElapsed();
+		auto elapsed = perf_thread_time.GetElapsed();
+		auto waited = perf_wait_time.GetElapsed();
 
 		DebugTrace<5>("thread took: %lld.%03lldms (%lld.%03lldms wait time) to add %d items \r\n",
-			elapsed.count() / 1000, elapsed.count() % 1000, waited.count() / 1000, waited.count() % 1000, added_items_pass);
+			elapsed.count() / 1000, elapsed.count() % 1000, waited.count() / 1000, waited.count() % 1000, items_generated_thread);
 	};
 
 	Stopwatch time_thread_create;
 
 	/* Launch workers on their own queues */
-	threads_waiting = Workers;
+	threads_waiting = worker_count;
 	auto workers = std::vector<std::future<void>>();
-	for (int i = 0; i < Workers; ++i) {
+	for (int i = 0; i < worker_count; ++i) {
 		workers.push_back(std::async(std::launch::async, expand_loop, &workerQueues[i], Random));
 	}
 
 	time_thread_create.Stop();
 	Stopwatch time_workers;
 
-	while (cur < goal) {
+	while (items_generated_global < goal_generated) {
 		{
+			/* Wait for all threads being done and waiting for next pass */
 			std::unique_lock lock(mutex_threads_waiting);
-			while (!done && (threads_waiting != Workers || /* Already started new passes */
-				(max_pass != min_pass))) { /* All are still waiting for start */
+			while (!done && 
+					(threads_waiting != worker_count || /* Already started new passes */
+					(max_pass != reached_pass))) { /* All are still waiting for start */
 				waits_main.fetch_add(1, std::memory_order_relaxed);
 				cv_threads_waiting.wait(lock);
 			}
-
-			if (cur >= goal) {
+			/* Signal exit if we got enough */
+			if (items_generated_global >= goal_generated) {
 				done = true;
 			}
-
-			max_pass = min_pass + 100;
+			/* Advance pass boundary, resume thread */
+			max_pass = reached_pass + 100; /* TODO: desynchronized passes */
 			cv_continue_thread.notify_all();
 		}
 	}
 	time_workers.Stop();
 	Stopwatch time_join;
-	/* End threadses */
-	for (int i = 0; i < Workers; ++i) {
+	/* Wait for threads to end cleanly */
+	for (int i = 0; i < worker_count; ++i) {
 		workers[i].get();
 	}
 	time_join.Stop();
 	measure_function.Finish();
 
-	DebugTrace<4>("        expand_process details: %lld.%03lld ms thread create, %lld.%03lld ms thread run, %lld.%03lld ms thread join, %d.%03d ms worker time (%u us per thread) \n",
+	/* Emit diag info */
+	DebugTrace<4>("  expand_process details: %lld.%03lld ms thread create, %lld.%03lld ms thread run, %lld.%03lld ms thread join, %d.%03d ms worker time (%u us per thread) \n",
 		time_thread_create.GetElapsed().count() / 1000, time_thread_create.GetElapsed().count() % 1000,
 		time_workers.GetElapsed().count() / 1000, time_workers.GetElapsed().count() % 1000,
 		time_join.GetElapsed().count() / 1000, time_join.GetElapsed().count() % 1000,
 		expand_pure_time_ms.load() / 1000, expand_pure_time_ms.load() % 1000,
-		expand_pure_time_ms.load() / Workers);
+		expand_pure_time_ms.load() / worker_count);
 	DebugTrace<4>("waits_continue: %d waits_main: %d threads_notify: %d \r\n", waits_continue.load(), waits_main.load(), threads_notify.load());
 }
 

@@ -67,7 +67,7 @@ template
 	typename Clock = std::chrono::high_resolution_clock,
 	typename = void
 >
-struct MeasureFunction { MeasureFunction(std::string_view name) { }; };
+struct MeasureFunction { MeasureFunction(std::string_view name) { };  void Finish() {}  };
 
 template
 <
