@@ -176,11 +176,11 @@ static int expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomG
 	Position temp;
 	int j, count = 0;
 	
-	/*for (int i = 0; i < q.size() * 100; ++i) {
-		if (i % 1000 == 1)
-			++count;
-	}
-	return count;*/
+	//for (int i = 0; i < q.size() * 1000; ++i) {
+	//	if (i % 10000 == 1)
+	//		++count;
+	//}
+	//return count;
 	
 
 	size_t total = q.size();
@@ -193,7 +193,7 @@ static int expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomG
 		yodds = ODDS * std::min(lvl->GetSize().y - temp.y, temp.y) / FILTER;
 		odds  = std::min(std::min(xodds, yodds), ODDS);
 		
-		if(odds % 9 > 2) {
+		if(Random.Bool(odds)) {
 			lvl->SetVoxelRaw(temp, 0);
 			count++;
 			
@@ -218,11 +218,11 @@ static int expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomG
 }
 
 static void expand_process(Level* lvl, PositionQueue& q) {
-	Stopwatch<std::chrono::milliseconds> time_whole;
+	Stopwatch time_whole;
 
 	std::atomic<int> cur = 0;
 	int goal = lvl->GetSize().x * lvl->GetSize().y * FILLRATIO / 100;
-	constexpr int Workers = 8;
+	constexpr int Workers = 12;
 
 	/* Split into one queue per worker */
 	/* TODO: Split per position quadrants */
@@ -255,7 +255,11 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 	auto expand_loop = [&](circular_buffer_adaptor<Position>* qq, RandomGenerator random) {
 		
 		int curr_pass = 0;
-		while (!done) {
+		int added_items_pass = 0;
+		bool no_more_work = false;
+		Stopwatch thread_time;
+		Stopwatch wait_time;
+		while (!done && !no_more_work) {
 			{
 				std::unique_lock lock(mutex_threads_waiting);
 				--threads_waiting;
@@ -264,9 +268,17 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 				threads_notify.fetch_add(1, std::memory_order_relaxed);
 			}
 
-			Stopwatch s;
-			cur.fetch_add(expand_once(lvl, *qq, random), std::memory_order_relaxed);
-			expand_pure_time_ms.fetch_add(std::chrono::duration_cast<std::chrono::microseconds>(s.GetElapsed()).count(), std::memory_order_relaxed);
+			wait_time.Stop();
+			Stopwatch expand_time;
+			int added = expand_once(lvl, *qq, random);
+			if (!added) {
+				//no_more_work = true;
+			
+			}
+			wait_time.Start();
+			cur.fetch_add(added, std::memory_order_relaxed);
+			added_items_pass += added;
+			expand_pure_time_ms.fetch_add(std::chrono::duration_cast<std::chrono::microseconds>(expand_time.GetElapsed()).count(), std::memory_order_relaxed);
 			
 			if (cur >= goal) {
 				done = true;
@@ -289,15 +301,22 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 			}
 			++curr_pass;
 		}
+		auto elapsed = thread_time.GetElapsed();
+		auto waited = wait_time.GetElapsed();
+		gamelib_print("thread took: %d.%03dms (%d.%03dms wait time) to add %d items \r\n", elapsed / 1000, elapsed % 1000, waited / 1000, waited % 1000, added_items_pass);
 	};
 
-	
+	Stopwatch time_thread_create;
+
 	/* Launch workers on their own queues */
 	threads_waiting = Workers;
 	auto workers = std::vector<std::thread>();
 	for (int i = 0; i < Workers; ++i) {
 		workers.push_back(std::thread(expand_loop, &workerQueues[i], Random));
 	}
+	
+	time_thread_create.Stop();
+	Stopwatch time_workers;
 
 	while (cur < goal) {
 		{
@@ -321,8 +340,12 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 	for (int i = 0; i < Workers; ++i) {
 		workers[i].join();
 	}
-	auto msecs = time_whole.GetElapsed();
-	gamelib_print("expand_whole took %u.%03u sec, %u us pure time (%u us per thread) \n", msecs / 1000, msecs % 1000, expand_pure_time_ms.load(), expand_pure_time_ms.load() / Workers);
+	gamelib_print("expand_whole took %u.%03u ms, %u.%03u ms thread create, %u.%03u ms thread run, %u.%03u ms worker time (%u us per thread) \n",
+		time_whole.GetElapsed() / 1000, time_whole.GetElapsed() % 1000,
+		time_thread_create.GetElapsed() / 1000, time_thread_create.GetElapsed() % 1000,
+		time_workers.GetElapsed() / 1000, time_workers.GetElapsed() % 1000,
+		expand_pure_time_ms.load() / 1000, expand_pure_time_ms.load() % 1000,
+		expand_pure_time_ms.load() / Workers);
 	gamelib_print("waits_continue: %d waits_main: %d threads_notify: %d \r\n", waits_continue.load(), waits_main.load(), threads_notify.load());
 }
 

@@ -189,6 +189,9 @@ struct circular_buffer_adaptor : private boost::circular_buffer<Value> {
 		parent::pop_front();
 		return true;
 	}
+	Value& peek() {
+		return parent::front();
+	}
 	bool push(const Value& val) {
 		parent::push_back(val);
 		return true;
