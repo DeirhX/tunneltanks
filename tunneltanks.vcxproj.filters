@@ -188,6 +188,9 @@
     <ClInclude Include="src\include\LevelView.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\include\trace.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

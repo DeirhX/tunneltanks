@@ -2,6 +2,7 @@
 #include <ctime>
 #include <chrono>
 #include <cassert>
+#include <string_view>
 
 /* Generic types that are used all over the place. 
    Conversions possible only when it is conceptually sensible - enforce clear semantics
@@ -74,39 +75,4 @@ struct Color {
 };
 
 using TankColor = char;
-
-
-template
-<
-	typename TimeUnit = std::chrono::microseconds,
-	typename Clock = std::chrono::high_resolution_clock
->
-struct Stopwatch
-{
-	std::chrono::time_point<Clock> start;
-	TimeUnit elapsed = {};
-	bool is_running = false;
-	Stopwatch() { Start(); }
-	
-	void Start()
-	{
-		start = Clock::now();
-		is_running = true;
-	}
-	void Stop()
-	{
-		assert(is_running);
-		elapsed +=  std::chrono::duration_cast<TimeUnit>(Clock::now() - start);
-		is_running = false;
-	}
-	
-	TimeUnit GetElapsed()
-	{
-		if (is_running)
-			Stop();
-		return elapsed;
-	}
-};
-
-
 

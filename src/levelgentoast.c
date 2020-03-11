@@ -8,6 +8,8 @@
 #include <level.h>
 #include <memalloc.h>
 #include <random.h>
+#include <trace.h>
+#include <containers.h>
 
 #include <deque>
 #include <atomic>
@@ -52,6 +54,8 @@ static int pairing_cmp(const void *a, const void *b) {
 }
 
 static void generate_tree(Level *lvl) {
+	auto perf = MeasureFunction<2>{ __FUNCTION__ };
+
 	int *dsets, paircount;
 	int i, j;
 	int k;
@@ -162,6 +166,7 @@ static void set_outside(Level *lvl, char val) {
 }
 
 static void expand_init(Level *lvl, PositionQueue& q) {
+	auto perf = MeasureFunction<3>{ __FUNCTION__ };
 	for(int y = 1; y<lvl->GetSize().y-1; y++)
 		for (int x = 1; x < lvl->GetSize().x - 1; x++) {
 			int offset = x + y * lvl->GetSize().x;
@@ -218,7 +223,7 @@ static int expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomG
 }
 
 static void expand_process(Level* lvl, PositionQueue& q) {
-	Stopwatch time_whole;
+	auto measure_function = MeasureFunction<3>{ __FUNCTION__ };
 
 	std::atomic<int> cur = 0;
 	int goal = lvl->GetSize().x * lvl->GetSize().y * FILLRATIO / 100;
@@ -228,7 +233,7 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 	/* TODO: Split per position quadrants */
 	auto workerQueues = std::vector<circular_buffer_adaptor<Position>>();
 	for (int i = 0; i < Workers; ++i) {
-		workerQueues.emplace_back(50000 / Workers/* Queue constructor */); 
+		workerQueues.emplace_back(50000 / Workers/* Queue constructor */);
 	}
 	int worker = 0;
 	while (q.size()) {
@@ -253,7 +258,7 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 	std::atomic<int> expand_pure_time_ms = 0;
 
 	auto expand_loop = [&](circular_buffer_adaptor<Position>* qq, RandomGenerator random) {
-		
+
 		Stopwatch thread_time;
 		Stopwatch wait_time;
 		int curr_pass = 0;
@@ -273,27 +278,27 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 			int added = expand_once(lvl, *qq, random);
 			if (!added) {
 				//no_more_work = true;
-			
+
 			}
 			wait_time.Start();
 			cur.fetch_add(added, std::memory_order_relaxed);
 			added_items_pass += added;
 			expand_pure_time_ms.fetch_add(std::chrono::duration_cast<std::chrono::microseconds>(expand_time.GetElapsed()).count(), std::memory_order_relaxed);
-			
+
 			if (cur >= goal) {
 				done = true;
 				cv_threads_waiting.notify_all();
 				threads_notify.fetch_add(1, std::memory_order_relaxed);
 			}
-			
+
 			{
 				std::unique_lock lock(mutex_threads_waiting);
 				++threads_waiting;
 				cv_threads_waiting.notify_all();
 				threads_notify.fetch_add(1, std::memory_order_relaxed);
-			//}
-			//{
-				//std::unique_lock lock(cv_threads_waiting);
+				//}
+				//{
+					//std::unique_lock lock(cv_threads_waiting);
 				while (curr_pass >= max_pass) {
 					cv_continue_thread.wait(lock);
 					waits_continue.fetch_add(1, std::memory_order_relaxed);
@@ -303,8 +308,8 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 		}
 		auto elapsed = thread_time.GetElapsed();
 		auto waited = wait_time.GetElapsed();
-		
-		DebugTrace<3>("thread took: %lld.%03lldms (%lld.%03lldms wait time) to add %d items \r\n",
+
+		DebugTrace<5>("thread took: %lld.%03lldms (%lld.%03lldms wait time) to add %d items \r\n",
 			elapsed.count() / 1000, elapsed.count() % 1000, waited.count() / 1000, waited.count() % 1000, added_items_pass);
 	};
 
@@ -316,7 +321,7 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 	for (int i = 0; i < Workers; ++i) {
 		workers.push_back(std::async(std::launch::async, expand_loop, &workerQueues[i], Random));
 	}
-	
+
 	time_thread_create.Stop();
 	Stopwatch time_workers;
 
@@ -324,7 +329,7 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 		{
 			std::unique_lock lock(mutex_threads_waiting);
 			while (!done && (threads_waiting != Workers || /* Already started new passes */
-				  (max_pass != min_pass))) { /* All are still waiting for start */ 
+				(max_pass != min_pass))) { /* All are still waiting for start */
 				waits_main.fetch_add(1, std::memory_order_relaxed);
 				cv_threads_waiting.wait(lock);
 			}
@@ -344,25 +349,24 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 		workers[i].get();
 	}
 	time_join.Stop();
-	time_whole.Stop();
+	measure_function.Finish();
 
-	DebugTrace<2>("expand_whole took %lld.%03lld ms, %lld.%03lld ms thread create, %lld.%03lld ms thread run, %lld.%03lld ms thread join, %d.%03d ms worker time (%u us per thread) \n",
-		time_whole.GetElapsed().count() / 1000, time_whole.GetElapsed().count() % 1000,
+	DebugTrace<4>("        expand_process details: %lld.%03lld ms thread create, %lld.%03lld ms thread run, %lld.%03lld ms thread join, %d.%03d ms worker time (%u us per thread) \n",
 		time_thread_create.GetElapsed().count() / 1000, time_thread_create.GetElapsed().count() % 1000,
 		time_workers.GetElapsed().count() / 1000, time_workers.GetElapsed().count() % 1000,
 		time_join.GetElapsed().count() / 1000, time_join.GetElapsed().count() % 1000,
 		expand_pure_time_ms.load() / 1000, expand_pure_time_ms.load() % 1000,
 		expand_pure_time_ms.load() / Workers);
-	DebugTrace<2>("waits_continue: %d waits_main: %d threads_notify: %d \r\n", waits_continue.load(), waits_main.load(), threads_notify.load());
+	DebugTrace<4>("waits_continue: %d waits_main: %d threads_notify: %d \r\n", waits_continue.load(), waits_main.load(), threads_notify.load());
 }
 
 static void expand_cleanup(Level *lvl) {
-
+	auto perf = MeasureFunction<3>{ __FUNCTION__ };
 	lvl->ForEachVoxel([](LevelVoxel& voxel) { voxel = !!voxel; });
 }
 
 static void randomly_expand(Level *lvl) {
-	
+	auto perf = MeasureFunction<2>{ __FUNCTION__ };
 	/* Experimentally, the queue never grew to larger than 3/50ths of the level
 	 * size, so we can use that to save quite a bit of memory: */
 	auto queue = PositionQueue(50000);
@@ -423,7 +427,7 @@ static int smooth_once(Level *lvl) {
 			}
 
 		time_step.Stop();
-		DebugTrace<3>("smooth_step thread took %lld.%03lld ms \n",
+		DebugTrace<5>("    smooth_step thread took %lld.%03lld ms \n",
 			time_step.GetElapsed().count() / 1000, time_step.GetElapsed().count() % 1000);
 		return count;
 	};
@@ -450,13 +454,15 @@ static int smooth_once(Level *lvl) {
 	}
 
 	time_whole.Stop();
-	DebugTrace<2>("smooth_once total took %lld.%03lld ms \n",
+	DebugTrace<4>("  smooth_once total took %lld.%03lld ms \n",
 		time_whole.GetElapsed().count() / 1000, time_whole.GetElapsed().count() % 1000);
 
 	return count;
 }
 
 static void smooth_cavern(Level *lvl) {
+	auto perf = MeasureFunction<2>{ __FUNCTION__ };
+
 	set_outside(lvl, 0);
 	while(smooth_once(lvl));
 	set_outside(lvl, 1);
@@ -468,6 +474,8 @@ static void smooth_cavern(Level *lvl) {
  *----------------------------------------------------------------------------*/
 
 void toast_generator(Level *lvl) {
+	auto perf = MeasureFunction<1>{ __FUNCTION__ };
+
 	generate_tree(lvl);
 	randomly_expand(lvl);
 	smooth_cavern(lvl);

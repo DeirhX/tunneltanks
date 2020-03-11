@@ -114,6 +114,7 @@
     <ClInclude Include="src\include\tank.h" />
     <ClInclude Include="src\include\tanklist.h" />
     <ClInclude Include="src\include\tanksprites.h" />
+    <ClInclude Include="src\include\trace.h" />
     <ClInclude Include="src\include\tweak.h" />
     <ClInclude Include="src\include\types.h" />
     <ClInclude Include="src\pch.h" />

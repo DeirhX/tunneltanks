@@ -5,8 +5,6 @@
  * Android.) */
 
 #include <types.h>
-#include <tank.h>
-
 
 /* If the gamelib needs initialization, this'll do it: */
 int gamelib_init();
@@ -28,7 +26,7 @@ typedef int (*draw_func)(void *data);
 void gamelib_main_loop(draw_func func, void *data);
 
 /* This lets you attach controllers to a tank: */
-int gamelib_tank_attach(Tank *t, int tank_num, int num_players) ;
+int gamelib_tank_attach(struct Tank *t, int tank_num, int num_players) ;
 
 /* TODO: This will need a means for configuring the controller... */
 
@@ -65,26 +63,7 @@ void     gamelib_print (const char *str, ...) ;
 void     gamelib_debug (const char *str, ...) ;
 void     gamelib_error (const char *str, ...) ;
 
-
-
-
-/* debug_level <= DEBUG_TRACE_LEVEL */
-template <int debug_level, typename... TPrintfArgs, typename std::enable_if_t<(debug_level <= DEBUG_TRACE_LEVEL), int> = 0 >
-void DebugTrace(TPrintfArgs&&... args)
-{
-    char debug_buff[1024];
-    std::sprintf(debug_buff, std::forward<TPrintfArgs>(args)...);
-    gamelib_debug(debug_buff);
-}
-template <int debug_level, typename... TPrintfArgs, typename std::enable_if_t<(debug_level > DEBUG_TRACE_LEVEL), int> = 0 >
-void DebugTrace(TPrintfArgs&&... args)
-{
-}
-
 /* Gamelib needs to be able to tell the outside that it needs a control GUI: */
 Rect     gamelib_gui_get_size() ;
-void     gamelib_gui_draw(Screen *s, Rect r) ;
-
-
-
+void     gamelib_gui_draw(struct Screen *s, Rect r) ;
 

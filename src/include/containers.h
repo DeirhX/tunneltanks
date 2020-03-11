@@ -4,7 +4,7 @@
 #include <queue>
 #include <deque>
 #include <assert.h>
-#include <debugapi.h>
+#include <trace.h>
 #include <vector>
 #include <boost/circular_buffer.hpp>
 #include <boost/lockfree/queue.hpp>
@@ -93,9 +93,7 @@ public:
 			container.pop_back();
 
 		if (container.size() != size_before && size_before >= 50) {
-			char buff[50];
-			std::sprintf(buff, "Shrunk %zd items, now size: %zd\r\n", size_before - container.size(), container.size());
-			OutputDebugString(buff);
+			DebugTrace<6>("Shrunk %zd items, now size: %zd\r\n", size_before - container.size(), container.size());
 		}
 	}
 

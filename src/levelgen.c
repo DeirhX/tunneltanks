@@ -21,6 +21,7 @@ typedef struct LevelGenerator {
 #include <levelgensimple.h>
 #include <levelgenmaze.h>
 #include <levelgenbraid.h>
+#include <trace.h>
 
 /* Add an entry for every generator: */
 LevelGenerator GENERATOR_LIST[] =
