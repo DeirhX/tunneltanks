@@ -11,7 +11,7 @@ struct Vector
 {
 	int x = 0, y = 0;
 	Vector() = default;
-	Vector(int x, int y) : x(x), y(y) { }
+	constexpr Vector(int x, int y) : x(x), y(y) { }
 };
 
 struct Position : public Vector
@@ -23,19 +23,19 @@ struct Position : public Vector
 struct Size : public Vector
 {
 	Size() = default;
-	Size(int sx, int sy) : Vector(sx, sy) {}
+	constexpr Size(int sx, int sy) : Vector(sx, sy) {}
 };
 
 struct Speed : public Vector
 {
 	Speed() = default;
-	Speed(int sx, int sy) : Vector(sx, sy) {}
+	constexpr Speed(int sx, int sy) : Vector(sx, sy) {}
 };
 
 struct Offset : public Vector
 {
 	Offset() = default;
-	Offset(int dx, int dy) : Vector(dx, dy) {}
+	constexpr Offset(int dx, int dy) : Vector(dx, dy) {}
 };
 
 /*

@@ -46,11 +46,11 @@ struct Screen {
 	bool	 is_fullscreen;
 	
 	/* Various variables for the current resolution: */
-	Size size;
-	Offset offset;
-	int xskips, yskips;
-	Size pixel;
-	
+	Size screen_size;
+	Offset screen_offset;
+	Size pixel_size;
+	Size pixels_skip;  /* Ever  */
+
 	/* Window shit: */
 	int  window_count;
 	Window    window[SCREEN_MAX_WINDOWS];
@@ -89,19 +89,22 @@ static void fill_background() {
 	}
 }
 
-void screen_draw_pixel(Screen *s, Position pos, Color color) {
+void screen_draw_pixel(Screen* s, Position pos, Color color) {
+
+	Offset adjusted = {  /* Make some pixels uniformly larger to fill in given space relatively evenly  */
+		(pos.x * s->pixels_skip.x) / GAME_WIDTH,
+		(pos.y * s->pixels_skip.y) / GAME_HEIGHT };
+/*	Offset adjusted_next = {
+		(pos.x * s->pixels_skip.x) / GAME_WIDTH,
+		(pos.y * s->pixels_skip.y) / GAME_HEIGHT };
+	*/
+	/* Final pixel position, adjusted by required scaling and offset */ 
+	pos.x = (pos.x * s->pixel_size.x) + s->screen_offset.x + adjusted.x;
+	pos.y = (pos.y * s->pixel_size.y) + s->screen_offset.y + adjusted.y;
 	
-	auto rel_pos = Size  { 
-		(pos.x * s->xskips) / GAME_WIDTH,
-		(pos.y * s->yskips) / GAME_HEIGHT
-	};
-	
-	pos.x *= s->pixel.x + s->offset.x + rel_pos.x;
-	pos.y *= s->pixel.y + s->offset.y + rel_pos.y;
-	
-	auto pixelSize = Size {
-		s->pixel.x + (rel_pos.x != ((pos.x + 1) * s->xskips / GAME_WIDTH)),
-		s->pixel.y + (rel_pos.y != ((pos.y + 1) * s->yskips / GAME_HEIGHT))
+	auto pixelSize = Size { /* Compute size based on needing uneven scaling or not */
+		s->pixel_size.x + (adjusted.x != ((pos.x + 1) * s->pixels_skip.x / GAME_WIDTH)),
+		s->pixel_size.y + (adjusted.y != ((pos.y + 1) * s->pixels_skip.y / GAME_HEIGHT))
 	};
 	
 	gamelib_draw_box(Rect{ pos, pixelSize }, color);
@@ -109,17 +112,17 @@ void screen_draw_pixel(Screen *s, Position pos, Color color) {
 
 /* These will say what virtual pixel a physical pixel resides on: */
 int  screen_map_x(Screen *s, int x) {
-	x -= s->offset.x;
-	x -= x/(int)s->pixel.x * (int)s->xskips/GAME_WIDTH;
-	x /= (int)s->pixel.x;
+	x -= s->screen_offset.x;
+	x -= x/(int)s->pixel_size.x * (int)s->pixels_skip.x /GAME_WIDTH;
+	x /= (int)s->pixel_size.x;
 	
 	return x;
 }
 
 int  screen_map_y(Screen *s, int y) {
-	y -= s->offset.y;
-	y -= y/(int)s->pixel.y * (int)s->yskips/GAME_HEIGHT;
-	y /= (int)s->pixel.y;
+	y -= s->screen_offset.y;
+	y -= y/(int)s->pixel_size.y * (int)s->pixels_skip.y /GAME_HEIGHT;
+	y /= (int)s->pixel_size.y;
 	
 	return y;
 }
@@ -349,7 +352,7 @@ void screen_set_fullscreen(Screen *s, bool is_fullscreen) {
 	
 	/* Resize the screen to include the new fullscreen mode: */
 	if (!is_fullscreen) screen_resize(s, Size{ SCREEN_WIDTH, SCREEN_HEIGHT });
-	else               screen_resize(s, s->size);
+	else                screen_resize(s, s->screen_size);
 }
 
 
@@ -398,10 +401,10 @@ int screen_resize(Screen *s, Size size) {
 	fill_background();
 	
 	/* Ok, the hard part is over. Copy in all of our data: */
-	s->size = size;
-	s->offset = offset;
-	s->pixel = pixel_size;
-	s->xskips = pixel_skips.x; s->yskips = pixel_skips.y;
+	s->screen_size = size;
+	s->screen_offset = offset;
+	s->pixel_size = pixel_size;
+	s->pixels_skip = pixel_skips;
 	
 	/* Redraw the game: */
 	screen_draw(s);
