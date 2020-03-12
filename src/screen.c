@@ -78,12 +78,12 @@ struct Screen {
 
 /* Fills a surface with a blue/black pattern: */
 static void fill_background() {
-	Rect dim = gamelib_get_resolution();
+	Size dim = gamelib_get_resolution();
 	
-	gamelib_draw_box(dim, color_bg);
+	gamelib_draw_box({{ 0, 0}, dim}, color_bg);
 	Position o;
-	for(o.y = 0; o.y<dim.size.y; o.y++) {
-		for(o.x = (o.y%2)*2; o.x<dim.size.x; o.x+=4) {
+	for(o.y = 0; o.y<dim.y; o.y++) {
+		for(o.x = (o.y%2)*2; o.x<dim.x; o.x+=4) {
 			gamelib_draw_box(Rect{ o, Size {1,1} }, color_bg_dot);
 		}
 	}
@@ -356,8 +356,8 @@ void screen_set_fullscreen(Screen *s, bool is_fullscreen) {
 /* Returns 0 if successful, 1 if failed: */
 int screen_resize(Screen *s, Size size) {
 	
-	int xskips, yskips, vw, vh, a, b;
-	
+	Size pixel_skips;
+	Size render_size;
 	Offset offset;
 	Size pixel_size;
 
@@ -367,37 +367,41 @@ int screen_resize(Screen *s, Size size) {
 	
 	/* A little extra logic for fullscreen: */
 	if(s->is_fullscreen) gamelib_set_fullscreen();
-	else                 gamelib_set_window    (size.x, size.y);
+	else                 gamelib_set_window    (size);
 	
-	Rect temp_rect = gamelib_get_resolution();
-	size.x = temp_rect.size.x; size.y = temp_rect.size.y;
+	size = gamelib_get_resolution();
 	
 	s->is_fullscreen = gamelib_get_fullscreen();
 	
-	/* What is the limiting factor in our scaling? */
-	a = size.y * GAME_WIDTH; b = size.x * GAME_HEIGHT;
-	if(a<b) {
-		/* size.y is. */
-		vh = size.y; vw = (GAME_WIDTH * size.y) / (GAME_HEIGHT);
-		offset.x = size.x/2 - vw/2; offset.y = 0;
+	/* What is the limiting factor in our scaling to maintain aspect ratio? */
+	int yw = size.y * GAME_WIDTH; 
+	int xh = size.x * GAME_HEIGHT;
+	if( yw < xh ) {
+		/* size.y is. Correct aspect ratio using offset */
+		render_size.x = (GAME_WIDTH * size.y) / (GAME_HEIGHT);
+		render_size.y = size.y;
+		offset.x = (size.x - render_size.x)/2;
+		offset.y = 0;
 	} else {
-		/* size.x is. */
-		vw = size.x; vh = (GAME_HEIGHT * size.x) / (GAME_WIDTH);
-		offset.x = 0; offset.y = size.y/2 - vh/2;
+		/* size.x is. Correct aspect ratio using offset */
+		render_size.x = size.x;
+		render_size.y = (GAME_HEIGHT * size.x) / (GAME_WIDTH);
+		offset.x = 0; 
+		offset.y = (size.y - render_size.y)/2;
 	}
 	
 	/* Calculate the pixel sizing variables: */
-	pixel_size.x = vw / GAME_WIDTH;  xskips = vw % GAME_WIDTH;
-	pixel_size.y = vh / GAME_HEIGHT; yskips = vh % GAME_HEIGHT;
+	pixel_size.x = render_size.x / GAME_WIDTH;  pixel_skips.x = render_size.x % GAME_WIDTH;
+	pixel_size.y = render_size.y / GAME_HEIGHT; pixel_skips.y = render_size.y % GAME_HEIGHT;
 	
 	/* Draw a nice bg: */
 	fill_background();
 	
 	/* Ok, the hard part is over. Copy in all of our data: */
-	s->size.x = size.x;   s->size.y = size.y;
-	s->offset.x = offset.x; s->offset.y = offset.y;
-	s->pixel.x = pixel_size.x; s->pixel.y = pixel_size.y;
-	s->xskips = xskips; s->yskips = yskips;
+	s->size = size;
+	s->offset = offset;
+	s->pixel = pixel_size;
+	s->xskips = pixel_skips.x; s->yskips = pixel_skips.y;
 	
 	/* Redraw the game: */
 	screen_draw(s);

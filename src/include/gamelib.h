@@ -44,8 +44,8 @@ void      gamelib_event_done() ;
 
 /* We need to be able to switch resolutions: */
 int  gamelib_set_fullscreen() ;
-int  gamelib_set_window(int w, int h) ;
-Rect gamelib_get_resolution() ;
+int  gamelib_set_window(Size size) ;
+Size gamelib_get_resolution() ;
 bool gamelib_get_fullscreen() ;
 
 /* We need a way to draw: */
