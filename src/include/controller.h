@@ -1,8 +1,15 @@
 #pragma once
-#include <tank.h>
+#include <types.h>
 
-/* Public (non-backend) controllers: */
-void controller_twitch_attach(Tank *t) ;
+struct ControllerOutput
+{
+	Speed speed = { };
+	bool is_shooting = false;
+};
 
-
-
+class Controller
+{
+public:
+	virtual ~Controller() = default;
+	virtual ControllerOutput ApplyControls(struct PublicTankInfo* tankPublic) = 0;
+};

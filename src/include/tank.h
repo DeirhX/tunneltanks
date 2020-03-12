@@ -6,7 +6,8 @@
 #include <screen.h>
 #include <drawbuffer.h>
 #include <projectile.h>
-#include <LevelView.h>
+#include <level_view.h>
+#include <controllersdl.h>
 
 struct LevelView;
 
@@ -17,28 +18,27 @@ typedef struct PublicTankInfo {
 	LevelView level_view;
 } PublicTankInfo;
 
-typedef void (*TankController)(PublicTankInfo *, void *, Speed *, int *) ;
-
 struct Tank
 {
 public:
 	bool is_valid = false;
+
+	bool is_shooting;
+
 	Position pos;
 	Speed speed; /* Velocity... ie: is it moving now? */
 	int direction;
 
 	TankColor color;
 
-	int bullet_timer, bullets_left, is_shooting;
+	int bullet_timer, bullets_left;
 
 	int health, energy;
 
-	TankController controller;
-	std::shared_ptr<void> controller_data;
+	std::shared_ptr<Controller> controller;
 
 	Level* lvl;
 	ProjectileList* pl;
-	//std::shared_ptr<LevelView> cached_slice;
 
 private:
 	Tank() = default; // Never use manually. Will be used inside intrusive containers
@@ -46,8 +46,7 @@ public:
 	static Tank Invalid() { return Tank(); }
 
 	Tank(TankColor color, Level* lvl, ProjectileList* pl, Position pos);
-	//~Tank() = default;
-	void SetController(TankController func, std::shared_ptr<void> data);
+	void SetController(std::shared_ptr<Controller> newController) { this->controller = newController; }
 
 	[[nodiscard]] Position GetPosition() const { return this->pos; }
 	[[nodiscard]] int GetColor() const { return this->color; }
@@ -70,6 +69,7 @@ public:
 
 	void ReturnBullet();
 	void TriggerExplosion() const;
+	void ApplyControllerOutput(ControllerOutput controls);
 };
 
 

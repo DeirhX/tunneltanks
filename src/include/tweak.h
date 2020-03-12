@@ -2,6 +2,9 @@
 
 #include <thread>
 #include <algorithm>
+#include <types.h>
+
+namespace tweak {
 /*
  * Most of the game engine's arbitrary limits are stored in here:
  */
@@ -24,6 +27,7 @@
 /* The virtual resolution of the game. (IE: How many blocks tall/wide) */
 #define GAME_WIDTH                     160
 #define GAME_HEIGHT                    100
+constexpr Size GameSize = { GAME_WIDTH, GAME_HEIGHT };
 
 /* The desired speed in frames per second: */
 #define GAME_FPS                       24
@@ -98,7 +102,6 @@
 #define _MEM_STATS
 #endif
 
-namespace tweak {
     constexpr int parallelism_divisor = 1;
     constexpr int parallelism_multiplier = 1;
     

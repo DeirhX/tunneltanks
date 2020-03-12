@@ -1,7 +1,7 @@
 #include <cstdlib>
 
 #include <level.h>
-#include <LevelView.h>
+#include <level_view.h>
 #include <memalloc.h>
 #include <tweak.h>
 #include <tank.h>

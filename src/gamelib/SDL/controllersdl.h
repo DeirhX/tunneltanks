@@ -1,6 +1,22 @@
 #pragma once
 #include <SDL.h>
-#include <tank.h>
+#include <controller.h>
 
-void controller_keyboard_attach( Tank *, SDLKey, SDLKey, SDLKey, SDLKey, SDLKey);
-void controller_joystick_attach( Tank *t ) ;
+class KeyboardController : public Controller
+{
+	SDLKey left, right, up, down, shoot;
+public:
+	KeyboardController(SDLKey left, SDLKey right, SDLKey up, SDLKey down, SDLKey shoot);
+	ControllerOutput ApplyControls(PublicTankInfo* tankPublic) override;
+
+};
+
+/* The SDL-based keyboard controller: */
+class JoystickController : public Controller
+{
+	SDL_Joystick* joystick;
+public:
+	JoystickController();
+	ControllerOutput ApplyControls(PublicTankInfo* tankPublic) override;
+};
+

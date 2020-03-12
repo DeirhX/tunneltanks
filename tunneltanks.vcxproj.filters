@@ -96,7 +96,7 @@
     <ClCompile Include="src\exceptions.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\LevelView.c">
+    <ClCompile Include="src\level_view.c">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -185,14 +185,20 @@
     <ClInclude Include="src\include\containers.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\include\LevelView.h">
+    <ClInclude Include="src\include\trace.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\include\trace.h">
+    <ClInclude Include="src\include\aitwitch.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\level_view.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="Debugging.natvis" />
   </ItemGroup>
 </Project>

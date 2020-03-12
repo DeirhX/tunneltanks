@@ -10,7 +10,7 @@
 #include <projectile.h>
 #include <random.h>
 #include <tanklist.h>
-#include <LevelView.h>
+#include <level_view.h>
 #include <algorithm>
 
 
@@ -31,8 +31,6 @@ Tank::Tank(TankColor color, Level *lvl, ProjectileList*pl, Position pos) :
 	this->is_shooting = 0;
 	this->health = TANK_STARTING_SHIELD;
 	this->energy = TANK_STARTING_FUEL;
-	this->controller = NULL;
-	this->controller_data = NULL;
 }
 
 /* We don't use the Tank structure in this function, since we are checking the
@@ -80,7 +78,8 @@ void Tank::DoMove(TankList *tl) {
 			.x      = static_cast<int>(this->pos.x - base.x),
 			.y      = static_cast<int>(this->pos.y - base.y),
 			.level_view  = LevelView(this, this->lvl)};
-		this->controller(&i, this->controller_data.get(), &this->speed, &this->is_shooting);
+		
+		this->ApplyControllerOutput(this->controller->ApplyControls(&i));
 	}
 	
 	/* Calculate the direction: */
@@ -204,10 +203,10 @@ void Tank::TriggerExplosion() const
 	));
 }
 
-/* This is meant to be called from a controller's attach function: */
-void Tank::SetController(TankController func, std::shared_ptr<void> data) {
-	this->controller = func;
-	this->controller_data = data;
+void Tank::ApplyControllerOutput(ControllerOutput controls)
+{
+	this->speed = controls.speed;
+	this->is_shooting = controls.is_shooting;
 }
 
 bool Tank::IsDead() const

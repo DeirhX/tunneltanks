@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="Position">
+    <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+  </Type>
+  <Type Name="Size">
+    <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+  </Type>
+  <Type Name="Speed">
+    <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+  </Type>
+  <Type Name="Vector">
+    <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+  </Type>
+</AutoVisualizer>

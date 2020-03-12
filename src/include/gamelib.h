@@ -44,13 +44,13 @@ void      gamelib_event_done() ;
 
 /* We need to be able to switch resolutions: */
 int  gamelib_set_fullscreen() ;
-int  gamelib_set_window(int w, int h) ;
-Rect gamelib_get_resolution() ;
+int  gamelib_set_window(Size size) ;
+Size gamelib_get_resolution() ;
 bool gamelib_get_fullscreen() ;
 
 /* We need a way to draw: */
 /* TODO: Implement an API for locking/unlocking the pixel array. */
-int  gamelib_draw_box(Rect *rect, Color c) ;
+int  gamelib_draw_box(Rect rect, Color c) ;
 
 /* Now, for a way to draw a bitmap, if the platform wants to... */
 typedef struct BMPFile BMPFile;

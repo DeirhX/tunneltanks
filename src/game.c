@@ -14,6 +14,7 @@
 #include <tweak.h>
 #include <gamelib.h>
 #include <chrono>
+#include <aitwitch.h>
 
 
 /*#define ERR_OUT(msg) fprintf(stderr, "PROGRAMMING ERROR: " msg "\n")*/
@@ -42,7 +43,7 @@ static void twitch_fill(TankList *tl, Level *lvl, TankColor starting_id) {
 	
 	for(TankColor i=starting_id; i<MAX_TANKS; i++) {
 		Tank *t = tl->AddTank(i, lvl->GetSpawn(i));
-		controller_twitch_attach(t);
+		t->SetController(std::make_shared<TwitchController>());
 	}
 }
 
@@ -240,7 +241,7 @@ int game_step(void *input) {
 		/* Trying to resize the window? */
 		if(temp == GAME_EVENT_RESIZE) {
 			Rect r = gamelib_event_resize_get_size();
-			screen_resize(gd->data.active.s, r.size.x, r.size.y);
+			screen_resize(gd->data.active.s, r.size);
 		
 		/* Trying to toggle fullscreen? */
 		} else if(temp == GAME_EVENT_TOGGLE_FULLSCREEN) {
