@@ -14,6 +14,7 @@
 #include <tweak.h>
 #include <gamelib.h>
 #include <chrono>
+#include <aitwitch.h>
 
 
 /*#define ERR_OUT(msg) fprintf(stderr, "PROGRAMMING ERROR: " msg "\n")*/
@@ -68,7 +69,7 @@ static void twitch_fill(TankList *tl, Level *lvl, TankColor starting_id) {
 	
 	for(TankColor i=starting_id; i<MAX_TANKS; i++) {
 		Tank *t = tl->AddTank(i, lvl->GetSpawn(i));
-		controller_twitch_attach(t);
+		t->SetController(std::make_shared<TwitchController>());
 	}
 }
 

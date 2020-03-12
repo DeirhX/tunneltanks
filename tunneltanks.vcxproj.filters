@@ -191,6 +191,9 @@
     <ClInclude Include="src\include\trace.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\include\aitwitch.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -85,7 +85,7 @@ int gamelib_get_target_fps()     { return GAME_FPS; }
 /* This is kind-of a stopgap, until I make a better controller... */
 static int try_attach_joystick(Tank *t) {
 	if(SDL_NumJoysticks() == 0) return 0;
-	controller_joystick_attach(t);
+	t->SetController(std::make_shared<JoystickController>());
 	return 1;
 }
 
@@ -97,18 +97,18 @@ static int try_attach_joystick(Tank *t) {
 int gamelib_tank_attach(Tank *t, int tank_num, int num_players) {
 	if(num_players == 1 && tank_num == 0) {
 		if(!try_attach_joystick(t))
-			controller_keyboard_attach(t, ONE_KEYBOARD);
+			t->SetController(std::make_shared<KeyboardController>(ONE_KEYBOARD));
 	
 	} else if(num_players == 2) {
 		if (tank_num == 0) {
 			if(!try_attach_joystick(t))
-				controller_keyboard_attach(t, TWO_KEYBOARD_A);
+				t->SetController(std::make_shared<KeyboardController>(TWO_KEYBOARD_A));
 		
 		} else if(tank_num == 1) {
 			if(SDL_NumJoysticks())
-				controller_keyboard_attach(t, ONE_KEYBOARD);
+				t->SetController(std::make_shared<KeyboardController>(ONE_KEYBOARD));
 			else
-				controller_keyboard_attach(t, TWO_KEYBOARD_B);
+				t->SetController(std::make_shared<KeyboardController>(TWO_KEYBOARD_B));
 		
 		} else return 1;
 	}

@@ -92,6 +92,7 @@
     <ClInclude Include="src\gamelib\SDL\controllersdl.h" />
     <ClInclude Include="src\gamelib\SDL\require_sdl.h" />
     <ClInclude Include="src\gamelib\SDL\sdldata.h" />
+    <ClInclude Include="src\include\aitwitch.h" />
     <ClInclude Include="src\include\containers.h" />
     <ClInclude Include="src\include\controller.h" />
     <ClInclude Include="src\include\drawbuffer.h" />
@@ -248,34 +249,34 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>Build\$(PlatformShortName)\$(Configuration)\</OutDir>
     <IntDir>obj\$(PlatformShortName)\$(Configuration)\</IntDir>
-    <IncludePath>sdl\include;src\gamelib\SDL;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>sdl\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">
     <OutDir>Build\$(PlatformShortName)\$(Configuration)\</OutDir>
     <IntDir>obj\$(PlatformShortName)\$(Configuration)\</IntDir>
-    <IncludePath>sdl\include;src\gamelib\SDL;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>sdl\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>Build\$(PlatformShortName)\$(Configuration)\</OutDir>
     <IntDir>obj\$(PlatformShortName)\$(Configuration)\</IntDir>
-    <IncludePath>sdl\include;src\gamelib\SDL;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>sdl\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">
     <OutDir>Build\$(PlatformShortName)\$(Configuration)\</OutDir>
     <IntDir>obj\$(PlatformShortName)\$(Configuration)\</IntDir>
-    <IncludePath>sdl\include;src\gamelib\SDL;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>sdl\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>sdl\include;src\gamelib\SDL;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>sdl\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
-    <IncludePath>sdl\include;src\gamelib\SDL;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>sdl\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>sdl\include;src\gamelib\SDL;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>sdl\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
-    <IncludePath>sdl\include;src\gamelib\SDL;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>sdl\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

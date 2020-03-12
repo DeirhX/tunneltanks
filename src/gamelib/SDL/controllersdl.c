@@ -4,8 +4,10 @@
 #include <gamelib.h>
 #include <tank.h>
 #include <memalloc.h>
+#include <controllersdl.h>
 
 #include "require_sdl.h"
+#include "exceptions.h"
 
 /* Any SDL-based controllers go in this file. */
 
@@ -13,27 +15,20 @@
  *   KEYBOARD                                                                 *
  *----------------------------------------------------------------------------*/
 
-typedef struct KeyboardPrivateData {
-	SDLKey left, right, up, down, shoot;
-} KeyboardPrivateData;
+KeyboardController::KeyboardController(SDLKey left, SDLKey right, SDLKey up, SDLKey down, SDLKey shoot)
+	: left(left), right(right), up(up), down(down), shoot(shoot)
+{
+}
 
-static void keyboard_controller(PublicTankInfo *i, void *d, Speed *spd, int *s) {
-	KeyboardPrivateData *data = static_cast<KeyboardPrivateData*>(d);
+ControllerOutput KeyboardController::ApplyControls(PublicTankInfo *tankPublic) {
 	Uint8 *keys = SDL_GetKeyState( NULL );
 	
-	spd->x = keys[data->right] - keys[data->left];
-	spd->y = keys[data->down]  - keys[data->up];
-	*s  = keys[data->shoot];
+	return ControllerOutput{
+		.speed {keys[this->right] - keys[this->left],
+				keys[this->down] - keys[this->up]},
+		.is_shooting = keys[this->shoot] != 0
+	};
 }
-
-void controller_keyboard_attach( Tank *t,
-	SDLKey left, SDLKey right, SDLKey up, SDLKey down, SDLKey shoot) {
-
-	auto  data = std::make_shared<KeyboardPrivateData>(KeyboardPrivateData{ left, right, up, down, shoot });
-	
-	t->SetController(keyboard_controller, data);
-}
-
 
 /*----------------------------------------------------------------------------*
  *   JOYSTICK                                                                 *
@@ -43,67 +38,60 @@ void controller_keyboard_attach( Tank *t,
  *       program exit. Fix this be making it possible for a controller to define
  *       a tear-down function. */
 
-/* The SDL-based keyboard controller: */
-typedef struct JoystickPrivateData {
-	SDL_Joystick *joystick;
-} JoystickPrivateData;
-
 
 /* This is the joystick value (between 1 and 32767) where a joystick axis gets
  * interpretted as going in that direction: */
 #define CUTOFF (10000)
 
-static void joystick_controller(PublicTankInfo *i, void *d, Speed *spd, int *s) {
-	JoystickPrivateData *data = static_cast<JoystickPrivateData*>(d);
+
+JoystickController::JoystickController() 
+{
+
+	/* Make sure that this is even a joystick to connect to: */
+	if (SDL_NumJoysticks() == 0) {
+		/* TODO: exiting isn't all that friendly... we need a better controller API... */
+		gamelib_debug("No joysticks connected.\n");
+		exit(1);
+	}
+
+	this->joystick =  SDL_JoystickOpen(0);
+
+	if (this->joystick) {
+		gamelib_debug("Using Joystick #0:\n");
+		gamelib_debug("  Name:    %s\n", SDL_JoystickName(0));
+		gamelib_debug("  Axes:    %d\n", SDL_JoystickNumAxes(this->joystick));
+		gamelib_debug("  Buttons: %d\n", SDL_JoystickNumButtons(this->joystick));
+		gamelib_debug("  Balls:   %d\n", SDL_JoystickNumBalls(this->joystick));
+
+	}
+	else {
+		gamelib_debug("Failed to open Joystick #0.\n");
+		throw GameException("Failed to open Joystick #0");
+	}
+}
+
+
+ControllerOutput JoystickController::ApplyControls(PublicTankInfo* tankPublic)
+{
 	Sint32 jx, jy;
 	Uint32 dist;
 	
 	/* Where is this joystick pointing? */
-	jx = SDL_JoystickGetAxis(data->joystick, 0);
-	jy = SDL_JoystickGetAxis(data->joystick, 1);
-	
-	/* Don't do jack if the joystick is too close to its orgin: */
+	jx = SDL_JoystickGetAxis(this->joystick, 0);
+	jy = SDL_JoystickGetAxis(this->joystick, 1);
+
+	auto output = ControllerOutput{};
 	dist = jx*jx + jy*jy;
-	if(dist < CUTOFF * CUTOFF) {
-		spd->x = spd->y = 0;
-		
-	/* Else, find out what direction the joystick is closest to: */
-	} else {
+	/* Don't do jack if the joystick is too close to its origin: */
+	if(dist >= CUTOFF * CUTOFF) {
 		int tx, ty;
 		
 		tx = (jx==0) ? 0 : ( abs(jy * 1000 / jx) < 2000 );
 		ty = (jx==0) ? 1 : ( abs(jy * 1000 / jx) > 500 );
 		
-		spd->x = tx * (jx > 0 ? 1 : -1);
-		spd->y = ty * (jy > 0 ? 1 : -1);
+		output.speed = { tx * (jx > 0 ? 1 : -1),
+						ty* (jy > 0 ? 1 : -1) };
 	}
-	*s  = SDL_JoystickGetButton(data->joystick, 0);
+	output.is_shooting = SDL_JoystickGetButton(this->joystick, 0);
+	return output;
 }
-
-void controller_joystick_attach( Tank *t ) {
-
-	
-	/* Make sure that this is even a joystick to connect to: */
-	if(SDL_NumJoysticks() == 0) {
-		/* TODO: exiting isn't all that friendly... we need a better controller API... */
-		gamelib_debug("No joysticks connected.\n");
-		exit(1);
-	}
-	
-	auto  data = std::make_shared<JoystickPrivateData>(JoystickPrivateData{ SDL_JoystickOpen(0) });
-
-	if(data->joystick) {
-		gamelib_debug("Using Joystick #0:\n");
-		gamelib_debug("  Name:    %s\n", SDL_JoystickName(0));
-		gamelib_debug("  Axes:    %d\n", SDL_JoystickNumAxes(data->joystick));
-		gamelib_debug("  Buttons: %d\n", SDL_JoystickNumButtons(data->joystick));
-		gamelib_debug("  Balls:   %d\n", SDL_JoystickNumBalls(data->joystick));
-	
-	} else {
-		gamelib_debug("Failed to open Joystick #0.\n");
-		exit(1);
-	}
-	
-	t->SetController(joystick_controller, data);
-}
-
