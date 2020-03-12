@@ -71,7 +71,7 @@ generate_level:
 
 		gamelib_print("Level generated in: ");
 		auto msecs = s.GetElapsed();
-		gamelib_print("%u.%03u sec\n", msecs / 1000, msecs % 1000);
+		gamelib_print("%lld.%03lld sec\n", msecs.count() / 1000, msecs.count() % 1000);
 
 		return { std::chrono::duration_cast<std::chrono::milliseconds>(msecs)};
 	}

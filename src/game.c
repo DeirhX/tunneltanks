@@ -194,7 +194,7 @@ void game_finalize(GameData *gd) {
 		 time_taken += generate_level(lvl, gd->data.config.gen);
 	}
 	auto average_time = time_taken / TestIterations;
-	gamelib_print("***\r\nAverage level time: %u.%03u sec\n", average_time / 1000, average_time % 1000);
+	gamelib_print("***\r\nAverage level time: %lld.%03lld sec\n", average_time.count() / 1000, average_time.count() % 1000);
 	
 	tl = new TankList(lvl, pl);
 	lvl->CreateDirtAndRocks();
