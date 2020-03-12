@@ -197,7 +197,7 @@ static void screen_draw_window(Screen *s, Window *w) {
 	for(y=0; y < w->r.size.y; y++) {
 		for(x=0; x < w->r.size.x; x++) {
 			int screenx = x + w->r.pos.x, screeny = y + w->r.pos.y;
-			Color c = drawbuffer_get_pixel(b, x + pos.x - w->r.size.x/2, y + pos.y - w->r.size.y/2);
+			Color c = b->GetPixel(Position{ x + pos.x - w->r.size.x / 2, y + pos.y - w->r.size.y / 2 });
 			screen_draw_pixel(s, screenx, screeny, c);
 		}
 	}

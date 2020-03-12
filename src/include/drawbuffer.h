@@ -1,6 +1,5 @@
 #pragma once
-typedef struct DrawBuffer DrawBuffer;
-
+#include <memory>
 #include <types.h>
 
 extern Color color_dirt_hi;
@@ -17,13 +16,18 @@ extern Color color_status_health;
 extern Color color_primary[8];
 extern Color color_tank[8][3];
 
-DrawBuffer *drawbuffer_new(int w, int h) ;
-void drawbuffer_destroy(DrawBuffer *b) ;
 
-void  drawbuffer_set_default(DrawBuffer *b, Color color) ;
-void  drawbuffer_set_pixel(DrawBuffer *b, int x, int y, Color color) ;
-Color drawbuffer_get_pixel(DrawBuffer *b, int x, int y) ;
+class DrawBuffer
+{
+	std::unique_ptr<Color> pixel_data;
+	Size size;
+	Color default_color;
 
-
-
+public:
+	DrawBuffer(Size size);
+	Color& DefaultColor() { return default_color; }
+	void SetDefaultColor(Color color) { default_color = color; }
+	void SetPixel(Position pos, Color color);
+	Color GetPixel(Position pos);
+};
 

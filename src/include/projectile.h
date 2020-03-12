@@ -42,6 +42,6 @@ public:
 	void Shrink() { container.Shrink(); }
 
 	void Advance(class Level* level, struct TankList* tankList);
-	void Erase(struct DrawBuffer* drawBuffer);
-    void Draw(struct DrawBuffer* drawBuffer);
+	void Erase(class DrawBuffer* drawBuffer);
+    void Draw(class DrawBuffer* drawBuffer);
 };

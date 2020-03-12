@@ -148,15 +148,15 @@ void Level::CommitAll() const
 		for(int x=0; x<this->size.x; x++) {
 			char val = this->GetVoxel({ x, y });
 			switch(val) {
-				case ROCK:    drawbuffer_set_pixel(drawBuffer, x, y, color_rock); break;
-				case DIRT_HI: drawbuffer_set_pixel(drawBuffer, x, y, color_dirt_hi); break;
-				case DIRT_LO: drawbuffer_set_pixel(drawBuffer, x, y, color_dirt_lo); break;
-				case BLANK:   drawbuffer_set_pixel(drawBuffer, x, y, color_blank); break;
+				case ROCK:    drawBuffer->SetPixel({x,y}, color_rock); break;
+				case DIRT_HI: drawBuffer->SetPixel({x,y}, color_dirt_hi); break;
+				case DIRT_LO: drawBuffer->SetPixel({x,y}, color_dirt_lo); break;
+				case BLANK:   drawBuffer->SetPixel({x,y}, color_blank); break;
 				default:
 					/* Else, this is most likely a base: */
 					int color = val - BASE;
 					if(color < MAX_TANKS)
-						drawbuffer_set_pixel(drawBuffer, x, y, color_tank[color][0]); break;
+						drawBuffer->SetPixel({x,y}, color_tank[color][0]); break;
 			}
 		}
 }
@@ -172,15 +172,15 @@ void Level::CommitPixel(Position pos) const
 	char val = this->GetVoxel(pos);
 	
 	switch(val) {
-		case ROCK:    drawbuffer_set_pixel(drawBuffer, pos.x, pos.y, color_rock); break;
-		case DIRT_HI: drawbuffer_set_pixel(drawBuffer, pos.x, pos.y, color_dirt_hi); break;
-		case DIRT_LO: drawbuffer_set_pixel(drawBuffer, pos.x, pos.y, color_dirt_lo); break;
-		case BLANK:   drawbuffer_set_pixel(drawBuffer, pos.x, pos.y, color_blank); break;
+		case ROCK:    drawBuffer->SetPixel(pos, color_rock); break;
+		case DIRT_HI: drawBuffer->SetPixel(pos, color_dirt_hi); break;
+		case DIRT_LO: drawBuffer->SetPixel(pos, color_dirt_lo); break;
+		case BLANK:   drawBuffer->SetPixel(pos, color_blank); break;
 		default:
 			/* Else, this is most likely a base: */
 			int color = val - BASE;
 			if(color < MAX_TANKS)
-				drawbuffer_set_pixel(drawBuffer, pos.x, pos.y, color_tank[color][0]); break;
+				drawBuffer->SetPixel(pos, color_tank[color][0]); break;
 	}
 }
 

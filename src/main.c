@@ -20,7 +20,8 @@
 	
 int main(int argc, char *argv[]) {
 	int i, is_reading_level=0, is_reading_seed=0, is_reading_file=0;
-	int fullscreen=0, width=1000, height=500, player_count = 2, debug = 0;
+	int fullscreen=0, player_count = 2, debug = 0;
+	Size size{ 1000, 500 };
 	char *id = NULL, *outfile_name = NULL;
 	int seed = 0, manual_seed=0;
 	GameData *gd;
@@ -82,7 +83,7 @@ int main(int argc, char *argv[]) {
 			is_reading_seed = 1;
 		
 		} else if( !strcmp("--large", argv[i]) ) {
-			width = 1500; height = 750;
+			size.x = 1500; size.y= 750;
 		
 		} else if( !strcmp("--debug", argv[i]) ) {
 			debug = 1;
@@ -105,7 +106,7 @@ int main(int argc, char *argv[]) {
 	
 	/* If we're only writing the generated level to file, then just do that: */
 	if(outfile_name) {
-		auto lvl = std::make_unique<Level>(Size{ width, height }, nullptr);
+		auto lvl = std::make_unique<Level>(size, nullptr);
 	
 		/* Generate our random level: */
 		generate_level(lvl.get(), id);
@@ -124,7 +125,7 @@ int main(int argc, char *argv[]) {
 	gd = game_new();
 	
 	game_set_level_gen   (gd, id);
-	game_set_level_size  (gd, width, height);
+	game_set_level_size  (gd, size);
 	game_set_debug       (gd, debug);
 	game_set_fullscreen  (gd, fullscreen);
 	game_set_player_count(gd, player_count);

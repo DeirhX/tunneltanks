@@ -157,10 +157,10 @@ void ProjectileList::Erase(DrawBuffer* drawBuffer)
 	for (Projectile& p : container)
 	{
 		if (p.is_effect)
-			drawbuffer_set_pixel(drawBuffer, p.pos.x / 16, p.pos.y / 16, color_blank);
+			drawBuffer->SetPixel(Position{p.pos.x / 16, p.pos.y / 16 }, color_blank);
 		else {
-			drawbuffer_set_pixel(drawBuffer, p.pos.x, p.pos.y, color_blank);
-			drawbuffer_set_pixel(drawBuffer, p.pos_old.x, p.pos_old.y, color_blank);
+			drawBuffer->SetPixel(Position{p.pos.x, p.pos.y}, color_blank);
+			drawBuffer->SetPixel(Position{p.pos_old.x, p.pos_old.y}, color_blank);
 		}
 	}
 }
@@ -171,10 +171,10 @@ void ProjectileList::Draw(DrawBuffer* drawBuffer)
 	for(Projectile& p : container)
 	{
 		if (p.is_effect)
-			drawbuffer_set_pixel(drawBuffer, p.pos.x / 16, p.pos.y / 16, color_fire_hot);
+			drawBuffer->SetPixel(Position{p.pos.x / 16, p.pos.y / 16}, color_fire_hot);
 		else {
-			drawbuffer_set_pixel(drawBuffer, p.pos.x, p.pos.y, color_fire_hot);
-			drawbuffer_set_pixel(drawBuffer, p.pos_old.x, p.pos_old.y, color_fire_cold);
+			drawBuffer->SetPixel(Position{p.pos.x, p.pos.y}, color_fire_hot);
+			drawBuffer->SetPixel(Position{p.pos_old.x, p.pos_old.y}, color_fire_cold);
 		}
 	}
 }

@@ -36,7 +36,7 @@
 
 typedef struct GameDataConfig {
 	char *gen;
-	int w, h;
+	Size size;
 	bool is_fullscreen;
 	int player_count;
 	int rand_seed;
@@ -140,8 +140,7 @@ GameData *game_new() {
 	out->data.config.w = GAME_WIDTH;
 	out->data.config.h = GAME_HEIGHT;
 	*/
-	out->data.config.w = 1000;
-	out->data.config.h = 500;
+	out->data.config.size = Size{ 1000, 500 };
 	out->data.config.player_count = gamelib_get_max_players();
 	
 	if(gamelib_get_can_window())          out->data.config.is_fullscreen = 0;
@@ -163,10 +162,10 @@ void game_set_level_gen(GameData *gd, char *gen) {
 	gd->data.config.gen = gen;
 }
 
-void game_set_level_size(GameData *gd, int w, int h) {
+void game_set_level_size(GameData *gd, Size size) {
 	ASSERT_CONFIG();
 	
-	gd->data.config.w = w; gd->data.config.h = h;
+	gd->data.config.size = size;
 }
 
 void game_set_debug(GameData *gd, bool is_debugging) {
@@ -206,8 +205,8 @@ void game_finalize(GameData *gd) {
 	/* Initialize most of the structures: */
 	s   = screen_new    (gd->data.config.is_fullscreen);
 	pl  = new ProjectileList();
-	b   = drawbuffer_new(gd->data.config.w, gd->data.config.h);
-	lvl = new Level(Size{ gd->data.config.w, gd->data.config.h }, b);
+	b = new DrawBuffer(gd->data.config.size);
+	lvl = new Level(gd->data.config.size, b);
 	
 	/* Generate our random level: */
 	int TestIterations = 30;
@@ -216,7 +215,7 @@ void game_finalize(GameData *gd) {
 #endif
 	std::chrono::milliseconds time_taken = {};
 	for (int i = TestIterations; i-- > 0; ) {
-		lvl = new Level(Size{ gd->data.config.w, gd->data.config.h }, b);
+		lvl = new Level( gd->data.config.size, b);
 		 time_taken += generate_level(lvl, gd->data.config.gen);
 	}
 	auto average_time = time_taken / TestIterations;
@@ -233,7 +232,7 @@ void game_finalize(GameData *gd) {
 		lvl->DumpBitmap("debug_start.bmp");
 	
 	/* Start drawing! */
-	drawbuffer_set_default(b, color_rock);
+	b->SetDefaultColor(color_rock);
 	lvl->CommitAll();
 	screen_set_mode_level(s, b);
 	
@@ -313,10 +312,10 @@ void game_free(GameData *gd) {
 		if(gd->is_debug)
 			gd->data.active.lvl->DumpBitmap("debug_end.bmp");
 		
-		drawbuffer_destroy(gd->data.active.b);
-		delete			  (gd->data.active.pl);
-		delete			  (gd->data.active.tl);
-		delete			  (gd->data.active.lvl);
+		delete		(gd->data.active.b);
+		delete		(gd->data.active.pl);
+		delete		(gd->data.active.tl);
+		delete		(gd->data.active.lvl);
 		screen_destroy    (gd->data.active.s);
 	}
 	

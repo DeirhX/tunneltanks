@@ -36,6 +36,8 @@ struct Offset : public Vector
 {
 	Offset() = default;
 	Offset(int dx, int dy) : Vector(dx, dy) {}
+
+	explicit Offset(Position pos): Vector(pos.x, pos.y) {}
 };
 
 /*

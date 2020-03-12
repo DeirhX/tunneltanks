@@ -1,5 +1,6 @@
 #include <drawbuffer.h>
 #include <memalloc.h>
+#include <memory>
 
 /* Various colors for use in the game: */
 Color color_dirt_hi       = Color(0xc3, 0x79, 0x30);
@@ -56,41 +57,21 @@ Color color_tank[8][3] = {
 /* TODO: We're using color structures here because we started with Uint32 values
  *       and this was an easier transition. Eventually, all colors will be in a
  *       central array, and the pixel data will simply be 1-byte indexes. */
-struct DrawBuffer {
-	Color *pixel_data;
-	int w, h;
-	Color default_color;
-};
 
 
-DrawBuffer *drawbuffer_new(int w, int h) {
-	DrawBuffer *out = get_object(DrawBuffer);
-	out->pixel_data = static_cast<Color*>(get_mem(sizeof(Color) * w * h));
-	out->w = w; out->h = h;
-	out->default_color.r = 0;
-	out->default_color.g = 0;
-	out->default_color.b = 0;
-	
-	return out;
+DrawBuffer::DrawBuffer(Size size): size(size), default_color(0, 0, 0)
+{
+	pixel_data.reset(new Color[size.x * size.y]);
 }
 
-void drawbuffer_destroy(DrawBuffer *b) {
-	if(!b) return;
-	free_mem(b->pixel_data);
-	free_mem(b);
+void DrawBuffer::SetPixel(Position offset, Color color)
+{
+	if (offset.x < 0 || offset.y < 0 || offset.x >= size.x || offset.y >= size.y) return;
+	pixel_data.get()[offset.y * size.x + offset.x] = color;
 }
 
-void drawbuffer_set_default(DrawBuffer *b, Color color) {
-	b->default_color = color;
+Color DrawBuffer::GetPixel(Position offset)
+{
+	if (offset.x < 0 || offset.y < 0 || offset.x >= size.x || offset.y >= size.y) return this->default_color;
+	return pixel_data.get()[offset.y * size.x + offset.x];
 }
-
-void drawbuffer_set_pixel(DrawBuffer *b, int x, int y, Color color) {
-	if(x >= b->w || y >= b->h) return;
-	b->pixel_data[ y * b->w + x ] = color;
-}
-
-Color drawbuffer_get_pixel(DrawBuffer *b, int x, int y) {
-	if(x < 0 || y < 0 || x >= b->w || y >= b->h) return b->default_color;
-	return b->pixel_data[ y * b->w + x ];
-}
-
