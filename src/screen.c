@@ -91,20 +91,20 @@ static void fill_background() {
 
 void screen_draw_pixel(Screen* s, Position pos, Color color) {
 
-	Offset adjusted = {  /* Make some pixels uniformly larger to fill in given space relatively evenly  */
+	Offset adjusted_size = {  /* Make some pixels uniformly larger to fill in given space relatively evenly  */
 		(pos.x * s->pixels_skip.x) / GAME_WIDTH,
 		(pos.y * s->pixels_skip.y) / GAME_HEIGHT };
-/*	Offset adjusted_next = {
-		(pos.x * s->pixels_skip.x) / GAME_WIDTH,
-		(pos.y * s->pixels_skip.y) / GAME_HEIGHT };
-	*/
+	Offset adjusted_next = {
+		((pos.x + 1) * s->pixels_skip.x) / GAME_WIDTH,
+		((pos.y + 1) * s->pixels_skip.y) / GAME_HEIGHT };
+	
 	/* Final pixel position, adjusted by required scaling and offset */ 
-	pos.x = (pos.x * s->pixel_size.x) + s->screen_offset.x + adjusted.x;
-	pos.y = (pos.y * s->pixel_size.y) + s->screen_offset.y + adjusted.y;
+	pos.x = (pos.x * s->pixel_size.x) + s->screen_offset.x + adjusted_size.x;
+	pos.y = (pos.y * s->pixel_size.y) + s->screen_offset.y + adjusted_size.y;
 	
 	auto pixelSize = Size { /* Compute size based on needing uneven scaling or not */
-		s->pixel_size.x + (adjusted.x != ((pos.x + 1) * s->pixels_skip.x / GAME_WIDTH)),
-		s->pixel_size.y + (adjusted.y != ((pos.y + 1) * s->pixels_skip.y / GAME_HEIGHT))
+		s->pixel_size.x + (adjusted_size.x != adjusted_next.x),
+		s->pixel_size.y + (adjusted_size.y != adjusted_next.y)
 	};
 	
 	gamelib_draw_box(Rect{ pos, pixelSize }, color);
