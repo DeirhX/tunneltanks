@@ -14,6 +14,7 @@ Color color_bg_dot        = Color(0x00, 0x00, 0xb6);
 Color color_status_bg     = Color(0x65, 0x65, 0x65);
 Color color_status_energy = Color(0xf5, 0xeb, 0x1a);
 Color color_status_health = Color(0x26, 0xf4, 0xf2);
+Color color_decal         = Color(0x38, 0x10, 0x10);
 
 /* Primary colors: */
 Color color_primary[8] = {

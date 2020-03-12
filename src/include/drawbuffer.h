@@ -13,6 +13,7 @@ extern Color color_bg_dot;
 extern Color color_status_bg;
 extern Color color_status_energy;
 extern Color color_status_health;
+extern Color color_decal;
 extern Color color_primary[8];
 extern Color color_tank[8][3];
 

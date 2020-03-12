@@ -1,7 +1,31 @@
 #pragma once
 #include <types.h>
 
-struct GameData;
+
+typedef struct GameDataConfig {
+	char* gen;
+	Size size;
+	bool is_fullscreen;
+	int player_count;
+	int rand_seed;
+} GameDataConfig;
+
+typedef struct GameDataActive {
+	class Level* lvl;
+	struct TankList* tl;
+	class DrawBuffer* b;
+	class ProjectileList* pl;
+	struct Screen* s;
+} GameDataActive;
+
+struct GameData {
+	int is_active;
+	int is_debug;
+	union {
+		GameDataConfig config;
+		GameDataActive active;
+	} data;
+};
 
 /* Create a default game structure: */
 GameData *game_new             () ;

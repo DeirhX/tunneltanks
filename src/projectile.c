@@ -157,10 +157,10 @@ void ProjectileList::Erase(DrawBuffer* drawBuffer)
 	for (Projectile& p : container)
 	{
 		if (p.is_effect)
-			drawBuffer->SetPixel(Position{p.pos.x / 16, p.pos.y / 16 }, color_blank);
+			drawBuffer->SetPixel(Position{p.pos.x / 16, p.pos.y / 16 }, color_decal);
 		else {
-			drawBuffer->SetPixel(Position{p.pos.x, p.pos.y}, color_blank);
-			drawBuffer->SetPixel(Position{p.pos_old.x, p.pos_old.y}, color_blank);
+			drawBuffer->SetPixel(Position{p.pos.x, p.pos.y}, color_decal);
+			drawBuffer->SetPixel(Position{p.pos_old.x, p.pos_old.y}, color_decal);
 		}
 	}
 }

@@ -34,32 +34,6 @@
 } while(0)
 
 
-typedef struct GameDataConfig {
-	char *gen;
-	Size size;
-	bool is_fullscreen;
-	int player_count;
-	int rand_seed;
-} GameDataConfig;
-
-typedef struct GameDataActive {
-	Level      *lvl;
-	TankList   *tl;
-	DrawBuffer *b;
-	ProjectileList *pl;
-	Screen     *s;
-} GameDataActive;
-
-struct GameData {
-	int is_active;
-	int is_debug;
-	union {
-		GameDataConfig config;
-		GameDataActive active;
-	} data;
-};
-
-
 /*----------------------------------------------------------------------------*
  * This bit is used to initialize various GUIs:                               *
  *----------------------------------------------------------------------------*/
