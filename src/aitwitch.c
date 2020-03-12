@@ -5,7 +5,7 @@
 #include <memalloc.h>
 #include <random.h>
 #include <tweak.h>
-#include "LevelView.h"
+#include <level_view.h>
 #include "aitwitch.h"
 
 

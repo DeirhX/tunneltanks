@@ -10,7 +10,7 @@
 #include <projectile.h>
 #include <random.h>
 #include <tanklist.h>
-#include <LevelView.h>
+#include <level_view.h>
 #include <algorithm>
 
 

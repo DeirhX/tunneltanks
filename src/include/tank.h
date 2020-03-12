@@ -6,7 +6,7 @@
 #include <screen.h>
 #include <drawbuffer.h>
 #include <projectile.h>
-#include <LevelView.h>
+#include <level_view.h>
 #include <controllersdl.h>
 
 struct LevelView;

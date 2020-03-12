@@ -75,35 +75,35 @@ struct Screen {
 
 /* Fills a surface with a blue/black pattern: */
 static void fill_background() {
-	int x, y;
-	Rect dim;
+	Rect dim = gamelib_get_resolution();
 	
-	dim = gamelib_get_resolution();
-	
-	gamelib_draw_box(NULL, color_bg);
-	for(y=0; y<dim.size.y; y++) {
-		for(x=(y%2)*2; x<dim.size.x; x+=4) {
-			Rect r = {(int)x, (int)y, 1, 1};
-			gamelib_draw_box(&r, color_bg_dot);
+	gamelib_draw_box(dim, color_bg);
+	Position o;
+	for(o.y = 0; o.y<dim.size.y; o.y++) {
+		for(o.x = (o.y%2)*2; o.x<dim.size.x; o.x+=4) {
+			gamelib_draw_box(Rect{ o, Size {1,1} }, color_bg_dot);
 		}
 	}
 }
 
-void screen_draw_pixel(Screen *s, int x, int y, Color color) {
-	int w, h, xs, ys;
+void screen_draw_pixel(Screen *s, Position pos, Color color) {
+	
 	Rect r;
+
+	auto rel_size = Size {
+		 (pos.x * s->xskips) / GAME_WIDTH,
+		 (pos.y * s->yskips) / GAME_HEIGHT
+	};
 	
-	xs = (x * s->xskips)/GAME_WIDTH;
-	ys = (y * s->yskips)/GAME_HEIGHT;
+	pos.x *= s->pixelw + s->xstart + rel_size.x;
+	pos.y *= s->pixelh + s->ystart + rel_size.y;
 	
-	x = x * s->pixelw + s->xstart + xs;
-	y = y * s->pixelh + s->ystart + ys;
+	auto pixelSize = Size {
+		s->pixelw + (rel_size.x != ((pos.x + 1) * s->xskips / GAME_WIDTH)),
+		s->pixelh + (rel_size.y != ((pos.y + 1) * s->yskips / GAME_HEIGHT))
+	};
 	
-	w = s->pixelw + (xs!=((x+1)*s->xskips/GAME_WIDTH));
-	h = s->pixelh + (ys!=((y+1)*s->yskips/GAME_HEIGHT));
-	
-	r = Rect(static_cast<int>(x), static_cast<int>(y),w, h);
-	gamelib_draw_box(&r, color);
+	gamelib_draw_box(Rect{ pos, pixelSize }, color);
 }
 
 /* These will say what virtual pixel a physical pixel resides on: */
@@ -160,7 +160,7 @@ static void screen_draw_static(Screen *s, Window *w) {
 			Color color;
 
 			if(!energy) {
-				screen_draw_pixel(s, x + w->r.pos.x, y + w->r.pos.y, _RAND_COLOR);
+				screen_draw_pixel(s, { x + w->r.pos.x, y + w->r.pos.y }, _RAND_COLOR);
 				continue;
 			}
 
@@ -178,7 +178,7 @@ static void screen_draw_static(Screen *s, Window *w) {
 
 			/* Finally, select a color (either black or random) and draw: */
 			color = drawing_black ? color_blank : _RAND_COLOR;
-			screen_draw_pixel(s, x + w->r.pos.x, y + w->r.pos.y, color);
+			screen_draw_pixel(s, { x + w->r.pos.x, y + w->r.pos.y }, color);
 		}
 
 	return;
@@ -198,7 +198,7 @@ static void screen_draw_window(Screen *s, Window *w) {
 		for(x=0; x < w->r.size.x; x++) {
 			int screenx = x + w->r.pos.x, screeny = y + w->r.pos.y;
 			Color c = drawbuffer_get_pixel(b, x + pos.x - w->r.size.x/2, y + pos.y - w->r.size.y/2);
-			screen_draw_pixel(s, screenx, screeny, c);
+			screen_draw_pixel(s, { screenx, screeny }, c);
 		}
 	}
 	
@@ -281,7 +281,7 @@ static void screen_draw_status(Screen *s, StatusBar *b) {
 			else
 				c = color_blank;
 
-			screen_draw_pixel(s, x + b->r.pos.x, y + b->r.pos.y, c);
+			screen_draw_pixel(s, { x + b->r.pos.x, y + b->r.pos.y }, c);
 		}
 	}
 }
@@ -290,7 +290,7 @@ static void screen_draw_bitmap(Screen *s, Bitmap *b) {
 	int x, y, i;
 
 	for(x=y=i=0; i < (b->r.size.x * b->r.size.y); i++) {
-		if(b->data[i]) screen_draw_pixel(s, x + b->r.pos.x, y + b->r.pos.y, *b->color);
+		if (b->data[i]) screen_draw_pixel(s, { x + b->r.pos.x, y + b->r.pos.y }, *b->color);
 		if(++x >= b->r.size.x) { y++; x=0; }
 	}
 }

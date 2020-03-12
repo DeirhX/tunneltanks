@@ -93,16 +93,11 @@ bool gamelib_get_fullscreen() {
 }
 
 /* Will set a given rectangle to a given color. (NULL rect is fullscreen): */
-int gamelib_draw_box(Rect *rect, Color color) {
+int gamelib_draw_box(Rect rect, Color color) {
 	Uint32 c = SDL_MapRGB(_DATA.s->format, color.r, color.g, color.b);
 	
-	if(rect) {
-		auto r = SDL_Rect{(Sint16)rect->pos.x, (Sint16)rect->pos.y, (Uint16)rect->size.x, (Uint16)rect->size.y};
-		SDL_FillRect(_DATA.s, &r, c);
-		return 0;
-	}
-	
-	SDL_FillRect(_DATA.s, NULL, c);
+	auto r = SDL_Rect{(Sint16)rect.pos.x, (Sint16)rect.pos.y, (Uint16)rect.size.x, (Uint16)rect.size.y};
+	SDL_FillRect(_DATA.s, &r, c);
 	return 0;
 }
 

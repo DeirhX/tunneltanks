@@ -23,7 +23,7 @@ void screen_set_mode_map(Screen *s, Map *m) ;
 */
 
 /* A few useful functions for external drawing: */
-void screen_draw_pixel(Screen *s, int x, int y, Color color) ;
+void screen_draw_pixel(Screen *s, Position pos, Color color) ;
 int  screen_map_x(Screen *s, int x) ;
 int  screen_map_y(Screen *s, int y) ;
 
