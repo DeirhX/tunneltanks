@@ -35,13 +35,9 @@ struct Speed : public Vector
 struct Offset : public Vector
 {
 	Offset() = default;
-<<<<<<< HEAD
-	Offset(int dx, int dy) : Vector(dx, dy) {}
+	constexpr Offset(int dx, int dy) : Vector(dx, dy) {}
 
 	explicit Offset(Position pos): Vector(pos.x, pos.y) {}
-=======
-	constexpr Offset(int dx, int dy) : Vector(dx, dy) {}
->>>>>>> 1f5118003c73c275a7982eef7880a2c8e2a95496
 };
 
 /*

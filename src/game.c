@@ -178,9 +178,9 @@ void game_finalize(GameData *gd) {
 	ASSERT_CONFIG();
 	
 	/* Initialize most of the structures: */
-	s   = screen_new    (gd->data.config.is_fullscreen);
+	s   = new Screen(gd->data.config.is_fullscreen);
 	pl  = new ProjectileList();
-	b = new DrawBuffer(gd->data.config.size);
+	b   = new DrawBuffer(gd->data.config.size);
 	lvl = new Level(gd->data.config.size, b);
 	
 	/* Generate our random level: */
@@ -209,7 +209,7 @@ void game_finalize(GameData *gd) {
 	/* Start drawing! */
 	b->SetDefaultColor(color_rock);
 	lvl->CommitAll();
-	screen_set_mode_level(s, b);
+	s->SetLevelDrawMode(b);
 	
 	/* Set up the players/GUI: */
 	if     (gd->data.config.player_count == 1) init_single_player(s, tl, lvl);
@@ -241,11 +241,11 @@ int game_step(void *input) {
 		/* Trying to resize the window? */
 		if(temp == GAME_EVENT_RESIZE) {
 			Rect r = gamelib_event_resize_get_size();
-			screen_resize(gd->data.active.s, r.size);
+			gd->data.active.s->Resize(r.size);
 		
 		/* Trying to toggle fullscreen? */
 		} else if(temp == GAME_EVENT_TOGGLE_FULLSCREEN) {
-			screen_set_fullscreen(gd->data.active.s, true);
+			gd->data.active.s->SetFullscreen(gd->data.active.s->GetFullscreen());
 		
 		/* Trying to exit? */
 		} else if(temp == GAME_EVENT_EXIT) {
@@ -291,7 +291,7 @@ void game_free(GameData *gd) {
 		delete		(gd->data.active.pl);
 		delete		(gd->data.active.tl);
 		delete		(gd->data.active.lvl);
-		screen_destroy    (gd->data.active.s);
+		delete      (gd->data.active.s);
 	}
 	
 	free_mem(gd);	

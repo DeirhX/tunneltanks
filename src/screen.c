@@ -12,69 +12,6 @@
 #include <gamelib.h>
 
 
-typedef enum ScreenDrawMode {
-	SCREEN_DRAW_INVALID,
-	SCREEN_DRAW_LEVEL
-} ScreenDrawMode;
-
-typedef struct Window {
-	Rect     r;
-	Tank    *t;
-	int counter;
-	int showing_static;
-} Window;
-
-typedef struct StatusBar {
-	Rect     r;
-	Tank    *t;
-	int      decreases_to_left;
-} StatusBar;
-
-typedef struct Bitmap {
-	Rect     r;
-	char    *data;
-	Color   *color;
-} Bitmap;
-
-typedef struct GUIController {
-	Rect r;
-} GUIController;
-
-
-struct Screen {
-	
-	bool	 is_fullscreen;
-	
-	/* Various variables for the current resolution: */
-	Size screen_size;
-	Offset screen_offset;
-	Size pixel_size;
-	Size pixels_skip;  /* Ever  */
-
-	/* Window shit: */
-	int  window_count;
-	Window    window[SCREEN_MAX_WINDOWS];
-
-	/* Status bar shit: */
-	int  status_count;
-	StatusBar status[SCREEN_MAX_STATUS];
-
-	/* Bitmap shit: */
-	int  bitmap_count;
-	Bitmap    bitmap[SCREEN_MAX_BITMAPS];
-	
-	/* GUI Controller shit: */
-	int controller_count;
-	GUIController controller;
-	/* Variables used for drawing: */
-	ScreenDrawMode mode;
-	union {
-		struct {
-			DrawBuffer *b;
-		} level;
-	} drawing;
-};
-
 
 /* Fills a surface with a blue/black pattern: */
 static void fill_background() {
@@ -193,21 +130,16 @@ static void screen_draw_static(Screen *s, Window *w) {
 
 /* Will draw a window using the level's drawbuffer: */
 static void screen_draw_window(Screen *s, Window *w) {
-	DrawBuffer *b = s->drawing.level.b;
-	int x, y;
+	DrawBuffer *b = s->drawBuffer;
 
 	Position pos = w->t->GetPosition();
 	
-	for(y=0; y < w->r.size.y; y++) {
-		for(x=0; x < w->r.size.x; x++) {
-			int screenx = x + w->r.pos.x, screeny = y + w->r.pos.y;
-<<<<<<< HEAD
+	for(int y=0; y < w->r.size.y; y++) {
+		for(int x=0; x < w->r.size.x; x++) {
+			int screen_x = x + w->r.pos.x, screen_y = y + w->r.pos.y;
+
 			Color c = b->GetPixel(Position{ x + pos.x - w->r.size.x / 2, y + pos.y - w->r.size.y / 2 });
-			screen_draw_pixel(s, screenx, screeny, c);
-=======
-			Color c = drawbuffer_get_pixel(b, x + pos.x - w->r.size.x/2, y + pos.y - w->r.size.y/2);
-			screen_draw_pixel(s, { screenx, screeny }, c);
->>>>>>> 1f5118003c73c275a7982eef7880a2c8e2a95496
+			screen_draw_pixel(s, { screen_x, screen_y }, c);
 		}
 	}
 	
@@ -322,64 +254,45 @@ void screen_draw(Screen *s) {
 
 
 /* The constructor sets the video mode: */
-Screen *screen_new(bool is_fullscreen) {
-	Screen *out = get_object(Screen);
-	
-	out->is_fullscreen = is_fullscreen;
-	out->mode = SCREEN_DRAW_INVALID;
-	out->window_count = out->status_count = out->bitmap_count = 0;
-	out->controller_count = 0;
-	
-	/* Set the window size to the default one: */
-	if (screen_resize(out, { SCREEN_WIDTH, SCREEN_HEIGHT })) {
-		free_mem(out);
-		return NULL;
-	}
-	
-	return out;
-}
-
-void screen_destroy(Screen *s) {
-	if(!s) return;
-	free_mem(s);
+Screen::Screen (bool is_fullscreen)
+: is_fullscreen(is_fullscreen), mode(SCREEN_DRAW_INVALID)
+{
+	this->Resize({ SCREEN_WIDTH, SCREEN_HEIGHT });
 }
 
 /* TODO: Change the screen API to better match gamelib... */
 
-void screen_set_fullscreen(Screen *s, bool is_fullscreen) {
+void Screen::SetFullscreen(bool new_fullscreen) {
 	
-	if(s->is_fullscreen == is_fullscreen) return;
+	if(this->is_fullscreen == new_fullscreen) return;
 	
-	/* -1 will toggle: */
-	if(is_fullscreen) is_fullscreen = !s->is_fullscreen;
-	
-	s->is_fullscreen = is_fullscreen;
+	this->is_fullscreen = new_fullscreen;
 	
 	/* Resize the screen to include the new fullscreen mode: */
-	if (!is_fullscreen) screen_resize(s, Size{ SCREEN_WIDTH, SCREEN_HEIGHT });
-	else                screen_resize(s, s->screen_size);
+	if (!is_fullscreen) this->Resize(Size{ SCREEN_WIDTH, SCREEN_HEIGHT });
+	else                this->Resize(this->screen_size);
 }
 
 
-/* Returns 0 if successful, 1 if failed: */
-int screen_resize(Screen *s, Size size) {
-	
-	Size pixel_skips;
+/* Returns if successful */
+void Screen::Resize(Size size)
+{
 	Size render_size;
-	Offset offset;
-	Size pixel_size;
+	this->pixels_skip = {};
+	this->screen_offset = {};
+	this->pixel_size = {};
 
 	/* Make sure that we aren't scaling to something too small: */
 	size.x = std::max(GAME_WIDTH, size.x);
 	size.y = std::max(GAME_HEIGHT, size.y);
 	
 	/* A little extra logic for fullscreen: */
-	if(s->is_fullscreen) gamelib_set_fullscreen();
-	else                 gamelib_set_window    (size);
+	if(this->is_fullscreen) gamelib_set_fullscreen();
+	else                    gamelib_set_window    (size);
 	
 	size = gamelib_get_resolution();
 	
-	s->is_fullscreen = gamelib_get_fullscreen();
+	this->is_fullscreen = gamelib_get_fullscreen();
 	
 	/* What is the limiting factor in our scaling to maintain aspect ratio? */
 	int yw = size.y * GAME_WIDTH; 
@@ -388,39 +301,33 @@ int screen_resize(Screen *s, Size size) {
 		/* size.y is. Correct aspect ratio using offset */
 		render_size.x = (GAME_WIDTH * size.y) / (GAME_HEIGHT);
 		render_size.y = size.y;
-		offset.x = (size.x - render_size.x)/2;
-		offset.y = 0;
+		this->screen_offset.x = (size.x - render_size.x)/2;
+		this->screen_offset.y = 0;
 	} else {
 		/* size.x is. Correct aspect ratio using offset */
 		render_size.x = size.x;
 		render_size.y = (GAME_HEIGHT * size.x) / (GAME_WIDTH);
-		offset.x = 0; 
-		offset.y = (size.y - render_size.y)/2;
+		screen_offset.x = 0;
+		screen_offset.y = (size.y - render_size.y)/2;
 	}
 	
 	/* Calculate the pixel sizing variables: */
-	pixel_size.x = render_size.x / GAME_WIDTH;  pixel_skips.x = render_size.x % GAME_WIDTH;
-	pixel_size.y = render_size.y / GAME_HEIGHT; pixel_skips.y = render_size.y % GAME_HEIGHT;
+	pixel_size.x = render_size.x / GAME_WIDTH;  pixels_skip.x = render_size.x % GAME_WIDTH;
+	pixel_size.y = render_size.y / GAME_HEIGHT; pixels_skip.y = render_size.y % GAME_HEIGHT;
 	
 	/* Draw a nice bg: */
 	fill_background();
 	
-	/* Ok, the hard part is over. Copy in all of our data: */
-	s->screen_size = size;
-	s->screen_offset = offset;
-	s->pixel_size = pixel_size;
-	s->pixels_skip = pixel_skips;
+	this->screen_size = size;
 	
 	/* Redraw the game: */
-	screen_draw(s);
-	
-	return 0;
+	screen_draw(this);
 }
 
 /* Set the current drawing mode: */
-void screen_set_mode_level(Screen *s, DrawBuffer *b) {
-	s->mode = SCREEN_DRAW_LEVEL;
-	s->drawing.level.b = b;
+void Screen::SetLevelDrawMode(DrawBuffer *b) {
+	this->mode = SCREEN_DRAW_LEVEL;
+	this->drawBuffer = b;
 }
 
 /*
