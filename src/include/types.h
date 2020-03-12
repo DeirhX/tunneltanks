@@ -14,10 +14,17 @@ struct Vector
 	constexpr Vector(int x, int y) : x(x), y(y) { }
 };
 
+struct ScreenPosition : public Vector
+{
+	ScreenPosition() = default;
+	ScreenPosition(int x, int y) : Vector(x, y) {}
+
+};
 struct Position : public Vector
 {
 	Position() = default;
 	Position(int x, int y) : Vector(x, y) {}
+	explicit Position(ScreenPosition pos) : Vector(pos.x, pos.y) {}
 };
 
 struct Size : public Vector
@@ -39,6 +46,7 @@ struct Offset : public Vector
 
 	explicit Offset(Position pos): Vector(pos.x, pos.y) {}
 };
+
 
 /*
  *   Vector +- Vector -> Vector
@@ -66,6 +74,7 @@ struct Rect {
 	Size size;
 	Rect() = default;
     Rect(Position pos, Size size) : pos(pos), size(size) { }
+	//Rect(ScreenPosition pos, Size size) : pos(pos), size(size) { }
 	Rect(int pos_x, int pos_y, int size_x, int size_y) : pos{ pos_x, pos_y }, size{ size_x, size_y } { }
 };
 

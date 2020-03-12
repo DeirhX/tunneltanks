@@ -74,32 +74,27 @@ public:
 
 	/* Set the current drawing mode: */
 	void SetLevelDrawMode(DrawBuffer* b);
+	/* Will randomly draw static to a window, based on a tank's health.  */
+	void DrawStatic(Window* w);
+	/* Will draw a window using the level's drawbuffer: */
+	void DrawWindow(Window* w);
 
+	/* A few useful functions for external drawing: */
+	void DrawPixel(ScreenPosition pos, Color color);
+	/* These will say what virtual pixel a physical pixel resides on: */
+	Position ScreenToWorld(ScreenPosition pos);
+	/*  Draw whatever it is now supposed to draw */
+	void DrawCurrentMode();
+
+	/* Will draw two bars indicating the charge/health of a tank: */
+	void DrawStatus(StatusBar* b);
+	void DrawBitmap(Bitmap* b);
+	void DrawLevel();
+public:
+	void AddWindow(Rect r, struct Tank* t);
+	void AddStatus(Rect r, struct Tank* t, int decreases_to_left);
+	void AddBitmap(Rect r, char* bitmap, Color* color);
+	void AddController(Rect r);
+
+	static void FillBackground();
 };
-
-
-/*
-void screen_set_mode_menu(Screen *s, Menu *m) ;
-void screen_set_mode_map(Screen *s, Map *m) ;
-*/
-
-/* A few useful functions for external drawing: */
-void screen_draw_pixel(Screen *s, Position pos, Color color) ;
-int  screen_map_x(Screen *s, int x) ;
-int  screen_map_y(Screen *s, int y) ;
-
-/* Window creation/removal: */
-
-void screen_add_window(Screen *s, Rect r, struct Tank *t) ;
-void screen_add_status(Screen *s, Rect r, struct Tank *t, int decreases_to_left) ;
-void screen_add_bitmap(Screen *s, Rect r, char *bitmap, Color *color) ;
-void screen_add_controller(Screen *s, Rect r) ;
-
-/*
-void     screen_remove_window(Screen *s, WindowID id) ;
-*/
-/* Draw the structure: */
-void screen_draw(Screen *s) ;
-
-
-

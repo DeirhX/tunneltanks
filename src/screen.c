@@ -10,11 +10,18 @@
 #include <tanksprites.h>
 #include <drawbuffer.h>
 #include <gamelib.h>
+#include "exceptions.h"
 
+/* The constructor sets the video mode: */
+Screen::Screen(bool is_fullscreen)
+	: is_fullscreen(is_fullscreen)
+{
+	this->Resize({ SCREEN_WIDTH, SCREEN_HEIGHT });
+}
 
 
 /* Fills a surface with a blue/black pattern: */
-static void fill_background() {
+void Screen::FillBackground() {
 	Size dim = gamelib_get_resolution();
 	
 	gamelib_draw_box({{ 0, 0}, dim}, color_bg);
@@ -26,48 +33,43 @@ static void fill_background() {
 	}
 }
 
-void screen_draw_pixel(Screen* s, Position pos, Color color) {
+void Screen::DrawPixel(ScreenPosition pos, Color color) {
 
 	Offset adjusted_size = {  /* Make some pixels uniformly larger to fill in given space relatively evenly  */
-		(pos.x * s->pixels_skip.x) / GAME_WIDTH,
-		(pos.y * s->pixels_skip.y) / GAME_HEIGHT };
+		(pos.x * this->pixels_skip.x) / GAME_WIDTH,
+		(pos.y * this->pixels_skip.y) / GAME_HEIGHT };
 	Offset adjusted_next = {
-		((pos.x + 1) * s->pixels_skip.x) / GAME_WIDTH,
-		((pos.y + 1) * s->pixels_skip.y) / GAME_HEIGHT };
+		((pos.x + 1) * this->pixels_skip.x) / GAME_WIDTH,
+		((pos.y + 1) * this->pixels_skip.y) / GAME_HEIGHT };
 	
 	/* Final pixel position, adjusted by required scaling and offset */ 
-	pos.x = (pos.x * s->pixel_size.x) + s->screen_offset.x + adjusted_size.x;
-	pos.y = (pos.y * s->pixel_size.y) + s->screen_offset.y + adjusted_size.y;
+	pos.x = (pos.x * this->pixel_size.x) + this->screen_offset.x + adjusted_size.x;
+	pos.y = (pos.y * this->pixel_size.y) + this->screen_offset.y + adjusted_size.y;
 	
 	auto pixelSize = Size { /* Compute size based on needing uneven scaling or not */
-		s->pixel_size.x + (adjusted_size.x != adjusted_next.x),
-		s->pixel_size.y + (adjusted_size.y != adjusted_next.y)
+		this->pixel_size.x + (adjusted_size.x != adjusted_next.x),
+		this->pixel_size.y + (adjusted_size.y != adjusted_next.y)
 	};
 	
-	gamelib_draw_box(Rect{ pos, pixelSize }, color);
+	gamelib_draw_box(Rect{ static_cast<Position>(pos), pixelSize }, color);
 }
 
-/* These will say what virtual pixel a physical pixel resides on: */
-int  screen_map_x(Screen *s, int x) {
-	x -= s->screen_offset.x;
-	x -= x/(int)s->pixel_size.x * (int)s->pixels_skip.x /GAME_WIDTH;
-	x /= (int)s->pixel_size.x;
+
+Position Screen::ScreenToWorld(ScreenPosition screen_pos) {
+
+	Position pos = (Position)screen_pos;
+	pos.x -= this->screen_offset.x;
+	pos.x -= pos.x/(int)this->pixel_size.x * (int)this->pixels_skip.x /GAME_WIDTH;
+	pos.x /= (int)this->pixel_size.x;
+
+	pos.y -= this->screen_offset.y;
+	pos.y -= pos.y / (int)this->pixel_size.y * (int)this->pixels_skip.y / GAME_HEIGHT;
+	pos.y /= (int)this->pixel_size.y;
 	
-	return x;
+	return pos;
 }
 
-int  screen_map_y(Screen *s, int y) {
-	y -= s->screen_offset.y;
-	y -= y/(int)s->pixel_size.y * (int)s->pixels_skip.y /GAME_HEIGHT;
-	y /= (int)s->pixel_size.y;
-	
-	return y;
-}
-
-
-/* Will randomly draw static to a window, based on a tank's health. Returns 1 if
- * static was drawn: */
-static void screen_draw_static(Screen *s, Window *w) {
+void Screen::DrawStatic(Window *w) {
 	int x, y;
 	//int health = w->t->GetHealth();
     int energy = w->t->GetEnergy();
@@ -101,7 +103,7 @@ static void screen_draw_static(Screen *s, Window *w) {
 			Color color;
 
 			if(!energy) {
-				screen_draw_pixel(s, { x + w->r.pos.x, y + w->r.pos.y }, _RAND_COLOR);
+				this->DrawPixel( { x + w->r.pos.x, y + w->r.pos.y }, _RAND_COLOR);
 				continue;
 			}
 
@@ -119,18 +121,16 @@ static void screen_draw_static(Screen *s, Window *w) {
 
 			/* Finally, select a color (either black or random) and draw: */
 			color = drawing_black ? color_blank : _RAND_COLOR;
-			screen_draw_pixel(s, { x + w->r.pos.x, y + w->r.pos.y }, color);
+			this->DrawPixel({ x + w->r.pos.x, y + w->r.pos.y }, color);
 		}
-
-	return;
 }
 
 #undef _RAND_COLOR
 #undef _BLACK_BAR_RAND
 
 /* Will draw a window using the level's drawbuffer: */
-static void screen_draw_window(Screen *s, Window *w) {
-	DrawBuffer *b = s->drawBuffer;
+void Screen::DrawWindow(Window *w) {
+	DrawBuffer *b = this->drawBuffer;
 
 	Position pos = w->t->GetPosition();
 	
@@ -139,18 +139,18 @@ static void screen_draw_window(Screen *s, Window *w) {
 			int screen_x = x + w->r.pos.x, screen_y = y + w->r.pos.y;
 
 			Color c = b->GetPixel(Position{ x + pos.x - w->r.size.x / 2, y + pos.y - w->r.size.y / 2 });
-			screen_draw_pixel(s, { screen_x, screen_y }, c);
+			this->DrawPixel({ screen_x, screen_y }, c);
 		}
 	}
 	
-	screen_draw_static(s, w);
+	this->DrawStatic(w);
 }
 
 /* Will draw two bars indicating the charge/health of a tank: */
 /* TODO: This currently draws every frame. Can we make a dirty flag, and only
  *       redraw when it's needed? Also, can we put some of these calculations in
  *       the StatusBar structure, so they don't have to be done every frame? */
-static void screen_draw_status(Screen *s, StatusBar *b) {
+void Screen::DrawStatus(StatusBar *b) {
 	int x, y;
 	
 	/* At what y value does the median divider start: */
@@ -222,43 +222,37 @@ static void screen_draw_status(Screen *s, StatusBar *b) {
 			else
 				c = color_blank;
 
-			screen_draw_pixel(s, { x + b->r.pos.x, y + b->r.pos.y }, c);
+			this->DrawPixel({ x + b->r.pos.x, y + b->r.pos.y }, c);
 		}
 	}
 }
 
-static void screen_draw_bitmap(Screen *s, Bitmap *b) {
+void Screen::DrawBitmap(Bitmap *b) {
 	int x, y, i;
 
 	for(x=y=i=0; i < (b->r.size.x * b->r.size.y); i++) {
-		if (b->data[i]) screen_draw_pixel(s, { x + b->r.pos.x, y + b->r.pos.y }, *b->color);
+		if (b->data[i]) this->DrawPixel({ x + b->r.pos.x, y + b->r.pos.y }, *b->color);
 		if(++x >= b->r.size.x) { y++; x=0; }
 	}
 }
 
-static void screen_draw_level(Screen *s) {
+void Screen::DrawLevel() {
 	int i;
 	
-	for(i=0; i<s->window_count; i++) screen_draw_window(s, &s->window[i]);
-	for(i=0; i<s->status_count; i++) screen_draw_status(s, &s->status[i]);
-	for(i=0; i<s->bitmap_count; i++) screen_draw_bitmap(s, &s->bitmap[i]);
-	if(s->controller_count)
-		gamelib_gui_draw(s, s->controller.r);
+	for(i=0; i < this->window_count; i++) DrawWindow(&this->window[i]);
+	for(i=0; i < this->status_count; i++) DrawStatus(&this->status[i]);
+	for(i=0; i < this->bitmap_count; i++) DrawBitmap(&this->bitmap[i]);
+	if(this->controller_count)
+		gamelib_gui_draw(this, this->controller.r);
 }
 
-void screen_draw(Screen *s) {	
-	if(s->mode == SCREEN_DRAW_LEVEL) {
-		screen_draw_level(s);
+void Screen::DrawCurrentMode() {	
+	if(this->mode == SCREEN_DRAW_LEVEL) {
+		this->DrawLevel();
 	}
+	//throw GameException("Invalid mode to draw");
 }
 
-
-/* The constructor sets the video mode: */
-Screen::Screen (bool is_fullscreen)
-: is_fullscreen(is_fullscreen), mode(SCREEN_DRAW_INVALID)
-{
-	this->Resize({ SCREEN_WIDTH, SCREEN_HEIGHT });
-}
 
 /* TODO: Change the screen API to better match gamelib... */
 
@@ -307,21 +301,23 @@ void Screen::Resize(Size size)
 		/* size.x is. Correct aspect ratio using offset */
 		render_size.x = size.x;
 		render_size.y = (GAME_HEIGHT * size.x) / (GAME_WIDTH);
-		screen_offset.x = 0;
-		screen_offset.y = (size.y - render_size.y)/2;
+		this->screen_offset.x = 0;
+		this->screen_offset.y = (size.y - render_size.y)/2;
 	}
 	
 	/* Calculate the pixel sizing variables: */
-	pixel_size.x = render_size.x / GAME_WIDTH;  pixels_skip.x = render_size.x % GAME_WIDTH;
-	pixel_size.y = render_size.y / GAME_HEIGHT; pixels_skip.y = render_size.y % GAME_HEIGHT;
+	this->pixel_size.x = render_size.x / GAME_WIDTH;
+	this->pixel_size.y = render_size.y / GAME_HEIGHT;
+	this->pixels_skip.x = render_size.x % GAME_WIDTH;
+	this->pixels_skip.y = render_size.y % GAME_HEIGHT;
 	
 	/* Draw a nice bg: */
-	fill_background();
+	Screen::FillBackground();
 	
 	this->screen_size = size;
 	
 	/* Redraw the game: */
-	screen_draw(this);
+	this->DrawCurrentMode();
 }
 
 /* Set the current drawing mode: */
@@ -331,28 +327,28 @@ void Screen::SetLevelDrawMode(DrawBuffer *b) {
 }
 
 /*
-void screen_set_mode_menu(Screen *s, Menu *m) ;
-void screen_set_mode_map(Screen *s, Map *m) ;
+void Screen::set_mode_menu( Menu *m) ;
+void Screen::set_mode_map( Map *m) ;
 */
 
 /* Window creation should only happen in Level-drawing mode: */
-void screen_add_window(Screen *s, Rect r, Tank *t) {
-	if(s->mode != SCREEN_DRAW_LEVEL) return;
+void Screen::AddWindow( Rect r, Tank *t) {
+	if(this->mode != SCREEN_DRAW_LEVEL) return;
 	
-	if(s->window_count >= SCREEN_MAX_WINDOWS) return;
-	s->window[ s->window_count++ ] = Window {r, t, 0, 0};
+	if(this->window_count >= SCREEN_MAX_WINDOWS) return;
+	this->window[ this->window_count++ ] = Window {r, t, 0, 0};
 }
 
 /* We can add the health/energy status bars here: */
-void screen_add_status(Screen *s, Rect r, Tank *t, int decreases_to_left) {
+void Screen::AddStatus(Rect r, Tank *t, int decreases_to_left) {
 	/* Verify that we're in the right mode, and that we have room: */
-	if(s->mode != SCREEN_DRAW_LEVEL) return;
-	if(s->status_count >= SCREEN_MAX_STATUS) return;
+	if(this->mode != SCREEN_DRAW_LEVEL) return;
+	if(this->status_count >= SCREEN_MAX_STATUS) return;
 
 	/* Make sure that this status bar isn't too small: */
 	if(r.size.x <= 2 || r.size.y <= 4) return;
 	
-	s->status[ s->status_count++ ] = StatusBar {r, t, decreases_to_left};
+	this->status[ this->status_count++ ] = StatusBar {r, t, decreases_to_left};
 }
 
 /* We tell the graphics system about GUI graphics here: 
@@ -360,22 +356,22 @@ void screen_add_status(Screen *s, Rect r, Tank *t, int decreases_to_left) {
  * value, especially if the bit depth is changed... 
  * TODO: That really isn't needed anymore, since we haven't cached mapped RGB
  *       values since the switch to gamelib... */
-void screen_add_bitmap(Screen *s, Rect r, char *bitmap, Color *color) {
+void Screen::AddBitmap( Rect r, char *bitmap, Color *color) {
 	/* Bitmaps are only for game mode: */
-	if(s->mode != SCREEN_DRAW_LEVEL) return;
-	if(s->bitmap_count >= SCREEN_MAX_BITMAPS) return;
+	if(this->mode != SCREEN_DRAW_LEVEL) return;
+	if(this->bitmap_count >= SCREEN_MAX_BITMAPS) return;
 	if(!bitmap || !color) return;
 	
-	s->bitmap[ s->bitmap_count++ ] = Bitmap{r, bitmap, color};
+	this->bitmap[ this->bitmap_count++ ] = Bitmap{r, bitmap, color};
 }
 
 /* We don't check to see if gamelib needs the gui controller thing in this file.
  * That is handled in game.c: */
-void screen_add_controller(Screen *s, Rect r) {
-	if(s->mode != SCREEN_DRAW_LEVEL) return;
-	if(s->controller_count) return;
+void Screen::AddController( Rect r) {
+	if(this->mode != SCREEN_DRAW_LEVEL) return;
+	if(this->controller_count) return;
 	
-	s->controller_count = 1;
-	s->controller.r = r;
+	this->controller_count = 1;
+	this->controller.r = r;
 }
 
