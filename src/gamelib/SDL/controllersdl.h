@@ -1,20 +1,6 @@
 #pragma once
 #include <SDL.h>
-#include <tank.h>
-
-struct ControllerOutput 
-{
-	Speed speed = { };
-	bool is_shooting = false;
-};
-
-class Controller
-{
-public:
-	virtual ~Controller() = default;
-	virtual ControllerOutput ApplyControls(struct PublicTankInfo* tankPublic) = 0;
-};
-
+#include <controller.h>
 
 class KeyboardController : public Controller
 {
