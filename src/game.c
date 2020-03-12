@@ -268,7 +268,7 @@ int game_step(void *input) {
 		/* Trying to resize the window? */
 		if(temp == GAME_EVENT_RESIZE) {
 			Rect r = gamelib_event_resize_get_size();
-			screen_resize(gd->data.active.s, r.size.x, r.size.y);
+			screen_resize(gd->data.active.s, r.size);
 		
 		/* Trying to toggle fullscreen? */
 		} else if(temp == GAME_EVENT_TOGGLE_FULLSCREEN) {

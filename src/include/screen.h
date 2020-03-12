@@ -13,7 +13,7 @@ void     screen_destroy(Screen *s) ;
 
 /* Resizing the screen: */
 void screen_set_fullscreen(Screen *s, bool is_fullscreen) ;
-int screen_resize(Screen *s, int width, int height) ;
+int screen_resize(Screen *s, Size size) ;
 
 /* Set the current drawing mode: */
 void screen_set_mode_level(Screen *s, DrawBuffer *b) ;

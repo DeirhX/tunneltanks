@@ -46,7 +46,10 @@ struct Screen {
 	bool	 is_fullscreen;
 	
 	/* Various variables for the current resolution: */
-	int width, height, xstart, ystart, pixelw, pixelh, xskips, yskips;
+	Size size;
+	Offset offset;
+	int xskips, yskips;
+	Size pixel;
 	
 	/* Window shit: */
 	int  window_count;
@@ -88,19 +91,17 @@ static void fill_background() {
 
 void screen_draw_pixel(Screen *s, Position pos, Color color) {
 	
-	Rect r;
-
-	auto rel_size = Size {
-		 (pos.x * s->xskips) / GAME_WIDTH,
-		 (pos.y * s->yskips) / GAME_HEIGHT
+	auto rel_pos = Size  { 
+		(pos.x * s->xskips) / GAME_WIDTH,
+		(pos.y * s->yskips) / GAME_HEIGHT
 	};
 	
-	pos.x *= s->pixelw + s->xstart + rel_size.x;
-	pos.y *= s->pixelh + s->ystart + rel_size.y;
+	pos.x *= s->pixel.x + s->offset.x + rel_pos.x;
+	pos.y *= s->pixel.y + s->offset.y + rel_pos.y;
 	
 	auto pixelSize = Size {
-		s->pixelw + (rel_size.x != ((pos.x + 1) * s->xskips / GAME_WIDTH)),
-		s->pixelh + (rel_size.y != ((pos.y + 1) * s->yskips / GAME_HEIGHT))
+		s->pixel.x + (rel_pos.x != ((pos.x + 1) * s->xskips / GAME_WIDTH)),
+		s->pixel.y + (rel_pos.y != ((pos.y + 1) * s->yskips / GAME_HEIGHT))
 	};
 	
 	gamelib_draw_box(Rect{ pos, pixelSize }, color);
@@ -108,17 +109,17 @@ void screen_draw_pixel(Screen *s, Position pos, Color color) {
 
 /* These will say what virtual pixel a physical pixel resides on: */
 int  screen_map_x(Screen *s, int x) {
-	x -= s->xstart;
-	x -= x/(int)s->pixelw * (int)s->xskips/GAME_WIDTH;
-	x /= (int)s->pixelw;
+	x -= s->offset.x;
+	x -= x/(int)s->pixel.x * (int)s->xskips/GAME_WIDTH;
+	x /= (int)s->pixel.x;
 	
 	return x;
 }
 
 int  screen_map_y(Screen *s, int y) {
-	y -= s->ystart;
-	y -= y/(int)s->pixelh * (int)s->yskips/GAME_HEIGHT;
-	y /= (int)s->pixelh;
+	y -= s->offset.y;
+	y -= y/(int)s->pixel.y * (int)s->yskips/GAME_HEIGHT;
+	y /= (int)s->pixel.y;
 	
 	return y;
 }
@@ -322,7 +323,7 @@ Screen *screen_new(bool is_fullscreen) {
 	out->controller_count = 0;
 	
 	/* Set the window size to the default one: */
-	if( screen_resize(out, SCREEN_WIDTH, SCREEN_HEIGHT) ) {
+	if (screen_resize(out, { SCREEN_WIDTH, SCREEN_HEIGHT })) {
 		free_mem(out);
 		return NULL;
 	}
@@ -347,53 +348,55 @@ void screen_set_fullscreen(Screen *s, bool is_fullscreen) {
 	s->is_fullscreen = is_fullscreen;
 	
 	/* Resize the screen to include the new fullscreen mode: */
-	if(!is_fullscreen) screen_resize(s, SCREEN_WIDTH, SCREEN_HEIGHT);
-	else               screen_resize(s, s->width, s->height);
+	if (!is_fullscreen) screen_resize(s, Size{ SCREEN_WIDTH, SCREEN_HEIGHT });
+	else               screen_resize(s, s->size);
 }
 
 
 /* Returns 0 if successful, 1 if failed: */
-int screen_resize(Screen *s, int width, int height) {
+int screen_resize(Screen *s, Size size) {
 	
-	int pixelw, pixelh, xskips, yskips, xstart, ystart, vw, vh, a, b;
-	Rect temp_rect;
+	int xskips, yskips, vw, vh, a, b;
 	
+	Offset offset;
+	Size pixel_size;
+
 	/* Make sure that we aren't scaling to something too small: */
-	if(width < GAME_WIDTH)   width = GAME_WIDTH;
-	if(height < GAME_HEIGHT) height = GAME_HEIGHT;
+	size.x = std::max(GAME_WIDTH, size.x);
+	size.y = std::max(GAME_HEIGHT, size.y);
 	
 	/* A little extra logic for fullscreen: */
 	if(s->is_fullscreen) gamelib_set_fullscreen();
-	else                 gamelib_set_window    (width, height);
+	else                 gamelib_set_window    (size.x, size.y);
 	
-	temp_rect = gamelib_get_resolution();
-	width = temp_rect.size.x; height = temp_rect.size.y;
+	Rect temp_rect = gamelib_get_resolution();
+	size.x = temp_rect.size.x; size.y = temp_rect.size.y;
 	
 	s->is_fullscreen = gamelib_get_fullscreen();
 	
 	/* What is the limiting factor in our scaling? */
-	a = height * GAME_WIDTH; b = width * GAME_HEIGHT;
+	a = size.y * GAME_WIDTH; b = size.x * GAME_HEIGHT;
 	if(a<b) {
-		/* Height is. */
-		vh = height; vw = (GAME_WIDTH * height) / (GAME_HEIGHT);
-		xstart = width/2 - vw/2; ystart = 0;
+		/* size.y is. */
+		vh = size.y; vw = (GAME_WIDTH * size.y) / (GAME_HEIGHT);
+		offset.x = size.x/2 - vw/2; offset.y = 0;
 	} else {
-		/* Width is. */
-		vw = width; vh = (GAME_HEIGHT * width) / (GAME_WIDTH);
-		xstart = 0; ystart = height/2 - vh/2;
+		/* size.x is. */
+		vw = size.x; vh = (GAME_HEIGHT * size.x) / (GAME_WIDTH);
+		offset.x = 0; offset.y = size.y/2 - vh/2;
 	}
 	
 	/* Calculate the pixel sizing variables: */
-	pixelw = vw / GAME_WIDTH;  xskips = vw % GAME_WIDTH;
-	pixelh = vh / GAME_HEIGHT; yskips = vh % GAME_HEIGHT;
+	pixel_size.x = vw / GAME_WIDTH;  xskips = vw % GAME_WIDTH;
+	pixel_size.y = vh / GAME_HEIGHT; yskips = vh % GAME_HEIGHT;
 	
 	/* Draw a nice bg: */
 	fill_background();
 	
 	/* Ok, the hard part is over. Copy in all of our data: */
-	s->width = width;   s->height = height;
-	s->xstart = xstart; s->ystart = ystart;
-	s->pixelw = pixelw; s->pixelh = pixelh;
+	s->size.x = size.x;   s->size.y = size.y;
+	s->offset.x = offset.x; s->offset.y = offset.y;
+	s->pixel.x = pixel_size.x; s->pixel.y = pixel_size.y;
 	s->xskips = xskips; s->yskips = yskips;
 	
 	/* Redraw the game: */
