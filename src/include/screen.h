@@ -14,14 +14,14 @@ typedef enum ScreenDrawMode {
 
 typedef struct Window {
 	Rect  r;
-	struct Tank* t;
+	class Tank* t;
 	int counter;
 	int showing_static;
 } Window;
 
 typedef struct StatusBar {
 	Rect  r;
-	struct Tank* t;
+	class Tank* t;
 	int      decreases_to_left;
 } StatusBar;
 
@@ -91,8 +91,8 @@ public:
 	void DrawBitmap(Bitmap* b);
 	void DrawLevel();
 public:
-	void AddWindow(Rect r, struct Tank* t);
-	void AddStatus(Rect r, struct Tank* t, int decreases_to_left);
+	void AddWindow(Rect r, class Tank* t);
+	void AddStatus(Rect r, class Tank* t, int decreases_to_left);
 	void AddBitmap(Rect r, char* bitmap, Color color);
 	void AddController(Rect r);
 

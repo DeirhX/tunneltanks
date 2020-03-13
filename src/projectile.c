@@ -11,13 +11,13 @@
 #include <tanklist.h>
 
 
-Projectile::Projectile(Position position, Position origin, Speed speed, int life, ProjectileType type, Tank* tank)
-    : pos(position), pos_old(origin), step(speed), life(life), type(type), tank(tank), is_alive(true)
+Projectile::Projectile(Position position, Position origin, Speed speed, int life, ProjectileType type, Level* level, Tank* tank)
+    : pos(position), pos_old(origin), step(speed), life(life), type(type), level(level), tank(tank), is_alive(true)
 {
 
 }
 
-std::vector<Projectile> Projectile::CreateExplosion(Position pos, int count, int r, int ttl)
+std::vector<Projectile> Projectile::CreateExplosion(Position pos, Level* level, int count, int radius, int ttl)
 {
 	/*  Beware. Explosions use multiplied positions to maintain 'floating' fraction as they move less than one pixel between frames */
 	auto items = std::vector<Projectile>{};
@@ -27,8 +27,8 @@ std::vector<Projectile> Projectile::CreateExplosion(Position pos, int count, int
 		items.emplace_back(Projectile{
 			Position{pos.x * 16 + 8, pos.y * 16 + 8},
 			Position{pos.x, pos.y},
-			Speed { Random.Int(0,r) - r / 2, Random.Int(0,r) - r / 2},
-			Random.Int(0,ttl), ProjectileType::Explosion, nullptr });
+			Speed { Random.Int(0,radius) - radius / 2, Random.Int(0,radius) - radius / 2},
+			Random.Int(0,ttl), ProjectileType::Explosion, level, nullptr });
 	}
 	return items;
 }
@@ -41,7 +41,7 @@ Projectile Projectile::CreateBullet(Tank* t)
 	    t->GetPosition(),
 	    t->GetPosition(),
 	    speed,
-	    TANK_BULLET_SPEED, ProjectileType::Bullet, t };
+	    TANK_BULLET_SPEED, ProjectileType::Bullet, t->level, t };
 }
 
 Projectile& ProjectileList::Add(Projectile projectile)
@@ -112,7 +112,7 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 					/* Add all of the effect particles: */
 
 					newly_added.reserve(newly_added.size() + EXPLOSION_HURT_COUNT);
-					for (Projectile& proj : Projectile::CreateExplosion(Position{ p.pos_old.x, p.pos_old.y },
+					for (Projectile& proj : Projectile::CreateExplosion(Position{ p.pos_old.x, p.pos_old.y }, level,
 						EXPLOSION_HURT_COUNT,
 						EXPLOSION_HURT_RADIUS,
 						EXPLOSION_HURT_TTL))
@@ -133,7 +133,7 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 
 					/* Add all of the effect particles: */
 					newly_added.reserve(newly_added.size() + EXPLOSION_DIRT_COUNT);
-					for (Projectile& proj : Projectile::CreateExplosion(Position{ p.pos_old.x, p.pos_old.y },
+					for (Projectile& proj : Projectile::CreateExplosion(Position{ p.pos_old.x, p.pos_old.y }, level,
 						EXPLOSION_DIRT_COUNT,
 						EXPLOSION_DIRT_RADIUS,
 						EXPLOSION_DIRT_TTL))
@@ -160,8 +160,8 @@ void ProjectileList::Erase(DrawBuffer* drawBuffer)
 		if (p.type == ProjectileType::Explosion)
 			drawBuffer->SetPixel(Position{p.pos.x / 16, p.pos.y / 16 }, Palette.Get(Colors::Decal));
 		else {
-			drawBuffer->SetPixel(Position{p.pos.x, p.pos.y}, Palette.Get(Colors::Decal));
-			drawBuffer->SetPixel(Position{p.pos_old.x, p.pos_old.y}, Palette.Get(Colors::Decal));
+			drawBuffer->SetPixel(Position{p.pos.x, p.pos.y}, Palette.Get(Colors::Blank));
+			drawBuffer->SetPixel(Position{p.pos_old.x, p.pos_old.y}, Palette.Get(Colors::Blank));
 		}
 	}
 }

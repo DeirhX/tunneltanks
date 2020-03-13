@@ -7,7 +7,7 @@ struct LevelView
 	constexpr static int Width = 159;
 	constexpr static int Height = 99;
 
-	struct Tank* tank;
+	class Tank* tank;
 	class Level* lvl;
 public:
 	enum class QueryResult {

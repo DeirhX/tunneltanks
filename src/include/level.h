@@ -42,8 +42,8 @@ class Level
 public:
 	
 private:
-	std::unique_ptr<LevelVoxel>  array;
-	Size    size;
+	std::unique_ptr<LevelVoxel> array;
+	Size size;
 	DrawBuffer* drawBuffer;
 	std::array<Position, MAX_TANKS> spawn;
 
@@ -80,7 +80,7 @@ public:
 
 	void CommitPixel(Position pos) const;
 	void CommitAll() const;
-	void DumpBitmap(const char* filename);
+	void DumpBitmap(const char* filename) const;
 
 	static Color GetVoxelColor(LevelVoxel voxel);
 private:

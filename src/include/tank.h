@@ -18,7 +18,7 @@ typedef struct PublicTankInfo {
 	LevelView level_view;
 } PublicTankInfo;
 
-struct Tank
+class Tank
 {
 public:
 	bool is_valid = false;
@@ -37,7 +37,7 @@ public:
 
 	std::shared_ptr<Controller> controller;
 
-	Level* lvl;
+	Level* level;
 	ProjectileList* pl;
 
 private:

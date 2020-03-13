@@ -223,7 +223,8 @@ Color Level::GetVoxelColor(LevelVoxel voxel)
 }
 
 /* Dumps a level into a BMP file: */
-void Level::DumpBitmap(const char *filename) {
+void Level::DumpBitmap(const char *filename) const
+{
 	BMPFile *f = gamelib_bmp_new(this->size.x, this->size.y);
 	
 	for(int y = 0; y< this->size.y; y++)

@@ -103,7 +103,7 @@ void Screen::DrawStatic(Window *w) {
 			Color color;
 
 			if(!energy) {
-				this->DrawPixel( { x + w->r.pos.x, y + w->r.pos.y }, Palette.GetPrimary(Random.Int(0,7)));
+				this->DrawPixel( { x + w->r.pos.x, y + w->r.pos.y }, Palette.GetPrimary(TankColor(Random.Int(0,7))));
 				continue;
 			}
 
@@ -120,7 +120,7 @@ void Screen::DrawStatic(Window *w) {
 			if(Random.Bool(STATIC_TRANSPARENCY)) continue;
 
 			/* Finally, select a color (either black or random) and draw: */
-			color = drawing_black ? Palette.Get(Colors::Blank) : Palette.GetPrimary(Random.Int(0, 7));
+			color = drawing_black ? Palette.Get(Colors::Blank) : Palette.GetPrimary(TankColor(Random.Int(0, 7)));
 			this->DrawPixel({ x + w->r.pos.x, y + w->r.pos.y }, color);
 		}
 }

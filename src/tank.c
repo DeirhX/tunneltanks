@@ -23,7 +23,7 @@ Tank::Tank(TankColor color, Level *lvl, ProjectileList*pl, Position pos) :
 	this->direction = Random.Int(0, 7);
 	if(this->direction >= 4) this->direction ++;
 	
-	this->lvl = lvl;
+	this->level = lvl;
     this->pl = pl;
 	 
 	this->bullet_timer = TANK_BULLET_DELAY;
@@ -71,13 +71,13 @@ void Tank::DoMove(TankList *tl) {
 	
 	/* Calculate all of our motion: */
 	if(this->controller) {
-		Vector         base = this->lvl->GetSpawn(this->color);
+		Vector         base = this->level->GetSpawn(this->color);
 		PublicTankInfo i = {
 			.health = this->health,
 			.energy = this->energy,
 			.x      = static_cast<int>(this->pos.x - base.x),
 			.y      = static_cast<int>(this->pos.y - base.y),
-			.level_view  = LevelView(this, this->lvl)};
+			.level_view  = LevelView(this, this->level)};
 		
 		this->ApplyControllerOutput(this->controller->ApplyControls(&i));
 	}
@@ -88,13 +88,13 @@ void Tank::DoMove(TankList *tl) {
 		
 		int newdir = static_cast<int> ((this->speed.x+1) + (this->speed.y+1) * 3);
 		
-		ct = tank_collision(this->lvl, newdir, this->pos.x+this->speed.x, this->pos.y+this->speed.y, tl, *this);
+		ct = tank_collision(this->level, newdir, this->pos.x+this->speed.x, this->pos.y+this->speed.y, tl, *this);
 		/* Now, is there room to move forward in that direction? */
 		if( ct != CT_COLLIDE ) {
 			
 			/* If so, then we can move: */
 			if( ct == CT_DIRT ) {
-				this->lvl->DigHole(this->pos + (1 * this->speed));
+				this->level->DigHole(this->pos + (1 * this->speed));
 			}
 			if (ct != CT_DIRT || this->is_shooting)
             {
@@ -127,7 +127,7 @@ void Tank::DoMove(TankList *tl) {
 /* Check to see if we're in any bases, and heal based on that: */
 void Tank::TryBaseHeal()
 {
-	BaseCollision c = this->lvl->CheckBaseCollision({this->pos.x, this->pos.y}, this->color);
+	BaseCollision c = this->level->CheckBaseCollision({this->pos.x, this->pos.y}, this->color);
 	if(c == BaseCollision::Yours) {
 		this->AlterEnergy(TANK_HOME_CHARGE);
 		this->AlterHealth(TANK_HOME_HEAL);
@@ -196,7 +196,7 @@ void Tank::AlterHealth(int diff) {
 void Tank::TriggerExplosion() const
 {
 	this->pl->Add(Projectile::CreateExplosion(
-		this->pos,
+		this->pos, this->level,
 		EXPLOSION_DEATH_COUNT,
 		EXPLOSION_DEATH_RADIUS,
 		EXPLOSION_DEATH_TTL

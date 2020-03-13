@@ -20,16 +20,17 @@ struct Projectile {
 	ProjectileType	type;
 	bool	is_alive = false;
 
-	struct Tank* tank;
+	class Level* level;
+	class Tank* tank;
 
 private:
 	Projectile() = default; // Never use manually. Will be used inside intrusive containers
 public:
 	static Projectile Invalid() { return Projectile(); }
 public:
-    Projectile(Position position, Position origin, Speed speed, int life, ProjectileType type, Tank* tank);
+    Projectile(Position position, Position origin, Speed speed, int life, ProjectileType type, Level* level, Tank* tank);
 
-	static std::vector<Projectile> CreateExplosion(Position pos, int count, int r, int ttl);
+	static std::vector<Projectile> CreateExplosion(Position pos, Level* level, int count, int radius, int ttl);
 	static Projectile CreateBullet(Tank* t);
 
 	bool IsInvalid() const { return !is_alive; }
