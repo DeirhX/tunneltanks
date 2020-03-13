@@ -126,7 +126,7 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 
 				/* Else, did we hit something in the level? */
 				LevelVoxel c = level->GetVoxel(p.pos);
-				if (c != BLANK) {
+				if (c != LevelVoxel::Blank) {
 					/* If we have an associated tank, return the shot: */
 					p.tank->ReturnBullet();
 

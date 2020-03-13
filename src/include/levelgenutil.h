@@ -2,7 +2,7 @@
 #include <level.h>
 #include <types.h>
 
-void     fill_all  (Level *lvl, char c) ;
+void     fill_all  (Level *lvl, LevelVoxel c) ;
 void     rough_up(Level *lvl) ;
 Position  pt_rand   (Size size, int border) ;
 int pt_dist   (Vector a, Vector b) ;

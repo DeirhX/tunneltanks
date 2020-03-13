@@ -196,17 +196,6 @@ static void braid_free(Braid *b) {
 }
 
 
-/* LEVEL-BUILDING LOGIC: */
-
-static void invert_all(Level *lvl)
-{
-	lvl->ForEachVoxel([](LevelVoxel& voxel)
-	{
-		voxel = (voxel == LevelVoxel::LevelGenRock) ? LevelVoxel::LevelGenDirt : LevelVoxel::LevelGenRock;
-	});
-}
-
-
 void braid_generator(Level *lvl) {
 	Braid *b = braid_new(lvl->GetSize() / CELL_SIZE);
 	
@@ -221,30 +210,30 @@ void braid_generator(Level *lvl) {
 			if(c.up)
 				draw_line(lvl,
 					Vector(x*CELL_SIZE,     y*CELL_SIZE), 
-					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), 0, 1);
+					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), LevelVoxel::LevelGenDirt, 1);
 			
 			if(c.right)
 				draw_line(lvl,
 					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), 
-					Vector((x+1)*CELL_SIZE, (y+1)*CELL_SIZE), 0, 1);
+					Vector((x+1)*CELL_SIZE, (y+1)*CELL_SIZE), LevelVoxel::LevelGenDirt, 1);
 			
 			if(!c.up && !c.right)
-				set_circle(lvl, (x+1)*CELL_SIZE, y*CELL_SIZE, 0);
+				set_circle(lvl, (x+1)*CELL_SIZE, y*CELL_SIZE, LevelVoxel::LevelGenDirt);
 		}
 	}
 	
 	/* Draw a line up the left, so you can see the texture there too: */
-	draw_line(lvl, Vector(0,0), Vector(0,b->size.y*CELL_SIZE), 0, 1);
+	draw_line(lvl, Vector(0,0), Vector(0,b->size.y*CELL_SIZE), LevelVoxel::LevelGenDirt, 1);
 	
 	/* Fill in the unused space left behind on the right/bottom: */
 	/* TODO: Have a fill_box() in levelgenutil.c? */
 	for(int y=0; y<lvl->GetSize().y; y++)
 		for(int x=b->size.x*CELL_SIZE; x<lvl->GetSize().x; x++)
-			lvl->SetVoxelRaw({x, y}, 0);
+			lvl->SetVoxelRaw({x, y}, LevelVoxel::LevelGenDirt);
 	
 	for(int y=b->size.y*CELL_SIZE; y<lvl->GetSize().y; y++)
 		for(int x=0; x<b->size.x*CELL_SIZE; x++)
-			lvl->SetVoxelRaw({x, y}, 0);
+			lvl->SetVoxelRaw({x, y}, LevelVoxel::LevelGenDirt);
 	
 	/* Rough it up a little, and invert: */
 	rough_up(lvl);

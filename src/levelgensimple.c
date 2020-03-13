@@ -126,7 +126,7 @@ static void add_spawns(Level *lvl) {
 
 void simple_generator(Level *lvl) {
 	/* Levels default to all rock. Set this to all dirt: */
-	fill_all(lvl, 0);
+	fill_all(lvl, LevelVoxel::LevelGenDirt);
 	
 	/* Add rock walls on all sides: */
 	add_rock_lines(lvl, SIDE_TOP);

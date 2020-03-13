@@ -91,7 +91,7 @@ void set_circle(Level *lvl, int x, int y, LevelVoxel value) {
 void draw_line(Level *dest, Vector a, Vector b, LevelVoxel value, int fat_line) {
 	int swap, dx, dy, error, stepy;
 	int x, y;
-	void (*pt_func)(Level *, int, int, char) ;
+	void (*pt_func)(Level *, int, int, LevelVoxel) ;
 	
 	/* How is this thing getting drawn? */
 	pt_func = (fat_line) ? set_circle : set_point;

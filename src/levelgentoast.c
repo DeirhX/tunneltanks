@@ -113,7 +113,7 @@ static void generate_tree(Level *lvl) {
 		for(k=0; k<TREESIZE; k++) 
 			if(dsets[k] == bset) 
 				dsets[k] = aset;
-		draw_line(lvl, points[pairs[i].a], points[pairs[i].b], 0, 0);
+		draw_line(lvl, points[pairs[i].a], points[pairs[i].b], LevelVoxel::LevelGenDirt, 0);
 	}
 	
 	/* We don't need this data anymore: */
@@ -143,14 +143,14 @@ static void generate_tree(Level *lvl) {
 //
 // Much less instructions. Optimizer cannot see it through and fold it :(
 static int has_neighbor(Level* lvl, int x, int y) {
-	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y - 1) }) != LevelVoxel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x + lvl->GetSize().x * (y - 1) })     != LevelVoxel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y - 1) }) != LevelVoxel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y) })     != LevelVoxel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y) })     != LevelVoxel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y + 1) }) != LevelVoxel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x + lvl->GetSize().x * (y + 1) })     != LevelVoxel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y + 1) }) != LevelVoxel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y - 1) }) == LevelVoxel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x     + lvl->GetSize().x * (y - 1) }) == LevelVoxel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y - 1) }) == LevelVoxel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y) })     == LevelVoxel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y) })     == LevelVoxel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y + 1) }) == LevelVoxel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x     + lvl->GetSize().x * (y + 1) }) == LevelVoxel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y + 1) }) == LevelVoxel::LevelGenDirt) return 1;
 	return 0;
 }
 
@@ -392,14 +392,14 @@ static void randomly_expand(Level *lvl) {
 
 
 static int count_neighbors(Level* lvl, int x, int y) {
-	return lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y - 1) }) +
-		lvl->GetVoxelRaw({ x + lvl->GetSize().x * (y - 1) }) +
-		lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y - 1) }) +
-		lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y) }) +
-		lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y) }) +
-		lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y + 1) }) +
-		lvl->GetVoxelRaw({ x + lvl->GetSize().x * (y + 1) }) +
-		lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y + 1) });
+	return (char)lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y - 1) }) +
+		(char)lvl->GetVoxelRaw({ x + lvl->GetSize().x * (y - 1) }) +
+		(char)lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y - 1) }) +
+		(char)lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y) }) +
+		(char)lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y) }) +
+		(char)lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y + 1) }) +
+		(char)lvl->GetVoxelRaw({ x + lvl->GetSize().x * (y + 1) }) +
+		(char)lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y + 1) });
 }
 
 //static int count_neighbors(Level* lvl, int x, int y) {
@@ -429,7 +429,8 @@ static int smooth_once(Level *lvl) {
 				LevelVoxel oldbit = lvl->GetVoxelRaw({ x, y });
 
 				n = count_neighbors(lvl, x, y);
-				lvl->SetVoxelRaw({ x, y }, oldbit ? (n >= 3) : (n > 4));
+				bool paintRock = (oldbit != LevelVoxel::LevelGenDirt) ? (n >= 3) : (n > 4);
+				lvl->SetVoxelRaw({ x, y }, paintRock ? LevelVoxel::LevelGenRock : LevelVoxel::LevelGenDirt);
 
 				count += lvl->GetVoxelRaw({ x, y }) != oldbit;
 			}
@@ -471,9 +472,9 @@ static int smooth_once(Level *lvl) {
 static void smooth_cavern(Level *lvl) {
 	auto perf = MeasureFunction<2>{ __FUNCTION__ };
 
-	set_outside(lvl, 0);
+	set_outside(lvl, LevelVoxel::LevelGenDirt);
 	while(smooth_once(lvl));
-	set_outside(lvl, 1);
+	set_outside(lvl, LevelVoxel::LevelGenRock);
 }
 
 

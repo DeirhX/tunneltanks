@@ -97,7 +97,7 @@ constexpr Size GameSize = { GAME_WIDTH, GAME_HEIGHT };
 #define _MEM_STATS
 #endif
 
-    constexpr int parallelism_divisor = 1;
+    constexpr int parallelism_divisor = 100;
     constexpr int parallelism_multiplier = 1;
     
     inline unsigned int parallelism_degree = std::max(1u, std::thread::hardware_concurrency() * parallelism_multiplier / parallelism_divisor);

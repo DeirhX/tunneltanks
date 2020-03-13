@@ -145,19 +145,6 @@ static void maze_free(Maze *m) {
 }
 
 
-/* LEVEL-BUILDING LOGIC: */
-
-static void invert_all(Level *lvl)
-{
-	lvl->ForEachVoxel([](LevelVoxel& voxel)
-	{
-		voxel = (voxel == LevelVoxel::LevelGenRock) ?
-			LevelVoxel::LevelGenDirt :
-			LevelVoxel::LevelGenRock;
-	});
-}
-
-
 void maze_generator(Level *lvl) {
 	int x, y;
 	Maze *m = maze_new(lvl->GetSize()/CELL_SIZE);
@@ -173,17 +160,17 @@ void maze_generator(Level *lvl) {
 			if(c.up)
 				draw_line(lvl,
 					Vector(x*CELL_SIZE,     y*CELL_SIZE), 
-					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), 0, 1);
+					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), LevelVoxel::LevelGenDirt, 1);
 			
 			if(c.right)
 				draw_line(lvl,
 					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), 
-					Vector((x+1)*CELL_SIZE, (y+1)*CELL_SIZE), 0, 1);
+					Vector((x+1)*CELL_SIZE, (y+1)*CELL_SIZE), LevelVoxel::LevelGenDirt, 1);
 		}
 	}
 	
 	/* Draw a line up the left, so you can see the texture there too: */
-	draw_line(lvl, Vector(0,0), Vector(0,m->h*CELL_SIZE), 0, 1);
+	draw_line(lvl, Vector(0,0), Vector(0,m->h*CELL_SIZE), LevelVoxel::LevelGenDirt, 1);
 	
 	/* Fill in the unused space left behind on the right/bottom: */
 	/* TODO: Have a fill_box() in levelgenutil.c? */
@@ -197,7 +184,6 @@ void maze_generator(Level *lvl) {
 	
 	/* Rough it up a little, and invert: */
 	rough_up(lvl);
-	invert_all(lvl);
 	
 	/* Add in the bases: */
 	for(TankColor i=0; i<MAX_TANKS; i++) {
