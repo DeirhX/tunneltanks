@@ -16,7 +16,7 @@ Level::Level(Size size, DrawBuffer* b)
 {
 	this->array.reset(new LevelVoxel[size.x * size.y]);
 	for (int i = 0; i < size.x * size.y; ++i)
-		this->array.get()[i] = LevelVoxel::Rock;
+		this->array.get()[i] = LevelVoxel::LevelGenRock;
 }
 
 void Level::SetVoxel(Position pos, LevelVoxel voxel)

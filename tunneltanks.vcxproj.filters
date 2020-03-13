@@ -204,4 +204,7 @@
   <ItemGroup>
     <Natvis Include="Debugging.natvis" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="to_do.txt" />
+  </ItemGroup>
 </Project>
