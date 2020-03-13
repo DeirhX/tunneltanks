@@ -138,13 +138,13 @@ void Level::CreateBases()
 
 Position Level::GetSpawn(TankColor color) const
 {
-	assert(color >= 0 && (int)color < this->spawn.size());
+	assert(color >= 0 && color < (int)this->spawn.size());
 	return this->spawn[color];
 }
 
 void Level::SetSpawn(TankColor color, Position pos)
 {
-	assert(color >= 0 && (int)color < this->spawn.size());
+	assert(color >= 0 && color < (int)this->spawn.size());
 	this->spawn[color] = pos;
 }
 
@@ -208,12 +208,14 @@ BaseCollision Level::CheckBaseCollision(Position pos, TankColor color)
 
 Color Level::GetVoxelColor(LevelVoxel voxel)
 {
-	if (voxel == LevelVoxel::DirtHigh)	   return color_dirt_hi;
-	else if (voxel == LevelVoxel::DirtLow) return color_dirt_lo;
-	else if (voxel == LevelVoxel::Rock)    return color_rock;
-	else if (voxel == LevelVoxel::Blank)   return color_blank;
+	if (voxel == LevelVoxel::DirtHigh)	   return Palette.Get(Colors::DirtHigh);
+	else if (voxel == LevelVoxel::DirtLow) return Palette.Get(Colors::DirtLow);
+	else if (voxel == LevelVoxel::DirtGrow)return Palette.Get(Colors::DirtGrow);
+	else if (voxel == LevelVoxel::Rock)    return Palette.Get(Colors::Rock);
+	else if (voxel == LevelVoxel::Decal)   return Palette.Get(Colors::Decal);
+	else if (voxel == LevelVoxel::Blank)   return Palette.Get(Colors::Blank);
 	else if (Voxels::IsBase(voxel))
-		return color_tank[static_cast<char>(voxel) - static_cast<char>(LevelVoxel::BaseMin)][0];
+		return Palette.GetTank(static_cast<char>(voxel) - static_cast<char>(LevelVoxel::BaseMin))[0];
 	else {
 		assert(!"Unknown voxel.");
 		return {};

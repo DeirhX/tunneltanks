@@ -99,6 +99,9 @@
     <ClCompile Include="src\level_view.c">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\colors.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\controllersdl.h">
@@ -196,6 +199,9 @@
     </ClInclude>
     <ClInclude Include="src\gamelib\SDL\control.h">
       <Filter>gamelib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\colors.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

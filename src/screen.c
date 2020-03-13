@@ -24,11 +24,11 @@ Screen::Screen(bool is_fullscreen)
 void Screen::FillBackground() {
 	Size dim = gamelib_get_resolution();
 	
-	gamelib_draw_box({{ 0, 0}, dim}, color_bg);
+	gamelib_draw_box({{ 0, 0}, dim}, Palette.Get(Colors::Background));
 	Position o;
 	for(o.y = 0; o.y<dim.y; o.y++) {
 		for(o.x = (o.y%2)*2; o.x<dim.x; o.x+=4) {
-			gamelib_draw_box(Rect{ o, Size {1,1} }, color_bg_dot);
+			gamelib_draw_box(Rect{ o, Size {1,1} }, Palette.Get(Colors::BackgroundDot));
 		}
 	}
 }
@@ -59,7 +59,7 @@ Position Screen::ScreenToWorld(ScreenPosition screen_pos) {
 
 	Position pos = (Position)screen_pos;
 	pos.x -= this->screen_offset.x;
-	pos.x -= pos.x/(int)this->pixel_size.x * (int)this->pixels_skip.x /GAME_WIDTH;
+	pos.x -= pos.x/(int)this->pixel_size.x * (int)this->pixels_skip.x / GAME_WIDTH;
 	pos.x /= (int)this->pixel_size.x;
 
 	pos.y -= this->screen_offset.y;
@@ -103,7 +103,7 @@ void Screen::DrawStatic(Window *w) {
 			Color color;
 
 			if(!energy) {
-				this->DrawPixel( { x + w->r.pos.x, y + w->r.pos.y }, _RAND_COLOR);
+				this->DrawPixel( { x + w->r.pos.x, y + w->r.pos.y }, Palette.GetPrimary(Random.Int(0,7)));
 				continue;
 			}
 
@@ -120,7 +120,7 @@ void Screen::DrawStatic(Window *w) {
 			if(Random.Bool(STATIC_TRANSPARENCY)) continue;
 
 			/* Finally, select a color (either black or random) and draw: */
-			color = drawing_black ? color_blank : _RAND_COLOR;
+			color = drawing_black ? Palette.Get(Colors::Blank) : Palette.GetPrimary(Random.Int(0, 7));
 			this->DrawPixel({ x + w->r.pos.x, y + w->r.pos.y }, color);
 		}
 }
@@ -188,39 +188,39 @@ void Screen::DrawStatus(StatusBar *b) {
 			Color c;
 
 			/* We round the corners of the status box: */
-			if((x == 0 || x == b->r.size.x - 1) && (y == 0 || y == b->r.size.y - 1))
+			if ((x == 0 || x == b->r.size.x - 1) && (y == 0 || y == b->r.size.y - 1))
 				continue;
-			
+
 			/* Outer border draws background: */
-			else if(y < STATUS_BORDER || y >= b->r.size.y-STATUS_BORDER ||
-			   x < STATUS_BORDER || x >= b->r.size.x-STATUS_BORDER)
-				c = color_status_bg;
+			else if (y < STATUS_BORDER || y >= b->r.size.y - STATUS_BORDER ||
+				x < STATUS_BORDER || x >= b->r.size.x - STATUS_BORDER)
+				c = Palette.Get(Colors::StatusBackground);
 
 			/* We round the corners here a little bit too: */
-			else if((x == STATUS_BORDER || x == b->r.size.x - STATUS_BORDER - 1) &&
-			        (y == STATUS_BORDER || y == b->r.size.y - STATUS_BORDER - 1))
-				c = color_status_bg;
+			else if ((x == STATUS_BORDER || x == b->r.size.x - STATUS_BORDER - 1) &&
+				(y == STATUS_BORDER || y == b->r.size.y - STATUS_BORDER - 1))
+				c = Palette.Get(Colors::StatusBackground);
 
 			/* Middle seperator draws as backround, as well: */
-			else if(y >= mid_y && y < mid_y + mid_h)
-				c = color_status_bg;
+			else if (y >= mid_y && y < mid_y + mid_h)
+				c = Palette.Get(Colors::StatusBackground);
 
 			/* Ok, this must be one of the bars. */
 			/* Is this the filled part of the energy bar? */
-			else if(y < mid_y && 
-				(( b->decreases_to_left && x< energy_filled) ||
-				 (!b->decreases_to_left && x>=energy_filled)))
-				c = color_status_energy;
+			else if (y < mid_y &&
+				((b->decreases_to_left && x < energy_filled) ||
+				(!b->decreases_to_left && x >= energy_filled)))
+				c = Palette.Get(Colors::StatusEnergy);
 
 			/* Is this the filled part of the health bar? */
 			else if(y > mid_y && 
 				(( b->decreases_to_left && x< health_filled) ||
 				 (!b->decreases_to_left && x>=health_filled)))
-				c = color_status_health;
+				c = Palette.Get(Colors::StatusHealth);
 
 			/* Else, this must be the empty part of a bar: */
 			else
-				c = color_blank;
+				c = Palette.Get(Colors::Blank);
 
 			this->DrawPixel({ x + b->r.pos.x, y + b->r.pos.y }, c);
 		}
@@ -231,7 +231,7 @@ void Screen::DrawBitmap(Bitmap *b) {
 	int x, y, i;
 
 	for(x=y=i=0; i < (b->r.size.x * b->r.size.y); i++) {
-		if (b->data[i]) this->DrawPixel({ x + b->r.pos.x, y + b->r.pos.y }, *b->color);
+		if (b->data[i]) this->DrawPixel({ x + b->r.pos.x, y + b->r.pos.y }, b->color);
 		if(++x >= b->r.size.x) { y++; x=0; }
 	}
 }
@@ -356,11 +356,11 @@ void Screen::AddStatus(Rect r, Tank *t, int decreases_to_left) {
  * value, especially if the bit depth is changed... 
  * TODO: That really isn't needed anymore, since we haven't cached mapped RGB
  *       values since the switch to gamelib... */
-void Screen::AddBitmap( Rect r, char *new_bitmap, Color *color) {
+void Screen::AddBitmap( Rect r, char *new_bitmap, Color color) {
 	/* Bitmaps are only for game mode: */
 	if(this->mode != SCREEN_DRAW_LEVEL) return;
 	if(this->bitmap_count >= SCREEN_MAX_BITMAPS) return;
-	if(!new_bitmap || !color) return;
+	if(!new_bitmap) return;
 	
 	this->bitmap[ this->bitmap_count++ ] = Bitmap{r, new_bitmap, color};
 }

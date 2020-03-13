@@ -39,6 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\aitwitch.c" />
+    <ClCompile Include="src\colors.cpp" />
     <ClCompile Include="src\drawbuffer.c" />
     <ClCompile Include="src\exceptions.cpp" />
     <ClCompile Include="src\game.c" />
@@ -94,6 +95,7 @@
     <ClInclude Include="src\gamelib\SDL\require_sdl.h" />
     <ClInclude Include="src\gamelib\SDL\sdldata.h" />
     <ClInclude Include="src\include\aitwitch.h" />
+    <ClInclude Include="src\include\colors.h" />
     <ClInclude Include="src\include\containers.h" />
     <ClInclude Include="src\include\controller.h" />
     <ClInclude Include="src\include\drawbuffer.h" />

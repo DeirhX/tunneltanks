@@ -9,6 +9,14 @@ namespace tweak {
  * Most of the game engine's arbitrary limits are stored in here:
  */
 
+    constexpr int parallelism_divisor = 1;
+    constexpr int parallelism_multiplier = 1;
+    inline unsigned int parallelism_degree = std::max(1u, std::thread::hardware_concurrency() * parallelism_multiplier / parallelism_divisor);
+
+    constexpr int DirtRecoverSpeed = 10; /* Average delay before growing finishes and new dirt is formed. More is faster. */
+    constexpr int DirtRegrowSpeed = 10; /* Average delay before it starts growing back. More is faster.*/
+	
+
 /* The default size of the window: */
 #define SCREEN_WIDTH                   640
 #define SCREEN_HEIGHT                  400
@@ -97,8 +105,5 @@ constexpr Size GameSize = { GAME_WIDTH, GAME_HEIGHT };
 #define _MEM_STATS
 #endif
 
-    constexpr int parallelism_divisor = 1;
-    constexpr int parallelism_multiplier = 1;
-    
-    inline unsigned int parallelism_degree = std::max(1u, std::thread::hardware_concurrency() * parallelism_multiplier / parallelism_divisor);
+ 
 }

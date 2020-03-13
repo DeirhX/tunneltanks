@@ -18,7 +18,9 @@ enum class LevelVoxel : char
 	Blank = ' ',
 	DirtHigh = 'D',
 	DirtLow = 'd',
+	DirtGrow = 'g',
 	Rock = 'r',
+	Decal = '.',
 	BaseMin = '0', // goes up to '7' for various tank colors
 	BaseMax = '7',
 

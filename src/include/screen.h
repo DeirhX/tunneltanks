@@ -28,7 +28,7 @@ typedef struct StatusBar {
 typedef struct Bitmap {
 	Rect     r;
 	char* data;
-	Color* color;
+	Color color;
 } Bitmap;
 
 typedef struct GUIController {
@@ -93,7 +93,7 @@ public:
 public:
 	void AddWindow(Rect r, struct Tank* t);
 	void AddStatus(Rect r, struct Tank* t, int decreases_to_left);
-	void AddBitmap(Rect r, char* bitmap, Color* color);
+	void AddBitmap(Rect r, char* bitmap, Color color);
 	void AddController(Rect r);
 
 	static void FillBackground();

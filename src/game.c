@@ -71,8 +71,8 @@ static void init_single_player(Screen *s, TankList *tl, Level *lvl) {
 		s->AddController( Rect(3, GAME_HEIGHT - 5 - static_cast<int>(gui.size.y), gui.size.x, gui.size.y));
 	
 	/* Add the GUI bitmaps: */
-	s->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - STATUS_HEIGHT    , 4, 5), GUI_ENERGY, &color_status_energy);
-	s->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - STATUS_HEIGHT + 6, 4, 5), GUI_HEALTH, &color_status_health);
+	s->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - STATUS_HEIGHT    , 4, 5), GUI_ENERGY, Palette.Get(Colors::StatusEnergy));
+	s->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - STATUS_HEIGHT + 6, 4, 5), GUI_HEALTH, Palette.Get(Colors::StatusHealth));
 	
 	/* Fill up the rest of the slots with Twitches: */
 	twitch_fill(tl, lvl, 1);
@@ -96,8 +96,8 @@ static void init_double_player(Screen *s, TankList *tl, Level *lvl) {
 	s->AddStatus(Rect(GAME_WIDTH/2+2+2, GAME_HEIGHT - 2 - STATUS_HEIGHT, GAME_WIDTH/2-5-3, STATUS_HEIGHT), t, 1);
 
 	/* Add the GUI bitmaps: */
-	s->AddBitmap(Rect(GAME_WIDTH/2-2, GAME_HEIGHT - 2 - STATUS_HEIGHT    , 4, 5), GUI_ENERGY, &color_status_energy);
-	s->AddBitmap(Rect(GAME_WIDTH/2-2, GAME_HEIGHT - 2 - STATUS_HEIGHT + 6, 4, 5), GUI_HEALTH, &color_status_health);
+	s->AddBitmap(Rect(GAME_WIDTH/2-2, GAME_HEIGHT - 2 - STATUS_HEIGHT    , 4, 5), GUI_ENERGY, Palette.Get(Colors::StatusEnergy));
+	s->AddBitmap(Rect(GAME_WIDTH/2-2, GAME_HEIGHT - 2 - STATUS_HEIGHT + 6, 4, 5), GUI_HEALTH, Palette.Get(Colors::StatusHealth));
 	
 	/* Fill up the rest of the slots with Twitches: */
 	twitch_fill(tl, lvl, 2);
@@ -148,7 +148,7 @@ Game::Game(GameDataConfig config) {
 		this->level->DumpBitmap("debug_start.bmp");
 	
 	/* Start drawing! */
-	this->draw_buffer->SetDefaultColor(color_rock);
+	this->draw_buffer->SetDefaultColor(Palette.Get(Colors::Rock));
 	this->level->CommitAll();
 	this->screen->SetLevelDrawMode(this->draw_buffer.get());
 	
@@ -220,15 +220,25 @@ bool Game::AdvanceStep() {
 void Game::DecayPass()
 {
 	int holes_decayed = 0;
-	this->level->ForEachVoxel([this, &holes_decayed](Position pos, LevelVoxel& vox)
+	int dirt_grown = 0;
+	this->level->ForEachVoxel([this, &holes_decayed, &dirt_grown](Position pos, LevelVoxel& vox)
 		{
 			if (vox == LevelVoxel::Blank)
 			{
 				int neighbors = this->level->CountNeighbors(pos, [](auto voxel) { return Voxels::IsDirt(voxel) ? 1 : 0; });
-				if (neighbors > 2 && Random.Bool(5 * neighbors)) {
-					vox = Random.Bool(500) ? LevelVoxel::DirtHigh : LevelVoxel::DirtLow;
+				if (neighbors > 2 && Random.Int(0, 10000) < tweak::DirtRegrowSpeed * neighbors) {
+					
+					vox = LevelVoxel::DirtGrow;
 					this->level->CommitPixel(pos);
 					++holes_decayed;
+				}
+			}
+			else if (vox == LevelVoxel::DirtGrow)
+			{
+				if (Random.Int(0, 1000) < tweak::DirtRecoverSpeed) {
+					vox = Random.Bool(500) ? LevelVoxel::DirtHigh : LevelVoxel::DirtLow;
+					this->level->CommitPixel(pos);
+					++dirt_grown;
 				}
 			}
 		}

@@ -158,10 +158,10 @@ void ProjectileList::Erase(DrawBuffer* drawBuffer)
 	for (Projectile& p : container)
 	{
 		if (p.type == ProjectileType::Explosion)
-			drawBuffer->SetPixel(Position{p.pos.x / 16, p.pos.y / 16 }, color_decal);
+			drawBuffer->SetPixel(Position{p.pos.x / 16, p.pos.y / 16 }, Palette.Get(Colors::Decal));
 		else {
-			drawBuffer->SetPixel(Position{p.pos.x, p.pos.y}, color_decal);
-			drawBuffer->SetPixel(Position{p.pos_old.x, p.pos_old.y}, color_decal);
+			drawBuffer->SetPixel(Position{p.pos.x, p.pos.y}, Palette.Get(Colors::Decal));
+			drawBuffer->SetPixel(Position{p.pos_old.x, p.pos_old.y}, Palette.Get(Colors::Decal));
 		}
 	}
 }
@@ -172,10 +172,10 @@ void ProjectileList::Draw(DrawBuffer* drawBuffer)
 	for(Projectile& p : container)
 	{
 		if (p.type == ProjectileType::Explosion)
-			drawBuffer->SetPixel(Position{p.pos.x / 16, p.pos.y / 16}, color_fire_hot);
+			drawBuffer->SetPixel(Position{p.pos.x / 16, p.pos.y / 16}, Palette.Get(Colors::FireHot));
 		else {
-			drawBuffer->SetPixel(Position{p.pos.x, p.pos.y}, color_fire_hot);
-			drawBuffer->SetPixel(Position{p.pos_old.x, p.pos_old.y}, color_fire_cold);
+			drawBuffer->SetPixel(Position{p.pos.x, p.pos.y}, Palette.Get(Colors::FireHot));
+			drawBuffer->SetPixel(Position{p.pos_old.x, p.pos_old.y}, Palette.Get(Colors::FireCold));
 		}
 	}
 }
