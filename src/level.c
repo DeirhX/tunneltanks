@@ -110,13 +110,13 @@ void Level::CreateBases()
 
 Position Level::GetSpawn(TankColor color) const
 {
-	assert(color >= 0 && color < this->spawn.size());
+	assert(color >= 0 && (int)color < this->spawn.size());
 	return this->spawn[color];
 }
 
 void Level::SetSpawn(TankColor color, Position pos)
 {
-	assert(color >= 0 && color < this->spawn.size());
+	assert(color >= 0 && (int)color < this->spawn.size());
 	this->spawn[color] = pos;
 }
 

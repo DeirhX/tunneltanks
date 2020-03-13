@@ -7,12 +7,12 @@
 #include <algorithm>
 
 
-typedef struct LevelGenerator {
-	const char         *id;
+struct LevelGeneratorDesc {
+	LevelGenerator     id;
+	const char*        name;
 	LevelGeneratorFunc gen;
 	const char         *desc;
-} LevelGenerator;
-#define LEVEL_GENERATOR(id, gen, desc) {(id), (gen), (desc)}
+};
 
 
 /* === All the generator headers go here: =================================== */
@@ -24,44 +24,48 @@ typedef struct LevelGenerator {
 #include <trace.h>
 
 /* Add an entry for every generator: */
-LevelGenerator GENERATOR_LIST[] =
+std::array<LevelGeneratorDesc, 4> LevelGenerators =
 {
-	LEVEL_GENERATOR("toast",  levelgen::toast::toast_generator,  "Twisty, cavernous maps." ),
+	LevelGeneratorDesc{LevelGenerator::Toast,  "toast", levelgen::toast::toast_generator,  "Twisty, cavernous maps."},
+	LevelGeneratorDesc{LevelGenerator::Braid,  "braid", levelgen::braid::braid_generator,  "Maze-like maps with no dead ends." },
+	LevelGeneratorDesc{LevelGenerator::Maze,   "maze", levelgen::maze::maze_generator,   "Complicated maps with a maze surrounding the bases."},
+	LevelGeneratorDesc{LevelGenerator::Simple, "simple", levelgen::simple::simple_generator, "Simple rectangular maps with ragged sides."},
 	
-	LEVEL_GENERATOR("braid",  levelgen::braid::braid_generator,  "Maze-like maps with no dead ends."),
-	LEVEL_GENERATOR("maze",   levelgen::maze::maze_generator,   "Complicated maps with a maze surrounding the bases."),
-	LEVEL_GENERATOR("simple", levelgen::simple::simple_generator, "Simple rectangular maps with ragged sides."),
-	
-	/* This needs to be the last item in the list: */
-	LEVEL_GENERATOR(NULL, NULL, NULL)
 };
+
+LevelGenerator GeneratorFromName(const char* name)
+{
+	if (name)
+	{
+		/* Look for the id: */
+		for (auto& generator : LevelGenerators)
+		{
+			if (!strcmp(name, generator.name)) {
+				return generator.id;
+			}
+		}
+	}
+	return LevelGenerator::None;
+}
+
 
 /* ========================================================================== */
 
 /* Linear search is ok here, since there aren't many level generators: */
-std::chrono::milliseconds generate_level(Level *lvl, const char *id) {
-	LevelGeneratorFunc func = NULL;
+std::chrono::milliseconds generate_level(Level *lvl, LevelGenerator generator) {
 	
 	/* If 'id' is null, go with the default: */
-	if(!id) id = GENERATOR_LIST[0].id;
-	
-	/* Look for the id: */
-	for(int i=0; GENERATOR_LIST[i].id; i++) {
-		if(!strcmp(id, GENERATOR_LIST[i].id)) {
-			gamelib_print("Using level generator: '%s'\n", GENERATOR_LIST[i].id);
-			func = GENERATOR_LIST[i].gen;
-			goto generate_level;
-		}
+	if(generator == LevelGenerator::None) 
+		generator = LevelGenerators[0].id;
+
+	auto found = std::find_if(LevelGenerators.begin(), LevelGenerators.end(), [generator](const auto& desc) {return desc.id == generator; });
+	if (found == LevelGenerators.end())
+	{
+		/* Report what level generator we found: */
+		gamelib_print("Using default level generator: '%s'\n", LevelGenerators[0].id);
 	}
-	
-	/* Report what level generator we found: */
-	gamelib_print("Couldn't find level generator: '%s'\n", id);
-	gamelib_print("Using default level generator: '%s'\n", GENERATOR_LIST[0].id);
-	
-	/* If we didn't find the id, then we select the default: */
-	if(!func) func = GENERATOR_LIST[0].gen;
-	
-generate_level:
+	gamelib_print("Using level generator: '%s'\n", found->name);
+	LevelGeneratorFunc func = found->gen;
 
 	{
 		Stopwatch<std::chrono::milliseconds> s;
@@ -84,14 +88,14 @@ static void put_chars(size_t i, char c) {
 }
 
 void print_levels(FILE *out) {
-	int i;
 	size_t max_id = 7;
 	size_t max_desc = strlen("Description:");
 	
 	/* Get the longest ID/Description length: */
-	for(i=0; GENERATOR_LIST[i].id; i++) {
-		max_id = std::max(max_id, strlen(GENERATOR_LIST[i].id));
-		max_desc = std::max(max_desc, strlen(GENERATOR_LIST[i].desc));
+	for (auto& generator : LevelGenerators)
+	{
+		max_id = std::max(max_id, strlen(generator.name));
+		max_desc = std::max(max_desc, strlen(generator.desc));
 	}
 	
 	/* Print the header: */
@@ -102,10 +106,10 @@ void print_levels(FILE *out) {
 	gamelib_print("\n");
 	
 	/* Print all things: */
-	for(i=0; GENERATOR_LIST[i].id; i++) {
-		gamelib_print("%s  ", GENERATOR_LIST[i].id);
-		put_chars(max_id - strlen(GENERATOR_LIST[i].id), ' ');
-		gamelib_print("%s%s\n", GENERATOR_LIST[i].desc, i==0 ? " (Default)":"");
+	for (auto i = 0u; i < LevelGenerators.size(); i++) {
+		gamelib_print("%s  ", LevelGenerators[i].name);
+		put_chars(max_id - strlen(LevelGenerators[i].name), ' ');
+		gamelib_print("%s%s\n", LevelGenerators[i].desc, i==0 ? " (Default)":"");
 	}
 	gamelib_print("\n");
 }

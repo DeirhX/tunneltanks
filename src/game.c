@@ -15,9 +15,9 @@
 #include <gamelib.h>
 #include <chrono>
 #include <aitwitch.h>
+#include "exceptions.h"
 
 
-/*#define ERR_OUT(msg) fprintf(stderr, "PROGRAMMING ERROR: " msg "\n")*/
 #define ERR_OUT(msg) gamelib_error( "PROGRAMMING ERROR: " msg )
 
 #define ASSERT_CONFIG() do { \
@@ -102,86 +102,28 @@ static void init_double_player(Screen *s, TankList *tl, Level *lvl) {
 	twitch_fill(tl, lvl, 2);
 }
 
-
-
 /* Create a default game structure: */
-GameData *game_new() {
-	GameData *out = get_object(GameData);
-	
+Game::Game(GameDataConfig config) {
 	/* Copy in all the default values: */
-	out->is_active = out->is_debug = 0;
-	out->data.config.gen = NULL;
+	this->config = config;
+	this->is_active = 0;
+	this->is_debug = config.is_debug;
+	
 	/* The hell was I thinking?
 	out->data.config.w = GAME_WIDTH;
 	out->data.config.h = GAME_HEIGHT;
 	*/
-	out->data.config.size = Size{ 1000, 500 };
-	out->data.config.player_count = gamelib_get_max_players();
-	
-	if(gamelib_get_can_window())          out->data.config.is_fullscreen = 0;
-	else if(gamelib_get_can_fullscreen()) out->data.config.is_fullscreen = 1;
+	if(gamelib_get_can_window())          this->config.is_fullscreen = false;
+	else if(gamelib_get_can_fullscreen()) this->config.is_fullscreen = true;
 	else {
 		/* The hell!? */
-		ERR_OUT("gamelib can't run fullscreen or in a window.");
-		exit(1);
+		throw GameException("gamelib can't run fullscreen or in a window.");
 	}
-	
-	return out;
-}
-
-
-/* Configure a game structure: */
-void game_set_level_gen(GameData *gd, char *gen) {
-	ASSERT_CONFIG();
-	
-	gd->data.config.gen = gen;
-}
-
-void game_set_level_size(GameData *gd, Size size) {
-	ASSERT_CONFIG();
-	
-	gd->data.config.size = size;
-}
-
-void game_set_debug(GameData *gd, bool is_debugging) {
-	ASSERT_CONFIG();
-	
-	gd->is_debug = is_debugging;
-}
-
-void game_set_fullscreen(GameData *gd, bool is_fullscreen) {
-	ASSERT_CONFIG();
-	
-	gd->data.config.is_fullscreen = is_fullscreen;
-}
-
-void game_set_player_count(GameData *gd, int num) {
-	ASSERT_CONFIG();
-	
-	if(!num || num > gamelib_get_max_players()) {
-		ERR_OUT("Tried to use more players than the platform can support.");
-		exit(1);
-	}
-	
-	gd->data.config.player_count = num;
-}
-
-
-/* Ready a game structure for actual use: */
-void game_finalize(GameData *gd) {
-	Level      *lvl;
-	TankList   *tl;
-	DrawBuffer *b;
-	ProjectileList *pl;
-	Screen     *s;
-	
-	ASSERT_CONFIG();
 	
 	/* Initialize most of the structures: */
-	s   = new Screen(gd->data.config.is_fullscreen);
-	pl  = new ProjectileList();
-	b   = new DrawBuffer(gd->data.config.size);
-	lvl = new Level(gd->data.config.size, b);
+	this->screen   = std::make_unique<Screen>(this->config.is_fullscreen);
+	this->projectiles  = std::make_unique<ProjectileList>();
+	this->draw_buffer   = std::make_unique<DrawBuffer>(this->config.size);
 	
 	/* Generate our random level: */
 	int TestIterations = 30;
@@ -190,48 +132,42 @@ void game_finalize(GameData *gd) {
 #endif
 	std::chrono::milliseconds time_taken = {};
 	for (int i = TestIterations; i-- > 0; ) {
-		lvl = new Level( gd->data.config.size, b);
-		 time_taken += generate_level(lvl, gd->data.config.gen);
+		this->level = std::make_unique<Level>(this->config.size, this->draw_buffer.get());
+		time_taken += generate_level(this->level.get(), this->config.level_generator);
 	}
 	auto average_time = time_taken / TestIterations;
 	gamelib_print("***\r\nAverage level time: %lld.%03lld sec\n", average_time.count() / 1000, average_time.count() % 1000);
 	
-	tl = new TankList(lvl, pl);
-	lvl->CreateDirtAndRocks();
-	lvl->CreateBases();
-
-
+	this->tank_list = std::make_unique<TankList>(this->level.get(), this->projectiles.get());
+	this->level->CreateDirtAndRocks();
+	this->level->CreateBases();
 	
 	/* Debug the starting data, if we're debugging: */
-	if(gd->is_debug)
-		lvl->DumpBitmap("debug_start.bmp");
+	if(this->is_debug)
+		this->level->DumpBitmap("debug_start.bmp");
 	
 	/* Start drawing! */
-	b->SetDefaultColor(color_rock);
-	lvl->CommitAll();
-	s->SetLevelDrawMode(b);
+	this->draw_buffer->SetDefaultColor(color_rock);
+	this->level->CommitAll();
+	this->screen->SetLevelDrawMode(this->draw_buffer.get());
 	
 	/* Set up the players/GUI: */
-	if     (gd->data.config.player_count == 1) init_single_player(s, tl, lvl);
-	else if(gd->data.config.player_count == 2) init_double_player(s, tl, lvl);
+	if (this->config.player_count > gamelib_get_max_players())
+		throw GameException("Tried to use more players than the platform can support.");
+	if     (this->config.player_count == 1) init_single_player(this->screen.get(), this->tank_list.get(), this->level.get());
+	else if(this->config.player_count == 2) init_double_player(this->screen.get(), this->tank_list.get(), this->level.get());
 	else {
 		ERR_OUT("Don't know how to draw more than 2 players at once...");
 		exit(1);
 	}
 	
 	/* Copy all of our variables into the GameData struct: */
-	gd->is_active = 1;
-	gd->data.active.s   = s;
-	gd->data.active.pl  = pl;
-	gd->data.active.b   = b;
-	gd->data.active.lvl = lvl;
-	gd->data.active.tl  = tl;
+	this->is_active = 1;
 }
 
 /* Step the game simulation by handling events, and drawing: */
-int game_step(void *input) {
-	GameData *gd = static_cast<GameData*>(input);
-	ASSERT_ACTIVE();
+bool Game::AdvanceStep() {
+	assert(this->is_active);
 	
 	EventType temp;
 	
@@ -241,15 +177,15 @@ int game_step(void *input) {
 		/* Trying to resize the window? */
 		if(temp == GAME_EVENT_RESIZE) {
 			Rect r = gamelib_event_resize_get_size();
-			gd->data.active.s->Resize(r.size);
+			this->screen->Resize(r.size);
 		
 		/* Trying to toggle fullscreen? */
 		} else if(temp == GAME_EVENT_TOGGLE_FULLSCREEN) {
-			gd->data.active.s->SetFullscreen(gd->data.active.s->GetFullscreen());
+			this->screen->SetFullscreen(this->screen->GetFullscreen());
 		
 		/* Trying to exit? */
 		} else if(temp == GAME_EVENT_EXIT) {
-			break;
+			return false;
 		}
 		
 		/* Done with this event: */
@@ -257,43 +193,32 @@ int game_step(void *input) {
 	}
 	
 	/* Clear everything: */
-	for_each_tank(*gd->data.active.tl, [=](Tank* t) {t->Clear(gd->data.active.b); });
-	gd->data.active.pl->Erase(gd->data.active.b);
+	for_each_tank(*this->tank_list, [=](Tank* t) {t->Clear(this->draw_buffer.get()); });
+	this->projectiles->Erase(this->draw_buffer.get());
 
 	/* Charge a small bit of energy for life: */
-	for_each_tank(*gd->data.active.tl, [=](Tank* t) {t->AlterEnergy(TANK_IDLE_COST); });
+	for_each_tank(*this->tank_list, [=](Tank* t) {t->AlterEnergy(TANK_IDLE_COST); });
 
 	/* See if we need to be healed: */
-	for_each_tank(*gd->data.active.tl, [=](Tank* t) {t->TryBaseHeal(); });
+	for_each_tank(*this->tank_list, [=](Tank* t) {t->TryBaseHeal(); });
 	
 	/* Move everything: */
-	gd->data.active.pl->Advance(gd->data.active.lvl, gd->data.active.tl);
-	for_each_tank(*gd->data.active.tl, [=](Tank* t) {t->DoMove(gd->data.active.tl); });
+	this->projectiles->Advance(this->level.get(), this->tank_list.get());
+	for_each_tank(*this->tank_list, [=](Tank* t) {t->DoMove(this->tank_list.get()); });
 	
 	/* Draw everything: */
-	gd->data.active.pl->Draw(gd->data.active.b);
-	for_each_tank(*gd->data.active.tl, [=](Tank* t) {t->Draw(gd->data.active.b); });
-	gd->data.active.s->DrawCurrentMode();
-	
-	return 0;
+	this->projectiles->Draw(this->draw_buffer.get());
+	for_each_tank(*this->tank_list.get(), [=](Tank* t) {t->Draw(this->draw_buffer.get()); });
+	this->screen->DrawCurrentMode();
+	return true;
 }
 
 /* Done with a game structure: */
-void game_free(GameData *gd) {
-	if(!gd) return;
-	
-	if(gd->is_active) {
+Game::~Game() {
+	if(this->is_active) {
 		/* Debug if we need to: */
-		if(gd->is_debug)
-			gd->data.active.lvl->DumpBitmap("debug_end.bmp");
-		
-		delete		(gd->data.active.b);
-		delete		(gd->data.active.pl);
-		delete		(gd->data.active.tl);
-		delete		(gd->data.active.lvl);
-		delete      (gd->data.active.s);
+		if(this->is_debug)
+		  this->level->DumpBitmap("debug_end.bmp");
 	}
-	
-	free_mem(gd);	
 }
 

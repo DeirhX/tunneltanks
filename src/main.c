@@ -12,6 +12,7 @@
 #include <projectile.h>
 #include <types.h>
 #include <gamelib.h>
+#include <control.h>
 
 /* Nothing in this file uses SDL, but we still have to include SDL.h for Macs,
  * since they do some extra magic in the file WRT the main() function: */
@@ -24,7 +25,6 @@ int main(int argc, char *argv[]) {
 	Size size{ 1000, 500 };
 	char *id = NULL, *outfile_name = NULL;
 	int seed = 0, manual_seed=0;
-	GameData *gd;
 	
 	/* Iterate through the CLAs: */
 	for(i=1; i<argc; i++) {
@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
 		auto lvl = std::make_unique<Level>(size, nullptr);
 	
 		/* Generate our random level: */
-		generate_level(lvl.get(), id);
+		generate_level(lvl.get(), GeneratorFromName(id));
 		lvl->CreateDirtAndRocks();
 		lvl->CreateBases();
 		
@@ -122,21 +122,21 @@ int main(int argc, char *argv[]) {
 	
 	/* Let's get this ball rolling: */
 	gamelib_init();
-	gd = game_new();
-	
-	game_set_level_gen   (gd, id);
-	game_set_level_size  (gd, size);
-	game_set_debug       (gd, debug);
-	game_set_fullscreen  (gd, fullscreen);
-	game_set_player_count(gd, player_count);
-	
-	game_finalize(gd);
-	
-	/* Play the game: */
-	gamelib_main_loop(game_step, gd);
-	
+	auto config = GameDataConfig
+	{
+		.level_generator = GeneratorFromName(id),
+		.size = size,
+		.is_debug = !!debug,
+		.is_fullscreen = !!fullscreen,
+		.player_count = player_count,
+	};
+	{
+		auto gd = std::make_unique<Game>(config);
+
+		/* Play the game: */
+		gamelib_main_loop([&gd]()-> bool {return gd->AdvanceStep(); } );
+	}
 	/* Ok, we're done. Tear everything up: */
-	game_free(gd);
 	gamelib_exit();
 	print_mem_stats();
 	

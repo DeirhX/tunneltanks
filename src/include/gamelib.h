@@ -23,7 +23,6 @@ int gamelib_get_target_fps() ;     /* Usually returns 24. */
 /* Some platforms (Android) will be acting as the game loop, so the game loop
  * needs to happen in the gamelib: */
 typedef int (*draw_func)(void *data);
-void gamelib_main_loop(draw_func func, void *data);
 
 /* This lets you attach controllers to a tank: */
 int gamelib_tank_attach(struct Tank *t, int tank_num, int num_players) ;
