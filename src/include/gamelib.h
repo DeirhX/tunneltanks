@@ -30,14 +30,14 @@ int gamelib_tank_attach(struct Tank *t, int tank_num, int num_players) ;
 /* TODO: This will need a means for configuring the controller... */
 
 /* Allow us to handle events in a fairly platform-neutral way: */
-typedef enum EventType {
-	GAME_EVENT_NONE = 0,
-	GAME_EVENT_EXIT,
-	GAME_EVENT_RESIZE,
-	GAME_EVENT_TOGGLE_FULLSCREEN,
-} EventType;
+enum class GameEvent {
+	None = 0,
+	Exit,
+	Resize,
+	ToggleFullscreen,
+};
 
-EventType gamelib_event_get_type() ;
+GameEvent gamelib_event_get_type() ;
 Rect      gamelib_event_resize_get_size() ; /* Returns {0,0,0,0} on fail. */
 void      gamelib_event_done() ;
 

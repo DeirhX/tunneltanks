@@ -7,18 +7,18 @@
 
 void fill_all(Level *lvl, LevelVoxel c)
 {
-	lvl->ForEachVoxel([c](LevelVoxel& voxel) { voxel = c; });
+	lvl->ForEachVoxel([c](Position, LevelVoxel& voxel) { voxel = c; });
 }
 void invert_all(Level* lvl)
 {
-	lvl->ForEachVoxel([](LevelVoxel& voxel)
+	lvl->ForEachVoxel([](Position, LevelVoxel& voxel)
 	{
 		voxel = (voxel == LevelVoxel::LevelGenRock) ? LevelVoxel::LevelGenDirt : LevelVoxel::LevelGenRock;
 	});
 }
 void unmark_all(Level* lvl)
 {
-	lvl->ForEachVoxel([](LevelVoxel& voxel)
+	lvl->ForEachVoxel([](Position, LevelVoxel& voxel)
 	{
 		voxel = (voxel == LevelVoxel::LevelGenDirt) ? LevelVoxel::LevelGenDirt : LevelVoxel::LevelGenRock;
 	});
@@ -48,7 +48,7 @@ void rough_up(Level *lvl) {
 	}
 	
 	/* For every marked spot, randomly fill it: */
-	lvl->ForEachVoxel([](LevelVoxel& voxel)
+	lvl->ForEachVoxel([](Position, LevelVoxel& voxel)
 	{
 		if (voxel == LevelVoxel::LevelGenMark)
 			voxel = Random.Bool(500) ? LevelVoxel::LevelGenRock : LevelVoxel::LevelGenDirt;

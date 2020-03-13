@@ -50,6 +50,30 @@ LevelVoxel& Level::VoxelRaw(Position pos)
 	return this->array.get()[pos.y * this->size.x + pos.x];
 }
 
+int Level::CountNeighborValues(Position pos)
+{
+	return (char)GetVoxelRaw({ pos.x - 1 + GetSize().x * (pos.y - 1) }) +
+		   (char)GetVoxelRaw({ pos.x     + GetSize().x * (pos.y - 1) }) +
+		   (char)GetVoxelRaw({ pos.x + 1 + GetSize().x * (pos.y - 1) }) +
+		   (char)GetVoxelRaw({ pos.x - 1 + GetSize().x * (pos.y) }) +
+		   (char)GetVoxelRaw({ pos.x + 1 + GetSize().x * (pos.y) }) +
+		   (char)GetVoxelRaw({ pos.x - 1 + GetSize().x * (pos.y + 1) }) +
+		   (char)GetVoxelRaw({ pos.x     + GetSize().x * (pos.y + 1) }) +
+		   (char)GetVoxelRaw({ pos.x + 1 + GetSize().x * (pos.y + 1) });
+}
+
+int Level::CountNeighbors(Position pos, LevelVoxel value)
+{
+	return !!(value == GetVoxelRaw({ pos.x - 1 + GetSize().x * (pos.y - 1) })) +
+		   !!(value == GetVoxelRaw({ pos.x + GetSize().x * (pos.y - 1) })) +
+		   !!(value == GetVoxelRaw({ pos.x + 1 + GetSize().x * (pos.y - 1) })) +
+		   !!(value == GetVoxelRaw({ pos.x - 1 + GetSize().x * (pos.y) })) +
+		   !!(value == GetVoxelRaw({ pos.x + 1 + GetSize().x * (pos.y) })) +
+		   !!(value == GetVoxelRaw({ pos.x - 1 + GetSize().x * (pos.y + 1) })) +
+		   !!(value == GetVoxelRaw({ pos.x + GetSize().x * (pos.y + 1) })) +
+		   !!(value == GetVoxelRaw({ pos.x + 1 + GetSize().x * (pos.y + 1) }));
+}
+
 LevelVoxel Level::GetVoxel(Position pos) const
 {
 	if (!IsInBounds(pos))

@@ -12,13 +12,13 @@
 /* TODO: Move this into the _DATA structure? Maybe... */
 typedef struct Event {
 	SDL_Event e;
-	EventType type;
+	GameEvent type;
 	Rect      dim;
 } Event;
 
 static Event cur_event = {
 	/*.e         = NULL,*/
-	.type      = GAME_EVENT_NONE,
+	.type      = GameEvent::None,
 	.dim = {0,0,0,0}
 };
 
@@ -28,35 +28,35 @@ static void check_for_event() {
 	SDL_Event e;
 	
 	/* Don't do jack if the current event hasn't been released: */
-	if(cur_event.type != GAME_EVENT_NONE) return;
+	if(cur_event.type != GameEvent::None) return;
 	
 	/* Grab the next event (if it exists) off the stack: */
-	while(cur_event.type == GAME_EVENT_NONE) {
+	while(cur_event.type == GameEvent::None) {
 		
 		/* Grab the next event, and only continue if we got something: */
 		if(!SDL_PollEvent(&e)) break;
 		
 		/* Resize event: */
 		if(e.type == SDL_VIDEORESIZE) {
-			cur_event.type = GAME_EVENT_RESIZE;
+			cur_event.type = GameEvent::Resize;
 			cur_event.dim = Rect(0,0, e.resize.w, e.resize.h);
 		
 		/* Keyboard events: */
 		} else if(e.type == SDL_KEYDOWN) {
 			if(e.key.keysym.sym == FULLSCREEN_KEY)
-				cur_event.type = GAME_EVENT_TOGGLE_FULLSCREEN;
+				cur_event.type = GameEvent::ToggleFullscreen;
 			
 			else if(e.key.keysym.sym == EXIT_KEY)
-				cur_event.type = GAME_EVENT_EXIT;
+				cur_event.type = GameEvent::Exit;
 		
 		/* Window close event: */
 		} else if(e.type == SDL_QUIT)
-			cur_event.type = GAME_EVENT_EXIT;
+			cur_event.type = GameEvent::Exit;
 	}
 }
 
 
-EventType gamelib_event_get_type() {
+GameEvent gamelib_event_get_type() {
 	check_for_event();
 	
 	return cur_event.type;
@@ -65,10 +65,10 @@ EventType gamelib_event_get_type() {
 Rect gamelib_event_resize_get_size() {
 	check_for_event();
 	
-	if(cur_event.type != GAME_EVENT_RESIZE) return Rect(0,0,0,0);
+	if(cur_event.type != GameEvent::Resize) return Rect(0,0,0,0);
 	return cur_event.dim;
 }
 
 void gamelib_event_done() {
-	cur_event.type = GAME_EVENT_NONE;
+	cur_event.type = GameEvent::None;
 }

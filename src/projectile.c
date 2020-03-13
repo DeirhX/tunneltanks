@@ -11,14 +11,15 @@
 #include <tanklist.h>
 
 
-Projectile::Projectile(Position position, Position origin, Speed speed, int life, bool is_effect, Tank* tank)
-    : pos(position), pos_old(origin), step(speed), life(life), is_effect(is_effect), tank(tank), is_alive(true)
+Projectile::Projectile(Position position, Position origin, Speed speed, int life, ProjectileType type, Tank* tank)
+    : pos(position), pos_old(origin), step(speed), life(life), type(type), tank(tank), is_alive(true)
 {
 
 }
 
 std::vector<Projectile> Projectile::CreateExplosion(Position pos, int count, int r, int ttl)
 {
+	/*  Beware. Explosions use multiplied positions to maintain 'floating' fraction as they move less than one pixel between frames */
 	auto items = std::vector<Projectile>{};
 	items.reserve(count);
 	/* Add all of the effect particles: */
@@ -27,7 +28,7 @@ std::vector<Projectile> Projectile::CreateExplosion(Position pos, int count, int
 			Position{pos.x * 16 + 8, pos.y * 16 + 8},
 			Position{pos.x, pos.y},
 			Speed { Random.Int(0,r) - r / 2, Random.Int(0,r) - r / 2},
-			Random.Int(0,ttl), 1, nullptr });
+			Random.Int(0,ttl), ProjectileType::Explosion, nullptr });
 	}
 	return items;
 }
@@ -40,7 +41,7 @@ Projectile Projectile::CreateBullet(Tank* t)
 	    t->GetPosition(),
 	    t->GetPosition(),
 	    speed,
-	    TANK_BULLET_SPEED, 0, t };
+	    TANK_BULLET_SPEED, ProjectileType::Bullet, t };
 }
 
 Projectile& ProjectileList::Add(Projectile projectile)
@@ -61,7 +62,7 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 	for (Projectile& p : container)
 	{
 		/* Is this a bullet, or an effect? */
-		if (p.is_effect) {
+		if (p.type == ProjectileType::Explosion ) {
 			/* Effect: */
 
 			/* Did this expire? */
@@ -156,7 +157,7 @@ void ProjectileList::Erase(DrawBuffer* drawBuffer)
 {
 	for (Projectile& p : container)
 	{
-		if (p.is_effect)
+		if (p.type == ProjectileType::Explosion)
 			drawBuffer->SetPixel(Position{p.pos.x / 16, p.pos.y / 16 }, color_decal);
 		else {
 			drawBuffer->SetPixel(Position{p.pos.x, p.pos.y}, color_decal);
@@ -170,7 +171,7 @@ void ProjectileList::Draw(DrawBuffer* drawBuffer)
 {
 	for(Projectile& p : container)
 	{
-		if (p.is_effect)
+		if (p.type == ProjectileType::Explosion)
 			drawBuffer->SetPixel(Position{p.pos.x / 16, p.pos.y / 16}, color_fire_hot);
 		else {
 			drawBuffer->SetPixel(Position{p.pos.x, p.pos.y}, color_fire_hot);

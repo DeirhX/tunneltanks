@@ -15,6 +15,7 @@
 #include <gamelib.h>
 #include <chrono>
 #include <aitwitch.h>
+#include <random.h>
 #include "exceptions.h"
 
 
@@ -169,22 +170,22 @@ Game::Game(GameDataConfig config) {
 bool Game::AdvanceStep() {
 	assert(this->is_active);
 	
-	EventType temp;
+	GameEvent temp;
 	
 	/* Handle all queued events: */
-	while( (temp=gamelib_event_get_type()) != GAME_EVENT_NONE ) {
+	while( (temp=gamelib_event_get_type()) != GameEvent::None ) {
 		
 		/* Trying to resize the window? */
-		if(temp == GAME_EVENT_RESIZE) {
+		if(temp == GameEvent::Resize) {
 			Rect r = gamelib_event_resize_get_size();
 			this->screen->Resize(r.size);
 		
 		/* Trying to toggle fullscreen? */
-		} else if(temp == GAME_EVENT_TOGGLE_FULLSCREEN) {
+		} else if(temp == GameEvent::ToggleFullscreen) {
 			this->screen->SetFullscreen(this->screen->GetFullscreen());
 		
 		/* Trying to exit? */
-		} else if(temp == GAME_EVENT_EXIT) {
+		} else if(temp == GameEvent::Exit) {
 			return false;
 		}
 		
@@ -192,30 +193,46 @@ bool Game::AdvanceStep() {
 		gamelib_event_done();
 	}
 	
+	/* Grow */
+	DecayPass();
+
 	/* Clear everything: */
-	for_each_tank(*this->tank_list, [=](Tank* t) {t->Clear(this->draw_buffer.get()); });
+	this->tank_list->for_each([=](Tank* t) {t->Clear(this->draw_buffer.get()); });
 	this->projectiles->Erase(this->draw_buffer.get());
 
 	/* Charge a small bit of energy for life: */
-	for_each_tank(*this->tank_list, [=](Tank* t) {t->AlterEnergy(TANK_IDLE_COST); });
+	this->tank_list->for_each([=](Tank* t) {t->AlterEnergy(TANK_IDLE_COST); });
 
 	/* See if we need to be healed: */
-	for_each_tank(*this->tank_list, [=](Tank* t) {t->TryBaseHeal(); });
+	this->tank_list->for_each([=](Tank* t) {t->TryBaseHeal(); });
 	
 	/* Move everything: */
 	this->projectiles->Advance(this->level.get(), this->tank_list.get());
-	for_each_tank(*this->tank_list, [=](Tank* t) {t->DoMove(this->tank_list.get()); });
+	this->tank_list->for_each([=](Tank* t) {t->DoMove(this->tank_list.get()); });
 	
 	/* Draw everything: */
 	this->projectiles->Draw(this->draw_buffer.get());
-	for_each_tank(*this->tank_list.get(), [=](Tank* t) {t->Draw(this->draw_buffer.get()); });
+	this->tank_list->for_each([=](Tank* t) {t->Draw(this->draw_buffer.get()); });
 	this->screen->DrawCurrentMode();
 	return true;
 }
 
 void Game::DecayPass()
 {
-	//this->level->
+	int holes_decayed = 0;
+	this->level->ForEachVoxel([this, &holes_decayed](Position pos, LevelVoxel& vox)
+		{
+			if (vox == LevelVoxel::Blank)
+			{
+				int neighbors = this->level->CountNeighbors(pos, LevelVoxel::Rock);
+				if (neighbors > 2 && Random.Bool(1000 * neighbors)) {
+					vox = Random.Bool(500) ? LevelVoxel::DirtHigh : LevelVoxel::DirtLow;
+					this->level->CommitPixel(pos);
+					++holes_decayed;
+				}
+			}
+		}
+	);
 }
 
 /* Done with a game structure: */
