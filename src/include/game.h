@@ -30,6 +30,8 @@ public:
 	~Game();
 
 	bool AdvanceStep();
+private:
+	void DecayPass();
 };
 
 

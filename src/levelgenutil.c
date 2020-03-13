@@ -5,37 +5,53 @@
 #include <types.h>
 #include <random.h>
 
-void fill_all(Level *lvl, LevelVoxel c) {
+void fill_all(Level *lvl, LevelVoxel c)
+{
 	lvl->ForEachVoxel([c](LevelVoxel& voxel) { voxel = c; });
 }
+void invert_all(Level* lvl)
+{
+	lvl->ForEachVoxel([](LevelVoxel& voxel)
+	{
+		voxel = (voxel == LevelVoxel::LevelGenRock) ? LevelVoxel::LevelGenDirt : LevelVoxel::LevelGenRock;
+	});
+}
+void unmark_all(Level* lvl)
+{
+	lvl->ForEachVoxel([](LevelVoxel& voxel)
+	{
+		voxel = (voxel == LevelVoxel::LevelGenDirt) ? LevelVoxel::LevelGenDirt : LevelVoxel::LevelGenRock;
+	});
+}
+
 
 void rough_up(Level *lvl) {
 	int x, y;
 	
 	/* Sanitize our input: */
-	lvl->ForEachVoxel([](LevelVoxel& voxel) { voxel = !!voxel; });
+	unmark_all(lvl);
 	
 	/* Mark all spots that are blank, but next to spots that are marked: */
 	for(x=0; x<lvl->GetSize().x; x++) {
 		for(y=0; y<lvl->GetSize().y; y++) {
 			int t = 0;
 			
-			if (lvl->GetVoxel({ x, y })) continue;
+			if (lvl->GetVoxel({ x, y }) != LevelVoxel::LevelGenDirt) continue;
 			
-			t += (x!=0            )       && lvl->GetVoxel({ x - 1, y }) == 1;
-			t += (x!=lvl->GetSize().x-1 ) && lvl->GetVoxel({ x + 1, y }) == 1;
-			t += (y!=0            )       && lvl->GetVoxel({ x, y - 1 }) == 1;
-			t += (y!=lvl->GetSize().y-1)  && lvl->GetVoxel({ x, y + 1 }) == 1;
+			t += (x!=0            )       && lvl->GetVoxel({ x - 1, y }) == LevelVoxel::LevelGenRock;
+			t += (x!=lvl->GetSize().x-1 ) && lvl->GetVoxel({ x + 1, y }) == LevelVoxel::LevelGenRock;
+			t += (y!=0            )       && lvl->GetVoxel({ x, y - 1 }) == LevelVoxel::LevelGenRock;
+			t += (y!=lvl->GetSize().y-1)  && lvl->GetVoxel({ x, y + 1 }) == LevelVoxel::LevelGenRock;
 
-			if(t) lvl->Voxel({ x, y }) = 2;
+			if(t) lvl->Voxel({ x, y }) = LevelVoxel::LevelGenMark;
 		}
 	}
 	
 	/* For every marked spot, randomly fill it: */
 	lvl->ForEachVoxel([](LevelVoxel& voxel)
 	{
-		if (voxel == 2)
-			voxel = Random.Bool(500);
+		if (voxel == LevelVoxel::LevelGenMark)
+			voxel = Random.Bool(500) ? LevelVoxel::LevelGenRock : LevelVoxel::LevelGenDirt;
 	});
 }
 
@@ -53,12 +69,12 @@ int pt_dist(Vector a, Vector b) {
 }
 
 /* Used for point drawing: */
-static void set_point(Level *lvl, int x, int y, char value) {
+static void set_point(Level *lvl, int x, int y, LevelVoxel value) {
 	if(x >= lvl->GetSize().x || y >= lvl->GetSize().y) return;
 	lvl->Voxel({ x, y }) = value;
 }
 
-void set_circle(Level *lvl, int x, int y, char value) {
+void set_circle(Level *lvl, int x, int y, LevelVoxel value) {
 	int tx, ty;
 	for(ty=-3; ty<=3; ty++) {
 		for(tx=-3; tx<=3; tx++) {
@@ -72,7 +88,7 @@ void set_circle(Level *lvl, int x, int y, char value) {
 
 /* New Bresenham's Algorithm-based function: */
 
-void draw_line(Level *dest, Vector a, Vector b, char value, int fat_line) {
+void draw_line(Level *dest, Vector a, Vector b, LevelVoxel value, int fat_line) {
 	int swap, dx, dy, error, stepy;
 	int x, y;
 	void (*pt_func)(Level *, int, int, char) ;

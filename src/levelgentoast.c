@@ -143,19 +143,19 @@ static void generate_tree(Level *lvl) {
 //
 // Much less instructions. Optimizer cannot see it through and fold it :(
 static int has_neighbor(Level* lvl, int x, int y) {
-	if (!lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y - 1) })) return 1;
-	if (!lvl->GetVoxelRaw({ x + lvl->GetSize().x * (y - 1) })) return 1;
-	if (!lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y - 1) })) return 1;
-	if (!lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y) })) return 1;
-	if (!lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y) })) return 1;
-	if (!lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y + 1) })) return 1;
-	if (!lvl->GetVoxelRaw({ x + lvl->GetSize().x * (y + 1) })) return 1;
-	if (!lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y + 1) })) return 1;
+	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y - 1) }) != LevelVoxel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x + lvl->GetSize().x * (y - 1) })     != LevelVoxel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y - 1) }) != LevelVoxel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y) })     != LevelVoxel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y) })     != LevelVoxel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y + 1) }) != LevelVoxel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x + lvl->GetSize().x * (y + 1) })     != LevelVoxel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y + 1) }) != LevelVoxel::LevelGenDirt) return 1;
 	return 0;
 }
 
 
-static void set_outside(Level *lvl, char val) {
+static void set_outside(Level *lvl, LevelVoxel val) {
 	int i;
 	Size size = lvl->GetSize();
 	
@@ -170,8 +170,8 @@ static void expand_init(Level *lvl, PositionQueue& q) {
 	for(int y = 1; y<lvl->GetSize().y-1; y++)
 		for (int x = 1; x < lvl->GetSize().x - 1; x++) {
 			int offset = x + y * lvl->GetSize().x;
-			if (lvl->GetVoxelRaw(offset) && has_neighbor(lvl, x, y)) {
-				lvl->SetVoxelRaw(offset, 2);
+			if (lvl->GetVoxelRaw(offset) != LevelVoxel::LevelGenDirt  && has_neighbor(lvl, x, y)) {
+				lvl->SetVoxelRaw(offset, LevelVoxel::LevelGenMark);
 				q.push({ x, y });
 			}
 		}
@@ -199,20 +199,18 @@ static int expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomG
 		odds  = std::min(std::min(xodds, yodds), ODDS);
 		
 		if(random.Bool(odds)) {
-			lvl->SetVoxelRaw(temp, 0);
+			lvl->SetVoxelRaw(temp, LevelVoxel::LevelGenDirt);
 			count++;
 			
 			/* Now, queue up any neighbors that qualify: */
 			for(j=0; j<9; j++) {
-				char *c;
-				int tx, ty;
-				
 				if(j==4) continue;
 				
-				tx = temp.x + (j%3) - 1; ty = temp.y + (j/3) - 1;
-				c = &lvl->VoxelRaw({ tx, ty });
-				if(*c == 1) {
-					*c = 2;
+				int tx = temp.x + (j % 3) - 1;
+				int ty = temp.y + (j / 3) - 1;
+				LevelVoxel* v = &lvl->VoxelRaw({ tx, ty });
+				if(*v == LevelVoxel::LevelGenRock) {
+				   *v  = LevelVoxel::LevelGenMark;
 					q.push({ tx, ty });
 				}
 			}
@@ -372,7 +370,7 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 
 static void expand_cleanup(Level *lvl) {
 	auto perf = MeasureFunction<3>{ __FUNCTION__ };
-	lvl->ForEachVoxel([](LevelVoxel& voxel) { voxel = !!voxel; });
+	lvl->ForEachVoxel([](LevelVoxel& voxel) { voxel = (voxel == LevelVoxel::LevelGenDirt) ? LevelVoxel::LevelGenDirt : LevelVoxel::LevelGenRock; });
 }
 
 static void randomly_expand(Level *lvl) {

@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
 	
 		/* Generate our random level: */
 		generate_level(lvl.get(), GeneratorFromName(id));
-		lvl->CreateDirtAndRocks();
+		lvl->GenerateDirtAndRocks();
 		lvl->CreateBases();
 		
 		/* Dump it out, and exit: */

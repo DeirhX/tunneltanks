@@ -200,7 +200,10 @@ static void braid_free(Braid *b) {
 
 static void invert_all(Level *lvl)
 {
-	lvl->ForEachVoxel([](LevelVoxel& voxel) { voxel = !voxel; });
+	lvl->ForEachVoxel([](LevelVoxel& voxel)
+	{
+		voxel = (voxel == LevelVoxel::LevelGenRock) ? LevelVoxel::LevelGenDirt : LevelVoxel::LevelGenRock;
+	});
 }
 
 

@@ -13,7 +13,27 @@ enum class BaseCollision
 	Enemy,
 };
 
-using LevelVoxel = char;
+enum class LevelVoxel : char
+{
+	Blank = ' ',
+	DirtHigh = 'D',
+	DirtLow = 'd',
+	Rock = 'r',
+	BaseMin = '0', // goes up to '7' for various tank colors
+	BaseMax = '7',
+
+	LevelGenDirt = 0,
+	LevelGenRock = 1,
+	LevelGenMark = 2,
+};
+class Voxels
+{
+public:
+	static bool IsDirt(LevelVoxel voxel) { return voxel == LevelVoxel::DirtHigh || voxel == LevelVoxel::DirtLow; }
+	static bool IsCollider(LevelVoxel voxel) { return voxel == LevelVoxel::Rock || (voxel >= LevelVoxel::BaseMin && voxel <= LevelVoxel::BaseMax); }
+	static bool IsBase(LevelVoxel voxel) { return (voxel >= LevelVoxel::BaseMin && voxel <= LevelVoxel::BaseMax); }
+};
+
 
 class Level
 {
@@ -40,8 +60,10 @@ public:
 	LevelVoxel GetVoxelRaw(int offset) const;
 	LevelVoxel& VoxelRaw(Position pos);
 
+	int CountNeighbors(Position pos);
+
 	// Level generate
-	void CreateDirtAndRocks();
+	void GenerateDirtAndRocks();
 	void CreateBases();
 	 template <typename VoxelFunc>
 	void ForEachVoxel(VoxelFunc func);
@@ -54,6 +76,8 @@ public:
 	void CommitPixel(Position pos) const;
 	void CommitAll() const;
 	void DumpBitmap(const char* filename);
+
+	static Color GetVoxelColor(LevelVoxel voxel);
 private:
 	bool IsInBounds(Position pos) const;
 	

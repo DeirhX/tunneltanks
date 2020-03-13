@@ -16,7 +16,7 @@ Level::Level(Size size, DrawBuffer* b)
 {
 	this->array.reset(new LevelVoxel[size.x * size.y]);
 	for (int i = 0; i < size.x * size.y; ++i)
-		this->array.get()[i] = 1;
+		this->array.get()[i] = LevelVoxel::Rock;
 }
 
 void Level::SetVoxel(Position pos, LevelVoxel voxel)
@@ -53,7 +53,7 @@ LevelVoxel& Level::VoxelRaw(Position pos)
 LevelVoxel Level::GetVoxel(Position pos) const
 {
 	if (!IsInBounds(pos))
-		return ROCK;
+		return LevelVoxel::Rock;
 	return this->array.get()[ pos.y * this->size.x + pos.x ];
 }
 
@@ -67,13 +67,15 @@ LevelVoxel Level::GetVoxelRaw(int address) const
 	return this->array.get()[address];
 }
 
-void Level::CreateDirtAndRocks()
+void Level::GenerateDirtAndRocks()
 {
 	for(int y = 0; y<this->size.y; y++)
 		for(int x = 0; x<this->size.x; x++) {
-			char& spot = this->Voxel({ x, y });
-			if(spot)  spot = ROCK;
-			else      spot = Random.Bool(500) ? DIRT_LO : DIRT_HI;
+			auto& spot = this->Voxel({ x, y });
+			if(spot == LevelVoxel::LevelGenRock)
+				spot = LevelVoxel::Rock;
+			else      
+				spot = Random.Bool(500) ? LevelVoxel::DirtLow : LevelVoxel::DirtHigh;
 		}
 }
 
@@ -91,10 +93,10 @@ void Level::CreateBase(Position pos, TankColor color)
 				if(x >= -BASE_DOOR_SIZE/2 && x <= BASE_DOOR_SIZE/2) 
 					continue;
 
-				SetVoxel(pix, static_cast<char>(BASE + color));
+				SetVoxel(pix, static_cast<LevelVoxel>(static_cast<char>(LevelVoxel::BaseMin) + color));
 			}
 			else
-				SetVoxel(pix, BLANK);
+				SetVoxel(pix, LevelVoxel::Blank);
 		}
 	}
 }
@@ -128,14 +130,14 @@ bool Level::DigHole(Position pos)
 		for(int tx = pos.x - 3; tx<= pos.x+3; tx++) {
 			/* Don't go out-of-bounds: */
 			LevelVoxel voxel = GetVoxel({ tx, ty });
-			if (voxel != DIRT_HI && voxel != DIRT_LO) 
+			if (voxel != LevelVoxel::DirtHigh && voxel != LevelVoxel::DirtLow) 
 				continue;
 			
 			/* Don't take out the corners: */
 			if((tx==pos.x-3 || tx== pos.x+3) && (ty== pos.y-3 || ty== pos.y+3)) 
 				continue;
 			
-			SetVoxel({ tx, ty }, BLANK);
+			SetVoxel({ tx, ty }, LevelVoxel::Blank);
 			did_dig = true;
 		}
 	
@@ -144,21 +146,11 @@ bool Level::DigHole(Position pos)
 
 void Level::CommitAll() const
 {
-	for(int y=0; y<this->size.y; y++)
-		for(int x=0; x<this->size.x; x++) {
-			char val = this->GetVoxel({ x, y });
-			switch(val) {
-				case ROCK:    drawBuffer->SetPixel({x,y}, color_rock); break;
-				case DIRT_HI: drawBuffer->SetPixel({x,y}, color_dirt_hi); break;
-				case DIRT_LO: drawBuffer->SetPixel({x,y}, color_dirt_lo); break;
-				case BLANK:   drawBuffer->SetPixel({x,y}, color_blank); break;
-				default:
-					/* Else, this is most likely a base: */
-					int color = val - BASE;
-					if(color < MAX_TANKS)
-						drawBuffer->SetPixel({x,y}, color_tank[color][0]); break;
-			}
+	for (int y = 0; y < this->size.y; y++) {
+		for (int x = 0; x < this->size.x; x++) {
+			CommitPixel({ x, y });
 		}
+	}
 }
 
 bool Level::IsInBounds(Position pos) const
@@ -169,19 +161,7 @@ bool Level::IsInBounds(Position pos) const
 
 void Level::CommitPixel(Position pos) const
 {
-	char val = this->GetVoxel(pos);
-	
-	switch(val) {
-		case ROCK:    drawBuffer->SetPixel(pos, color_rock); break;
-		case DIRT_HI: drawBuffer->SetPixel(pos, color_dirt_hi); break;
-		case DIRT_LO: drawBuffer->SetPixel(pos, color_dirt_lo); break;
-		case BLANK:   drawBuffer->SetPixel(pos, color_blank); break;
-		default:
-			/* Else, this is most likely a base: */
-			int color = val - BASE;
-			if(color < MAX_TANKS)
-				drawBuffer->SetPixel(pos, color_tank[color][0]); break;
-	}
+	drawBuffer->SetPixel(pos, GetVoxelColor(this->GetVoxel(pos))); 
 }
 
 
@@ -201,6 +181,19 @@ BaseCollision Level::CheckBaseCollision(Position pos, TankColor color)
 	return BaseCollision::None;
 }
 
+Color Level::GetVoxelColor(LevelVoxel voxel)
+{
+	if (voxel == LevelVoxel::DirtHigh)	   return color_dirt_hi;
+	else if (voxel == LevelVoxel::DirtLow) return color_dirt_lo;
+	else if (voxel == LevelVoxel::Rock)    return color_rock;
+	else if (voxel == LevelVoxel::Blank)   return color_blank;
+	else if (Voxels::IsBase(voxel))
+		return color_tank[static_cast<char>(voxel) - static_cast<char>(LevelVoxel::BaseMin)][0];
+	else {
+		assert(!"Unknown voxel.");
+		return {};
+	}
+}
 
 /* Dumps a level into a BMP file: */
 void Level::DumpBitmap(const char *filename) {
@@ -210,16 +203,8 @@ void Level::DumpBitmap(const char *filename) {
 		for(int x = 0; x< this->size.x; x++) {
 			Color color = Color(0,0,0);
 			
-			char val = this->GetVoxel({ x, y });
-			
-			if     (val == DIRT_HI) color = color_dirt_hi;
-			else if(val == DIRT_LO) color = color_dirt_lo;
-			else if(val == ROCK)    color = color_rock;
-			else if(val == BLANK)   color = color_blank;
-			else if(val-BASE < MAX_TANKS && val-BASE >= 0)
-				color = color_tank[val-BASE][0];
-			
-			gamelib_bmp_set_pixel(f, x, y, color);
+			LevelVoxel val = this->GetVoxel({ x, y });
+			gamelib_bmp_set_pixel(f, x, y, GetVoxelColor(val));
 		}
 	
 	gamelib_bmp_finalize(f, filename);

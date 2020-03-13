@@ -72,34 +72,33 @@ static void add_rock_lines(Level *lvl, Side s) {
 		
 		/* Draw this in whatever way is needed: */
 		if(needs_flip)
-			draw_line(lvl, Vector(cur.y, cur.x), Vector(prev.y, prev.x), static_cast<char>(s), 0);
+			draw_line(lvl, Vector(cur.y, cur.x), Vector(prev.y, prev.x), static_cast<LevelVoxel>(s), 0);
 		else
-			draw_line(lvl, cur, prev, static_cast<char>(s), 0);
+			draw_line(lvl, cur, prev, static_cast<LevelVoxel>(s), 0);
 		
 		prev = cur;
 		
 	} while(cur.x != maxx);
 	
 	/* Do the correct fill sequence, based on side: */
-	#define _LOOKUP_ ((lvl)->Voxel({x, y}))
 	
 	if(s == SIDE_TOP)
 		for(x=0; x<lvl->GetSize().x; x++)
-			for(y=0; _LOOKUP_ != s; y++) _LOOKUP_ = 1;
+			for(y=0; lvl->Voxel({ x, y }) != static_cast<LevelVoxel>(s); y++) lvl->Voxel({ x, y }) = LevelVoxel::LevelGenRock;
 	
 	else if(s == SIDE_RIGHT)
 		for(y=0; y<lvl->GetSize().y; y++)
-			for(x=lvl->GetSize().x-1; _LOOKUP_ != s; x--) _LOOKUP_ = 1;
+			for(x=lvl->GetSize().x-1; lvl->Voxel({ x, y }) != static_cast<LevelVoxel>(s); x--) lvl->Voxel({ x, y }) = LevelVoxel::LevelGenRock;
 	
 	else if(s == SIDE_BOTTOM)
 		for(x=0; x<lvl->GetSize().x; x++)
-			for(y=lvl->GetSize().y-1; _LOOKUP_ != s; y--) _LOOKUP_ = 1;
+			for(y=lvl->GetSize().y-1; lvl->Voxel({ x, y }) != static_cast<LevelVoxel>(s); y--) lvl->Voxel({ x, y }) = LevelVoxel::LevelGenRock;
 	
 	else if(s == SIDE_LEFT)
 		for(y=0; y<lvl->GetSize().y; y++)
-			for(x=0; _LOOKUP_ != s; x++) _LOOKUP_ = 1;
+			for(x=0; lvl->Voxel({ x, y }) != static_cast<LevelVoxel>(s); x++) lvl->Voxel({ x, y }) = LevelVoxel::LevelGenRock;
 }
-#undef _LOOKUP_
+
 
 
 static void add_spawns(Level *lvl) {

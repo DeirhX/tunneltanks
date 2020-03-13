@@ -52,11 +52,11 @@ static CollisionType tank_collision(Level *lvl, int dir, int x, int y, TankList 
 			char c = TANK_SPRITE[dir][3+ty][3+tx];
 			if(!c) continue;
 			
-			c = lvl->GetVoxel({ x + tx, y + ty });
+			LevelVoxel v = lvl->GetVoxel({ x + tx, y + ty });
 			
-			if(c==DIRT_HI || c==DIRT_LO) out = CT_DIRT;
+			if(Voxels::IsDirt(v)) out = CT_DIRT;
 			
-			if(c!=DIRT_HI && c!=DIRT_LO && c!=BLANK) return CT_COLLIDE;
+			if(Voxels::IsCollider(v)) return CT_COLLIDE;
 		}
 	
 	/* Tank collisions: */

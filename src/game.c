@@ -139,7 +139,7 @@ Game::Game(GameDataConfig config) {
 	gamelib_print("***\r\nAverage level time: %lld.%03lld sec\n", average_time.count() / 1000, average_time.count() % 1000);
 	
 	this->tank_list = std::make_unique<TankList>(this->level.get(), this->projectiles.get());
-	this->level->CreateDirtAndRocks();
+	this->level->GenerateDirtAndRocks();
 	this->level->CreateBases();
 	
 	/* Debug the starting data, if we're debugging: */
@@ -211,6 +211,11 @@ bool Game::AdvanceStep() {
 	for_each_tank(*this->tank_list.get(), [=](Tank* t) {t->Draw(this->draw_buffer.get()); });
 	this->screen->DrawCurrentMode();
 	return true;
+}
+
+void Game::DecayPass()
+{
+	//this->level->
 }
 
 /* Done with a game structure: */

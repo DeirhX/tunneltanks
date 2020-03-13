@@ -91,11 +91,6 @@ constexpr Size GameSize = { GAME_WIDTH, GAME_HEIGHT };
 #define EXPLOSION_DEATH_TTL            72
 
 /* Characters used in level structures for things: */
-#define DIRT_HI                        'D'
-#define DIRT_LO                        'd'
-#define ROCK                           'r'
-#define BLANK                          ' '
-#define BASE                           '0'
 
 /* Default to keeping memory stats: */
 #ifndef _MEM_STATS

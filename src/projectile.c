@@ -77,13 +77,13 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 
 			/* Make sure we didn't hit a level detail: */
 			LevelVoxel c = level->GetVoxel( pos);
-			if (c != DIRT_HI && c != DIRT_LO && c != BLANK) {
+			if (Voxels::IsCollider(c)) {
 				Remove(p);
 				continue;
 			}
 
 			/* Effects blank everything out in their paths: */
-			level->SetVoxel(pos, BLANK);
+			level->SetVoxel(pos, LevelVoxel::Blank);
 
 		}
 		else {

@@ -149,7 +149,12 @@ static void maze_free(Maze *m) {
 
 static void invert_all(Level *lvl)
 {
-	lvl->ForEachVoxel([](LevelVoxel& voxel) { voxel = !voxel; });
+	lvl->ForEachVoxel([](LevelVoxel& voxel)
+	{
+		voxel = (voxel == LevelVoxel::LevelGenRock) ?
+			LevelVoxel::LevelGenDirt :
+			LevelVoxel::LevelGenRock;
+	});
 }
 
 
@@ -184,11 +189,11 @@ void maze_generator(Level *lvl) {
 	/* TODO: Have a fill_box() in levelgenutil.c? */
 	for(y=0; y<lvl->GetSize().y; y++)
 		for(x=m->w*CELL_SIZE; x<lvl->GetSize().x; x++)
-			lvl->SetVoxel({ x, y }, 0);
+			lvl->SetVoxel({ x, y }, LevelVoxel::LevelGenDirt);
 	
 	for(y=m->h*CELL_SIZE; y<lvl->GetSize().y; y++)
 		for(x=0; x<m->w*CELL_SIZE; x++)
-			lvl->SetVoxel({ x, y }, 0);
+			lvl->SetVoxel({ x, y }, LevelVoxel::LevelGenDirt);
 	
 	/* Rough it up a little, and invert: */
 	rough_up(lvl);
