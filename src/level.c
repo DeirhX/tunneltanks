@@ -72,7 +72,7 @@ void Level::GenerateDirtAndRocks()
 	for(int y = 0; y<this->size.y; y++)
 		for(int x = 0; x<this->size.x; x++) {
 			auto& spot = this->Voxel({ x, y });
-			if(spot == LevelVoxel::LevelGenRock)
+			if(spot != LevelVoxel::LevelGenDirt)
 				spot = LevelVoxel::Rock;
 			else      
 				spot = Random.Bool(500) ? LevelVoxel::DirtLow : LevelVoxel::DirtHigh;
@@ -129,8 +129,7 @@ bool Level::DigHole(Position pos)
 	for(int ty = pos.y - 3; ty<= pos.y+3; ty++)
 		for(int tx = pos.x - 3; tx<= pos.x+3; tx++) {
 			/* Don't go out-of-bounds: */
-			LevelVoxel voxel = GetVoxel({ tx, ty });
-			if (voxel != LevelVoxel::DirtHigh && voxel != LevelVoxel::DirtLow) 
+			if (!Voxels::IsDirt(GetVoxel({ tx, ty })))
 				continue;
 			
 			/* Don't take out the corners: */

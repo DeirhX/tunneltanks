@@ -4,6 +4,7 @@
 
 #include <gamelib.h>
 #include <levelgen.h>
+#include <levelgentoast.h>
 #include <levelgenutil.h>
 #include <level.h>
 #include <memalloc.h>
@@ -20,11 +21,6 @@
 namespace levelgen::toast {
 
 /* Configuration Constants: */
-constexpr int BORDER = 30;
-constexpr int FILTER = 70;
-constexpr int ODDS = 300;
-constexpr int FILLRATIO = 65;
-constexpr int TREESIZE = 150;
 
 typedef struct Pairing {
 	int dist, a, b;
@@ -63,16 +59,18 @@ static void generate_tree(Level *lvl) {
 	Pairing *pairs;
 	
 	/* Get an array of disjoint set IDs: */
-	dsets = static_cast<int*>(get_mem( sizeof(int) * TREESIZE ));
-	for(i=0; i<TREESIZE; i++) dsets[i] = i;
+	dsets = static_cast<int*>(get_mem( sizeof(int) * ToastParams::TreeSize ));
+	for(i=0; i< ToastParams::TreeSize; i++) 
+		dsets[i] = i;
 	
 	/* Randomly generate all points: */
-	points = static_cast<Position*>(get_mem( sizeof(Position) * TREESIZE ));
-	for(i=0; i<TREESIZE; i++) points[i] = pt_rand(lvl->GetSize(), BORDER);
+	points = static_cast<Position*>(get_mem( sizeof(Position) * ToastParams::TreeSize ));
+	for(i=0; i< ToastParams::TreeSize; i++)
+		points[i] = generate_inside(lvl->GetSize(), ToastParams::BorderWidth);
 	
 	/* While we're here, copy in some of those points: */
 	lvl->SetSpawn(0, points[0]);
-	for(i=1,j=1; i<TREESIZE && j<MAX_TANKS; i++) {
+	for(i=1,j=1; i< ToastParams::TreeSize && j<MAX_TANKS; i++) {
 		for(k=0; k<j; k++) {
 			if (pt_dist(points[i], lvl->GetSpawn(TankColor( k ))) < MIN_SPAWN_DIST * MIN_SPAWN_DIST)
 				break;
@@ -87,12 +85,12 @@ static void generate_tree(Level *lvl) {
 		exit(1);
 	}
 	/* Get an array of all point-point pairings: */
-	paircount = TREESIZE*(TREESIZE-1) / 2;
+	paircount = ToastParams::TreeSize*(ToastParams::TreeSize-1) / 2;
 	pairs = static_cast<Pairing*>(get_mem( sizeof(Pairing) * (paircount) ));
 
 	/* Set up all the pairs, and sort them: */
-	for(k=i=0; i<TREESIZE; i++)
-		for(j=i+1; j<TREESIZE; j++, k++) {
+	for(k=i=0; i< ToastParams::TreeSize; i++)
+		for(j=i+1; j< ToastParams::TreeSize; j++, k++) {
 			pairs[k].a = i; pairs[k].b = j;
 			pairs[k].dist = pt_dist(points[i], points[j]);
 		}
@@ -102,7 +100,7 @@ static void generate_tree(Level *lvl) {
 		
 		/* Trees only have |n|-1 edges, so call it quits if we've selected that
 		 * many: */
-		if(j>=TREESIZE-1) break;
+		if(j>= ToastParams::TreeSize-1) break;
 		
 		aset = dsets[pairs[i].a]; bset = dsets[pairs[i].b];
 		if(aset == bset) continue;
@@ -110,7 +108,7 @@ static void generate_tree(Level *lvl) {
 		/* Else, these points are in different disjoint sets. "Join" them by
 		 * drawing them, and merging the two sets: */
 		j+=1;
-		for(k=0; k<TREESIZE; k++) 
+		for(k=0; k< ToastParams::TreeSize; k++)
 			if(dsets[k] == bset) 
 				dsets[k] = aset;
 		draw_line(lvl, points[pairs[i].a], points[pairs[i].b], LevelVoxel::LevelGenDirt, 0);
@@ -146,8 +144,8 @@ static int has_neighbor(Level* lvl, int x, int y) {
 	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y - 1) }) == LevelVoxel::LevelGenDirt) return 1;
 	if (lvl->GetVoxelRaw({ x     + lvl->GetSize().x * (y - 1) }) == LevelVoxel::LevelGenDirt) return 1;
 	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y - 1) }) == LevelVoxel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y) })     == LevelVoxel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y) })     == LevelVoxel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y    ) }) == LevelVoxel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y    ) }) == LevelVoxel::LevelGenDirt) return 1;
 	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y + 1) }) == LevelVoxel::LevelGenDirt) return 1;
 	if (lvl->GetVoxelRaw({ x     + lvl->GetSize().x * (y + 1) }) == LevelVoxel::LevelGenDirt) return 1;
 	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y + 1) }) == LevelVoxel::LevelGenDirt) return 1;
@@ -177,33 +175,40 @@ static void expand_init(Level *lvl, PositionQueue& q) {
 		}
 }
 
-static int expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomGenerator random) {
-	Position temp;
-	int j, count = 0;
+
+struct ExpandResult {
+	int dirt_generated = 0;
+	int rocks_marked = 0;
+};
 	
+
+ExpandResult expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomGenerator random) {
+
 	//for (int i = 0; i < q.size() * 1000; ++i) {
 	//	if (i % 10000 == 1)
 	//		++count;
 	//}
 	//return count;
 	
-
+	ExpandResult result = {};
 	size_t total = q.size();
 	for(size_t i=0; i<total; i++) {
 		int xodds, yodds, odds;
 		
+		Position temp;
 		q.pop(temp);
 
-		xodds = ODDS * std::min(lvl->GetSize().x - temp.x, temp.x) / FILTER;
-		yodds = ODDS * std::min(lvl->GetSize().y - temp.y, temp.y) / FILTER;
-		odds  = std::min(std::min(xodds, yodds), ODDS);
+		/* Odds based on proximity to edge of level */
+		xodds = ToastParams::MaxDirtSpawnOdds * std::min(lvl->GetSize().x - temp.x, temp.x) / ToastParams::DirtSpawnProgression;
+		yodds = ToastParams::MaxDirtSpawnOdds * std::min(lvl->GetSize().y - temp.y, temp.y) / ToastParams::DirtSpawnProgression;
+		odds  = std::min(std::min(xodds, yodds), ToastParams::MaxDirtSpawnOdds);
 		
 		if(random.Bool(odds)) {
 			lvl->SetVoxelRaw(temp, LevelVoxel::LevelGenDirt);
-			count++;
+			++result.dirt_generated;
 			
 			/* Now, queue up any neighbors that qualify: */
-			for(j=0; j<9; j++) {
+			for(int j=0; j<9; j++) {
 				if(j==4) continue;
 				
 				int tx = temp.x + (j % 3) - 1;
@@ -211,19 +216,20 @@ static int expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomG
 				LevelVoxel* v = &lvl->VoxelRaw({ tx, ty });
 				if(*v == LevelVoxel::LevelGenRock) {
 				   *v  = LevelVoxel::LevelGenMark;
+				   ++result.rocks_marked;
 					q.push({ tx, ty });
 				}
 			}
 		} else
 			q.push(temp);
 	}
-	return count;
+	return result;
 }
 
 static void expand_process(Level* lvl, PositionQueue& q) {
 	auto measure_function = MeasureFunction<3>{ __FUNCTION__ };
 	/* Want to generate at least goal_generated */
-	const int goal_generated = lvl->GetSize().x * lvl->GetSize().y * FILLRATIO / 100;
+	const int goal_generated = ToastParams::TargetDirtAmount(lvl);
 	std::atomic<int> items_generated_global = 0;
 
 	/* Prepare worker pool */
@@ -266,7 +272,8 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 		Stopwatch perf_wait_time;
 
 		int curr_pass = 0;
-		int items_generated_thread = 0;
+		int dirt_generated = 0;
+		int rocks_marked = 0;
 		bool no_more_work = false;
 		while (!done && !no_more_work) {
 			{	/* Signal thread is entering work state */
@@ -281,12 +288,13 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 
 			/* Call the function doing actual work */
 			Stopwatch expand_time;
-			int added = expand_once(lvl, *qq, random);
-			if (!added) {
+			ExpandResult result = expand_once(lvl, *qq, random);
+			if (!result.dirt_generated) {
 				//no_more_work = true;  /* Do we want to quit early? */
 			}
-			items_generated_thread += added;
-			items_generated_global.fetch_add(added, std::memory_order_relaxed);
+			dirt_generated += result.dirt_generated;
+			rocks_marked += result.rocks_marked;
+			items_generated_global.fetch_add(result.dirt_generated, std::memory_order_relaxed);
 			expand_pure_time_ms.fetch_add(expand_time.GetElapsed().count(), std::memory_order_relaxed);
 
 			perf_wait_time.Start();
@@ -314,8 +322,8 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 		auto elapsed = perf_thread_time.GetElapsed();
 		auto waited = perf_wait_time.GetElapsed();
 
-		DebugTrace<5>("thread took: %lld.%03lldms (%lld.%03lldms wait time) to add %d items \r\n",
-			elapsed.count() / 1000, elapsed.count() % 1000, waited.count() / 1000, waited.count() % 1000, items_generated_thread);
+		DebugTrace<5>("thread took: %lld.%03lldms (%lld.%03lldms wait time) to add %d dirt and mark %d voxels \r\n",
+			elapsed.count() / 1000, elapsed.count() % 1000, waited.count() / 1000, waited.count() % 1000, dirt_generated, rocks_marked);
 	};
 
 	Stopwatch time_thread_create;
@@ -370,7 +378,7 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 
 static void expand_cleanup(Level *lvl) {
 	auto perf = MeasureFunction<3>{ __FUNCTION__ };
-	lvl->ForEachVoxel([](LevelVoxel& voxel) { voxel = (voxel == LevelVoxel::LevelGenDirt) ? LevelVoxel::LevelGenDirt : LevelVoxel::LevelGenRock; });
+	unmark_all(lvl);
 }
 
 static void randomly_expand(Level *lvl) {
@@ -393,13 +401,13 @@ static void randomly_expand(Level *lvl) {
 
 static int count_neighbors(Level* lvl, int x, int y) {
 	return (char)lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y - 1) }) +
-		(char)lvl->GetVoxelRaw({ x + lvl->GetSize().x * (y - 1) }) +
-		(char)lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y - 1) }) +
-		(char)lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y) }) +
-		(char)lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y) }) +
-		(char)lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y + 1) }) +
-		(char)lvl->GetVoxelRaw({ x + lvl->GetSize().x * (y + 1) }) +
-		(char)lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y + 1) });
+		   (char)lvl->GetVoxelRaw({ x     + lvl->GetSize().x * (y - 1) }) +
+		   (char)lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y - 1) }) +
+		   (char)lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y    ) }) +
+		   (char)lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y    ) }) +
+		   (char)lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y + 1) }) +
+		   (char)lvl->GetVoxelRaw({ x     + lvl->GetSize().x * (y + 1) }) +
+		   (char)lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y + 1) });
 }
 
 //static int count_neighbors(Level* lvl, int x, int y) {
@@ -414,8 +422,6 @@ static int count_neighbors(Level* lvl, int x, int y) {
 //}
 //
 	
-#define MIN2(a,b)   ((a<b) ? a : b)
-#define MIN3(a,b,c) ((a<b) ? a : (b<c) ? b : c)
 static int smooth_once(Level *lvl) {
 
 	/* Smooth surfaces. Require at least 3 neighbors to keep alive. Spawn new at 5 neighbors. */
@@ -443,7 +449,7 @@ static int smooth_once(Level *lvl) {
 
 	Stopwatch time_whole;
 	/* Parallelize the process using std::async and slicing jobs vertically by [y] */
-	int Tasks = tweak::parallelism_degree / 4;
+	int Tasks = std::max(1u, tweak::parallelism_degree / 4);
 	auto tasks = std::vector<std::future<int>>();
 	tasks.reserve(Tasks);
 	const int first = 1;
@@ -473,7 +479,8 @@ static void smooth_cavern(Level *lvl) {
 	auto perf = MeasureFunction<2>{ __FUNCTION__ };
 
 	set_outside(lvl, LevelVoxel::LevelGenDirt);
-	while(smooth_once(lvl));
+	auto steps_remain = ToastParams::SmoothingSteps;
+	while(smooth_once(lvl) && --steps_remain != 0);
 	set_outside(lvl, LevelVoxel::LevelGenRock);
 }
 

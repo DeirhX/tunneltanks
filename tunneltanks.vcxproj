@@ -297,7 +297,7 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=3;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_AMD64_;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=5;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_AMD64_;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DisableSpecificWarnings>5045;4514;4820;4706;4100</DisableSpecificWarnings>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
@@ -344,7 +344,7 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=3;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_X86_;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=5;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_X86_;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DisableSpecificWarnings>5045;4514;4820;4706;4100</DisableSpecificWarnings>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
@@ -389,7 +389,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=3;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_AMD64_;NDEBUG;CMAKE_INTDIR="Release";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=5;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_AMD64_;NDEBUG;CMAKE_INTDIR="Release";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DisableSpecificWarnings>5045;4514;4820;4706;4100</DisableSpecificWarnings>
@@ -441,7 +441,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=3;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_X86_;NDEBUG;CMAKE_INTDIR="Release";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=5;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_X86_;NDEBUG;CMAKE_INTDIR="Release";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DisableSpecificWarnings>5045;4514;4820;4706;4100</DisableSpecificWarnings>
@@ -492,7 +492,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=3;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_AMD64_;NDEBUG;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=5;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_AMD64_;NDEBUG;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>
       </DebugInformationFormat>
       <LanguageStandard>stdcpplatest</LanguageStandard>
@@ -540,7 +540,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=3;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_X86_;NDEBUG;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=5;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_X86_;NDEBUG;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>
       </DebugInformationFormat>
       <LanguageStandard>stdcpplatest</LanguageStandard>
@@ -588,7 +588,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=3;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_AMD64_;NDEBUG;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=5;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_AMD64_;NDEBUG;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DisableSpecificWarnings>5045;4514;4820;4706;4100</DisableSpecificWarnings>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
@@ -635,7 +635,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=3;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_X86_;NDEBUG;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=5;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_X86_;NDEBUG;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DisableSpecificWarnings>5045;4514;4820;4706;4100</DisableSpecificWarnings>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>

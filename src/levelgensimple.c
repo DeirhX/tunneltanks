@@ -103,13 +103,13 @@ static void add_rock_lines(Level *lvl, Side s) {
 
 static void add_spawns(Level *lvl) {
 	
-	lvl->SetSpawn(0, pt_rand(lvl->GetSize(), BORDER));
+	lvl->SetSpawn(0, generate_inside(lvl->GetSize(), BORDER));
 	
 	for(TankColor i=1; i<MAX_TANKS; i++) {
 		bool done = false;
 		while(!done) {
 			/* Try adding a new point: */
-			lvl->SetSpawn(i, pt_rand(lvl->GetSize(), BORDER));
+			lvl->SetSpawn(i, generate_inside(lvl->GetSize(), BORDER));
 			
 			TankColor j;
 			/* Make sure that point isn't too close to others: */

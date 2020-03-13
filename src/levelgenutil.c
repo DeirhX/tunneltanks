@@ -55,7 +55,7 @@ void rough_up(Level *lvl) {
 	});
 }
 
-Position pt_rand(Size size, int border) {
+Position generate_inside(Size size, int border) {
 	Position out;
 	out.x = Random.Int(border, size.x - border);
 	out.y = Random.Int(border, size.y - border);
