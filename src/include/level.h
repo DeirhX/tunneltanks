@@ -62,6 +62,8 @@ public:
 
 	int CountNeighborValues(Position pos);
 	int CountNeighbors(Position pos, LevelVoxel neighbor_value);
+   template <typename CountFunc>
+	int CountNeighbors(Position pos, CountFunc count_func);
 
 	// Level generate
 	void GenerateDirtAndRocks();
@@ -94,4 +96,17 @@ void Level::ForEachVoxel(VoxelFunc voxelFunc)
 		{
 			voxelFunc(pos, this->Voxel(pos));
 		}
+}
+
+template <typename CountFunc>
+int Level::CountNeighbors(Position pos, CountFunc count_func)
+{
+	return count_func(GetVoxelRaw({ pos.x - 1 + GetSize().x * (pos.y - 1) })) +
+		count_func(GetVoxelRaw({ pos.x + GetSize().x * (pos.y - 1) })) +
+		count_func(GetVoxelRaw({ pos.x + 1 + GetSize().x * (pos.y - 1) })) +
+		count_func(GetVoxelRaw({ pos.x - 1 + GetSize().x * (pos.y) })) +
+		count_func(GetVoxelRaw({ pos.x + 1 + GetSize().x * (pos.y) })) +
+		count_func(GetVoxelRaw({ pos.x - 1 + GetSize().x * (pos.y + 1) })) +
+		count_func(GetVoxelRaw({ pos.x + GetSize().x * (pos.y + 1) })) +
+		count_func(GetVoxelRaw({ pos.x + 1 + GetSize().x * (pos.y + 1) }));
 }

@@ -74,6 +74,8 @@ int Level::CountNeighbors(Position pos, LevelVoxel value)
 		   !!(value == GetVoxelRaw({ pos.x + 1 + GetSize().x * (pos.y + 1) }));
 }
 
+
+
 LevelVoxel Level::GetVoxel(Position pos) const
 {
 	if (!IsInBounds(pos))

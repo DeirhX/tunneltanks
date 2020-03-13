@@ -224,8 +224,8 @@ void Game::DecayPass()
 		{
 			if (vox == LevelVoxel::Blank)
 			{
-				int neighbors = this->level->CountNeighbors(pos, LevelVoxel::Rock);
-				if (neighbors > 2 && Random.Bool(1000 * neighbors)) {
+				int neighbors = this->level->CountNeighbors(pos, [](auto voxel) { return Voxels::IsDirt(voxel) ? 1 : 0; });
+				if (neighbors > 2 && Random.Bool(5 * neighbors)) {
 					vox = Random.Bool(500) ? LevelVoxel::DirtHigh : LevelVoxel::DirtLow;
 					this->level->CommitPixel(pos);
 					++holes_decayed;
