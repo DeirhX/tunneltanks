@@ -13,6 +13,7 @@
 
 #include <atomic>
 #include <future>
+#include "parallelism.h"
 
 namespace levelgen::toast {
 
@@ -421,7 +422,7 @@ static int count_neighbors(Level* lvl, int x, int y) {
 static int smooth_once(Level *lvl) {
 
 	/* Smooth surfaces. Require at least 3 neighbors to keep alive. Spawn new at 5 neighbors. */
-	auto smooth_step = [lvl](int from_y, int until_y) {
+	auto smooth_step = [lvl](int from_y, int until_y, ThreadLocal) {
 		Stopwatch time_step;
 		int count = 0;
 		Size size = lvl->GetSize();
@@ -444,26 +445,8 @@ static int smooth_once(Level *lvl) {
 	};
 
 	Stopwatch time_whole;
-	/* Parallelize the process using std::async and slicing jobs vertically by [y] */
-	int Tasks = std::max(1u, tweak::perf::parallelism_degree / 4);
-	auto tasks = std::vector<std::future<int>>();
-	tasks.reserve(Tasks);
-	const int first = 1;
-	const int last = lvl->GetSize().y - 2;
-	int curr = first;
-	for (int i = 0; i < Tasks; ++i) {
-		if (curr <= last) {
-			int until = curr + (last - first) / Tasks;
-			tasks.emplace_back(std::async(std::launch::async, smooth_step, curr, std::min(last, until)));
-			curr = until + 1;
-		}
-	}
-	/* Wait for everything done and sum the results */
-	int count = 0;
-	for (auto& task : tasks) {
-		count += task.get();
-	}
-
+	int count = parallel_for(smooth_step, 1, lvl->GetSize().y - 2, WorkerDivisor{4});
+	
 	time_whole.Stop();
 	DebugTrace<4>("  smooth_once total took %lld.%03lld ms \n",
 		time_whole.GetElapsed().count() / 1000, time_whole.GetElapsed().count() % 1000);

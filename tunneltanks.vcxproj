@@ -116,6 +116,7 @@
     <ClInclude Include="src\include\levelgenutil.h" />
     <ClInclude Include="src\include\level_view.h" />
     <ClInclude Include="src\include\memalloc.h" />
+    <ClInclude Include="src\include\parallelism.h" />
     <ClInclude Include="src\include\projectile.h" />
     <ClInclude Include="src\include\projectile_list.h" />
     <ClInclude Include="src\include\random.h" />

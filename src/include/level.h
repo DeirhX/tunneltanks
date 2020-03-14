@@ -6,6 +6,7 @@
 #include <memory>
 #include <array>
 #include <vector>
+#include "parallelism.h"
 
 enum class BaseCollision
 {
@@ -83,7 +84,7 @@ public:
 
 	int CountNeighborValues(Position pos);
 	int CountNeighbors(Position pos, LevelVoxel neighbor_value);
-   template <typename CountFunc>
+     template <typename CountFunc>
 	int CountNeighbors(Position pos, CountFunc count_func);
 
 	// Level generate
@@ -91,6 +92,8 @@ public:
 	void CreateBases();
 	 template <typename VoxelFunc>
 	void ForEachVoxel(VoxelFunc func);
+	 template <typename VoxelFunc>
+	void ForEachVoxelParallel(VoxelFunc func, WorkerCount worker_count = {});
 
 	Position GetSpawn(TankColor color) const;
 	void SetSpawn(TankColor color, Position pos);
@@ -117,6 +120,22 @@ void Level::ForEachVoxel(VoxelFunc voxelFunc)
 		{
 			voxelFunc(pos, this->Voxel(pos));
 		}
+}
+template <typename VoxelFunc> 
+void Level::ForEachVoxelParallel(VoxelFunc voxelFunc, WorkerCount worker_count)
+{
+	auto parallel_slice = [this, voxelFunc](int min, int max, ThreadLocal threadLocal)
+	{
+		Position pos;
+		for (pos.x = min; pos.x <= max; ++pos.x)
+			for (pos.y = 0; pos.y < this->GetSize().y; ++pos.y)
+			{
+				voxelFunc(pos, this->Voxel(pos), threadLocal);
+			}
+		return 0;
+	};
+
+	parallel_for(parallel_slice, 0, this->GetSize().x - 1);
 }
 
 template <typename CountFunc>

@@ -6,6 +6,7 @@ class RandomGenerator
 	bool is_seeded = false;
 	std::mt19937 gen;
 public:
+	RandomGenerator() { Seed(); }
 	void Seed();
 	void Seed(int seed);
 

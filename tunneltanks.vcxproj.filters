@@ -221,6 +221,9 @@
     <ClInclude Include="src\include\projectile_list.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\include\parallelism.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
