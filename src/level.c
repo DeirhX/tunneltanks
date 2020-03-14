@@ -1,7 +1,6 @@
 #include <cstdlib>
 
 #include <level.h>
-#include <memalloc.h>
 #include <random.h>
 #include <tweak.h>
 #include <types.h>
@@ -10,6 +9,7 @@
 
 #include "exceptions.h"
 #include <cassert>
+#include "colors.h"
 
 Level::Level(Size size, DrawBuffer* b)
 	: size(size), drawBuffer (b)

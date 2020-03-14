@@ -102,6 +102,18 @@
     <ClCompile Include="src\colors.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\scene.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\include\world.h">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\include\projectile_list.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\controllersdl.h">
@@ -201,6 +213,12 @@
       <Filter>gamelib</Filter>
     </ClInclude>
     <ClInclude Include="src\include\colors.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\scene.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\projectile_list.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

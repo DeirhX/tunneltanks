@@ -4,7 +4,6 @@
 #include <types.h>
 #include <memalloc.h>
 
-#include "sdldata.h"
 #include "require_sdl.h"
 
 

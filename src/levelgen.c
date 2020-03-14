@@ -1,6 +1,5 @@
 #include <cstdio>
 #include <cstring>
-#include <ctime>
 #include <chrono>
 #include <gamelib.h>
 #include <levelgen.h>

@@ -52,6 +52,8 @@
     <ClCompile Include="src\gamelib\SDL\logging.c" />
     <ClCompile Include="src\gamelib\SDL\sdldata.c" />
     <ClCompile Include="src\guisprites.c" />
+    <ClCompile Include="src\include\projectile_list.cpp" />
+    <ClCompile Include="src\include\world.h" />
     <ClCompile Include="src\level.c" />
     <ClCompile Include="src\levelgen.c" />
     <ClCompile Include="src\levelgenbraid.c" />
@@ -74,6 +76,7 @@
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsCpp</CompileAs>
     </ClCompile>
     <ClCompile Include="src\random.c" />
+    <ClCompile Include="src\scene.cpp" />
     <ClCompile Include="src\screen.c" />
     <ClCompile Include="src\tank.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
@@ -87,6 +90,7 @@
     </ClCompile>
     <ClCompile Include="src\tanklist.c" />
     <ClCompile Include="src\tanksprites.c" />
+    <ClCompile Include="src\world.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\exceptions.h" />
@@ -113,7 +117,9 @@
     <ClInclude Include="src\include\level_view.h" />
     <ClInclude Include="src\include\memalloc.h" />
     <ClInclude Include="src\include\projectile.h" />
+    <ClInclude Include="src\include\projectile_list.h" />
     <ClInclude Include="src\include\random.h" />
+    <ClInclude Include="src\include\scene.h" />
     <ClInclude Include="src\include\screen.h" />
     <ClInclude Include="src\include\tank.h" />
     <ClInclude Include="src\include\tanklist.h" />

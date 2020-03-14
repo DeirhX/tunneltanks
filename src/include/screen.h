@@ -1,6 +1,4 @@
 #pragma once
-struct Screen;
-
 #include <level.h>
 #include <types.h>
 #include <tank.h>
@@ -36,7 +34,7 @@ typedef struct GUIController {
 } GUIController;
 
 
-struct Screen {
+class Screen {
 
 	bool	 is_fullscreen;
 

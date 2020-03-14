@@ -2,7 +2,6 @@
 
 #include <controller.h>
 #include <tank.h>
-#include <memalloc.h>
 #include <random.h>
 #include <tweak.h>
 #include <level_view.h>

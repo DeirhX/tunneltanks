@@ -3,11 +3,10 @@
 /* For the controllers/AIs: */
 //#include <levelslice.h>
 #include <level.h>
-#include <screen.h>
 #include <drawbuffer.h>
-#include <projectile.h>
 #include <level_view.h>
 #include <controllersdl.h>
+#include "projectile_list.h"
 
 struct LevelView;
 
@@ -67,7 +66,7 @@ public:
     void AlterEnergy(int diff);
 	void AlterHealth(int diff);
 
-    void DoMove(struct TankList* tl);
+    void DoMove(class TankList* tl);
 	CollisionType GetCollision(int dir, Position pos, TankList* tl);
 	void TryBaseHeal();
 

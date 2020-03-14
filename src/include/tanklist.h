@@ -1,15 +1,11 @@
 #pragma once
-#include <vector>
-
-struct TankList;
-
-#include <iterators.h>
 #include <tank.h>
 #include <types.h>
-#include <tweak.h>
 #include <containers.h>
 
-struct TankList {
+class ProjectileList;
+
+class TankList {
 public:
 	ValueContainer<Tank> list;
 	Level* lvl;

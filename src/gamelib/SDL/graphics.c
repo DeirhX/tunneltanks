@@ -1,4 +1,3 @@
-#include <cstdio>
 #include <SDL.h>
 
 #include <gamelib.h>

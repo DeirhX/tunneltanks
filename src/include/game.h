@@ -2,7 +2,7 @@
 #include <types.h>
 #include <memory>
 #include "levelgen.h"
-
+#include "world.h"
 
 struct GameDataConfig {
 	LevelGenerator level_generator;
@@ -20,18 +20,16 @@ struct Game {
 	GameDataConfig config = {};
 
 	std::unique_ptr<class Level> level;
-	std::unique_ptr<struct TankList> tank_list;
 	std::unique_ptr<class DrawBuffer> draw_buffer;
-	std::unique_ptr<class ProjectileList> projectiles;
-	std::unique_ptr<struct Screen> screen;
-
+	std::unique_ptr<class Screen> screen;
+	World world;
 public:
 	Game(GameDataConfig config);
 	~Game();
 
 	bool AdvanceStep();
 private:
-	void DecayPass();
+	void RegrowPass();
 };
 
 

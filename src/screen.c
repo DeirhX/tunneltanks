@@ -1,16 +1,12 @@
-#include <cstdlib>
-
 #include <screen.h>
 #include <tweak.h>
-#include <memalloc.h>
 #include <random.h>
 #include <level.h>
 #include <tank.h>
 #include <types.h>
-#include <tanksprites.h>
 #include <drawbuffer.h>
 #include <gamelib.h>
-#include "exceptions.h"
+#include "colors.h"
 
 /* The constructor sets the video mode: */
 Screen::Screen(bool is_fullscreen)

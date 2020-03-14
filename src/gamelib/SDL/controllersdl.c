@@ -3,7 +3,6 @@
 
 #include <gamelib.h>
 #include <tank.h>
-#include <memalloc.h>
 #include <controllersdl.h>
 
 #include "require_sdl.h"

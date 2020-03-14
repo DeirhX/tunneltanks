@@ -1,5 +1,4 @@
 #include <drawbuffer.h>
-#include <memalloc.h>
 #include <memory>
 
 /* TODO: We're using color structures here because we started with Uint32 values

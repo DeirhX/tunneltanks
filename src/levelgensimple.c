@@ -1,4 +1,3 @@
-#include <cstdio>
 #include <cmath>
 
 #include <level.h>

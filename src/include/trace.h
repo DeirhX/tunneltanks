@@ -3,6 +3,7 @@
 #include <type_traits>
 #include <string_view>
 #include <gamelib.h>
+#include <cassert>
 
 using TraceLevel = int;
 

@@ -3,7 +3,6 @@
 #pragma once
 #include <queue>
 #include <deque>
-#include <assert.h>
 #include <trace.h>
 #include <vector>
 #include <boost/circular_buffer.hpp>

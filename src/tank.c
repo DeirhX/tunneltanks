@@ -1,8 +1,5 @@
-#include <cstdlib>
-
 #include <tank.h>
 #include <level.h>
-#include <memalloc.h>
 #include <screen.h>
 #include <tweak.h>
 #include <tanksprites.h>

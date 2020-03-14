@@ -8,7 +8,6 @@
 #include <level.h>
 #include <levelgen.h>
 #include <random.h>
-#include <drawbuffer.h>
 #include <projectile.h>
 #include <types.h>
 #include <gamelib.h>

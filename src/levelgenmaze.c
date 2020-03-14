@@ -1,5 +1,3 @@
-#include <cstdio>
-
 #include <level.h>
 #include <levelgenutil.h>
 #include <memalloc.h>

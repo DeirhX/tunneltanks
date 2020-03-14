@@ -1,4 +1,3 @@
-#include <cstdio>
 #include <cstdlib>
 #include <ctime>
 
@@ -12,11 +11,8 @@
 #include <trace.h>
 #include <containers.h>
 
-#include <deque>
 #include <atomic>
-#include <thread>
 #include <future>
-#include <queue>
 
 namespace levelgen::toast {
 

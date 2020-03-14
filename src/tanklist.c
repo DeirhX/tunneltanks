@@ -3,17 +3,15 @@
 #include <tanklist.h>
 #include <tank.h>
 #include <types.h>
-#include <memalloc.h>
 #include <level.h>
 #include <projectile.h>
 #include <tweak.h>
 #include <tanksprites.h>
-#include <vector>
-#include <cassert>
 #include <ranges>
 
 #include "exceptions.h"
 #include <algorithm>
+#include "projectile_list.h"
 
 TankList::TankList(Level *lvl, ProjectileList *pl): lvl(lvl), pl(pl)
 {

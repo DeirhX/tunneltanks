@@ -1,6 +1,5 @@
 #include <cstdio>
 #include <ctime>
-#include <cstdlib>
 
 #include <random.h>
 #include <gamelib.h>
