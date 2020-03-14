@@ -4,41 +4,68 @@
 #include <tank.h>
 #include <drawbuffer.h>
 
+#include "guisprites.h"
+
 
 typedef enum ScreenDrawMode {
 	SCREEN_DRAW_INVALID,
 	SCREEN_DRAW_LEVEL
 } ScreenDrawMode;
 
-typedef struct Window {
-	Rect  r;
-	class Tank* t;
-	int counter;
-	int showing_static;
-} Window;
+class GuiWidget
+{
+public:
+	virtual void Draw(class Screen* screen) = 0;
+};
 
-typedef struct StatusBar {
-	Rect  r;
-	class Tank* t;
-	int      decreases_to_left;
-} StatusBar;
+/* Will draw a window using the level's drawbuffer: */
+class Window : public GuiWidget
+{
+	Rect  rect;
+	class Tank* tank;
+	
+	int counter = 0;
+	int showing_static = 0;
+public:
+	Window(Rect rect, class Tank* tank) : rect(rect), tank(tank) {}
+	void Draw(class Screen* screen) override;
+private:
+	/* Will randomly draw static to a window, based on a tank's health.  */
+	void DrawStatic(class Screen* screen);
+};
 
-typedef struct Bitmap {
-	Rect     r;
-	char* data;
+/* Will draw two bars indicating the charge/health of a tank: */
+class StatusBar : public GuiWidget
+{
+	Rect  rect;
+	class Tank* tank;
+	bool decreases_to_left;
+public:
+	StatusBar(Rect rect, class Tank* tank, bool decrease_to_left) : rect(rect), tank(tank), decreases_to_left(decrease_to_left) {}
+	void Draw(class Screen* screen)override;
+};
+
+/* Will draw an arbitrary, static bitmap to screen*/
+struct BitmapRender : public GuiWidget
+{
+	Rect  rect;
+	Bitmap* data;
 	Color color;
-} Bitmap;
+public:
+	BitmapRender(Rect rect, Bitmap* bitmap_data, Color color) : rect(rect), data(bitmap_data), color(color) {}
+	void Draw(class Screen* screen)override;
+};
 
-typedef struct GUIController {
+struct GUIController
+{
 	Rect r;
-} GUIController;
+};
 
 
 class Screen {
 
-	bool	 is_fullscreen;
+	bool is_fullscreen;
 
-	/* Various variables for the current resolution: */
 	Size screen_size = {};
 	Offset screen_offset = {};
 	Size pixel_size = {};
@@ -46,14 +73,12 @@ class Screen {
 
 	std::vector<Window> windows;
 	std::vector<StatusBar> statuses;
-	std::vector<Bitmap> bitmaps;
+	std::vector<BitmapRender> bitmaps;
 
-	/* GUI Controller shit: */
-	int controller_count = 0;
 	GUIController controller;
-	/* Variables used for drawing: */
 	ScreenDrawMode mode = SCREEN_DRAW_INVALID;
 	DrawBuffer* drawBuffer = nullptr;
+
 public:
 	Screen(bool is_fullscreen);
 
@@ -64,10 +89,8 @@ public:
 
 	/* Set the current drawing mode: */
 	void SetLevelDrawMode(DrawBuffer* b);
-	/* Will randomly draw static to a window, based on a tank's health.  */
-	void DrawStatic(Window* w);
-	/* Will draw a window using the level's drawbuffer: */
-	void DrawWindow(Window* w);
+	/* Source contents of the screen */
+	DrawBuffer* GetDrawBuffer() { return drawBuffer; }
 
 	/* A few useful functions for external drawing: */
 	void DrawPixel(ScreenPosition pos, Color color);
@@ -76,14 +99,11 @@ public:
 	/*  Draw whatever it is now supposed to draw */
 	void DrawCurrentMode();
 
-	/* Will draw two bars indicating the charge/health of a tank: */
-	void DrawStatus(StatusBar* b);
-	void DrawBitmap(Bitmap* b);
 	void DrawLevel();
 public:
-	void AddWindow(Rect r, class Tank* t);
-	void AddStatus(Rect r, class Tank* t, int decreases_to_left);
-	void AddBitmap(Rect r, char* bitmap, Color color);
+	void AddWindow(Rect rect, class Tank* task);
+	void AddStatus(Rect r, class Tank* t, bool decreases_to_left);
+	void AddBitmap(Rect r, Bitmap* bitmap, Color color);
 	/* Call to remove all windows, statuses and bitmaps */
 	void ClearGuiElements();
 	

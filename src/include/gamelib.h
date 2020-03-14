@@ -63,6 +63,6 @@ void     gamelib_debug (const char *str, ...) ;
 void     gamelib_error (const char *str, ...) ;
 
 /* Gamelib needs to be able to tell the outside that it needs a control GUI: */
-Rect     gamelib_gui_get_size() ;
-void     gamelib_gui_draw(class Screen *s, Rect r) ;
+//Rect     gamelib_gui_get_size() ;
+//void     gamelib_gui_draw(class Screen *s, Rect r) ;
 

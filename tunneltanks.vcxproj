@@ -64,7 +64,6 @@
     <ClCompile Include="src\level_view.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\memalloc.c" />
-    <ClCompile Include="src\pch.cpp" />
     <ClCompile Include="src\projectile.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">CompileAsCpp</CompileAs>
@@ -128,7 +127,6 @@
     <ClInclude Include="src\include\trace.h" />
     <ClInclude Include="src\include\tweak.h" />
     <ClInclude Include="src\include\types.h" />
-    <ClInclude Include="src\pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="sdl\VisualC\SDLmain\SDLmain.vcxproj">

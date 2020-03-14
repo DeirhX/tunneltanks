@@ -35,7 +35,7 @@ void GameMode::AssumeAIControl(TankList *tl, Level *lvl, TankColor starting_id) 
 std::unique_ptr<SinglePlayerMode> SinglePlayerMode::Setup(Screen* screen, World* world)
 {
 	/* Account for the GUI Controller: */
-	Rect gui = gamelib_gui_get_size();
+	Rect gui = {}; // TODO: This was set to zero, I swear!
 	int gui_shift = gui.size.x + !!gui.size.x * 15; /* << Shift out of way of thumb... */
 
 	gamelib_debug("XYWH: %u %u %u %u", gui.pos.x, gui.pos.y, gui.size.x, gui.size.y);
@@ -50,8 +50,8 @@ std::unique_ptr<SinglePlayerMode> SinglePlayerMode::Setup(Screen* screen, World*
 		screen->AddController(Rect(3, GAME_HEIGHT - 5 - static_cast<int>(gui.size.y), gui.size.x, gui.size.y));
 
 	/* Add the GUI bitmaps: */
-	screen->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5), GUI_ENERGY, Palette.Get(Colors::StatusEnergy));
-	screen->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5), GUI_HEALTH, Palette.Get(Colors::StatusHealth));
+	screen->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5), &bitmaps::GuiEnergy, Palette.Get(Colors::StatusEnergy));
+	screen->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5), &bitmaps::GuiHealth, Palette.Get(Colors::StatusHealth));
 
 	/* Fill up the rest of the slots with Twitches: */
 	GameMode::AssumeAIControl(world->tank_list.get(), world->level.get(), 1);
@@ -82,8 +82,8 @@ std::unique_ptr<LocalTwoPlayerMode> LocalTwoPlayerMode::Setup(Screen* screen, Wo
 	screen->AddStatus(Rect(GAME_WIDTH / 2 + 2 + 2, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH / 2 - 5 - 3, tweak::screen::status_height), t, 1);
 
 	/* Add the GUI bitmaps: */
-	screen->AddBitmap(Rect(GAME_WIDTH / 2 - 2, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5), GUI_ENERGY, Palette.Get(Colors::StatusEnergy));
-	screen->AddBitmap(Rect(GAME_WIDTH / 2 - 2, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5), GUI_HEALTH, Palette.Get(Colors::StatusHealth));
+	screen->AddBitmap(Rect(GAME_WIDTH / 2 - 2, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5), &bitmaps::GuiEnergy, Palette.Get(Colors::StatusEnergy));
+	screen->AddBitmap(Rect(GAME_WIDTH / 2 - 2, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5), &bitmaps::GuiHealth, Palette.Get(Colors::StatusHealth));
 
 	/* Fill up the rest of the slots with Twitches: */
 	GameMode::AssumeAIControl(world->tank_list.get(), world->level.get(), 2);

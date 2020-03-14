@@ -9,6 +9,7 @@
 #include <tanklist.h>
 #include <level_view.h>
 #include <algorithm>
+#include "colors.h"
 
 
 Tank::Tank(TankColor color, Level *lvl, ProjectileList*pl, Position pos) :
