@@ -233,11 +233,10 @@ void Screen::DrawBitmap(Bitmap *b) {
 }
 
 void Screen::DrawLevel() {
-	int i;
-	
-	for(i=0; i < this->window_count; i++) DrawWindow(&this->window[i]);
-	for(i=0; i < this->status_count; i++) DrawStatus(&this->status[i]);
-	for(i=0; i < this->bitmap_count; i++) DrawBitmap(&this->bitmap[i]);
+
+	std::for_each(this->windows.begin(), this->windows.end(), [this](auto& item) { DrawWindow(&item); });
+	std::for_each(this->statuses.begin(), this->statuses.end(), [this](auto& item) { DrawStatus(&item); });
+	std::for_each(this->bitmaps.begin(), this->bitmaps.end(), [this](auto& item) { DrawBitmap(&item); });
 	if(this->controller_count)
 		gamelib_gui_draw(this, this->controller.r);
 }
@@ -330,21 +329,17 @@ void Screen::set_mode_map( Map *m) ;
 /* Window creation should only happen in Level-drawing mode: */
 void Screen::AddWindow( Rect r, Tank *t) {
 	if(this->mode != SCREEN_DRAW_LEVEL) return;
-	
-	if(this->window_count >= tweak::screen::max_windows) return;
-	this->window[ this->window_count++ ] = Window {r, t, 0, 0};
+	this->windows.emplace_back(Window{ r, t, 0, 0 });
 }
 
 /* We can add the health/energy status bars here: */
 void Screen::AddStatus(Rect r, Tank *t, int decreases_to_left) {
 	/* Verify that we're in the right mode, and that we have room: */
 	if(this->mode != SCREEN_DRAW_LEVEL) return;
-	if(this->status_count >= tweak::screen::max_status) return;
 
 	/* Make sure that this status bar isn't too small: */
 	if(r.size.x <= 2 || r.size.y <= 4) return;
-	
-	this->status[ this->status_count++ ] = StatusBar {r, t, decreases_to_left};
+	this->statuses.emplace_back(StatusBar{ r, t, decreases_to_left });
 }
 
 /* We tell the graphics system about GUI graphics here: 
@@ -355,10 +350,15 @@ void Screen::AddStatus(Rect r, Tank *t, int decreases_to_left) {
 void Screen::AddBitmap( Rect r, char *new_bitmap, Color color) {
 	/* Bitmaps are only for game mode: */
 	if(this->mode != SCREEN_DRAW_LEVEL) return;
-	if(this->bitmap_count >= tweak::screen::max_bitmaps) return;
 	if(!new_bitmap) return;
-	
-	this->bitmap[ this->bitmap_count++ ] = Bitmap{r, new_bitmap, color};
+	this->bitmaps.emplace_back(Bitmap{ r, new_bitmap, color });
+}
+
+void Screen::ClearGuiElements()
+{
+	this->bitmaps.clear();
+	this->windows.clear();
+	this->statuses.clear();
 }
 
 /* We don't check to see if gamelib needs the gui controller thing in this file.

@@ -23,7 +23,7 @@
  * This bit is used to initialize various GUIs:                               *
  *----------------------------------------------------------------------------*/
 
-static void twitch_fill(TankList *tl, Level *lvl, TankColor starting_id) {
+void GameMode::AssumeAIControl(TankList *tl, Level *lvl, TankColor starting_id) {
 	
 	for(TankColor i=starting_id; i<MAX_TANKS; i++) {
 		Tank *t = tl->AddTank(i, lvl->GetSpawn(i));
@@ -32,56 +32,75 @@ static void twitch_fill(TankList *tl, Level *lvl, TankColor starting_id) {
 }
 
 
-/* TODO: De-uglify this crap: */
-static void init_single_player(Screen *s, TankList *tl, Level *lvl) {
+std::unique_ptr<SinglePlayerMode> SinglePlayerMode::Setup(Screen* screen, World* world)
+{
 	/* Account for the GUI Controller: */
 	Rect gui = gamelib_gui_get_size();
 	int gui_shift = gui.size.x + !!gui.size.x * 15; /* << Shift out of way of thumb... */
-	
+
 	gamelib_debug("XYWH: %u %u %u %u", gui.pos.x, gui.pos.y, gui.size.x, gui.size.y);
-	
+
 	/* Ready the tank! */
-	Tank* t = tl->AddTank(0, lvl->GetSpawn(0));
+	Tank* t = world->tank_list->AddTank(0, world->level->GetSpawn(0));
 	gamelib_tank_attach(t, 0, 1);
-	
-	s->AddWindow(Rect{ Position{ 2, 2 }, Size {GAME_WIDTH - 4, GAME_HEIGHT - 6 - tweak::screen::status_height} }, t);
-	s->AddStatus(Rect(9 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH-12 - gui_shift, tweak::screen::status_height), t, 1);
-	if(gui_shift)
-		s->AddController( Rect(3, GAME_HEIGHT - 5 - static_cast<int>(gui.size.y), gui.size.x, gui.size.y));
-	
+
+	screen->AddWindow(Rect{ Position{ 2, 2 }, Size {GAME_WIDTH - 4, GAME_HEIGHT - 6 - tweak::screen::status_height} }, t);
+	screen->AddStatus(Rect(9 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH - 12 - gui_shift, tweak::screen::status_height), t, 1);
+	if (gui_shift)
+		screen->AddController(Rect(3, GAME_HEIGHT - 5 - static_cast<int>(gui.size.y), gui.size.x, gui.size.y));
+
 	/* Add the GUI bitmaps: */
-	s->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height    , 4, 5), GUI_ENERGY, Palette.Get(Colors::StatusEnergy));
-	s->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5), GUI_HEALTH, Palette.Get(Colors::StatusHealth));
-	
+	screen->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5), GUI_ENERGY, Palette.Get(Colors::StatusEnergy));
+	screen->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5), GUI_HEALTH, Palette.Get(Colors::StatusHealth));
+
 	/* Fill up the rest of the slots with Twitches: */
-	twitch_fill(tl, lvl, 1);
+	GameMode::AssumeAIControl(world->tank_list.get(), world->level.get(), 1);
+
+	return std::unique_ptr<SinglePlayerMode>{ new SinglePlayerMode(screen, world) }; // Can't make unique, private constructor
 }
 
-static void init_double_player(Screen *s, TankList *tl, Level *lvl) {
+void SinglePlayerMode::TearDown()
+{
+	this->screen->ClearGuiElements();
+	this->screen = nullptr;
+	this->world = nullptr;
+}
+
+std::unique_ptr<LocalTwoPlayerMode> LocalTwoPlayerMode::Setup(Screen* screen, World* world)
+{
 	/* Ready the tanks! */
-	Tank* t = tl->AddTank(0, lvl->GetSpawn(0));
+	Tank* t = world->tank_list->AddTank(0, world->level->GetSpawn(0));
 	gamelib_tank_attach(t, 0, 2);
-	s->AddWindow(Rect(2, 2, GAME_WIDTH/2-3, GAME_HEIGHT-6-tweak::screen::status_height), t);
-	s->AddStatus(Rect(3, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH/2-5-2, tweak::screen::status_height), t, 0);
-	
+	screen->AddWindow(Rect(2, 2, GAME_WIDTH / 2 - 3, GAME_HEIGHT - 6 - tweak::screen::status_height), t);
+	screen->AddStatus(Rect(3, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH / 2 - 5 - 2, tweak::screen::status_height), t, 0);
+
 	/* Load up two controllable tanks: */
-	t = tl->AddTank(1, lvl->GetSpawn(1));
-	
+	t = world->tank_list->AddTank(1, world->level->GetSpawn(1));
 	/*controller_twitch_attach(t);  << Attach a twitch to a camera tank, so we can see if they're getting smarter... */
 	gamelib_tank_attach(t, 1, 2);
-	s->AddWindow(Rect(GAME_WIDTH/2+1, 2, GAME_WIDTH/2-3, GAME_HEIGHT-6-tweak::screen::status_height), t);
-	s->AddStatus(Rect(GAME_WIDTH/2+2+2, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH/2-5-3, tweak::screen::status_height), t, 1);
+	screen->AddWindow(Rect(GAME_WIDTH / 2 + 1, 2, GAME_WIDTH / 2 - 3, GAME_HEIGHT - 6 - tweak::screen::status_height), t);
+	screen->AddStatus(Rect(GAME_WIDTH / 2 + 2 + 2, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH / 2 - 5 - 3, tweak::screen::status_height), t, 1);
 
 	/* Add the GUI bitmaps: */
-	s->AddBitmap(Rect(GAME_WIDTH/2-2, GAME_HEIGHT - 2 - tweak::screen::status_height    , 4, 5), GUI_ENERGY, Palette.Get(Colors::StatusEnergy));
-	s->AddBitmap(Rect(GAME_WIDTH/2-2, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5), GUI_HEALTH, Palette.Get(Colors::StatusHealth));
-	
+	screen->AddBitmap(Rect(GAME_WIDTH / 2 - 2, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5), GUI_ENERGY, Palette.Get(Colors::StatusEnergy));
+	screen->AddBitmap(Rect(GAME_WIDTH / 2 - 2, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5), GUI_HEALTH, Palette.Get(Colors::StatusHealth));
+
 	/* Fill up the rest of the slots with Twitches: */
-	twitch_fill(tl, lvl, 2);
+	GameMode::AssumeAIControl(world->tank_list.get(), world->level.get(), 2);
+
+	return std::unique_ptr<LocalTwoPlayerMode>{ new LocalTwoPlayerMode(screen, world) }; // Can't make unique, private constructor
 }
 
+void LocalTwoPlayerMode::TearDown()
+{
+	this->screen->ClearGuiElements();
+	this->screen = nullptr;
+	this->world = nullptr;
+}
+
+
 /* Create a default game structure: */
-Game::Game(GameDataConfig config) {
+Game::Game(GameConfig config) {
 	/* Copy in all the default values: */
 	this->config = config;
 	this->is_active = 0;
@@ -129,18 +148,19 @@ Game::Game(GameDataConfig config) {
 	this->draw_buffer->SetDefaultColor(Palette.Get(Colors::Rock));
 	level->CommitAll();
 	this->screen->SetLevelDrawMode(this->draw_buffer.get());
-	
+	world.level = std::move(level);
+
 	/* Set up the players/GUI: */
 	if (this->config.player_count > gamelib_get_max_players())
 		throw GameException("Tried to use more players than the platform can support.");
-	if     (this->config.player_count == 1) init_single_player(this->screen.get(), this->world.tank_list.get(), level.get());
-	else if(this->config.player_count == 2) init_double_player(this->screen.get(), this->world.tank_list.get(), level.get());
+	if     (this->config.player_count == 1) this->mode = SinglePlayerMode::Setup(this->screen.get(), &this->world);
+	else if(this->config.player_count == 2) this->mode = LocalTwoPlayerMode::Setup(this->screen.get(), &this->world);
 	else {
 		ERR_OUT("Don't know how to draw more than 2 players at once...");
 		exit(1);
 	}
 
-	world.level = std::move(level);
+	
 	
 	/* Copy all of our variables into the GameData struct: */
 	this->is_active = 1;
@@ -181,10 +201,12 @@ bool Game::AdvanceStep() {
 
 /* Done with a game structure: */
 Game::~Game() {
-	if(this->is_active) {
+	if(this->is_active) 
+	{
 		/* Debug if we need to: */
 		if(this->is_debug)
 		  world.level->DumpBitmap("debug_end.bmp");
+		this->mode->TearDown();
 	}
 }
 

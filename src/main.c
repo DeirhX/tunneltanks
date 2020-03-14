@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
 	
 	/* Let's get this ball rolling: */
 	gamelib_init();
-	auto config = GameDataConfig
+	auto config = GameConfig
 	{
 		.level_generator = GeneratorFromName(id),
 		.size = size,

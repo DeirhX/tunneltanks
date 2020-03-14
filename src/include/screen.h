@@ -44,17 +44,9 @@ class Screen {
 	Size pixel_size = {};
 	Size pixels_skip = {};
 
-	/* Window shit: */
-	int  window_count = 0;
-	Window    window[tweak::screen::max_windows];
-
-	/* Status bar shit: */
-	int  status_count = 0;
-	StatusBar status[tweak::screen::max_status];
-
-	/* Bitmap shit: */
-	int  bitmap_count = 0;
-	Bitmap    bitmap[tweak::screen::max_bitmaps];
+	std::vector<Window> windows;
+	std::vector<StatusBar> statuses;
+	std::vector<Bitmap> bitmaps;
 
 	/* GUI Controller shit: */
 	int controller_count = 0;
@@ -92,6 +84,9 @@ public:
 	void AddWindow(Rect r, class Tank* t);
 	void AddStatus(Rect r, class Tank* t, int decreases_to_left);
 	void AddBitmap(Rect r, char* bitmap, Color color);
+	/* Call to remove all windows, statuses and bitmaps */
+	void ClearGuiElements();
+	
 	void AddController(Rect r);
 
 	static void FillBackground();
