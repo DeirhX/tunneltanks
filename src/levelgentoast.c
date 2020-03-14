@@ -422,7 +422,7 @@ static int count_neighbors(Level* lvl, int x, int y) {
 static int smooth_once(Level *lvl) {
 
 	/* Smooth surfaces. Require at least 3 neighbors to keep alive. Spawn new at 5 neighbors. */
-	auto smooth_step = [lvl](int from_y, int until_y, ThreadLocal) {
+	auto smooth_step = [lvl](int from_y, int until_y, ThreadLocal* t) {
 		Stopwatch time_step;
 		int count = 0;
 		Size size = lvl->GetSize();

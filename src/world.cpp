@@ -32,12 +32,12 @@ void World::RegrowPass()
 	Stopwatch<> elapsed;
 	int holes_decayed = 0;
 	int dirt_grown = 0;
-	this->level->ForEachVoxel([this, &holes_decayed, &dirt_grown](Position pos, LevelVoxel& vox)
+	this->level->ForEachVoxelParallel([this, &holes_decayed, &dirt_grown](Position pos, LevelVoxel& vox, ThreadLocal* local)
 	{
 		if (vox == LevelVoxel::Blank)
 		{
 			int neighbors = this->level->CountNeighbors(pos, [](auto voxel) { return Voxels::IsDirt(voxel) ? 1 : 0; });
-			if (neighbors > 2 && Random.Int(0, 10000) < tweak::DirtRegrowSpeed * neighbors) {
+			if (neighbors > 2 && local->random.Int(0, 10000) < tweak::DirtRegrowSpeed * neighbors) {
 
 				vox = LevelVoxel::DirtGrow;
 				this->level->CommitPixel(pos);
@@ -47,7 +47,7 @@ void World::RegrowPass()
 		else if (vox == LevelVoxel::DirtGrow)
 		{
 			if (Random.Int(0, 1000) < tweak::DirtRecoverSpeed) {
-				vox = Random.Bool(500) ? LevelVoxel::DirtHigh : LevelVoxel::DirtLow;
+				vox = local->random.Bool(500) ? LevelVoxel::DirtHigh : LevelVoxel::DirtLow;
 				this->level->CommitPixel(pos);
 				++dirt_grown;
 			}

@@ -124,7 +124,7 @@ void Level::ForEachVoxel(VoxelFunc voxelFunc)
 template <typename VoxelFunc> 
 void Level::ForEachVoxelParallel(VoxelFunc voxelFunc, WorkerCount worker_count)
 {
-	auto parallel_slice = [this, voxelFunc](int min, int max, ThreadLocal threadLocal)
+	auto parallel_slice = [this, voxelFunc](int min, int max, ThreadLocal* threadLocal)
 	{
 		Position pos;
 		for (pos.x = min; pos.x <= max; ++pos.x)

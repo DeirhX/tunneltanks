@@ -31,22 +31,24 @@ struct ThreadLocal
 };
 
 template <typename Func>  /* void(int first, int last)  */
-auto parallel_for(Func func, int minimum, int maximum, WorkerCount worker_count = {}) -> std::invoke_result_t<Func, int, int, ThreadLocal>
+auto parallel_for(Func func, int minimum, int maximum, WorkerCount worker_count = {}) -> std::invoke_result_t<Func, int, int, ThreadLocal*>
 {
 	/* Parallelize the process using std::async and slicing jobs */
+	auto threadLocals = std::vector<ThreadLocal>();
 	auto tasks = std::vector<std::future<int>>();
+	threadLocals.resize(worker_count);
 	tasks.reserve(worker_count);
 
 	int curr = minimum;
 	for (int i = 0; i < worker_count; ++i) {
 		if (curr <= maximum) {
 			int until = curr + (maximum - minimum) / worker_count;
-			tasks.emplace_back(std::async(std::launch::async, func, curr, std::min(maximum, until), ThreadLocal{}));
+			tasks.emplace_back(std::async(std::launch::async, func, curr, std::min(maximum, until), &threadLocals[i]));
 			curr = until + 1;
 		}
 	}
 	/* Wait for everything done and sum the results */
-	auto result = decltype(func(minimum, maximum, ThreadLocal{})){}; //std::result_of<Func>::type{};
+	auto result = std::invoke_result_t<Func, int, int, ThreadLocal*>{}; //std::result_of<Func>::type{};
 	for (auto& task : tasks) {
 		result += task.get();
 	}
