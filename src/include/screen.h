@@ -48,15 +48,15 @@ struct Screen {
 
 	/* Window shit: */
 	int  window_count = 0;
-	Window    window[SCREEN_MAX_WINDOWS];
+	Window    window[tweak::screen::max_windows];
 
 	/* Status bar shit: */
 	int  status_count = 0;
-	StatusBar status[SCREEN_MAX_STATUS];
+	StatusBar status[tweak::screen::max_status];
 
 	/* Bitmap shit: */
 	int  bitmap_count = 0;
-	Bitmap    bitmap[SCREEN_MAX_BITMAPS];
+	Bitmap    bitmap[tweak::screen::max_bitmaps];
 
 	/* GUI Controller shit: */
 	int controller_count = 0;

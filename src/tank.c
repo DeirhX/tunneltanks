@@ -26,41 +26,34 @@ Tank::Tank(TankColor color, Level *lvl, ProjectileList*pl, Position pos) :
 	this->level = lvl;
     this->pl = pl;
 	 
-	this->bullet_timer = TANK_BULLET_DELAY;
-	this->bullets_left = TANK_BULLET_MAX;
-	this->is_shooting = 0;
+	this->bullet_timer = tweak::tank::BulletDelay;
+	this->bullets_left = tweak::tank::BulletMax;
+	this->is_shooting = false;
 	this->health = TANK_STARTING_SHIELD;
 	this->energy = TANK_STARTING_FUEL;
 }
 
 /* We don't use the Tank structure in this function, since we are checking the
  * tank's hypothetical position... ie: IF we were here, would we collide? */
-
-typedef enum CollisionType {
-	CT_NONE,    /* All's clear! */
-	CT_DIRT,    /* We hit dirt, but that's it. */
-	CT_COLLIDE  /* Hit a rock/base/tank/something we can't drive over. */
-} CollisionType;
-
-static CollisionType tank_collision(Level *lvl, int dir, int x, int y, TankList *tl, Tank& tank) {
-	int tx, ty;
-	CollisionType out = CT_NONE;
+CollisionType Tank::GetCollision(int dir, Position position, TankList *tl) {
+	Offset off;
+	CollisionType out = CollisionType::None;
 	
 	/* Level Collisions: */
-	for(ty=-3; ty<=3; ty++)
-		for(tx=-3; tx<=3; tx++) {
-			char c = TANK_SPRITE[dir][3+ty][3+tx];
+	for(off.y=-3; off.y<=3; off.y++)
+		for(off.x=-3; off.x<=3; off.x++) {
+			char c = TANK_SPRITE[dir][3+ off.y][3+ off.x];
 			if(!c) continue;
 			
-			LevelVoxel v = lvl->GetVoxel({ x + tx, y + ty });
+			LevelVoxel v = this->level->GetVoxel(position + off);
 			
-			if(Voxels::IsDirt(v)) out = CT_DIRT;
+			if(Voxels::IsDirt(v)) out = CollisionType::Dirt;
 			
-			if(Voxels::IsCollider(v)) return CT_COLLIDE;
+			if(Voxels::IsBlockingCollision(v)) return CollisionType::Blocked;
 		}
 	
 	/* Tank collisions: */
-	if(tl->CheckForCollision(tank, Position{x,y}, dir)) return CT_COLLIDE;
+	if(tl->CheckForCollision(*this, position, dir)) return CollisionType::Blocked;
 	return out;
 }
 
@@ -84,19 +77,15 @@ void Tank::DoMove(TankList *tl) {
 	
 	/* Calculate the direction: */
 	if(this->speed.x != 0 || this->speed.y != 0) {
-		CollisionType ct;
-		
 		int newdir = static_cast<int> ((this->speed.x+1) + (this->speed.y+1) * 3);
 		
-		ct = tank_collision(this->level, newdir, this->pos.x+this->speed.x, this->pos.y+this->speed.y, tl, *this);
+		CollisionType collision = this->GetCollision(newdir, this->pos + 1 * this->speed, tl);
 		/* Now, is there room to move forward in that direction? */
-		if( ct != CT_COLLIDE ) {
-			
+		if( collision != CollisionType::Blocked ) {
+
+			this->level->DigHole(this->pos + (1 * this->speed));
 			/* If so, then we can move: */
-			if( ct == CT_DIRT ) {
-				this->level->DigHole(this->pos + (1 * this->speed));
-			}
-			if (ct != CT_DIRT || this->is_shooting)
+			if (collision != CollisionType::Dirt || this->is_shooting)
             {
 				/* We will only move/rotate if we were able to get here without
 				 * digging, so we can avoid certain bizarre bugs: */
@@ -119,7 +108,7 @@ void Tank::DoMove(TankList *tl) {
 			this->AlterEnergy(TANK_SHOOT_COST);
 			
 			this->bullets_left --;
-			this->bullet_timer = TANK_BULLET_DELAY;
+			this->bullet_timer = tweak::tank::BulletDelay;
 		}
 	} else this->bullet_timer--;
 }
@@ -135,7 +124,7 @@ void Tank::TryBaseHeal()
 		this->AlterEnergy(TANK_ENEMY_CHARGE);
 }
 
-void Tank::Draw(DrawBuffer *b) const
+void Tank::Draw(DrawBuffer *drawBuff) const
 {
 	if(!this->health) return;
 	
@@ -143,18 +132,18 @@ void Tank::Draw(DrawBuffer *b) const
 		for(int x=0; x<7; x++) {
 			char val = TANK_SPRITE[this->direction][y][x];
 			if(val)
-				b->SetPixel(Position{ this->pos.x + x - 3, this->pos.y + y - 3 }, Palette.GetTank(this->color)[val - 1]);
+				drawBuff->SetPixel(Position{ this->pos.x + x - 3, this->pos.y + y - 3 }, Palette.GetTank(this->color)[val - 1]);
 		}
 }
 
-void Tank::Clear(DrawBuffer *b) const
+void Tank::Clear(DrawBuffer *drawBuff) const
 {
 	if(!this->health) return;
 	
 	for(int y=0; y<7; y++)
 		for(int x=0; x<7; x++)
 			if(TANK_SPRITE[this->direction][y][x])
-				b->SetPixel(Position{ this->pos.x + x - 3, this->pos.y + y - 3 }, Palette.Get(Colors::Blank));
+				level->CommitPixel(Position{ this->pos.x + x - 3, this->pos.y + y - 3 });
 }
 
 void Tank::ReturnBullet()

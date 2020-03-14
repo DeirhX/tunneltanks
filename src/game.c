@@ -65,14 +65,14 @@ static void init_single_player(Screen *s, TankList *tl, Level *lvl) {
 	t = tl->AddTank(0, lvl->GetSpawn(0));
 	gamelib_tank_attach(t, 0, 1);
 	
-	s->AddWindow(Rect{ Position{ 2, 2 }, Size {GAME_WIDTH - 4, GAME_HEIGHT - 6 - STATUS_HEIGHT} }, t);
-	s->AddStatus(Rect(9 + gui_shift, GAME_HEIGHT - 2 - STATUS_HEIGHT, GAME_WIDTH-12 - gui_shift, STATUS_HEIGHT), t, 1);
+	s->AddWindow(Rect{ Position{ 2, 2 }, Size {GAME_WIDTH - 4, GAME_HEIGHT - 6 - tweak::screen::status_height} }, t);
+	s->AddStatus(Rect(9 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH-12 - gui_shift, tweak::screen::status_height), t, 1);
 	if(gui_shift)
 		s->AddController( Rect(3, GAME_HEIGHT - 5 - static_cast<int>(gui.size.y), gui.size.x, gui.size.y));
 	
 	/* Add the GUI bitmaps: */
-	s->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - STATUS_HEIGHT    , 4, 5), GUI_ENERGY, Palette.Get(Colors::StatusEnergy));
-	s->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - STATUS_HEIGHT + 6, 4, 5), GUI_HEALTH, Palette.Get(Colors::StatusHealth));
+	s->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height    , 4, 5), GUI_ENERGY, Palette.Get(Colors::StatusEnergy));
+	s->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5), GUI_HEALTH, Palette.Get(Colors::StatusHealth));
 	
 	/* Fill up the rest of the slots with Twitches: */
 	twitch_fill(tl, lvl, 1);
@@ -84,20 +84,20 @@ static void init_double_player(Screen *s, TankList *tl, Level *lvl) {
 	/* Ready the tanks! */
 	t = tl->AddTank(0, lvl->GetSpawn(0));
 	gamelib_tank_attach(t, 0, 2);
-	s->AddWindow(Rect(2, 2, GAME_WIDTH/2-3, GAME_HEIGHT-6-STATUS_HEIGHT), t);
-	s->AddStatus(Rect(3, GAME_HEIGHT - 2 - STATUS_HEIGHT, GAME_WIDTH/2-5-2, STATUS_HEIGHT), t, 0);
+	s->AddWindow(Rect(2, 2, GAME_WIDTH/2-3, GAME_HEIGHT-6-tweak::screen::status_height), t);
+	s->AddStatus(Rect(3, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH/2-5-2, tweak::screen::status_height), t, 0);
 	
 	/* Load up two controllable tanks: */
 	t = tl->AddTank(1, lvl->GetSpawn(1));
 	
 	/*controller_twitch_attach(t);  << Attach a twitch to a camera tank, so we can see if they're getting smarter... */
 	gamelib_tank_attach(t, 1, 2);
-	s->AddWindow(Rect(GAME_WIDTH/2+1, 2, GAME_WIDTH/2-3, GAME_HEIGHT-6-STATUS_HEIGHT), t);
-	s->AddStatus(Rect(GAME_WIDTH/2+2+2, GAME_HEIGHT - 2 - STATUS_HEIGHT, GAME_WIDTH/2-5-3, STATUS_HEIGHT), t, 1);
+	s->AddWindow(Rect(GAME_WIDTH/2+1, 2, GAME_WIDTH/2-3, GAME_HEIGHT-6-tweak::screen::status_height), t);
+	s->AddStatus(Rect(GAME_WIDTH/2+2+2, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH/2-5-3, tweak::screen::status_height), t, 1);
 
 	/* Add the GUI bitmaps: */
-	s->AddBitmap(Rect(GAME_WIDTH/2-2, GAME_HEIGHT - 2 - STATUS_HEIGHT    , 4, 5), GUI_ENERGY, Palette.Get(Colors::StatusEnergy));
-	s->AddBitmap(Rect(GAME_WIDTH/2-2, GAME_HEIGHT - 2 - STATUS_HEIGHT + 6, 4, 5), GUI_HEALTH, Palette.Get(Colors::StatusHealth));
+	s->AddBitmap(Rect(GAME_WIDTH/2-2, GAME_HEIGHT - 2 - tweak::screen::status_height    , 4, 5), GUI_ENERGY, Palette.Get(Colors::StatusEnergy));
+	s->AddBitmap(Rect(GAME_WIDTH/2-2, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5), GUI_HEALTH, Palette.Get(Colors::StatusHealth));
 	
 	/* Fill up the rest of the slots with Twitches: */
 	twitch_fill(tl, lvl, 2);
@@ -198,7 +198,7 @@ bool Game::AdvanceStep() {
 
 	/* Clear everything: */
 	this->tank_list->for_each([=](Tank* t) {t->Clear(this->draw_buffer.get()); });
-	this->projectiles->Erase(this->draw_buffer.get());
+	this->projectiles->Erase(this->draw_buffer.get(), this->level.get());
 
 	/* Charge a small bit of energy for life: */
 	this->tank_list->for_each([=](Tank* t) {t->AlterEnergy(TANK_IDLE_COST); });

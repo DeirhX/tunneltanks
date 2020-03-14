@@ -16,7 +16,8 @@ enum class Colors
 	StatusBackground,
 	StatusEnergy,
 	StatusHealth,
-	Decal,
+	DecalHigh,
+	DecalLow,
 	Size,
 };
 

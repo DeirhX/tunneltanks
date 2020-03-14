@@ -16,7 +16,7 @@
 Screen::Screen(bool is_fullscreen)
 	: is_fullscreen(is_fullscreen)
 {
-	this->Resize({ SCREEN_WIDTH, SCREEN_HEIGHT });
+	this->Resize({ tweak::screen::size.x, tweak::screen::size.y });
 }
 
 
@@ -84,7 +84,7 @@ void Screen::DrawStatic(Window *w) {
 	if(!w->counter) {
 		int intensity = 1000 * energy / STATIC_THRESHOLD;
 		w->showing_static = !Random.Bool(intensity);
-		w->counter = Random.Int(GAME_FPS/16, GAME_FPS/8) * w->showing_static ? 1u : 4u;
+		w->counter = Random.Int(tweak::perf::target_fps/16, tweak::perf::target_fps/8) * w->showing_static ? 1u : 4u;
 
 	} else w->counter--;
 	
@@ -162,24 +162,24 @@ void Screen::DrawStatus(StatusBar *b) {
 	/* How many pixels are filled in? */
 	int energy_filled = b->t->GetEnergy();
     int health_filled = b->t->GetHealth();
-    int half_energy_pixel = TANK_STARTING_FUEL/((b->r.size.x - STATUS_BORDER*2)*2);
+    int half_energy_pixel = TANK_STARTING_FUEL/((b->r.size.x - tweak::screen::status_border*2)*2);
 	
 	energy_filled += half_energy_pixel;
 	
-	energy_filled *= (b->r.size.x - STATUS_BORDER*2);
+	energy_filled *= (b->r.size.x - tweak::screen::status_border*2);
 	energy_filled /= TANK_STARTING_FUEL;
-	health_filled *= (b->r.size.x - STATUS_BORDER*2);
+	health_filled *= (b->r.size.x - tweak::screen::status_border*2);
 	health_filled /= TANK_STARTING_SHIELD;
 
 	/* If we are decreasing to the right, we need to invert those values: */
 	if(!b->decreases_to_left) {
-		energy_filled = b->r.size.x - STATUS_BORDER - energy_filled;
-		health_filled = b->r.size.x - STATUS_BORDER - health_filled;
+		energy_filled = b->r.size.x - tweak::screen::status_border - energy_filled;
+		health_filled = b->r.size.x - tweak::screen::status_border - health_filled;
 		
-	/* Else, we still need to shift it to the right by STATUS_BORDER: */
+	/* Else, we still need to shift it to the right by tweak::screen::status_border: */
 	} else {
-		energy_filled += STATUS_BORDER;
-		health_filled += STATUS_BORDER;
+		energy_filled += tweak::screen::status_border;
+		health_filled += tweak::screen::status_border;
 	}
 	
 	/* Ok, lets draw this thing: */
@@ -192,13 +192,13 @@ void Screen::DrawStatus(StatusBar *b) {
 				continue;
 
 			/* Outer border draws background: */
-			else if (y < STATUS_BORDER || y >= b->r.size.y - STATUS_BORDER ||
-				x < STATUS_BORDER || x >= b->r.size.x - STATUS_BORDER)
+			else if (y < tweak::screen::status_border || y >= b->r.size.y - tweak::screen::status_border ||
+				x < tweak::screen::status_border || x >= b->r.size.x - tweak::screen::status_border)
 				c = Palette.Get(Colors::StatusBackground);
 
 			/* We round the corners here a little bit too: */
-			else if ((x == STATUS_BORDER || x == b->r.size.x - STATUS_BORDER - 1) &&
-				(y == STATUS_BORDER || y == b->r.size.y - STATUS_BORDER - 1))
+			else if ((x == tweak::screen::status_border || x == b->r.size.x - tweak::screen::status_border - 1) &&
+				(y == tweak::screen::status_border || y == b->r.size.y - tweak::screen::status_border - 1))
 				c = Palette.Get(Colors::StatusBackground);
 
 			/* Middle seperator draws as backround, as well: */
@@ -263,7 +263,7 @@ void Screen::SetFullscreen(bool new_fullscreen) {
 	this->is_fullscreen = new_fullscreen;
 	
 	/* Resize the screen to include the new fullscreen mode: */
-	if (!is_fullscreen) this->Resize(Size{ SCREEN_WIDTH, SCREEN_HEIGHT });
+	if (!is_fullscreen) this->Resize(Size{ tweak::screen::size.x, tweak::screen::size.y });
 	else                this->Resize(this->screen_size);
 }
 
@@ -335,7 +335,7 @@ void Screen::set_mode_map( Map *m) ;
 void Screen::AddWindow( Rect r, Tank *t) {
 	if(this->mode != SCREEN_DRAW_LEVEL) return;
 	
-	if(this->window_count >= SCREEN_MAX_WINDOWS) return;
+	if(this->window_count >= tweak::screen::max_windows) return;
 	this->window[ this->window_count++ ] = Window {r, t, 0, 0};
 }
 
@@ -343,7 +343,7 @@ void Screen::AddWindow( Rect r, Tank *t) {
 void Screen::AddStatus(Rect r, Tank *t, int decreases_to_left) {
 	/* Verify that we're in the right mode, and that we have room: */
 	if(this->mode != SCREEN_DRAW_LEVEL) return;
-	if(this->status_count >= SCREEN_MAX_STATUS) return;
+	if(this->status_count >= tweak::screen::max_status) return;
 
 	/* Make sure that this status bar isn't too small: */
 	if(r.size.x <= 2 || r.size.y <= 4) return;
@@ -359,7 +359,7 @@ void Screen::AddStatus(Rect r, Tank *t, int decreases_to_left) {
 void Screen::AddBitmap( Rect r, char *new_bitmap, Color color) {
 	/* Bitmaps are only for game mode: */
 	if(this->mode != SCREEN_DRAW_LEVEL) return;
-	if(this->bitmap_count >= SCREEN_MAX_BITMAPS) return;
+	if(this->bitmap_count >= tweak::screen::max_bitmaps) return;
 	if(!new_bitmap) return;
 	
 	this->bitmap[ this->bitmap_count++ ] = Bitmap{r, new_bitmap, color};

@@ -150,12 +150,12 @@ void Level::SetSpawn(TankColor color, Position pos)
 
 bool Level::DigHole(Position pos)
 {
-	bool did_dig = false;
+	bool digged = false;
 	
 	for(int ty = pos.y - 3; ty<= pos.y+3; ty++)
 		for(int tx = pos.x - 3; tx<= pos.x+3; tx++) {
 			/* Don't go out-of-bounds: */
-			if (!Voxels::IsDirt(GetVoxel({ tx, ty })))
+			if (!Voxels::IsDiggable(GetVoxel({ tx, ty })))
 				continue;
 			
 			/* Don't take out the corners: */
@@ -163,10 +163,10 @@ bool Level::DigHole(Position pos)
 				continue;
 			
 			SetVoxel({ tx, ty }, LevelVoxel::Blank);
-			did_dig = true;
+			digged = true;
 		}
 	
-	return did_dig;
+	return digged;
 }
 
 void Level::CommitAll() const
@@ -212,7 +212,8 @@ Color Level::GetVoxelColor(LevelVoxel voxel)
 	else if (voxel == LevelVoxel::DirtLow) return Palette.Get(Colors::DirtLow);
 	else if (voxel == LevelVoxel::DirtGrow)return Palette.Get(Colors::DirtGrow);
 	else if (voxel == LevelVoxel::Rock)    return Palette.Get(Colors::Rock);
-	else if (voxel == LevelVoxel::Decal)   return Palette.Get(Colors::Decal);
+	else if (voxel == LevelVoxel::DecalLow)   return Palette.Get(Colors::DecalLow);
+	else if (voxel == LevelVoxel::DecalHigh)   return Palette.Get(Colors::DecalHigh);
 	else if (voxel == LevelVoxel::Blank)   return Palette.Get(Colors::Blank);
 	else if (Voxels::IsBase(voxel))
 		return Palette.GetTank(static_cast<char>(voxel) - static_cast<char>(LevelVoxel::BaseMin))[0];

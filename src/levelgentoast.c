@@ -233,7 +233,7 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 	std::atomic<int> items_generated_global = 0;
 
 	/* Prepare worker pool */
-	const int worker_count = tweak::parallelism_degree;
+	const int worker_count = tweak::perf::parallelism_degree;
 	auto workerQueues = std::vector<circular_buffer_adaptor<Position>>(); 	/* TODO: circular buffer can overflow */
 	for (int i = 0; i < worker_count; ++i) {
 		workerQueues.emplace_back(50000 / worker_count /* Queue constructor */ );
@@ -449,7 +449,7 @@ static int smooth_once(Level *lvl) {
 
 	Stopwatch time_whole;
 	/* Parallelize the process using std::async and slicing jobs vertically by [y] */
-	int Tasks = std::max(1u, tweak::parallelism_degree / 4);
+	int Tasks = std::max(1u, tweak::perf::parallelism_degree / 4);
 	auto tasks = std::vector<std::future<int>>();
 	tasks.reserve(Tasks);
 	const int first = 1;

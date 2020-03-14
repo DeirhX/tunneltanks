@@ -3,30 +3,38 @@
 #include <thread>
 #include <algorithm>
 #include <types.h>
+#include <chrono>
 
 namespace tweak {
 /*
  * Most of the game engine's arbitrary limits are stored in here:
  */
+	namespace perf {
+		constexpr int parallelism_percent = 100;
+		inline unsigned int parallelism_degree = std::max(1u, std::thread::hardware_concurrency() * parallelism_percent / 100);
 
-    constexpr int parallelism_divisor = 1;
-    constexpr int parallelism_multiplier = 1;
-    inline unsigned int parallelism_degree = std::max(1u, std::thread::hardware_concurrency() * parallelism_multiplier / parallelism_divisor);
+		/* The desired speed in frames per second: */
+		constexpr int target_fps = 24;
+		constexpr std::chrono::milliseconds advance_step{ 1000 / target_fps };
+
+	}
 
     constexpr int DirtRecoverSpeed = 5; /* Average delay before growing finishes and new dirt is formed. More is faster. */
     constexpr int DirtRegrowSpeed = 10; /* Average delay before it starts growing back. More is faster.*/
-	
 
-/* The default size of the window: */
-#define SCREEN_WIDTH                   640
-#define SCREEN_HEIGHT                  400
-#define SCREEN_MAX_WINDOWS             4
-#define SCREEN_MAX_STATUS              4
-#define SCREEN_MAX_BITMAPS             4
+	namespace screen
+	{
+		/* The default size of the window: */
+		constexpr Size size = { 640, 400 };
+		constexpr int max_windows = 4;
+		constexpr int max_status = 4;
+		constexpr int max_bitmaps = 4;
 
-/* Various attributes of the status bar: */
-#define STATUS_HEIGHT                  11
-#define STATUS_BORDER                  1
+		/* Various attributes of the status bar: */
+		constexpr int status_height = 11;
+		constexpr int status_border = 1;
+	}
+
 
 /* Window title / version string: */
 #define WINDOW_TITLE                   "TunnelTanks"
@@ -37,39 +45,38 @@ namespace tweak {
 #define GAME_HEIGHT                    100
 constexpr Size GameSize = { GAME_WIDTH, GAME_HEIGHT };
 
-/* The desired speed in frames per second: */
-#define GAME_FPS                       24
-#define GAME_FPS_WAIT                  ((int)(1000/GAME_FPS))
 
 /* The minimum distance between two tanks in the world. If this is set too high,
  * then the level generator may start throwing exceptions: */
 #define MIN_SPAWN_DIST                 150
 
-/* The number of frames to wait in between shots: */
-#define TANK_BULLET_DELAY              3
+namespace tank {
+	    /* The number of frames to wait in between shots: */
+	constexpr int BulletDelay = 3;
 
-/* The maximum number of bullets allowed from a given tank: */
-#define TANK_BULLET_MAX                6
+	/* The maximum number of bullets allowed from a given tank: */
+	constexpr int BulletMax = 6;
 
-/* The speed in pixels/frame of bullets: */
-#define TANK_BULLET_SPEED              3
+	/* The speed in pixels/frame of bullets: */
+	constexpr int BulletSpeed = 3;
 
-/* The maximum number of tanks: */
-#define MAX_TANKS                      8
+	/* The maximum number of tanks: */
+	#define MAX_TANKS                      8
 
-/* Various constants for energy calculation: */
-#define TANK_STARTING_FUEL             24000
-#define TANK_SHOOT_COST                -160
-#define TANK_MOVE_COST                 -8
-#define TANK_IDLE_COST                 -3
-#define TANK_HOME_CHARGE               120
-#define TANK_ENEMY_CHARGE              45
+	/* Various constants for energy calculation: */
+	#define TANK_STARTING_FUEL             24000
+	#define TANK_SHOOT_COST                -160
+	#define TANK_MOVE_COST                 -8
+	#define TANK_IDLE_COST                 -3
+	#define TANK_HOME_CHARGE               120
+	#define TANK_ENEMY_CHARGE              45
 
-/* Various constants for health calculation: */
-#define TANK_STARTING_SHIELD           1000
-#define TANK_SHOT_DAMAGE               -160
-#define TANK_HOME_HEAL                 3
+	/* Various constants for health calculation: */
+	#define TANK_STARTING_SHIELD           1000
+	#define TANK_SHOT_DAMAGE               -160
+	#define TANK_HOME_HEAL                 3
 
+}
 /* Constants for drawing static: (The bottom 3 constants are out of 1000) */
 #define STATIC_THRESHOLD               (TANK_STARTING_FUEL/5)
 #define STATIC_TRANSPARENCY            200

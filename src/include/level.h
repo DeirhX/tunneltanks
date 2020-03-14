@@ -20,7 +20,8 @@ enum class LevelVoxel : char
 	DirtLow = 'd',
 	DirtGrow = 'g',
 	Rock = 'r',
-	Decal = '.',
+	DecalHigh = '.',
+	DecalLow = ',',
 	BaseMin = '0', // goes up to '7' for various tank colors
 	BaseMax = '7',
 
@@ -32,7 +33,10 @@ class Voxels
 {
 public:
 	static bool IsDirt(LevelVoxel voxel) { return voxel == LevelVoxel::DirtHigh || voxel == LevelVoxel::DirtLow; }
-	static bool IsCollider(LevelVoxel voxel) { return voxel == LevelVoxel::Rock || (voxel >= LevelVoxel::BaseMin && voxel <= LevelVoxel::BaseMax); }
+	static bool IsDiggable(LevelVoxel voxel) { return voxel == LevelVoxel::DirtHigh || voxel == LevelVoxel::DirtLow || voxel == LevelVoxel::DirtGrow; }
+	static bool IsSoftCollision(LevelVoxel voxel) { return IsDirt(voxel); }
+	static bool IsBlockingCollision(LevelVoxel voxel) { return voxel == LevelVoxel::Rock || (voxel >= LevelVoxel::BaseMin && voxel <= LevelVoxel::BaseMax); }
+	static bool IsAnyCollision(LevelVoxel voxel) { return IsSoftCollision(voxel) || IsBlockingCollision(voxel); }
 	static bool IsBase(LevelVoxel voxel) { return (voxel >= LevelVoxel::BaseMin && voxel <= LevelVoxel::BaseMax); }
 };
 

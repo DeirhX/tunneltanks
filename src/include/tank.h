@@ -12,11 +12,17 @@
 struct LevelView;
 
 /* Put inside a structure, so we are protected from casual AI cheating: */
-typedef struct PublicTankInfo {
+struct PublicTankInfo {
 	int health, energy;
 	int x, y; /* relative from home base */
 	LevelView level_view;
-} PublicTankInfo;
+};
+
+enum class CollisionType {
+	None,    /* All's clear! */
+	Dirt,    /* We hit dirt, but that's it. */
+	Blocked  /* Hit a rock/base/tank/something we can't drive over. */
+};
 
 class Tank
 {
@@ -62,10 +68,11 @@ public:
 	void AlterHealth(int diff);
 
     void DoMove(struct TankList* tl);
+	CollisionType GetCollision(int dir, Position pos, TankList* tl);
 	void TryBaseHeal();
 
-	void Clear(DrawBuffer* b) const;
-	void Draw(DrawBuffer* b) const;
+	void Clear(DrawBuffer* drawBuff) const;
+	void Draw(DrawBuffer* drawBuff) const;
 
 	void ReturnBullet();
 	void TriggerExplosion() const;

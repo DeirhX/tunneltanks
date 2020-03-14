@@ -40,8 +40,8 @@ Projectile Projectile::CreateBullet(Tank* t)
 	return Projectile {
 	    t->GetPosition(),
 	    t->GetPosition(),
-	    speed,
-	    TANK_BULLET_SPEED, ProjectileType::Bullet, t->level, t };
+	    speed, tweak::tank::BulletSpeed,
+		ProjectileType::Bullet, t->level, t };
 }
 
 Projectile& ProjectileList::Add(Projectile projectile)
@@ -78,13 +78,13 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 
 			/* Make sure we didn't hit a level detail: */
 			LevelVoxel c = level->GetVoxel( pos);
-			if (Voxels::IsCollider(c)) {
+			if (Voxels::IsBlockingCollision(c)) {
 				Remove(p);
 				continue;
 			}
 
 			/* Effects blank everything out in their paths: */
-			level->SetVoxel(pos, LevelVoxel::Blank);
+			level->SetVoxel(pos, Random.Bool(500) ? LevelVoxel::DecalHigh : LevelVoxel::DecalLow);
 
 		}
 		else {
@@ -93,21 +93,18 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 			/* Bullet: */
 
 			for (i = 0; i < p.life; i++) {
-				Tank* t;
-				int clr;
-
 				p.pos_old.x = p.pos.x;     p.pos_old.y = p.pos.y;
 				p.pos.x += p.step.x;		 p.pos.y += p.step.y;
 
 				/* Did we hit another tank? */
-				clr = p.tank->GetColor();
-				t = tankList->GetTankAtPoint(p.pos.x, p.pos.y, clr);
-				if (t) {
+				int hitTankColor = p.tank->GetColor();
+				Tank* hitTank = tankList->GetTankAtPoint(p.pos.x, p.pos.y, hitTankColor);
+				if (hitTank) {
 					/* If we have an associated tank, return the shot: */
 					p.tank->ReturnBullet();
 
 					/* Hurt the tank we hit: */
-					t->AlterHealth(TANK_SHOT_DAMAGE);
+					hitTank->AlterHealth(TANK_SHOT_DAMAGE);
 
 					/* Add all of the effect particles: */
 
@@ -127,7 +124,7 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 
 				/* Else, did we hit something in the level? */
 				LevelVoxel c = level->GetVoxel(p.pos);
-				if (c != LevelVoxel::Blank) {
+				if (Voxels::IsAnyCollision(c)) {
 					/* If we have an associated tank, return the shot: */
 					p.tank->ReturnBullet();
 
@@ -153,15 +150,15 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 	Shrink();
 }
 
-void ProjectileList::Erase(DrawBuffer* drawBuffer)
+void ProjectileList::Erase(DrawBuffer* drawBuffer, Level* level)
 {
 	for (Projectile& p : container)
 	{
 		if (p.type == ProjectileType::Explosion)
-			drawBuffer->SetPixel(Position{p.pos.x / 16, p.pos.y / 16 }, Palette.Get(Colors::Decal));
+			level->CommitPixel(Position{p.pos.x / 16, p.pos.y / 16 });
 		else {
-			drawBuffer->SetPixel(Position{p.pos.x, p.pos.y}, Palette.Get(Colors::Blank));
-			drawBuffer->SetPixel(Position{p.pos_old.x, p.pos_old.y}, Palette.Get(Colors::Blank));
+			level->CommitPixel(Position{p.pos.x, p.pos.y});
+			level->CommitPixel(Position{p.pos_old.x, p.pos_old.y});
 		}
 	}
 }
