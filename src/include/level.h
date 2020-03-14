@@ -5,6 +5,7 @@
 #include "tweak.h"
 #include <memory>
 #include <array>
+#include <vector>
 
 enum class BaseCollision
 {
@@ -41,12 +42,26 @@ public:
 };
 
 
+class LevelData
+{
+	using Container = std::vector<LevelVoxel>;
+public:
+	Container array;
+	LevelVoxel& operator[](int i);
+	const LevelVoxel& operator[](int i) const;
+
+	Container::iterator begin() { return array.begin(); }
+	Container::iterator end() { return array.end(); }
+	Container::const_iterator cbegin() const { return array.cbegin(); }
+	Container::const_iterator cend() const { return array.cend(); }
+};
+
 class Level
 {
 public:
 	
 private:
-	std::unique_ptr<LevelVoxel> array;
+	LevelData data;
 	Size size;
 	DrawBuffer* drawBuffer;
 	std::array<Position, MAX_TANKS> spawn;

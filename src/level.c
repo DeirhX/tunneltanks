@@ -11,43 +11,54 @@
 #include <cassert>
 #include "colors.h"
 
+LevelVoxel& LevelData::operator[](int i)
+{
+	return this->array[i];
+}
+
+const LevelVoxel& LevelData::operator[](int i) const
+{
+	return this->array[i];
+}
+
 Level::Level(Size size, DrawBuffer* b)
 	: size(size), drawBuffer (b)
 {
-	this->array.reset(new LevelVoxel[size.x * size.y]);
-	for (int i = 0; i < size.x * size.y; ++i)
-		this->array.get()[i] = LevelVoxel::LevelGenRock;
+	this->data.array.resize(size.x * size.y);
+	std::fill(this->data.array.begin(), this->data.array.end(), LevelVoxel::LevelGenRock);
+	//for (int i = 0; i < size.x * size.y; ++i)
+	//	this->data[i] = LevelVoxel::LevelGenRock;
 }
 
 void Level::SetVoxel(Position pos, LevelVoxel voxel)
 {
 	if (!IsInBounds(pos))
 		throw GameException("Invalid position");
-	this->array.get()[ pos.y*this->size.x + pos.x ] = voxel;
+	this->data[ pos.y*this->size.x + pos.x ] = voxel;
 
 	CommitPixel(pos);
 }
 
 void Level::SetVoxelRaw(Position pos, LevelVoxel voxel)
 {
-	this->array.get()[pos.y * this->size.x + pos.x] = voxel;
+	this->data[pos.y * this->size.x + pos.x] = voxel;
 }
 
 void Level::SetVoxelRaw(int offset, LevelVoxel voxel)
 {
-	this->array.get()[offset] = voxel;
+	this->data[offset] = voxel;
 }
 
 LevelVoxel& Level::Voxel(Position pos)
 {
 	if (!IsInBounds(pos))
 		throw GameException("Invalid position");
-	return this->array.get()[pos.y * this->size.x + pos.x];
+	return this->data[pos.y * this->size.x + pos.x];
 }
 
 LevelVoxel& Level::VoxelRaw(Position pos)
 {
-	return this->array.get()[pos.y * this->size.x + pos.x];
+	return this->data[pos.y * this->size.x + pos.x];
 }
 
 int Level::CountNeighborValues(Position pos)
@@ -80,17 +91,17 @@ LevelVoxel Level::GetVoxel(Position pos) const
 {
 	if (!IsInBounds(pos))
 		return LevelVoxel::Rock;
-	return this->array.get()[ pos.y * this->size.x + pos.x ];
+	return this->data[ pos.y * this->size.x + pos.x ];
 }
 
 LevelVoxel Level::GetVoxelRaw(Position pos) const
 {
-	return this->array.get()[pos.y * this->size.x + pos.x];
+	return this->data[pos.y * this->size.x + pos.x];
 }
 
 LevelVoxel Level::GetVoxelRaw(int address) const
 {
-	return this->array.get()[address];
+	return this->data[address];
 }
 
 void Level::GenerateDirtAndRocks()

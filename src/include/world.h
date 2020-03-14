@@ -14,6 +14,7 @@ public:
 	void Advance(class DrawBuffer* drawBuffer);
 private:
 	std::chrono::microseconds regrow_elapsed = {};
+	std::chrono::microseconds regrow_average = {};
 	int advance_count = 0;
 
 	void RegrowPass();

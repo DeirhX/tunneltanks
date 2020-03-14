@@ -4,6 +4,7 @@
 
 void World::Advance(class DrawBuffer* draw_buffer)
 {
+	++this->advance_count;
 	RegrowPass();
 	
 	/* Clear everything: */
@@ -23,6 +24,7 @@ void World::Advance(class DrawBuffer* draw_buffer)
 	/* Draw everything: */
 	this->projectiles->Draw(draw_buffer);
 	this->tank_list->for_each([=](Tank* t) {t->Draw(draw_buffer); });
+
 }
 
 void World::RegrowPass()
@@ -53,4 +55,7 @@ void World::RegrowPass()
 	}
 	);
 	this->regrow_elapsed += elapsed.GetElapsed();
+	this->regrow_average = this->regrow_elapsed / this->advance_count;
+	if (this->advance_count % 100 == 1)
+		DebugTrace<4>("RegrowPass takes on average %lld.%03lld ms\r\n", this->regrow_average.count() / 1000, this->regrow_average.count() % 1000);
 }
