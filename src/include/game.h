@@ -19,7 +19,6 @@ struct Game {
 	
 	GameDataConfig config = {};
 
-	std::unique_ptr<class Level> level;
 	std::unique_ptr<class DrawBuffer> draw_buffer;
 	std::unique_ptr<class Screen> screen;
 	World world;
@@ -29,7 +28,6 @@ public:
 
 	bool AdvanceStep();
 private:
-	void RegrowPass();
 };
 
 

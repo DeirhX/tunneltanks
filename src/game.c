@@ -109,35 +109,38 @@ Game::Game(GameDataConfig config) {
 	TestIterations = 3;
 #endif
 	std::chrono::milliseconds time_taken = {};
+	std::unique_ptr<Level> level;
 	for (int i = TestIterations; i-- > 0; ) {
-		this->level = std::make_unique<Level>(this->config.size, this->draw_buffer.get());
-		time_taken += generate_level(this->level.get(), this->config.level_generator);
+		level = std::make_unique<Level>(this->config.size, this->draw_buffer.get());
+		time_taken += generate_level(level.get(), this->config.level_generator);
 	}
 	auto average_time = time_taken / TestIterations;
 	gamelib_print("***\r\nAverage level time: %lld.%03lld sec\n", average_time.count() / 1000, average_time.count() % 1000);
 	
-	this->world.tank_list = std::make_unique<TankList>(this->level.get(), this->world.projectiles.get());
-	this->level->GenerateDirtAndRocks();
-	this->level->CreateBases();
+	this->world.tank_list = std::make_unique<TankList>(level.get(), this->world.projectiles.get());
+	level->GenerateDirtAndRocks();
+	level->CreateBases();
 	
 	/* Debug the starting data, if we're debugging: */
 	if(this->is_debug)
-		this->level->DumpBitmap("debug_start.bmp");
+		level->DumpBitmap("debug_start.bmp");
 	
 	/* Start drawing! */
 	this->draw_buffer->SetDefaultColor(Palette.Get(Colors::Rock));
-	this->level->CommitAll();
+	level->CommitAll();
 	this->screen->SetLevelDrawMode(this->draw_buffer.get());
 	
 	/* Set up the players/GUI: */
 	if (this->config.player_count > gamelib_get_max_players())
 		throw GameException("Tried to use more players than the platform can support.");
-	if     (this->config.player_count == 1) init_single_player(this->screen.get(), this->world.tank_list.get(), this->level.get());
-	else if(this->config.player_count == 2) init_double_player(this->screen.get(), this->world.tank_list.get(), this->level.get());
+	if     (this->config.player_count == 1) init_single_player(this->screen.get(), this->world.tank_list.get(), level.get());
+	else if(this->config.player_count == 2) init_double_player(this->screen.get(), this->world.tank_list.get(), level.get());
 	else {
 		ERR_OUT("Don't know how to draw more than 2 players at once...");
 		exit(1);
 	}
+
+	world.level = std::move(level);
 	
 	/* Copy all of our variables into the GameData struct: */
 	this->is_active = 1;
@@ -170,41 +173,10 @@ bool Game::AdvanceStep() {
 		gamelib_event_done();
 	}
 	
-	/* Grow */
-	RegrowPass();
-
-	world.Advance(this->level.get(), this->draw_buffer.get());
+	world.Advance(this->draw_buffer.get());
 	this->screen->DrawCurrentMode();
 	
 	return true;
-}
-
-void Game::RegrowPass()
-{
-	int holes_decayed = 0;
-	int dirt_grown = 0;
-	this->level->ForEachVoxel([this, &holes_decayed, &dirt_grown](Position pos, LevelVoxel& vox)
-		{
-			if (vox == LevelVoxel::Blank)
-			{
-				int neighbors = this->level->CountNeighbors(pos, [](auto voxel) { return Voxels::IsDirt(voxel) ? 1 : 0; });
-				if (neighbors > 2 && Random.Int(0, 10000) < tweak::DirtRegrowSpeed * neighbors) {
-					
-					vox = LevelVoxel::DirtGrow;
-					this->level->CommitPixel(pos);
-					++holes_decayed;
-				}
-			}
-			else if (vox == LevelVoxel::DirtGrow)
-			{
-				if (Random.Int(0, 1000) < tweak::DirtRecoverSpeed) {
-					vox = Random.Bool(500) ? LevelVoxel::DirtHigh : LevelVoxel::DirtLow;
-					this->level->CommitPixel(pos);
-					++dirt_grown;
-				}
-			}
-		}
-	);
 }
 
 /* Done with a game structure: */
@@ -212,7 +184,7 @@ Game::~Game() {
 	if(this->is_active) {
 		/* Debug if we need to: */
 		if(this->is_debug)
-		  this->level->DumpBitmap("debug_end.bmp");
+		  world.level->DumpBitmap("debug_end.bmp");
 	}
 }
 
