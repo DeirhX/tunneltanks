@@ -104,9 +104,9 @@ Game::Game(GameDataConfig config) {
 	this->draw_buffer   = std::make_unique<DrawBuffer>(this->config.size);
 	
 	/* Generate our random level: */
-	int TestIterations = 30;
+	int TestIterations = 10;
 #ifdef _DEBUG
-	TestIterations = 3;
+	TestIterations = 1;
 #endif
 	std::chrono::milliseconds time_taken = {};
 	std::unique_ptr<Level> level;

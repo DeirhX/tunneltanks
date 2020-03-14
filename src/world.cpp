@@ -34,10 +34,11 @@ void World::RegrowPass()
 	int dirt_grown = 0;
 	this->level->ForEachVoxelParallel([this, &holes_decayed, &dirt_grown](Position pos, LevelVoxel& vox, ThreadLocal* local)
 	{
-		if (vox == LevelVoxel::Blank)
+		if (vox == LevelVoxel::Blank || Voxels::IsScorched(vox))
 		{
 			int neighbors = this->level->CountNeighbors(pos, [](auto voxel) { return Voxels::IsDirt(voxel) ? 1 : 0; });
-			if (neighbors > 2 && local->random.Int(0, 10000) < tweak::DirtRegrowSpeed * neighbors) {
+			int modifier = (vox == LevelVoxel::Blank) ? 3 : 1;
+			if (neighbors > 2 && local->random.Int(0, 500) < tweak::DirtRegrowSpeed * neighbors * modifier) {
 
 				vox = LevelVoxel::DirtGrow;
 				this->level->CommitPixel(pos);
@@ -52,7 +53,7 @@ void World::RegrowPass()
 				++dirt_grown;
 			}
 		}
-	}
+	}, WorkerCount{PhysicalCores{}}
 	);
 	this->regrow_elapsed += elapsed.GetElapsed();
 	this->regrow_average = this->regrow_elapsed / this->advance_count;

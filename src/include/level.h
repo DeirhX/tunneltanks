@@ -40,6 +40,7 @@ public:
 	static bool IsBlockingCollision(LevelVoxel voxel) { return voxel == LevelVoxel::Rock || (voxel >= LevelVoxel::BaseMin && voxel <= LevelVoxel::BaseMax); }
 	static bool IsAnyCollision(LevelVoxel voxel) { return IsSoftCollision(voxel) || IsBlockingCollision(voxel); }
 	static bool IsBase(LevelVoxel voxel) { return (voxel >= LevelVoxel::BaseMin && voxel <= LevelVoxel::BaseMax); }
+	static bool IsScorched(LevelVoxel voxel) { return voxel == LevelVoxel::DecalHigh || voxel == LevelVoxel::DecalLow; }
 };
 
 
@@ -135,7 +136,7 @@ void Level::ForEachVoxelParallel(VoxelFunc voxelFunc, WorkerCount worker_count)
 		return 0;
 	};
 
-	parallel_for(parallel_slice, 0, this->GetSize().x - 1);
+	parallel_for(parallel_slice, 0, this->GetSize().x - 1, worker_count);
 }
 
 template <typename CountFunc>

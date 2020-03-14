@@ -5,11 +5,17 @@
 #include <type_traits>
 #include "random.h"
 
+struct PhysicalCores
+{
+	
+};
+
 struct WorkerCount
 {
 	unsigned int worker_count;
 	WorkerCount() : worker_count(tweak::perf::parallelism_degree) { }
 	WorkerCount(int workers) : worker_count(std::max(1, workers)) { }
+	WorkerCount(PhysicalCores max) : WorkerCount() { }
 	operator int() const { return worker_count; }
 };
 
@@ -36,13 +42,14 @@ auto parallel_for(Func func, int minimum, int maximum, WorkerCount worker_count 
 	/* Parallelize the process using std::async and slicing jobs */
 	auto threadLocals = std::vector<ThreadLocal>();
 	auto tasks = std::vector<std::future<int>>();
-	threadLocals.resize(worker_count);
+	threadLocals.reserve(worker_count);
 	tasks.reserve(worker_count);
 
 	int curr = minimum;
 	for (int i = 0; i < worker_count; ++i) {
 		if (curr <= maximum) {
 			int until = curr + (maximum - minimum) / worker_count;
+			threadLocals.emplace_back();
 			tasks.emplace_back(std::async(std::launch::async, func, curr, std::min(maximum, until), &threadLocals[i]));
 			curr = until + 1;
 		}
