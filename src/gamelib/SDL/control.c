@@ -39,7 +39,7 @@ void smart_wait() {
 	
 	/* Get the current time, and the next time: */
 	cur  = SDL_GetTicks();
-	next = int((cur/tweak::perf::advance_step.count() + 1) * tweak::perf::advance_step.count());
+	next = int((cur/tweak::perf::AdvanceStep.count() + 1) * tweak::perf::AdvanceStep.count());
 	
 	/* Wait if we need to: */
 	if(cur >= next) return;
@@ -66,7 +66,7 @@ int gamelib_get_max_players()    { return 2; }
 bool gamelib_get_can_resize()     { return 1; }
 bool gamelib_get_can_fullscreen() { return 1; }
 bool gamelib_get_can_window()     { return 1; }
-int gamelib_get_target_fps()     { return tweak::perf::target_fps; }
+int gamelib_get_target_fps()     { return tweak::perf::TargetFps; }
 
 
 

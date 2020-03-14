@@ -84,7 +84,7 @@ void Screen::DrawStatic(Window *w) {
 	if(!w->counter) {
 		int intensity = 1000 * energy / STATIC_THRESHOLD;
 		w->showing_static = !Random.Bool(intensity);
-		w->counter = Random.Int(tweak::perf::target_fps/16, tweak::perf::target_fps/8) * w->showing_static ? 1u : 4u;
+		w->counter = Random.Int(tweak::perf::TargetFps/16, tweak::perf::TargetFps/8) * w->showing_static ? 1u : 4u;
 
 	} else w->counter--;
 	

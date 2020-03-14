@@ -14,8 +14,8 @@ namespace tweak {
 		inline unsigned int parallelism_degree = std::max(1u, std::thread::hardware_concurrency() * parallelism_percent / 100);
 
 		/* The desired speed in frames per second: */
-		constexpr int target_fps = 24;
-		constexpr std::chrono::milliseconds advance_step{ 1000 / target_fps };
+		constexpr int TargetFps = 24;
+		constexpr std::chrono::milliseconds AdvanceStep{ 1000 / TargetFps };
 
 	}
 
@@ -68,8 +68,8 @@ namespace tank {
 	#define TANK_SHOOT_COST                -160
 	#define TANK_MOVE_COST                 -8
 	#define TANK_IDLE_COST                 -3
-	#define TANK_HOME_CHARGE               120
-	#define TANK_ENEMY_CHARGE              45
+	#define TANK_HOME_CHARGE               300
+	#define TANK_ENEMY_CHARGE              90
 
 	/* Various constants for health calculation: */
 	#define TANK_STARTING_SHIELD           1000
