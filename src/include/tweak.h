@@ -50,8 +50,13 @@ constexpr Size GameSize = { GAME_WIDTH, GAME_HEIGHT };
  * then the level generator may start throwing exceptions: */
 #define MIN_SPAWN_DIST                 150
 
+ /* The maximum number of tanks: */
+constexpr int MaxPlayers = 8;
+
 namespace tank {
-	    /* The number of frames to wait in between shots: */
+	constexpr int MaxLives = 3;
+	
+	/* The number of frames to wait in between shots: */
 	constexpr int BulletDelay = 3;
 
 	/* The maximum number of bullets allowed from a given tank: */
@@ -60,25 +65,22 @@ namespace tank {
 	/* The speed in pixels/frame of bullets: */
 	constexpr int BulletSpeed = 3;
 
-	/* The maximum number of tanks: */
-	#define MAX_TANKS                      8
-
 	/* Various constants for energy calculation: */
-	#define TANK_STARTING_FUEL             24000
-	#define TANK_SHOOT_COST                -160
-	#define TANK_MOVE_COST                 -8
-	#define TANK_IDLE_COST                 -3
-	#define TANK_HOME_CHARGE               300
-	#define TANK_ENEMY_CHARGE              90
-
+	constexpr int StartingFuel = 24000;
+	constexpr int ShootCost = -160;
+	constexpr int MoveCost = -8;
+	constexpr int IdleCost = -3;
+	constexpr int HomeChargeSpeed = 300;
+	constexpr int EnemyChargeSpeed = 90;
+				  
 	/* Various constants for health calculation: */
-	#define TANK_STARTING_SHIELD           1000
-	#define TANK_SHOT_DAMAGE               -160
-	#define TANK_HOME_HEAL                 3
+	constexpr int StartingShield = 1000;
+	constexpr int ShotDamage = -160;
+	constexpr int HomeHealSpeed = 3;
 
 }
 /* Constants for drawing static: (The bottom 3 constants are out of 1000) */
-#define STATIC_THRESHOLD               (TANK_STARTING_FUEL/5)
+#define STATIC_THRESHOLD               (tweak::tank::StartingFuel/5)
 #define STATIC_TRANSPARENCY            200
 #define STATIC_BLACK_BAR_ODDS          500
 #define STATIC_BLACK_BAR_SIZE          500

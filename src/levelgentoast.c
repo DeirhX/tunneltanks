@@ -1,3 +1,4 @@
+#include "base.h"
 #include <cstdlib>
 #include <ctime>
 
@@ -67,7 +68,7 @@ static void generate_tree(Level *lvl) {
 	
 	/* While we're here, copy in some of those points: */
 	lvl->SetSpawn(0, points[0]);
-	for(i=1,j=1; i< ToastParams::TreeSize && j<MAX_TANKS; i++) {
+	for(i=1,j=1; i< ToastParams::TreeSize && j< tweak::MaxPlayers; i++) {
 		for(k=0; k<j; k++) {
 			if (pt_dist(points[i], lvl->GetSpawn(TankColor( k ))) < MIN_SPAWN_DIST * MIN_SPAWN_DIST)
 				break;
@@ -76,7 +77,7 @@ static void generate_tree(Level *lvl) {
 		if(k!=j) continue;
 		lvl->SetSpawn(TankColor(j++), points[i]);
 	}
-	if(j!=MAX_TANKS) {
+	if(j!= tweak::MaxPlayers) {
 		/* TODO: More robust error handling. */
 		gamelib_error("OH SHUCKS OH SHUCKS OH SHUCKS\n");
 		exit(1);

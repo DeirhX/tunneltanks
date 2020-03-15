@@ -1,7 +1,8 @@
+#include "base.h"
 #include <stdio.h>
 #include <cstdlib>
 #include <string.h>
-
+#include <crtdbg.h>
 #include <game.h>
 #include <tweak.h>
 #include <memalloc.h>
@@ -19,6 +20,9 @@
 
 	
 int main(int argc, char *argv[]) {
+
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	
 	int i, is_reading_level=0, is_reading_seed=0, is_reading_file=0;
 	int fullscreen=0, player_count = 2, debug = 0;
 	Size size{ 1000, 500 };
@@ -138,6 +142,9 @@ int main(int argc, char *argv[]) {
 	/* Ok, we're done. Tear everything up: */
 	gamelib_exit();
 	print_mem_stats();
-	
+
+#ifdef _MSC_VER
+	_CrtDumpMemoryLeaks();
+#endif
 	return 0;
 }

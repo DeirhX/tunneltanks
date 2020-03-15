@@ -1,3 +1,4 @@
+#include "base.h"
 #include <drawbuffer.h>
 #include <memory>
 

@@ -1,3 +1,4 @@
+#include "base.h"
 #include <cstdlib>
 
 #include <level.h>
@@ -118,7 +119,7 @@ void Level::GenerateDirtAndRocks()
 
 void Level::CreateBase(Position pos, TankColor color)
 {
-	if(color >= MAX_TANKS) 
+	if(color >= tweak::MaxPlayers)
 		return;
 	
 	for(int y = -BASE_SIZE / 2; y<=BASE_SIZE/2; y++) {
@@ -142,7 +143,7 @@ void Level::CreateBase(Position pos, TankColor color)
  *       you use MAX_TANKS tanks. */
 void Level::CreateBases()
 {
-	for (TankColor i = 0; i < MAX_TANKS; i++) {
+	for (TankColor i = 0; i < tweak::MaxPlayers; i++) {
 		CreateBase({ this->spawn[i].x, this->spawn[i].y }, i);
 	}
 }
@@ -206,7 +207,7 @@ void Level::CommitPixel(Position pos) const
  * take MAX_TANKS time. */
 BaseCollision Level::CheckBaseCollision(Position pos, TankColor color)
 {
-	for(TankColor id = 0; id < MAX_TANKS; id++) {
+	for(TankColor id = 0; id < tweak::MaxPlayers; id++) {
 		if(std::abs(this->spawn[id].x - pos.x) < BASE_SIZE/2 && std::abs(this->spawn[id].y - pos.y) < BASE_SIZE/2) {
 			if (id == color)
 				return BaseCollision::Yours;

@@ -1,3 +1,4 @@
+#include "base.h"
 #include <tank.h>
 #include <level.h>
 #include <screen.h>
@@ -27,8 +28,8 @@ Tank::Tank(TankColor color, Level *lvl, ProjectileList*pl, Position pos) :
 	this->bullet_timer = tweak::tank::BulletDelay;
 	this->bullets_left = tweak::tank::BulletMax;
 	this->is_shooting = false;
-	this->health = TANK_STARTING_SHIELD;
-	this->energy = TANK_STARTING_FUEL;
+	this->health = tweak::tank::StartingShield;
+	this->energy = tweak::tank::StartingFuel;
 }
 
 /* We don't use the Tank structure in this function, since we are checking the
@@ -91,7 +92,7 @@ void Tank::DoMove(TankList *tl) {
 				this->pos.x += this->speed.x; this->pos.y += this->speed.y;
 
 				/* Well, we moved, so let's charge ourselves: */
-				this->AlterEnergy(TANK_MOVE_COST);
+				this->AlterEnergy(tweak::tank::MoveCost);
 			}
 		}
 	}
@@ -103,7 +104,7 @@ void Tank::DoMove(TankList *tl) {
 			this->pl->Add(Projectile::CreateBullet(this));
 
 			/* We just fired. Let's charge ourselves: */
-			this->AlterEnergy(TANK_SHOOT_COST);
+			this->AlterEnergy(tweak::tank::ShootCost);
 			
 			this->bullets_left --;
 			this->bullet_timer = tweak::tank::BulletDelay;
@@ -116,10 +117,10 @@ void Tank::TryBaseHeal()
 {
 	BaseCollision c = this->level->CheckBaseCollision({this->pos.x, this->pos.y}, this->color);
 	if(c == BaseCollision::Yours) {
-		this->AlterEnergy(TANK_HOME_CHARGE);
-		this->AlterHealth(TANK_HOME_HEAL);
+		this->AlterEnergy(tweak::tank::HomeChargeSpeed);
+		this->AlterHealth(tweak::tank::HomeHealSpeed);
 	} else if(c == BaseCollision::Enemy)
-		this->AlterEnergy(TANK_ENEMY_CHARGE);
+		this->AlterEnergy(tweak::tank::EnemyChargeSpeed);
 }
 
 void Tank::Draw(DrawBuffer *drawBuff) const
@@ -157,12 +158,12 @@ void Tank::AlterEnergy(int diff) {
 	/* If the diff would make the energy negative, then we just set it to 0: */
 	if(diff < 0 && -diff >= this->energy) {
 		this->energy = 0;
-		this->AlterHealth(-TANK_STARTING_SHIELD);
+		this->AlterHealth(-tweak::tank::StartingShield);
 		return;
 	}
 
 	/* Else, just add, and account for overflow: */
-	this->energy= std::min(this->energy+ diff, TANK_STARTING_FUEL);
+	this->energy= std::min(this->energy+ diff, tweak::tank::StartingFuel);
 }
 
 void Tank::AlterHealth(int diff) {
@@ -177,7 +178,7 @@ void Tank::AlterHealth(int diff) {
 		return;
 	}
 
-	this->health = std::min(this->health + diff, TANK_STARTING_SHIELD);
+	this->health = std::min(this->health + diff, tweak::tank::StartingShield);
 }
 
 void Tank::TriggerExplosion() const

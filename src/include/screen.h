@@ -4,7 +4,8 @@
 #include <tank.h>
 #include <drawbuffer.h>
 
-#include "guisprites.h"
+#include "gui_sprites.h"
+#include "gui_widgets.h"
 
 
 typedef enum ScreenDrawMode {
@@ -12,49 +13,6 @@ typedef enum ScreenDrawMode {
 	SCREEN_DRAW_LEVEL
 } ScreenDrawMode;
 
-class GuiWidget
-{
-public:
-	virtual void Draw(class Screen* screen) = 0;
-};
-
-/* Will draw a window using the level's drawbuffer: */
-class Window : public GuiWidget
-{
-	Rect  rect;
-	class Tank* tank;
-	
-	int counter = 0;
-	int showing_static = 0;
-public:
-	Window(Rect rect, class Tank* tank) : rect(rect), tank(tank) {}
-	void Draw(class Screen* screen) override;
-private:
-	/* Will randomly draw static to a window, based on a tank's health.  */
-	void DrawStatic(class Screen* screen);
-};
-
-/* Will draw two bars indicating the charge/health of a tank: */
-class StatusBar : public GuiWidget
-{
-	Rect  rect;
-	class Tank* tank;
-	bool decreases_to_left;
-public:
-	StatusBar(Rect rect, class Tank* tank, bool decrease_to_left) : rect(rect), tank(tank), decreases_to_left(decrease_to_left) {}
-	void Draw(class Screen* screen)override;
-};
-
-/* Will draw an arbitrary, static bitmap to screen*/
-struct BitmapRender : public GuiWidget
-{
-	Rect  rect;
-	Bitmap* data;
-	Color color;
-public:
-	BitmapRender(Rect rect, Bitmap* bitmap_data, Color color) : rect(rect), data(bitmap_data), color(color) {}
-	void Draw(class Screen* screen)override;
-};
 
 struct GUIController
 {
@@ -71,9 +29,9 @@ class Screen {
 	Size pixel_size = {};
 	Size pixels_skip = {};
 
-	std::vector<Window> windows;
-	std::vector<StatusBar> statuses;
-	std::vector<BitmapRender> bitmaps;
+	std::vector<widgets::TankView> windows;
+	std::vector<widgets::StatusBar> statuses;
+	std::vector<widgets::BitmapRender> bitmaps;
 
 	GUIController controller;
 	ScreenDrawMode mode = SCREEN_DRAW_INVALID;

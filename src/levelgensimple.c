@@ -1,3 +1,4 @@
+#include "base.h"
 #include <cmath>
 
 #include <level.h>
@@ -104,7 +105,7 @@ static void add_spawns(Level *lvl) {
 	
 	lvl->SetSpawn(0, generate_inside(lvl->GetSize(), BORDER));
 	
-	for(TankColor i=1; i<MAX_TANKS; i++) {
+	for(TankColor i=1; i< tweak::MaxPlayers; i++) {
 		bool done = false;
 		while(!done) {
 			/* Try adding a new point: */

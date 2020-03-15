@@ -1,3 +1,4 @@
+#include "base.h"
 #include <cstdlib>
 
 #include <tanklist.h>

@@ -1,5 +1,8 @@
+#include "base.h"
 #include "colors.h"
 /* Various colors for use in the game: */
+#include <cassert>
+
 #include "types.h"
 
 ColorPalette Palette;
@@ -19,6 +22,7 @@ ColorPalette::ColorPalette()
 	Set(Colors::StatusHealth, Color(0x26, 0xf4, 0xf2));
 	Set(Colors::DecalLow, Color(0x28, 0x28, 0x28));
 	Set(Colors::DecalHigh, Color(0x48, 0x38, 0x2f));
+	//Set(Colors::LifeDot, Color(0x48, 0x38, 0x2f));
 
 	SetPrimary(0, Color(0x00, 0x00, 0x00));
 	SetPrimary(1, Color(0xff, 0x00, 0x00));

@@ -61,7 +61,7 @@ ControllerOutput do_exit_down(PublicTankInfo *i, TwitchController* data) {
 
 ControllerOutput do_twitch(PublicTankInfo *i, TwitchController* data) {
 	
-	if(i->health < TANK_STARTING_SHIELD/2 || i->energy < TANK_STARTING_FUEL/3 ||
+	if(i->health < tweak::tank::StartingShield/2 || i->energy < tweak::tank::StartingFuel/3 ||
 	  (abs(i->x) < BASE_SIZE/2 && abs(i->y) < BASE_SIZE/2) ) {
 		/* We need a quick pick-me-up... */
 		data->mode = TWITCH_RETURN;
@@ -106,7 +106,7 @@ ControllerOutput do_return(PublicTankInfo *i, TwitchController* data) {
 ControllerOutput do_recharge(PublicTankInfo *i, TwitchController* data) {
 	
 	/* Check to see if we're fully charged/healed: */
-	if(i->health == TANK_STARTING_SHIELD && i->energy == TANK_STARTING_FUEL) {
+	if(i->health == tweak::tank::StartingShield && i->energy == tweak::tank::StartingFuel) {
 		data->mode = TWITCH_START;
 		return { };
 	}

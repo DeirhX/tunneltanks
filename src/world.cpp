@@ -1,3 +1,4 @@
+#include "base.h"
 #include "world.h"
 #include "random.h"
 
@@ -12,7 +13,7 @@ void World::Advance(class DrawBuffer* draw_buffer)
 	this->projectiles->Erase(draw_buffer, this->level.get());
 
 	/* Charge a small bit of energy for life: */
-	this->tank_list->for_each([=](Tank* t) {t->AlterEnergy(TANK_IDLE_COST); });
+	this->tank_list->for_each([=](Tank* t) {t->AlterEnergy(tweak::tank::IdleCost); });
 
 	/* See if we need to be healed: */
 	this->tank_list->for_each([=](Tank* t) {t->TryBaseHeal(); });

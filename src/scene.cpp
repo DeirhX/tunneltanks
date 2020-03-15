@@ -1,3 +1,4 @@
+#include "base.h"
 #include "scene.h"
 #include "tank.h"
 

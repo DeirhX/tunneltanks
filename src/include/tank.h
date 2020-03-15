@@ -36,9 +36,12 @@ public:
 
 	TankColor color;
 
-	int bullet_timer, bullets_left;
+	int bullet_timer;
+	int bullets_left;
 
-	int health, energy;
+	int health;
+	int energy;
+	int lives_left;
 
 	std::shared_ptr<Controller> controller;
 

@@ -1,7 +1,8 @@
+#include "base.h"
 #include <cstdlib>
 
 #include <game.h>
-#include <guisprites.h>
+#include <gui_sprites.h>
 #include <level.h>
 #include <levelgen.h>
 #include <tanklist.h>
@@ -25,7 +26,7 @@
 
 void GameMode::AssumeAIControl(TankList *tl, Level *lvl, TankColor starting_id) {
 	
-	for(TankColor i=starting_id; i<MAX_TANKS; i++) {
+	for(TankColor i=starting_id; i< tweak::MaxPlayers; i++) {
 		Tank *t = tl->AddTank(i, lvl->GetSpawn(i));
 		t->SetController(std::make_shared<TwitchController>());
 	}

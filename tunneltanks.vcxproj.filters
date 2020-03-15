@@ -72,9 +72,6 @@
     <ClCompile Include="src\drawbuffer.c">
       <Filter>src\draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\guisprites.c">
-      <Filter>src\draw</Filter>
-    </ClCompile>
     <ClCompile Include="src\screen.c">
       <Filter>src\draw</Filter>
     </ClCompile>
@@ -117,14 +114,14 @@
     <ClCompile Include="src\world.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
-    <ClCompile Include="src\include\world.h">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
     <ClCompile Include="src\level.c">
       <Filter>src\game_entity</Filter>
     </ClCompile>
     <ClCompile Include="src\game.c">
       <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gui_widgets.cpp">
+      <Filter>src\draw</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -162,9 +159,6 @@
       <Filter>src\draw</Filter>
     </ClInclude>
     <ClInclude Include="src\include\drawbuffer.h">
-      <Filter>src\draw</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\guisprites.h">
       <Filter>src\draw</Filter>
     </ClInclude>
     <ClInclude Include="src\include\screen.h">
@@ -233,6 +227,14 @@
     <ClInclude Include="src\include\controller.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
+    <ClInclude Include="src\include\gui_widgets.h">
+      <Filter>src\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\gui_sprites.h">
+      <Filter>src\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\base.h" />
+    <ClInclude Include="src\include\world.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

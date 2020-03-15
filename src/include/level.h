@@ -66,7 +66,7 @@ private:
 	LevelData data;
 	Size size;
 	DrawBuffer* drawBuffer;
-	std::array<Position, MAX_TANKS> spawn;
+	std::array<Position, tweak::MaxPlayers> spawn;
 
 public:
 	Level(Size size, DrawBuffer* db);

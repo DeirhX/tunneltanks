@@ -51,9 +51,8 @@
     <ClCompile Include="src\gamelib\SDL\gui.c" />
     <ClCompile Include="src\gamelib\SDL\logging.c" />
     <ClCompile Include="src\gamelib\SDL\sdldata.c" />
-    <ClCompile Include="src\guisprites.c" />
+    <ClCompile Include="src\gui_widgets.cpp" />
     <ClCompile Include="src\include\projectile_list.cpp" />
-    <ClCompile Include="src\include\world.h" />
     <ClCompile Include="src\level.c" />
     <ClCompile Include="src\levelgen.c" />
     <ClCompile Include="src\levelgenbraid.c" />
@@ -64,34 +63,17 @@
     <ClCompile Include="src\level_view.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\memalloc.c" />
-    <ClCompile Include="src\projectile.c">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsCpp</CompileAs>
-    </ClCompile>
+    <ClCompile Include="src\projectile.c" />
     <ClCompile Include="src\random.c" />
     <ClCompile Include="src\scene.cpp" />
     <ClCompile Include="src\screen.c" />
-    <ClCompile Include="src\tank.c">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsCpp</CompileAs>
-    </ClCompile>
+    <ClCompile Include="src\tank.c" />
     <ClCompile Include="src\tanklist.c" />
     <ClCompile Include="src\tanksprites.c" />
     <ClCompile Include="src\world.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\base.h" />
     <ClInclude Include="src\exceptions.h" />
     <ClInclude Include="src\gamelib\SDL\control.h" />
     <ClInclude Include="src\gamelib\SDL\controllersdl.h" />
@@ -104,7 +86,8 @@
     <ClInclude Include="src\include\drawbuffer.h" />
     <ClInclude Include="src\include\game.h" />
     <ClInclude Include="src\include\gamelib.h" />
-    <ClInclude Include="src\include\guisprites.h" />
+    <ClInclude Include="src\include\gui_sprites.h" />
+    <ClInclude Include="src\include\gui_widgets.h" />
     <ClInclude Include="src\include\iterators.h" />
     <ClInclude Include="src\include\level.h" />
     <ClInclude Include="src\include\levelgen.h" />
@@ -127,6 +110,7 @@
     <ClInclude Include="src\include\trace.h" />
     <ClInclude Include="src\include\tweak.h" />
     <ClInclude Include="src\include\types.h" />
+    <ClInclude Include="src\include\world.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="sdl\VisualC\SDLmain\SDLmain.vcxproj">
@@ -160,17 +144,17 @@
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
-    <EnableUnitySupport>true</EnableUnitySupport>
     <UseDebugLibraries>true</UseDebugLibraries>
     <SpectreMitigation>false</SpectreMitigation>
+    <EnableUnitySupport>true</EnableUnitySupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
-    <EnableUnitySupport>true</EnableUnitySupport>
     <UseDebugLibraries>true</UseDebugLibraries>
     <SpectreMitigation>false</SpectreMitigation>
+    <EnableUnitySupport>true</EnableUnitySupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -304,7 +288,7 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=5;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_AMD64_;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=5;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;_CRTDBG_MAP_ALLOC;NOMINMAX;_AMD64_;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DisableSpecificWarnings>5045;4514;4820;4706;4100</DisableSpecificWarnings>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
@@ -351,7 +335,7 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=5;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_X86_;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=5;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;_CRTDBG_MAP_ALLOC;NOMINMAX;_X86_;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DisableSpecificWarnings>5045;4514;4820;4706;4100</DisableSpecificWarnings>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>

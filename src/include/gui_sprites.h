@@ -34,16 +34,20 @@ using Bitmap = ValueArray<char>;
 namespace bitmaps
 {
 	inline auto GuiHealth = Bitmap(Size{ 4, 5 },
-		{ 1,0,0,1,
+		{1,0,0,1,
 		 1,0,0,1,
 		 1,1,1,1,
 		 1,0,0,1,
 		 1,0,0,1 });
 
 	inline auto GuiEnergy = Bitmap(Size{ 4, 5 },
-		{ 1,1,1,1,
+		{1,1,1,1,
 		 1,0,0,0,
 		 1,1,1,0,
 		 1,0,0,0,
 		 1,1,1,1 });
+
+	inline auto LifeDot = Bitmap(Size{ 2, 2 },
+		{1,1,
+		 1,1,});
 }

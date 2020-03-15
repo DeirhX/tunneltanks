@@ -1,3 +1,4 @@
+#include "base.h"
 #include <level.h>
 #include <levelgenutil.h>
 #include <memalloc.h>
@@ -184,7 +185,7 @@ void maze_generator(Level *lvl) {
 	rough_up(lvl);
 	
 	/* Add in the bases: */
-	for(TankColor i=0; i<MAX_TANKS; i++) {
+	for(TankColor i=0; i< tweak::MaxPlayers; i++) {
 		int tx, ty;
 		
 		/* Pick a random spot for the base: */

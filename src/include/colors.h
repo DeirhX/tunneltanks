@@ -16,6 +16,7 @@ enum class Colors
 	StatusBackground,
 	StatusEnergy,
 	StatusHealth,
+	LifeDot = StatusHealth,
 	DecalHigh,
 	DecalLow,
 	Size,

@@ -1,3 +1,4 @@
+#include "base.h"
 #include "projectile.h"
 #include "projectile_list.h"
 #include "level.h"
@@ -66,7 +67,7 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 					p.tank->ReturnBullet();
 
 					/* Hurt the tank we hit: */
-					hitTank->AlterHealth(TANK_SHOT_DAMAGE);
+					hitTank->AlterHealth(tweak::tank::ShotDamage);
 
 					/* Add all of the effect particles: */
 
