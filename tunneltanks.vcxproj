@@ -38,38 +38,38 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\aitwitch.c" />
+    <ClCompile Include="src\aitwitch.cpp" />
     <ClCompile Include="src\colors.cpp" />
-    <ClCompile Include="src\drawbuffer.c" />
+    <ClCompile Include="src\drawbuffer.cpp" />
     <ClCompile Include="src\exceptions.cpp" />
-    <ClCompile Include="src\game.c" />
-    <ClCompile Include="src\gamelib\SDL\bitmap.c" />
-    <ClCompile Include="src\gamelib\SDL\control.c" />
-    <ClCompile Include="src\gamelib\SDL\controllersdl.c" />
-    <ClCompile Include="src\gamelib\SDL\events.c" />
-    <ClCompile Include="src\gamelib\SDL\graphics.c" />
-    <ClCompile Include="src\gamelib\SDL\gui.c" />
-    <ClCompile Include="src\gamelib\SDL\logging.c" />
-    <ClCompile Include="src\gamelib\SDL\sdldata.c" />
+    <ClCompile Include="src\game.cpp" />
+    <ClCompile Include="src\gamelib\SDL\bitmap.cpp" />
+    <ClCompile Include="src\gamelib\SDL\control.cpp" />
+    <ClCompile Include="src\gamelib\SDL\controllersdl.cpp" />
+    <ClCompile Include="src\gamelib\SDL\events.cpp" />
+    <ClCompile Include="src\gamelib\SDL\graphics.cpp" />
+    <ClCompile Include="src\gamelib\SDL\gui.cpp" />
+    <ClCompile Include="src\gamelib\SDL\logging.cpp" />
+    <ClCompile Include="src\gamelib\SDL\sdldata.cpp" />
     <ClCompile Include="src\gui_widgets.cpp" />
     <ClCompile Include="src\include\projectile_list.cpp" />
-    <ClCompile Include="src\level.c" />
-    <ClCompile Include="src\levelgen.c" />
-    <ClCompile Include="src\levelgenbraid.c" />
+    <ClCompile Include="src\level.cpp" />
+    <ClCompile Include="src\levelgen.cpp" />
+    <ClCompile Include="src\levelgenbraid.cpp" />
     <ClCompile Include="src\levelgenmaze.c" />
-    <ClCompile Include="src\levelgensimple.c" />
-    <ClCompile Include="src\levelgentoast.c" />
-    <ClCompile Include="src\levelgenutil.c" />
-    <ClCompile Include="src\level_view.c" />
-    <ClCompile Include="src\main.c" />
-    <ClCompile Include="src\memalloc.c" />
-    <ClCompile Include="src\projectile.c" />
-    <ClCompile Include="src\random.c" />
+    <ClCompile Include="src\levelgensimple.cpp" />
+    <ClCompile Include="src\levelgentoast.cpp" />
+    <ClCompile Include="src\levelgenutil.cpp" />
+    <ClCompile Include="src\level_view.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\memalloc.cpp" />
+    <ClCompile Include="src\projectile.cpp" />
+    <ClCompile Include="src\random.cpp" />
     <ClCompile Include="src\scene.cpp" />
-    <ClCompile Include="src\screen.c" />
-    <ClCompile Include="src\tank.c" />
-    <ClCompile Include="src\tanklist.c" />
-    <ClCompile Include="src\tanksprites.c" />
+    <ClCompile Include="src\screen.cpp" />
+    <ClCompile Include="src\tank.cpp" />
+    <ClCompile Include="src\tanklist.cpp" />
+    <ClCompile Include="src\tanksprites.cpp" />
     <ClCompile Include="src\world.cpp" />
   </ItemGroup>
   <ItemGroup>

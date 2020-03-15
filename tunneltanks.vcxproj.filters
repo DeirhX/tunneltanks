@@ -24,88 +24,16 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\gamelib\SDL\bitmap.c">
-      <Filter>gamelib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\gamelib\SDL\control.c">
-      <Filter>gamelib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\gamelib\SDL\controllersdl.c">
-      <Filter>gamelib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\gamelib\SDL\events.c">
-      <Filter>gamelib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\gamelib\SDL\graphics.c">
-      <Filter>gamelib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\gamelib\SDL\gui.c">
-      <Filter>gamelib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\gamelib\SDL\logging.c">
-      <Filter>gamelib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\gamelib\SDL\sdldata.c">
-      <Filter>gamelib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\levelgen.c">
-      <Filter>src\generators</Filter>
-    </ClCompile>
-    <ClCompile Include="src\levelgenbraid.c">
-      <Filter>src\generators</Filter>
-    </ClCompile>
     <ClCompile Include="src\levelgenmaze.c">
-      <Filter>src\generators</Filter>
-    </ClCompile>
-    <ClCompile Include="src\levelgensimple.c">
-      <Filter>src\generators</Filter>
-    </ClCompile>
-    <ClCompile Include="src\levelgentoast.c">
-      <Filter>src\generators</Filter>
-    </ClCompile>
-    <ClCompile Include="src\levelgenutil.c">
       <Filter>src\generators</Filter>
     </ClCompile>
     <ClCompile Include="src\colors.cpp">
       <Filter>src\draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\drawbuffer.c">
-      <Filter>src\draw</Filter>
-    </ClCompile>
-    <ClCompile Include="src\screen.c">
-      <Filter>src\draw</Filter>
-    </ClCompile>
-    <ClCompile Include="src\tanksprites.c">
-      <Filter>src\draw</Filter>
-    </ClCompile>
     <ClCompile Include="src\exceptions.cpp">
       <Filter>src\system</Filter>
     </ClCompile>
-    <ClCompile Include="src\memalloc.c">
-      <Filter>src\system</Filter>
-    </ClCompile>
-    <ClCompile Include="src\random.c">
-      <Filter>src\system</Filter>
-    </ClCompile>
-    <ClCompile Include="src\main.c">
-      <Filter>src\system</Filter>
-    </ClCompile>
-    <ClCompile Include="src\aitwitch.c">
-      <Filter>src\ai</Filter>
-    </ClCompile>
-    <ClCompile Include="src\level_view.c">
-      <Filter>src\ai</Filter>
-    </ClCompile>
-    <ClCompile Include="src\projectile.c">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
     <ClCompile Include="src\include\projectile_list.cpp">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
-    <ClCompile Include="src\tank.c">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
-    <ClCompile Include="src\tanklist.c">
       <Filter>src\game_entity</Filter>
     </ClCompile>
     <ClCompile Include="src\scene.cpp">
@@ -114,14 +42,86 @@
     <ClCompile Include="src\world.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
-    <ClCompile Include="src\level.c">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
-    <ClCompile Include="src\game.c">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
     <ClCompile Include="src\gui_widgets.cpp">
       <Filter>src\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\bitmap.cpp">
+      <Filter>gamelib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\control.cpp">
+      <Filter>gamelib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\controllersdl.cpp">
+      <Filter>gamelib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\events.cpp">
+      <Filter>gamelib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\graphics.cpp">
+      <Filter>gamelib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\logging.cpp">
+      <Filter>gamelib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\gui.cpp">
+      <Filter>gamelib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\sdldata.cpp">
+      <Filter>gamelib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\aitwitch.cpp">
+      <Filter>src\ai</Filter>
+    </ClCompile>
+    <ClCompile Include="src\level_view.cpp">
+      <Filter>src\ai</Filter>
+    </ClCompile>
+    <ClCompile Include="src\drawbuffer.cpp">
+      <Filter>src\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\screen.cpp">
+      <Filter>src\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tanksprites.cpp">
+      <Filter>src\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\level.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\projectile.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tank.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tanklist.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\memalloc.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
+    <ClCompile Include="src\random.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgenutil.cpp">
+      <Filter>src\generators</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgentoast.cpp">
+      <Filter>src\generators</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgensimple.cpp">
+      <Filter>src\generators</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgen.cpp">
+      <Filter>src\generators</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgenbraid.cpp">
+      <Filter>src\generators</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
