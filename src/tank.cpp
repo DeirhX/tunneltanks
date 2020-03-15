@@ -24,12 +24,6 @@ Tank::Tank(TankColor color, Level *lvl, ProjectileList*pl, Position pos) :
 	
 	this->level = lvl;
     this->pl = pl;
-	 
-	this->bullet_timer = tweak::tank::BulletDelay;
-	this->bullets_left = tweak::tank::BulletMax;
-	this->is_shooting = false;
-	this->health = tweak::tank::StartingShield;
-	this->energy = tweak::tank::StartingFuel;
 }
 
 /* We don't use the Tank structure in this function, since we are checking the

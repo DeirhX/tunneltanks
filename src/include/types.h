@@ -43,7 +43,6 @@ struct Offset : public Vector
 	explicit Offset(Position pos): Vector(pos.x, pos.y) {}
 };
 
-
 /*
  *   Vector +- Vector -> Vector
  *   Position - Position -> Offset
@@ -88,3 +87,8 @@ struct Color {
 
 using TankColor = char;
 
+enum class Direction
+{
+	Horizontal,
+	Vertical,
+};

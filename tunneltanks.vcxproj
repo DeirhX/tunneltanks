@@ -39,6 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\aitwitch.cpp" />
+    <ClCompile Include="src\bitmaps.cpp" />
     <ClCompile Include="src\colors.cpp" />
     <ClCompile Include="src\drawbuffer.cpp" />
     <ClCompile Include="src\exceptions.cpp" />
@@ -86,7 +87,7 @@
     <ClInclude Include="src\include\drawbuffer.h" />
     <ClInclude Include="src\include\game.h" />
     <ClInclude Include="src\include\gamelib.h" />
-    <ClInclude Include="src\include\gui_sprites.h" />
+    <ClInclude Include="src\include\bitmaps.h" />
     <ClInclude Include="src\include\gui_widgets.h" />
     <ClInclude Include="src\include\iterators.h" />
     <ClInclude Include="src\include\level.h" />

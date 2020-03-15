@@ -163,12 +163,20 @@ namespace widgets {
 
 	void BitmapRender::Draw(Screen* screen)
 	{
-		int x, y, i;
-
-		for (x = y = i = 0; i < (this->rect.size.x * this->rect.size.y); i++) {
-			if (this->data->At(i)) screen->DrawPixel({ x + this->rect.pos.x, y + this->rect.pos.y }, this->color);
-			if (++x >= this->rect.size.x) { y++; x = 0; }
-		}
+		this->data->Draw(screen, this->rect.pos, this->color);
 	}
 
+	void LivesLeft::Draw(Screen* screen)
+	{
+		assert(direction == Direction::Vertical); // Implemennt horizontal when we need it
+		if (direction == Direction::Vertical) 
+		{
+			int y_pos = 0;
+			for (int life = 0; life < tank->GetLives() && y_pos + 2 <= this->rect.size.y; ++life)
+			{
+				this->data->Draw(screen, Position{ this->rect.pos } + Offset{ 0, y_pos }, this->color);
+				y_pos += 1 + this->data->size.y;
+			}
+		}
+	}
 }

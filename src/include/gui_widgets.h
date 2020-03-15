@@ -1,9 +1,10 @@
 #pragma once
 #include "colors.h"
-#include "gui_sprites.h"
+#include "bitmaps.h"
 #include "tank.h"
 
 class Screen;
+class Tank;
 
 namespace widgets
 {
@@ -34,7 +35,7 @@ namespace widgets
 	class StatusBar : public GuiWidget
 	{
 		Rect  rect;
-		class Tank* tank;
+		Tank* tank;
 		bool decreases_to_left;
 	public:
 		StatusBar(Rect rect, class Tank* tank, bool decrease_to_left) : rect(rect), tank(tank), decreases_to_left(decrease_to_left) {}
@@ -54,9 +55,17 @@ namespace widgets
 
 	struct LivesLeft : public BitmapRender
 	{
+		Direction direction;
+		Tank* tank;
 	public:
-		LivesLeft(Rect rect) : BitmapRender(rect, &bitmaps::LifeDot, Palette.Get(Colors::LifeDot)) {}
-		//void Draw(Screen* screen) override;
+		LivesLeft(Rect rect, Direction direction, Tank* tank)
+		: BitmapRender(rect, &bitmaps::LifeDot, Palette.Get(Colors::LifeDot)), direction(direction), tank(tank)
+		{
+			assert(direction == Direction::Vertical && rect.size.x == this->data->size.x
+			    || direction == Direction::Horizontal && rect.size.y == this->data->size.y);
+			
+		}
+		void Draw(Screen* screen) override;
 	};
 
 }

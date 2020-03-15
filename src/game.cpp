@@ -2,7 +2,7 @@
 #include <cstdlib>
 
 #include <game.h>
-#include <gui_sprites.h>
+#include <bitmaps.h>
 #include <level.h>
 #include <levelgen.h>
 #include <tanklist.h>

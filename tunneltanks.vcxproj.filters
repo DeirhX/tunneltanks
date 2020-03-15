@@ -123,6 +123,9 @@
     <ClCompile Include="src\levelgenbraid.cpp">
       <Filter>src\generators</Filter>
     </ClCompile>
+    <ClCompile Include="src\bitmaps.cpp">
+      <Filter>src\draw</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\controllersdl.h">
@@ -230,11 +233,11 @@
     <ClInclude Include="src\include\gui_widgets.h">
       <Filter>src\draw</Filter>
     </ClInclude>
-    <ClInclude Include="src\include\gui_sprites.h">
-      <Filter>src\draw</Filter>
-    </ClInclude>
     <ClInclude Include="src\base.h" />
     <ClInclude Include="src\include\world.h" />
+    <ClInclude Include="src\include\bitmaps.h">
+      <Filter>src\draw</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

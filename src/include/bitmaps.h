@@ -4,8 +4,9 @@
 #include <initializer_list>
 #include <vector>
 
-
 #include "types.h"
+
+class Screen;
 
 template <typename DataType = char>
 class ValueArray
@@ -29,7 +30,13 @@ public:
 	}
 };
 
-using Bitmap = ValueArray<char>;
+class Bitmap : public ValueArray<char>
+{
+public:
+	Bitmap(Size size, std::initializer_list<char> data) : ValueArray<char>(size, data) { }
+	/* Note: No clipping */
+	void Draw(Screen* screen, Position position, Color color);
+};
 
 namespace bitmaps
 {

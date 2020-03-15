@@ -4,7 +4,7 @@
 #include <tank.h>
 #include <drawbuffer.h>
 
-#include "gui_sprites.h"
+#include "bitmaps.h"
 #include "gui_widgets.h"
 
 

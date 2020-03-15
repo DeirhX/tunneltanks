@@ -28,7 +28,7 @@ class Tank
 public:
 	bool is_valid = false;
 
-	bool is_shooting;
+	bool is_shooting = false;
 
 	Position pos;
 	Speed speed; /* Velocity... ie: is it moving now? */
@@ -36,12 +36,12 @@ public:
 
 	TankColor color;
 
-	int bullet_timer;
-	int bullets_left;
+	int bullet_timer = tweak::tank::BulletDelay;
+	int bullets_left = tweak::tank::BulletMax;
 
-	int health;
-	int energy;
-	int lives_left;
+	int health = tweak::tank::StartingShield;
+	int energy = tweak::tank::StartingFuel;
+	int lives_left = tweak::tank::MaxLives;
 
 	std::shared_ptr<Controller> controller;
 
@@ -65,6 +65,7 @@ public:
 	[[nodiscard]] bool IsInvalid() const { return !this->is_valid; } // For ValueContainer
 	[[nodiscard]] int GetEnergy() const { return this->energy; }
 	[[nodiscard]] int GetHealth() const { return this->health; }
+	[[nodiscard]] int GetLives() const { return this->lives_left; }
 	void Invalidate() { this->is_valid = false; }
     void AlterEnergy(int diff);
 	void AlterHealth(int diff);
