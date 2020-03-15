@@ -8,6 +8,8 @@
 #include "gui_widgets.h"
 
 
+class World;
+
 typedef enum ScreenDrawMode {
 	SCREEN_DRAW_INVALID,
 	SCREEN_DRAW_LEVEL
@@ -29,9 +31,9 @@ class Screen {
 	Size pixel_size = {};
 	Size pixels_skip = {};
 
-	std::vector<widgets::TankView> windows;
-	std::vector<widgets::StatusBar> statuses;
-	std::vector<widgets::BitmapRender> bitmaps;
+	std::vector<std::unique_ptr<widgets::GuiWidget>> widgets;
+	/*std::vector<std::unique_ptr<widgets::StatusBar>> statuses;
+	std::vector<std::unique_ptr<widgets::BitmapRender>> bitmaps;*/
 
 	GUIController controller;
 	ScreenDrawMode mode = SCREEN_DRAW_INVALID;
@@ -59,6 +61,7 @@ public:
 
 	void DrawLevel();
 public:
+	void AddWidget(std::unique_ptr<widgets::GuiWidget>&& widget);
 	void AddWindow(Rect rect, class Tank* task);
 	void AddStatus(Rect r, class Tank* t, bool decreases_to_left);
 	void AddBitmap(Rect r, Bitmap* bitmap, Color color);
@@ -68,4 +71,11 @@ public:
 	void AddController(Rect r);
 
 	static void FillBackground();
+};
+
+class Screens
+{
+public:
+	static void SinglePlayerScreenSetup(Screen* screen, World* world, Tank* player);
+	static void TwoPlayerScreenSetup(Screen* screen, World* world, Tank* player_one, Tank* player_two);
 };

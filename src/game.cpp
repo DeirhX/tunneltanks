@@ -35,24 +35,12 @@ void GameMode::AssumeAIControl(TankList *tl, Level *lvl, TankColor starting_id) 
 
 std::unique_ptr<SinglePlayerMode> SinglePlayerMode::Setup(Screen* screen, World* world)
 {
-	/* Account for the GUI Controller: */
-	Rect gui = {}; // TODO: This was set to zero, I swear!
-	int gui_shift = gui.size.x + !!gui.size.x * 15; /* << Shift out of way of thumb... */
-
-	gamelib_debug("XYWH: %u %u %u %u", gui.pos.x, gui.pos.y, gui.size.x, gui.size.y);
 
 	/* Ready the tank! */
 	Tank* t = world->tank_list->AddTank(0, world->level->GetSpawn(0));
 	gamelib_tank_attach(t, 0, 1);
 
-	screen->AddWindow(Rect{ Position{ 2, 2 }, Size {GAME_WIDTH - 4, GAME_HEIGHT - 6 - tweak::screen::status_height} }, t);
-	screen->AddStatus(Rect(9 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH - 12 - gui_shift, tweak::screen::status_height), t, 1);
-	if (gui_shift)
-		screen->AddController(Rect(3, GAME_HEIGHT - 5 - static_cast<int>(gui.size.y), gui.size.x, gui.size.y));
-
-	/* Add the GUI bitmaps: */
-	screen->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5), &bitmaps::GuiEnergy, Palette.Get(Colors::StatusEnergy));
-	screen->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5), &bitmaps::GuiHealth, Palette.Get(Colors::StatusHealth));
+	Screens::SinglePlayerScreenSetup(screen, world, t);
 
 	/* Fill up the rest of the slots with Twitches: */
 	GameMode::AssumeAIControl(world->tank_list.get(), world->level.get(), 1);
@@ -70,22 +58,15 @@ void SinglePlayerMode::TearDown()
 std::unique_ptr<LocalTwoPlayerMode> LocalTwoPlayerMode::Setup(Screen* screen, World* world)
 {
 	/* Ready the tanks! */
-	Tank* t = world->tank_list->AddTank(0, world->level->GetSpawn(0));
-	gamelib_tank_attach(t, 0, 2);
-	screen->AddWindow(Rect(2, 2, GAME_WIDTH / 2 - 3, GAME_HEIGHT - 6 - tweak::screen::status_height), t);
-	screen->AddStatus(Rect(3, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH / 2 - 5 - 2, tweak::screen::status_height), t, 0);
+	Tank* player_one = world->tank_list->AddTank(0, world->level->GetSpawn(0));
+	gamelib_tank_attach(player_one, 0, 2);
 
 	/* Load up two controllable tanks: */
-	t = world->tank_list->AddTank(1, world->level->GetSpawn(1));
+	Tank* player_two = world->tank_list->AddTank(1, world->level->GetSpawn(1));
 	/*controller_twitch_attach(t);  << Attach a twitch to a camera tank, so we can see if they're getting smarter... */
-	gamelib_tank_attach(t, 1, 2);
-	screen->AddWindow(Rect(GAME_WIDTH / 2 + 1, 2, GAME_WIDTH / 2 - 3, GAME_HEIGHT - 6 - tweak::screen::status_height), t);
-	screen->AddStatus(Rect(GAME_WIDTH / 2 + 2 + 2, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH / 2 - 5 - 3, tweak::screen::status_height), t, 1);
+	gamelib_tank_attach(player_two, 1, 2);
 
-	/* Add the GUI bitmaps: */
-	screen->AddBitmap(Rect(GAME_WIDTH / 2 - 2, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5), &bitmaps::GuiEnergy, Palette.Get(Colors::StatusEnergy));
-	screen->AddBitmap(Rect(GAME_WIDTH / 2 - 2, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5), &bitmaps::GuiHealth, Palette.Get(Colors::StatusHealth));
-
+	Screens::TwoPlayerScreenSetup(screen, world, player_one, player_two);
 	/* Fill up the rest of the slots with Twitches: */
 	GameMode::AssumeAIControl(world->tank_list.get(), world->level.get(), 2);
 

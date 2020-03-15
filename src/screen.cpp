@@ -30,6 +30,39 @@ void Screen::FillBackground() {
 	}
 }
 
+void Screens::SinglePlayerScreenSetup(Screen* screen, World* world, Tank* player)
+{
+	int gui_shift = 0;
+	/* Tank view and status below it*/
+	screen->AddWindow(Rect{ Position{ 2, 2 }, Size {GAME_WIDTH - 4, GAME_HEIGHT - 6 - tweak::screen::status_height} }, player);
+	auto status_rect = Rect(9 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH - 16 - gui_shift, tweak::screen::status_height);
+	screen->AddStatus(status_rect, player, true);
+	screen->AddWidget(std::make_unique<widgets::LivesLeft>(Rect{ status_rect.Right() + 1, status_rect.Top() + 1, 2, 2 }));
+	
+	/* Add the E/S bitmaps: */
+	screen->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5), &bitmaps::GuiEnergy, Palette.Get(Colors::StatusEnergy));
+	screen->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5), &bitmaps::GuiHealth, Palette.Get(Colors::StatusHealth));
+}
+
+void Screens::TwoPlayerScreenSetup(Screen* screen, World* world, Tank* player_one, Tank* player_two)
+{
+	screen->AddWindow(Rect(2, 2, GAME_WIDTH / 2 - 3, GAME_HEIGHT - 6 - tweak::screen::status_height), player_one);
+	auto status_rect = Rect(3, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH / 2 - 5 - 2 - 4, tweak::screen::status_height);
+	screen->AddStatus(status_rect, player_one, false);
+	screen->AddWidget(std::make_unique<widgets::LivesLeft>(Rect{ status_rect.Right() + 1, status_rect.Top() + 1, 2, 2 }));
+
+	screen->AddWindow(Rect(GAME_WIDTH / 2 + 1, 2, GAME_WIDTH / 2 - 3, GAME_HEIGHT - 6 - tweak::screen::status_height), player_two);
+	status_rect = Rect(GAME_WIDTH / 2 + 2 + 2, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH / 2 - 5 - 3 - 4, tweak::screen::status_height);
+	screen->AddStatus(status_rect, player_two, true);
+	screen->AddWidget(std::make_unique<widgets::LivesLeft>(Rect{ status_rect.Right() + 1, status_rect.Top() + 1, 2, 2 }));
+
+	/* Add the GUI bitmaps: */
+	screen->AddBitmap(Rect(GAME_WIDTH / 2 - 2, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5), &bitmaps::GuiEnergy, Palette.Get(Colors::StatusEnergy));
+	screen->AddBitmap(Rect(GAME_WIDTH / 2 - 2, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5), &bitmaps::GuiHealth, Palette.Get(Colors::StatusHealth));
+
+}
+
+
 void Screen::DrawPixel(ScreenPosition pos, Color color) {
 
 	Offset adjusted_size = {  /* Make some pixels uniformly larger to fill in given space relatively evenly  */
@@ -68,12 +101,7 @@ Position Screen::ScreenToWorld(ScreenPosition screen_pos) {
 
 void Screen::DrawLevel() {
 
-	std::for_each(this->windows.begin(), this->windows.end(), [this](auto& item) { item.Draw(this); });
-	std::for_each(this->statuses.begin(), this->statuses.end(), [this](auto& item) { item.Draw(this); });
-	std::for_each(this->bitmaps.begin(), this->bitmaps.end(), [this](auto& item) { item.Draw(this); });
-
-	/*if(this->controller_count)
-		gamelib_gui_draw(this, this->controller.r);*/
+	std::for_each(this->widgets.begin(), this->widgets.end(), [this](auto& item) { item->Draw(this); });
 }
 
 void Screen::DrawCurrentMode() {	
@@ -161,10 +189,16 @@ void Screen::set_mode_menu( Menu *m) ;
 void Screen::set_mode_map( Map *m) ;
 */
 
+void Screen::AddWidget(std::unique_ptr<widgets::GuiWidget>&& widget)
+{
+	if (this->mode != SCREEN_DRAW_LEVEL) return;
+	this->widgets.emplace_back(std::move(widget));
+}
+
 /* Window creation should only happen in Level-drawing mode: */
 void Screen::AddWindow( Rect rect, Tank *task) {
 	if(this->mode != SCREEN_DRAW_LEVEL) return;
-	this->windows.emplace_back(widgets::TankView{ rect, task});
+	this->widgets.emplace_back(std::make_unique<widgets::TankView>( rect, task));
 }
 
 /* We can add the health/energy status bars here: */
@@ -174,7 +208,7 @@ void Screen::AddStatus(Rect rect, Tank *tank, bool decreases_to_left) {
 
 	/* Make sure that this status bar isn't too small: */
 	if(rect.size.x <= 2 || rect.size.y <= 4) return;
-	this->statuses.emplace_back(widgets::StatusBar{ rect, tank, decreases_to_left });
+	this->widgets.emplace_back(std::make_unique<widgets::StatusBar>( rect, tank, decreases_to_left ));
 }
 
 /* We tell the graphics system about GUI graphics here: 
@@ -186,14 +220,12 @@ void Screen::AddBitmap( Rect rect, Bitmap* new_bitmap, Color color) {
 	/* Bitmaps are only for game mode: */
 	if(this->mode != SCREEN_DRAW_LEVEL) return;
 	if(!new_bitmap) return;
-	this->bitmaps.emplace_back(widgets::BitmapRender{ rect, new_bitmap, color });
+	this->widgets.emplace_back(std::make_unique<widgets::BitmapRender>( rect, new_bitmap, color ));
 }
 
 void Screen::ClearGuiElements()
 {
-	this->bitmaps.clear();
-	this->windows.clear();
-	this->statuses.clear();
+	this->widgets.clear();
 }
 
 /* We don't check to see if gamelib needs the gui controller thing in this file.

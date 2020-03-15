@@ -72,6 +72,11 @@ struct Rect {
     Rect(Position pos, Size size) : pos(pos), size(size) { }
 	//Rect(ScreenPosition pos, Size size) : pos(pos), size(size) { }
 	Rect(int pos_x, int pos_y, int size_x, int size_y) : pos{ pos_x, pos_y }, size{ size_x, size_y } { }
+
+	int Left() const { return pos.x; }
+	int Top() const { return pos.y; }
+	int Right() const { return pos.x + size.x; }
+	int Bottom() const { return pos.y + size.y; }
 };
 
 /* A simple way to reference a color: */
