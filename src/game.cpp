@@ -13,6 +13,7 @@
 #include <gamelib.h>
 #include <chrono>
 #include <aitwitch.h>
+#include <world.h>
 #include <random.h>
 #include "exceptions.h"
 #include "colors.h"
@@ -37,13 +38,13 @@ std::unique_ptr<SinglePlayerMode> SinglePlayerMode::Setup(Screen* screen, World*
 {
 
 	/* Ready the tank! */
-	Tank* t = world->tank_list->AddTank(0, world->level->GetSpawn(0));
+	Tank* t = world->GetTankList()->AddTank(0, world->GetLevel()->GetSpawn(0));
 	gamelib_tank_attach(t, 0, 1);
 
 	Screens::SinglePlayerScreenSetup(screen, world, t);
 
 	/* Fill up the rest of the slots with Twitches: */
-	GameMode::AssumeAIControl(world->tank_list.get(), world->level.get(), 1);
+	GameMode::AssumeAIControl(world->GetTankList(), world->GetLevel(), 1);
 
 	return std::unique_ptr<SinglePlayerMode>{ new SinglePlayerMode(screen, world) }; // Can't make unique, private constructor
 }
@@ -58,17 +59,17 @@ void SinglePlayerMode::TearDown()
 std::unique_ptr<LocalTwoPlayerMode> LocalTwoPlayerMode::Setup(Screen* screen, World* world)
 {
 	/* Ready the tanks! */
-	Tank* player_one = world->tank_list->AddTank(0, world->level->GetSpawn(0));
+	Tank* player_one = world->GetTankList()->AddTank(0, world->GetLevel()->GetSpawn(0));
 	gamelib_tank_attach(player_one, 0, 2);
 
 	/* Load up two controllable tanks: */
-	Tank* player_two = world->tank_list->AddTank(1, world->level->GetSpawn(1));
+	Tank* player_two = world->GetTankList()->AddTank(1, world->GetLevel()->GetSpawn(1));
 	/*controller_twitch_attach(t);  << Attach a twitch to a camera tank, so we can see if they're getting smarter... */
 	gamelib_tank_attach(player_two, 1, 2);
 
 	Screens::TwoPlayerScreenSetup(screen, world, player_one, player_two);
 	/* Fill up the rest of the slots with Twitches: */
-	GameMode::AssumeAIControl(world->tank_list.get(), world->level.get(), 2);
+	GameMode::AssumeAIControl(world->GetTankList(), world->GetLevel(), 2);
 
 	return std::unique_ptr<LocalTwoPlayerMode>{ new LocalTwoPlayerMode(screen, world) }; // Can't make unique, private constructor
 }
@@ -101,7 +102,6 @@ Game::Game(GameConfig config) {
 	
 	/* Initialize most of the structures: */
 	this->screen   = std::make_unique<Screen>(this->config.is_fullscreen);
-	this->world.projectiles  = std::make_unique<ProjectileList>();
 	this->draw_buffer   = std::make_unique<DrawBuffer>(this->config.size);
 	
 	/* Generate our random level: */
@@ -117,8 +117,10 @@ Game::Game(GameConfig config) {
 	}
 	auto average_time = time_taken / TestIterations;
 	gamelib_print("***\r\nAverage level time: %lld.%03lld sec\n", average_time.count() / 1000, average_time.count() % 1000);
-	
-	this->world.tank_list = std::make_unique<TankList>(level.get(), this->world.projectiles.get());
+
+	/* Create projectile list, tank list and materialize the level voxels */
+	auto projectile_list = std::make_unique<ProjectileList>();
+	auto tank_list = std::make_unique<TankList>(level.get(), projectile_list.get());
 	level->GenerateDirtAndRocks();
 	level->CreateBases();
 	
@@ -126,23 +128,24 @@ Game::Game(GameConfig config) {
 	if(this->is_debug)
 		level->DumpBitmap("debug_start.bmp");
 	
-	/* Start drawing! */
+	/* Push the level to the draw buffer */
 	this->draw_buffer->SetDefaultColor(Palette.Get(Colors::Rock));
 	level->CommitAll();
 	this->screen->SetLevelDrawMode(this->draw_buffer.get());
-	world.level = std::move(level);
 
-	/* Set up the players/GUI: */
+	/* Create the world */
+	world = std::make_unique<World>(this, std::move(tank_list), std::move(projectile_list), std::move(level));
+	
+	/* Set up the players/GUI inside the world */
 	if (this->config.player_count > gamelib_get_max_players())
 		throw GameException("Tried to use more players than the platform can support.");
-	if     (this->config.player_count == 1) this->mode = SinglePlayerMode::Setup(this->screen.get(), &this->world);
-	else if(this->config.player_count == 2) this->mode = LocalTwoPlayerMode::Setup(this->screen.get(), &this->world);
+	if     (this->config.player_count == 1) this->mode = SinglePlayerMode::Setup(this->screen.get(), this->world.get());
+	else if(this->config.player_count == 2) this->mode = LocalTwoPlayerMode::Setup(this->screen.get(), this->world.get());
 	else {
 		ERR_OUT("Don't know how to draw more than 2 players at once...");
 		exit(1);
 	}
 
-	
 	
 	/* Copy all of our variables into the GameData struct: */
 	this->is_active = 1;
@@ -175,10 +178,15 @@ bool Game::AdvanceStep() {
 		gamelib_event_done();
 	}
 	
-	world.Advance(this->draw_buffer.get());
+	world->Advance(this->draw_buffer.get());
 	this->screen->DrawCurrentMode();
 	
 	return true;
+}
+
+void Game::GameOver()
+{
+	
 }
 
 /* Done with a game structure: */
@@ -187,7 +195,7 @@ Game::~Game() {
 	{
 		/* Debug if we need to: */
 		if(this->is_debug)
-		  world.level->DumpBitmap("debug_end.bmp");
+		  world->GetLevel()->DumpBitmap("debug_end.bmp");
 		this->mode->TearDown();
 	}
 }

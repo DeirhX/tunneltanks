@@ -54,14 +54,14 @@ constexpr Size GameSize = { GAME_WIDTH, GAME_HEIGHT };
 constexpr int MaxPlayers = 8;
 
 namespace tank {
+
 	constexpr int MaxLives = 3;
+	constexpr int RespawnDelay = perf::TargetFps * 3;
 	
 	/* The number of frames to wait in between shots: */
 	constexpr int BulletDelay = 3;
-
 	/* The maximum number of bullets allowed from a given tank: */
 	constexpr int BulletMax = 6;
-
 	/* The speed in pixels/frame of bullets: */
 	constexpr int BulletSpeed = 3;
 

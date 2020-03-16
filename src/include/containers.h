@@ -14,7 +14,7 @@
 //  to minimum.
 // Iterator and foreach support - skips over dead elements 
 template <typename T>
-concept Invalidable = requires(T t) { { t.IsInvalid() } -> bool; { t.Invalidate() }; { T::Invalid() }->T; };
+concept Invalidable = requires(T t) { { t.IsInvalid() } -> bool; { t.Invalidate() }; };
 
 template <Invalidable TElement>
 class ValueContainer

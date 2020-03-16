@@ -30,13 +30,13 @@ std::vector<Projectile> Projectile::CreateExplosion(Position pos, Level* level, 
 	return items;
 }
 
-Projectile Projectile::CreateBullet(Tank* t)
+Projectile Projectile::CreateBullet(Tank* tank)
 {
-	int dir = t->GetDirection();
+	int dir = tank->GetDirection();
 	Speed speed = Speed{ static_cast<int>(dir) % 3 - 1, static_cast<int>(dir) / 3 - 1 };
 	return Projectile {
-	    t->GetPosition(),
-	    t->GetPosition(),
+	    tank->GetPosition(),
+	    tank->GetPosition(),
 	    speed, tweak::tank::BulletSpeed,
-		ProjectileType::Bullet, t->level, t };
+		ProjectileType::Bullet, tank->GetLevel(), tank };
 }

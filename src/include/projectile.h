@@ -31,7 +31,7 @@ public:
     Projectile(Position position, Position origin, Speed speed, int life, ProjectileType type, Level* level, Tank* tank);
 
 	static std::vector<Projectile> CreateExplosion(Position pos, Level* level, int count, int radius, int ttl);
-	static Projectile CreateBullet(Tank* t);
+	static Projectile CreateBullet(Tank* tank);
 
 	bool IsInvalid() const { return !is_alive; }
 	bool IsValid() const { return is_alive; }

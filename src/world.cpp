@@ -1,6 +1,7 @@
 #include "base.h"
 #include "world.h"
 #include "random.h"
+#include "game.h"
 
 
 void World::Advance(class DrawBuffer* draw_buffer)
@@ -10,22 +11,21 @@ void World::Advance(class DrawBuffer* draw_buffer)
 	
 	/* Clear everything: */
 	this->tank_list->for_each([=](Tank* t) {t->Clear(draw_buffer); });
-	this->projectiles->Erase(draw_buffer, this->level.get());
-
-	/* Charge a small bit of energy for life: */
-	this->tank_list->for_each([=](Tank* t) {t->AlterEnergy(tweak::tank::IdleCost); });
-
-	/* See if we need to be healed: */
-	this->tank_list->for_each([=](Tank* t) {t->TryBaseHeal(); });
+	this->projectile_list->Erase(draw_buffer, this->level.get());
 
 	/* Move everything: */
-	this->projectiles->Advance(this->level.get(), this->tank_list.get());
-	this->tank_list->for_each([=](Tank* t) {t->DoMove(this->tank_list.get()); });
+	this->projectile_list->Advance(this->level.get(), this->GetTankList());
+	this->tank_list->for_each([=](Tank* t) {t->Advance(this); });
 
 	/* Draw everything: */
-	this->projectiles->Draw(draw_buffer);
+	this->projectile_list->Draw(draw_buffer);
 	this->tank_list->for_each([=](Tank* t) {t->Draw(draw_buffer); });
 
+}
+
+void World::GameIsOver()
+{
+	this->game->GameOver();
 }
 
 void World::RegrowPass()

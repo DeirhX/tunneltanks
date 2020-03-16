@@ -1,17 +1,20 @@
 #pragma once
 #include <memory>
 /* For the controllers/AIs: */
-//#include <levelslice.h>
+
 #include <level.h>
 #include <drawbuffer.h>
 #include <level_view.h>
 #include <controllersdl.h>
-#include "projectile_list.h"
+#include <projectile_list.h>
+//#include <world.h>
 
 struct LevelView;
+class World;
 
 /* Put inside a structure, so we are protected from casual AI cheating: */
-struct PublicTankInfo {
+struct PublicTankInfo
+{
 	int health, energy;
 	int x, y; /* relative from home base */
 	LevelView level_view;
@@ -25,19 +28,18 @@ enum class CollisionType {
 
 class Tank
 {
-public:
 	bool is_valid = false;
-
 	bool is_shooting = false;
 
 	Position pos;
 	Speed speed; /* Velocity... ie: is it moving now? */
-	int direction;
+	int direction; // TODO: Modernize
 
-	TankColor color;
+	TankColor color; /* Unique id and also color of the tank */
 
 	int bullet_timer = tweak::tank::BulletDelay;
 	int bullets_left = tweak::tank::BulletMax;
+	int respawn_timer = 0;
 
 	int health = tweak::tank::StartingShield;
 	int energy = tweak::tank::StartingFuel;
@@ -48,11 +50,9 @@ public:
 	Level* level;
 	ProjectileList* pl;
 
-private:
-	Tank() = default; // Never use manually. Will be used inside intrusive containers
 public:
-	static Tank Invalid() { return Tank(); }
-
+	void Invalidate() { this->is_valid = false; }
+	
 	Tank(TankColor color, Level* lvl, ProjectileList* pl, Position pos);
 	void SetController(std::shared_ptr<Controller> newController) { this->controller = newController; }
 
@@ -66,23 +66,26 @@ public:
 	[[nodiscard]] int GetEnergy() const { return this->energy; }
 	[[nodiscard]] int GetHealth() const { return this->health; }
 	[[nodiscard]] int GetLives() const { return this->lives_left; }
-	void Invalidate() { this->is_valid = false; }
+	[[nodiscard]] Level* GetLevel() { return this->level; };
+
+	void Advance(World* world); /* Advance world-step */
+		
     void AlterEnergy(int diff);
 	void AlterHealth(int diff);
 
-    void DoMove(class TankList* tl);
+	void Spawn();
+	void Die();
+
+	void ApplyControllerOutput(ControllerOutput controls);
+
 	CollisionType GetCollision(int dir, Position pos, TankList* tl);
-	void TryBaseHeal();
 
 	void Clear(DrawBuffer* drawBuff) const;
 	void Draw(DrawBuffer* drawBuff) const;
 
 	void ReturnBullet();
-	void TriggerExplosion() const;
-	void ApplyControllerOutput(ControllerOutput controls);
+private:
+	void DoMove(class TankList* tl);
+	void TryBaseHeal();
 };
-
-
-
-
 

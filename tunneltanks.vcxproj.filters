@@ -234,9 +234,11 @@
       <Filter>src\draw</Filter>
     </ClInclude>
     <ClInclude Include="src\base.h" />
-    <ClInclude Include="src\include\world.h" />
     <ClInclude Include="src\include\bitmaps.h">
       <Filter>src\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\world.h">
+      <Filter>src\game_entity</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

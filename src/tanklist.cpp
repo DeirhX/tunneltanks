@@ -25,7 +25,7 @@ TankList::~TankList()
 
 Tank* TankList::AddTank(TankColor color, Vector p)
 {
-	auto found= std::find_if(begin(), end(), [color](auto& el) { return color == el.color; });
+	auto found= std::find_if(begin(), end(), [color](auto& el) { return color == el.GetColor(); });
 	if (found != list.end())
 		throw GameException("already exists");
 
@@ -35,7 +35,7 @@ Tank* TankList::AddTank(TankColor color, Vector p)
 
 void TankList::RemoveTank(TankColor color)
 {
-	auto found = std::find_if(begin(), end(), [color](auto& el) { return color == el.color; });
+	auto found = std::find_if(begin(), end(), [color](auto& el) { return color == el.GetColor(); });
 	(*found).Invalidate();
 }
 
@@ -43,7 +43,7 @@ Tank* TankList::GetTankAtPoint(int x, int y, int ignored) {
 	
 	for(Tank& tank : *this) 
 	{
-		if(tank.color == ignored || tank.IsDead()) continue;
+		if(tank.GetColor() == ignored || tank.IsDead()) continue;
 		
 		Position pos = tank.GetPosition();
 		pos.x = x - pos.x + 3; pos.y = y - pos.y + 3;
@@ -62,7 +62,7 @@ bool TankList::CheckForCollision(Tank& tank, Position testPos, int testDirection
 	{
 		int lx, ly, ux, uy;
 		
-		if(otherTank.color == tank.color || otherTank.IsDead()) continue;
+		if(otherTank.GetColor() == tank.GetColor() || otherTank.IsDead()) continue;
 		
 		/* Let's see if these two tanks are ANYWHERE near each other: */
 		Position pos = otherTank.GetPosition();

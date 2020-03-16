@@ -1,8 +1,10 @@
 #pragma once
+#include <cassert>
 #include <types.h>
 #include <memory>
 #include "levelgen.h"
-#include "world.h"
+
+class TankList;
 
 struct GameConfig {
 	LevelGenerator level_generator;
@@ -13,7 +15,8 @@ struct GameConfig {
 	int rand_seed;
 };
 
-struct Game {
+class Game
+{
 	int is_active = false;
 	int is_debug = false;
 	
@@ -21,7 +24,7 @@ struct Game {
 
 	std::unique_ptr<class DrawBuffer> draw_buffer;
 	std::unique_ptr<class Screen> screen;
-	World world;
+	std::unique_ptr<class World> world;
 
 	std::unique_ptr<class GameMode> mode;
 public:
@@ -29,6 +32,7 @@ public:
 	~Game();
 
 	bool AdvanceStep();
+	void GameOver();
 private:
 };
 

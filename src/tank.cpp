@@ -10,6 +10,7 @@
 #include <tanklist.h>
 #include <level_view.h>
 #include <algorithm>
+#include <world.h>
 #include "colors.h"
 
 
@@ -144,6 +145,34 @@ void Tank::ReturnBullet()
 	this->bullets_left++;
 }
 
+void Tank::Advance(World* world)
+{
+	if (!this->IsDead())
+	{
+		this->AlterEnergy(tweak::tank::IdleCost);
+
+		this->TryBaseHeal();
+		/* Solve collisions with other tanks */
+		this->DoMove(world->GetTankList());
+	}
+	else {
+		--this->respawn_timer;
+		if (!this->respawn_timer)
+		{
+			--this->lives_left;
+			if (this->lives_left)
+			{
+				Spawn();
+			}
+			else 
+			{
+				world->GameIsOver();
+			}
+
+		}
+	}
+}
+
 void Tank::AlterEnergy(int diff) {
 
 	/* You can't alter energy if the tank is dead: */
@@ -165,18 +194,30 @@ void Tank::AlterHealth(int diff) {
 	/* Make sure we don't come back from the dead: */
 	if(this->IsDead()) return;
 	
-	if(diff < 0 && -diff >= this->health) {
-		this->health = 0;
-		this->energy = 0;
-		this->TriggerExplosion();
+	if(diff < 0 && -diff >= this->health) 
+	{
+		Die();
 		return;
 	}
 
 	this->health = std::min(this->health + diff, tweak::tank::StartingShield);
 }
 
-void Tank::TriggerExplosion() const
+void Tank::Spawn()
 {
+	this->bullet_timer = tweak::tank::BulletDelay;
+	this->bullets_left = tweak::tank::BulletMax;
+	this->health = tweak::tank::StartingShield;
+	this->energy = tweak::tank::StartingFuel;
+}
+
+
+void Tank::Die()
+{
+	this->health = 0;
+	this->energy = 0;
+	this->respawn_timer = tweak::tank::RespawnDelay;
+
 	this->pl->Add(Projectile::CreateExplosion(
 		this->pos, this->level,
 		EXPLOSION_DEATH_COUNT,
