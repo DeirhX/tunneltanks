@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="gamelib">
-      <UniqueIdentifier>{4e67f530-6514-4333-a5cb-f806424c4517}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{2bec0e26-c4c7-4941-abaf-a7a2598710dd}</UniqueIdentifier>
     </Filter>
@@ -21,6 +18,9 @@
     </Filter>
     <Filter Include="src\game_entity">
       <UniqueIdentifier>{906cc533-fa4c-4f62-8198-653d69786463}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sdl_interface">
+      <UniqueIdentifier>{4e67f530-6514-4333-a5cb-f806424c4517}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -46,28 +46,28 @@
       <Filter>src\draw</Filter>
     </ClCompile>
     <ClCompile Include="src\gamelib\SDL\bitmap.cpp">
-      <Filter>gamelib</Filter>
+      <Filter>sdl_interface</Filter>
     </ClCompile>
     <ClCompile Include="src\gamelib\SDL\control.cpp">
-      <Filter>gamelib</Filter>
+      <Filter>sdl_interface</Filter>
     </ClCompile>
     <ClCompile Include="src\gamelib\SDL\controllersdl.cpp">
-      <Filter>gamelib</Filter>
+      <Filter>sdl_interface</Filter>
     </ClCompile>
     <ClCompile Include="src\gamelib\SDL\events.cpp">
-      <Filter>gamelib</Filter>
+      <Filter>sdl_interface</Filter>
     </ClCompile>
     <ClCompile Include="src\gamelib\SDL\graphics.cpp">
-      <Filter>gamelib</Filter>
+      <Filter>sdl_interface</Filter>
     </ClCompile>
     <ClCompile Include="src\gamelib\SDL\logging.cpp">
-      <Filter>gamelib</Filter>
+      <Filter>sdl_interface</Filter>
     </ClCompile>
     <ClCompile Include="src\gamelib\SDL\gui.cpp">
-      <Filter>gamelib</Filter>
+      <Filter>sdl_interface</Filter>
     </ClCompile>
     <ClCompile Include="src\gamelib\SDL\sdldata.cpp">
-      <Filter>gamelib</Filter>
+      <Filter>sdl_interface</Filter>
     </ClCompile>
     <ClCompile Include="src\aitwitch.cpp">
       <Filter>src\ai</Filter>
@@ -129,16 +129,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\controllersdl.h">
-      <Filter>gamelib</Filter>
+      <Filter>sdl_interface</Filter>
     </ClInclude>
     <ClInclude Include="src\gamelib\SDL\require_sdl.h">
-      <Filter>gamelib</Filter>
+      <Filter>sdl_interface</Filter>
     </ClInclude>
     <ClInclude Include="src\gamelib\SDL\sdldata.h">
-      <Filter>gamelib</Filter>
+      <Filter>sdl_interface</Filter>
     </ClInclude>
     <ClInclude Include="src\gamelib\SDL\control.h">
-      <Filter>gamelib</Filter>
+      <Filter>sdl_interface</Filter>
     </ClInclude>
     <ClInclude Include="src\include\levelgen.h">
       <Filter>src\generators</Filter>

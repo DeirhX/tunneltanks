@@ -12,4 +12,6 @@ class Controller
 public:
 	virtual ~Controller() = default;
 	virtual ControllerOutput ApplyControls(struct PublicTankInfo* tankPublic) = 0;
+
+	virtual bool IsPlayer() = 0;
 };

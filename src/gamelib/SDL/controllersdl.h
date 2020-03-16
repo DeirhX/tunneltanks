@@ -9,6 +9,7 @@ public:
 	KeyboardController(SDLKey left, SDLKey right, SDLKey up, SDLKey down, SDLKey shoot);
 	ControllerOutput ApplyControls(PublicTankInfo* tankPublic) override;
 
+	bool IsPlayer() override { return true; }
 };
 
 /* The SDL-based keyboard controller: */
@@ -18,5 +19,7 @@ class JoystickController : public Controller
 public:
 	JoystickController();
 	ControllerOutput ApplyControls(PublicTankInfo* tankPublic) override;
+
+	bool IsPlayer() override { return true; }
 };
 

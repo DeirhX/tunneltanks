@@ -23,4 +23,6 @@ public:
 public:
 	TwitchController();
 	ControllerOutput ApplyControls(struct PublicTankInfo* tankPublic) override;
+
+	bool IsPlayer() override { return false; }
 };
