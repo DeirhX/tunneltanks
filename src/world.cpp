@@ -38,8 +38,8 @@ void World::RegrowPass()
 		if (vox == LevelVoxel::Blank || Voxels::IsScorched(vox))
 		{
 			int neighbors = this->level->CountNeighbors(pos, [](auto voxel) { return Voxels::IsDirt(voxel) ? 1 : 0; });
-			int modifier = (vox == LevelVoxel::Blank) ? 3 : 1;
-			if (neighbors > 2 && local->random.Int(0, 500) < tweak::DirtRegrowSpeed * neighbors * modifier) {
+			int modifier = (vox == LevelVoxel::Blank) ? 4 : 1;
+			if (neighbors > 2 && local->random.Int(0, 10000) < tweak::DirtRegrowSpeed * neighbors * modifier) {
 
 				vox = LevelVoxel::DirtGrow;
 				this->level->CommitPixel(pos);

@@ -19,8 +19,8 @@ namespace tweak {
 
 	}
 
-    constexpr int DirtRecoverSpeed = 5; /* Average delay before growing finishes and new dirt is formed. More is faster. */
-    constexpr int DirtRegrowSpeed = 10; /* Average delay before it starts growing back. More is faster.*/
+    constexpr int DirtRecoverSpeed = 2; /* Average delay before growing finishes and new dirt is formed. More is faster. */
+    constexpr int DirtRegrowSpeed = 5; /* Average delay before it starts growing back. More is faster.*/
 
 	namespace screen
 	{
