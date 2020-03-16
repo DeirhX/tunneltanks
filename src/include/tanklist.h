@@ -4,17 +4,18 @@
 #include <containers.h>
 
 class ProjectileList;
+class TankBase;
 
 class TankList {
 public:
 	ValueContainer<Tank> list;
-	Level* lvl;
-	ProjectileList* pl;
+	Level* level;
+	ProjectileList* projectile_list;
 
-	TankList(Level* lvl, ProjectileList* pl);
-	~TankList();
+	TankList(Level* level, ProjectileList* projectile_list);
+	//~TankList();
 
-	Tank* AddTank(TankColor id, Vector p);
+	Tank* AddTank(TankColor id, TankBase* tank_base);
 	void RemoveTank(TankColor id);
 	Tank* GetTankAtPoint(int x, int y, int ignored);
 	bool CheckForCollision(Tank& tank, Position testPos, int testDirection);

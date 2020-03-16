@@ -114,7 +114,7 @@ static void add_spawns(Level *lvl) {
 			TankColor j;
 			/* Make sure that point isn't too close to others: */
 			for(j=0; j<i; j++) {
-				if(pt_dist(lvl->GetSpawn(i),lvl->GetSpawn(j)) < MIN_SPAWN_DIST*MIN_SPAWN_DIST)
+				if(pt_dist(lvl->GetSpawn(i)->GetPosition(),lvl->GetSpawn(j)->GetPosition()) < MIN_SPAWN_DIST*MIN_SPAWN_DIST)
 					break;
 			}
 			

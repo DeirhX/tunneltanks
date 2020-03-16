@@ -31,11 +31,12 @@ class Tank
 	bool is_valid = false;
 	bool is_shooting = false;
 
-	Position pos;
+	Position pos; /* Current tank position */
 	Speed speed; /* Velocity... ie: is it moving now? */
 	int direction; // TODO: Modernize
 
 	TankColor color; /* Unique id and also color of the tank */
+	TankBase* tank_base = nullptr; /* Base owned by the tank  */
 
 	int bullet_timer = tweak::tank::BulletDelay;
 	int bullets_left = tweak::tank::BulletMax;
@@ -48,12 +49,12 @@ class Tank
 	std::shared_ptr<Controller> controller;
 
 	Level* level;
-	ProjectileList* pl;
+	ProjectileList* projectile_list;
 
 public:
 	void Invalidate() { this->is_valid = false; }
 	
-	Tank(TankColor color, Level* lvl, ProjectileList* pl, Position pos);
+	Tank(TankColor color, Level* lvl, ProjectileList* pl, TankBase* tank_base);
 	void SetController(std::shared_ptr<Controller> newController) { this->controller = newController; }
 
 	[[nodiscard]] Position GetPosition() const { return this->pos; }

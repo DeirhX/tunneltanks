@@ -43,6 +43,15 @@ public:
 	static bool IsScorched(LevelVoxel voxel) { return voxel == LevelVoxel::DecalHigh || voxel == LevelVoxel::DecalLow; }
 };
 
+class TankBase
+{
+	Position position;
+public:
+	TankBase(Position position) : position(position) { }
+	Position GetPosition() { return this->position; }
+};
+
+
 
 class LevelData
 {
@@ -66,13 +75,14 @@ private:
 	LevelData data;
 	Size size;
 	DrawBuffer* drawBuffer;
-	std::array<Position, tweak::MaxPlayers> spawn;
+	std::vector<std::unique_ptr<TankBase>> spawn;
 
 public:
 	Level(Size size, DrawBuffer* db);
 
 	Size GetSize() const { return size; };
 
+	/* Voxel get-set-reference operations */
 	void SetVoxel(Position pos, LevelVoxel voxel);
 	LevelVoxel GetVoxel(Position pos) const;
 	LevelVoxel& Voxel(Position pos);
@@ -83,12 +93,21 @@ public:
 	LevelVoxel GetVoxelRaw(int offset) const;
 	LevelVoxel& VoxelRaw(Position pos);
 
+	/* Draw buffer interaction */
+	void CommitPixel(Position pos) const;
+	void CommitAll() const;
+	void DumpBitmap(const char* filename) const;
+
+	/* Color lookup. Can be somewhere else. */
+	static Color GetVoxelColor(LevelVoxel voxel);
+	
+	/* Count neighbors is used when level building and for ad-hoc queries (e.g. dirt regeneration) */
 	int CountNeighborValues(Position pos);
 	int CountNeighbors(Position pos, LevelVoxel neighbor_value);
      template <typename CountFunc>
 	int CountNeighbors(Position pos, CountFunc count_func);
 
-	// Level generate
+	/* Level generation */
 	void GenerateDirtAndRocks();
 	void CreateBases();
 	 template <typename VoxelFunc>
@@ -96,16 +115,12 @@ public:
 	 template <typename VoxelFunc>
 	void ForEachVoxelParallel(VoxelFunc func, WorkerCount worker_count = {});
 
-	Position GetSpawn(TankColor color) const;
-	void SetSpawn(TankColor color, Position pos);
+	/* Tank-related stuff */
+	TankBase* GetSpawn(TankColor color) const;
+	void SetSpawn(TankColor color, std::unique_ptr<TankBase>&& tank_base);
+	void SetSpawn(TankColor color, Position position); 
 	bool DigHole(Position pos);
 	BaseCollision CheckBaseCollision(Position pos, TankColor color);
-
-	void CommitPixel(Position pos) const;
-	void CommitAll() const;
-	void DumpBitmap(const char* filename) const;
-
-	static Color GetVoxelColor(LevelVoxel voxel);
 private:
 	bool IsInBounds(Position pos) const;
 	

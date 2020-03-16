@@ -186,7 +186,7 @@ bool Game::AdvanceStep() {
 
 void Game::GameOver()
 {
-	
+	assert(!"Implement game over!");
 }
 
 /* Done with a game structure: */

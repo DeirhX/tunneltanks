@@ -22,13 +22,11 @@ const LevelVoxel& LevelData::operator[](int i) const
 	return this->array[i];
 }
 
-Level::Level(Size size, DrawBuffer* b)
-	: size(size), drawBuffer (b)
+Level::Level(Size size, DrawBuffer* draw_buffer)
+	: size(size), drawBuffer (draw_buffer)
 {
 	this->data.array.resize(size.x * size.y);
 	std::fill(this->data.array.begin(), this->data.array.end(), LevelVoxel::LevelGenRock);
-	//for (int i = 0; i < size.x * size.y; ++i)
-	//	this->data[i] = LevelVoxel::LevelGenRock;
 }
 
 void Level::SetVoxel(Position pos, LevelVoxel voxel)
@@ -144,20 +142,27 @@ void Level::CreateBase(Position pos, TankColor color)
 void Level::CreateBases()
 {
 	for (TankColor i = 0; i < tweak::MaxPlayers; i++) {
-		CreateBase({ this->spawn[i].x, this->spawn[i].y }, i);
+		CreateBase({ this->spawn[i]->GetPosition().x, this->spawn[i]->GetPosition().y }, i);
 	}
 }
 
-Position Level::GetSpawn(TankColor color) const
+TankBase* Level::GetSpawn(TankColor color) const
 {
 	assert(color >= 0 && color < (int)this->spawn.size());
-	return this->spawn[color];
+	return this->spawn[color].get();
 }
 
-void Level::SetSpawn(TankColor color, Position pos)
+void Level::SetSpawn(TankColor color, std::unique_ptr<TankBase>&& tank_base)
 {
-	assert(color >= 0 && color < (int)this->spawn.size());
-	this->spawn[color] = pos;
+	assert(color >= 0 && color < tweak::MaxPlayers);
+	if (TankColor(this->spawn.size()) <= color)
+		this->spawn.resize(color + 1);
+	this->spawn[color] = std::move(tank_base);
+}
+
+void Level::SetSpawn(TankColor color, Position position)
+{
+	this->SetSpawn(color, std::make_unique<TankBase>(position));
 }
 
 bool Level::DigHole(Position pos)
@@ -208,7 +213,7 @@ void Level::CommitPixel(Position pos) const
 BaseCollision Level::CheckBaseCollision(Position pos, TankColor color)
 {
 	for(TankColor id = 0; id < tweak::MaxPlayers; id++) {
-		if(std::abs(this->spawn[id].x - pos.x) < BASE_SIZE/2 && std::abs(this->spawn[id].y - pos.y) < BASE_SIZE/2) {
+		if(std::abs(this->spawn[id]->GetPosition().x - pos.x) < BASE_SIZE/2 && std::abs(this->spawn[id]->GetPosition().y - pos.y) < BASE_SIZE/2) {
 			if (id == color)
 				return BaseCollision::Yours;
 			return BaseCollision::Enemy;

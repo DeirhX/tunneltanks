@@ -14,8 +14,8 @@
 #include "colors.h"
 
 
-Tank::Tank(TankColor color, Level *lvl, ProjectileList*pl, Position pos) :
-	pos(pos), color(color), is_valid(true)
+Tank::Tank(TankColor color, Level *lvl, ProjectileList*pl, TankBase* tank_base) :
+	pos(tank_base->GetPosition()), color(color), is_valid(true), tank_base(tank_base)
 {
 	// this->cached_slice = std::make_shared<LevelView>(this, lvl);
 	
@@ -24,7 +24,7 @@ Tank::Tank(TankColor color, Level *lvl, ProjectileList*pl, Position pos) :
 	if(this->direction >= 4) this->direction ++;
 	
 	this->level = lvl;
-    this->pl = pl;
+    this->projectile_list = pl;
 }
 
 /* We don't use the Tank structure in this function, since we are checking the
@@ -58,7 +58,7 @@ void Tank::DoMove(TankList *tl) {
 	
 	/* Calculate all of our motion: */
 	if(this->controller) {
-		Vector         base = this->level->GetSpawn(this->color);
+		Vector         base = this->level->GetSpawn(this->color)->GetPosition();
 		PublicTankInfo i = {
 			.health = this->health,
 			.energy = this->energy,
@@ -96,7 +96,7 @@ void Tank::DoMove(TankList *tl) {
 	if(this->bullet_timer == 0) {
 		if(this->is_shooting && this->bullets_left > 0) {
 			
-			this->pl->Add(Projectile::CreateBullet(this));
+			this->projectile_list->Add(Projectile::CreateBullet(this));
 
 			/* We just fired. Let's charge ourselves: */
 			this->AlterEnergy(tweak::tank::ShootCost);
@@ -218,7 +218,7 @@ void Tank::Die()
 	this->energy = 0;
 	this->respawn_timer = tweak::tank::RespawnDelay;
 
-	this->pl->Add(Projectile::CreateExplosion(
+	this->projectile_list->Add(Projectile::CreateExplosion(
 		this->pos, this->level,
 		EXPLOSION_DEATH_COUNT,
 		EXPLOSION_DEATH_RADIUS,

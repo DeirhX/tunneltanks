@@ -14,23 +14,17 @@
 #include <algorithm>
 #include "projectile_list.h"
 
-TankList::TankList(Level *lvl, ProjectileList *pl): lvl(lvl), pl(pl)
+TankList::TankList(Level *level, ProjectileList *projectile_list): level(level), projectile_list(projectile_list)
 {
 }
 
-TankList::~TankList()
-{
-}
-
-
-Tank* TankList::AddTank(TankColor color, Vector p)
+Tank* TankList::AddTank(TankColor color, TankBase* tank_base)
 {
 	auto found= std::find_if(begin(), end(), [color](auto& el) { return color == el.GetColor(); });
 	if (found != list.end())
 		throw GameException("already exists");
 
-	return &this->list.ConstructElement(color, this->lvl, this->pl, Position{p.x, p.y});
-	//return this->list.Add(std::make_unique<Tank>(color, this->lvl, this->pl, Position{p.x, p.y}));
+	return &this->list.ConstructElement(color, this->level, this->projectile_list, tank_base);
 }
 
 void TankList::RemoveTank(TankColor color)
