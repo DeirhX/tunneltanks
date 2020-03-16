@@ -172,9 +172,10 @@ namespace widgets {
 		if (direction == Direction::Vertical) 
 		{
 			int y_pos = 0;
-			for (int life = 0; life < tank->GetLives() && y_pos + 2 <= this->rect.size.y; ++life)
+			for (int life = 0; y_pos + 2 <= this->rect.size.y; ++life)
 			{
-				this->data->Draw(screen, Position{ this->rect.pos } + Offset{ 0, y_pos }, this->color);
+				Color color = (life < tank->GetLives()) ? this->color : Palette.Get(Colors::Blank);
+				this->data->Draw(screen, Position{ this->rect.pos } + Offset{ 0, y_pos }, color);
 				y_pos += 1 + this->data->size.y;
 			}
 		}

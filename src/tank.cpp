@@ -209,6 +209,8 @@ void Tank::Spawn()
 	this->bullets_left = tweak::tank::BulletMax;
 	this->health = tweak::tank::StartingShield;
 	this->energy = tweak::tank::StartingFuel;
+
+	this->pos = this->tank_base->GetPosition();
 }
 
 
