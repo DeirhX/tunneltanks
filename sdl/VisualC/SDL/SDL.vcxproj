@@ -25,26 +25,28 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
     <SpectreMitigation>false</SpectreMitigation>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
     <UseDebugLibraries>true</UseDebugLibraries>
     <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
     <SpectreMitigation>false</SpectreMitigation>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -128,6 +130,9 @@
       <SubSystem>Windows</SubSystem>
       <CLRUnmanagedCodeCheck>false</CLRUnmanagedCodeCheck>
     </Link>
+    <Lib>
+      <AdditionalDependencies>winmm.lib;dxguid.lib</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
@@ -164,6 +169,9 @@
       <TargetMachine>MachineX64</TargetMachine>
       <CLRUnmanagedCodeCheck>false</CLRUnmanagedCodeCheck>
     </Link>
+    <Lib>
+      <AdditionalDependencies>winmm.lib;dxguid.lib</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
@@ -201,6 +209,9 @@
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <SubSystem>Windows</SubSystem>
     </Link>
+    <Lib>
+      <AdditionalDependencies>winmm.lib;dxguid.lib</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
@@ -238,6 +249,9 @@
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
+    <Lib>
+      <AdditionalDependencies>winmm.lib;dxguid.lib</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\audio\disk\SDL_diskaudio.c" />
