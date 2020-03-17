@@ -174,8 +174,8 @@ namespace widgets {
 			int y_pos = 0;
 			for (int life = 0; y_pos + 2 <= this->rect.size.y; ++life)
 			{
-				Color color = (life < tank->GetLives()) ? this->color : Palette.Get(Colors::Blank);
-				this->data->Draw(screen, Position{ this->rect.pos } + Offset{ 0, y_pos }, color);
+				Color such_color = (life < tank->GetLives()) ? this->color : Palette.Get(Colors::Blank);
+				this->data->Draw(screen, Position{ this->rect.pos } + Offset{ 0, y_pos }, such_color);
 				y_pos += 1 + this->data->size.y;
 			}
 		}

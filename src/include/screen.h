@@ -64,7 +64,7 @@ public:
 	void AddWidget(std::unique_ptr<widgets::GuiWidget>&& widget);
 	void AddWindow(Rect rect, class Tank* task);
 	void AddStatus(Rect r, class Tank* t, bool decreases_to_left);
-	void AddBitmap(Rect r, Bitmap* bitmap, Color color);
+	void AddBitmap(Rect r, MonoBitmap* bitmap, Color color);
 	/* Call to remove all windows, statuses and bitmaps */
 	void ClearGuiElements();
 	

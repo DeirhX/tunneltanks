@@ -216,7 +216,7 @@ void Screen::AddStatus(Rect rect, Tank *tank, bool decreases_to_left) {
  * value, especially if the bit depth is changed... 
  * TODO: That really isn't needed anymore, since we haven't cached mapped RGB
  *       values since the switch to gamelib... */
-void Screen::AddBitmap( Rect rect, Bitmap* new_bitmap, Color color) {
+void Screen::AddBitmap( Rect rect, MonoBitmap* new_bitmap, Color color) {
 	/* Bitmaps are only for game mode: */
 	if(this->mode != SCREEN_DRAW_LEVEL) return;
 	if(!new_bitmap) return;

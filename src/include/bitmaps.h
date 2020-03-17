@@ -30,35 +30,69 @@ public:
 	}
 };
 
-class Bitmap : public ValueArray<char>
+template <typename DataType>
+class Bitmap : public ValueArray<DataType>
 {
+	using Base = ValueArray<DataType>;
+protected:
+	/* Draw entire bitmap */
+	template <typename GetColorFunc>
+	void Draw(Screen* screen, Position position, GetColorFunc GetPixelColor); /* Color GetPixelColor(int index) */
+	/* Draw portion of bitmap */
+	template <typename GetColorFunc>
+	void Draw(Screen* screen, Position screen_pos, Rect source_rect, GetColorFunc GetPixelColor); /* Color GetPixelColor(int index) */
+
+	Bitmap(Size size, std::initializer_list<DataType> data) : Base(size, data) { }
 public:
-	Bitmap(Size size, std::initializer_list<char> data) : ValueArray<char>(size, data) { }
+	[[nodiscard]] int ToIndex(Position position) const { return position.x + position.y * this->size.x; }
+};
+
+
+class MonoBitmap : public Bitmap<char>
+{
+	using Base = Bitmap<char>;
+public:
+	MonoBitmap(Size size, std::initializer_list<char> data) : Bitmap<char>(size, data) { }
 	/* Draw entire bitmap */
 	void Draw(Screen* screen, Position position, Color color);
 	/* Draw portion of bitmap */
 	void Draw(Screen* screen, Position screen_pos, Rect source_rect, Color color);
 private:
-	int ToIndex(Position position) { return position.x + position.y * size.x; }
+	//int ToIndex(Position position) const { return position.x + position.y * size.x; }
+};
+
+class ColorBitmap : public Bitmap<Color>
+{
+	using Base = Bitmap<Color>;
+public:
+	ColorBitmap(Size size, std::initializer_list<Color> data) : Bitmap<Color>(size, data) { }
+	/* Draw entire bitmap */
+	void Draw(Screen* screen, Position screen_pos);
+	void Draw(Screen* screen, Position screen_pos, Color color_filter);
+	/* Draw portion of bitmap */
+	void Draw(Screen* screen, Position screen_pos, Rect source_rect);
+	void Draw(Screen* screen, Position screen_pos, Rect source_rect, Color color_filter);
+private:
+	//int ToIndex(Position position) const { return position.x + position.y * size.x; }
 };
 
 namespace bitmaps
 {
-	inline auto GuiHealth = Bitmap(Size{ 4, 5 },
+	inline auto GuiHealth = MonoBitmap(Size{ 4, 5 },
 		{1,0,0,1,
 		 1,0,0,1,
 		 1,1,1,1,
 		 1,0,0,1,
 		 1,0,0,1 });
 
-	inline auto GuiEnergy = Bitmap(Size{ 4, 5 },
+	inline auto GuiEnergy = MonoBitmap(Size{ 4, 5 },
 		{1,1,1,1,
 		 1,0,0,0,
 		 1,1,1,0,
 		 1,0,0,0,
 		 1,1,1,1 });
 
-	inline auto LifeDot = Bitmap(Size{ 2, 2 },
+	inline auto LifeDot = MonoBitmap(Size{ 2, 2 },
 		{1,1,
 		 1,1,});
 }

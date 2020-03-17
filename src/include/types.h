@@ -63,7 +63,7 @@ inline Position operator+(Position v, Offset o) { return { v.x + o.x, v.y + o.y 
 inline Position operator+(Position v, Size o) { return { v.x + o.x, v.y + o.y }; }
 
 
-/* A simple struct for quads: */
+/* Rectangle */
 struct Rect {
 	Position pos;
 	Size size;
@@ -78,11 +78,19 @@ struct Rect {
 	int Bottom() const { return pos.y + size.y; }
 };
 
-/* A simple way to reference a color: */
-struct Color {
+struct Color
+{
 	unsigned char r{}, g{}, b{};
+public:
 	Color() = default;
     Color(unsigned char r, unsigned char g, unsigned char b) : r(r), g(g), b(b) { }
+	Color Mask(Color other) const { return Color( (this->r * other.r) / 255, (this->g * other.g) / 255, (this->b * other.b) / 255 ); }
+};
+
+struct Color32 {
+	unsigned char r{}, g{}, b{}, a{};
+	Color32() = default;
+	Color32(unsigned char r, unsigned char g, unsigned char b, unsigned char a) : r(r), g(g), b(b), a(a) { }
 };
 
 using TankColor = char;

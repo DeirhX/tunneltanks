@@ -46,10 +46,10 @@ namespace widgets
 	struct BitmapRender : public GuiWidget
 	{
 		Rect  rect;
-		Bitmap* data;
+		MonoBitmap* data;
 		Color color;
 	public:
-		BitmapRender(Rect rect, Bitmap* bitmap_data, Color color) : rect(rect), data(bitmap_data), color(color) {}
+		BitmapRender(Rect rect, MonoBitmap* bitmap_data, Color color) : rect(rect), data(bitmap_data), color(color) {}
 		void Draw(Screen* screen) override;
 	};
 
