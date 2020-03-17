@@ -53,6 +53,8 @@ public:
 	iterator end() { return data.end(); }
 	const_iterator cbegin() const { return data.cbegin(); }
 	const_iterator cend() const { return data.cend(); }
+
+	operator Container() const { return data; }
 };
 
 template <typename DataType>

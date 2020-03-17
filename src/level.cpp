@@ -11,6 +11,7 @@
 #include "exceptions.h"
 #include <cassert>
 #include "colors.h"
+#include "trace.h"
 
 
 LevelData::LevelData(Size size) : array(size)
@@ -238,16 +239,21 @@ Color Level::GetVoxelColor(LevelVoxel voxel)
 /* Dumps a level into a BMP file: */
 void Level::DumpBitmap(const char *filename) const
 {
-	BMPFile *f = gamelib_bmp_new(this->size.x, this->size.y);
-	
-	for(int y = 0; y< this->size.y; y++)
-		for(int x = 0; x< this->size.x; x++) {
-			Color color = Color(0,0,0);
-			
-			LevelVoxel val = this->GetVoxel({ x, y });
-			gamelib_bmp_set_pixel(f, x, y, GetVoxelColor(val));
+	//for (int i = 0; i < 20; ++i)
+	{
+		BMPFile* f = gamelib_bmp_new(this->size.x, this->size.y);
+
+		auto color_data = std::vector<Color>(this->size.x * this->size.y);
+
+		for (int i = 0; i < this->size.y * this->size.x; i++)
+			color_data[i] = GetVoxelColor(this->GetVoxelRaw(i));
+
+		{
+			auto trace = MeasureFunction<5>("DumpBitmap");
+			gamelib_bmp_set_data(f, color_data);
 		}
-	
-	gamelib_bmp_finalize(f, filename);
+
+		gamelib_bmp_finalize(f, filename);
+	}
 }
 
