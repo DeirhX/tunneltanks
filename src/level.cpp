@@ -12,20 +12,15 @@
 #include <cassert>
 #include "colors.h"
 
-LevelVoxel& LevelData::operator[](int i)
-{
-	return this->array[i];
-}
 
-const LevelVoxel& LevelData::operator[](int i) const
+LevelData::LevelData(Size size) : array(size)
 {
-	return this->array[i];
+	
 }
 
 Level::Level(Size size, DrawBuffer* draw_buffer)
-	: size(size), drawBuffer (draw_buffer)
+	: size(size), drawBuffer (draw_buffer), data(size)
 {
-	this->data.array.resize(size.x * size.y);
 	std::fill(this->data.array.begin(), this->data.array.end(), LevelVoxel::LevelGenRock);
 }
 

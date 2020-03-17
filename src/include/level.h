@@ -6,6 +6,8 @@
 #include <memory>
 #include <array>
 #include <vector>
+
+#include "bitmaps.h"
 #include "parallelism.h"
 
 enum class BaseCollision
@@ -55,11 +57,14 @@ public:
 
 class LevelData
 {
-	using Container = std::vector<LevelVoxel>;
+	using Container = ValueArray<LevelVoxel>;
 public:
 	Container array;
-	LevelVoxel& operator[](int i);
-	const LevelVoxel& operator[](int i) const;
+
+	LevelData(Size size);
+	
+	LevelVoxel& operator[](int i) { return array[i]; }
+	const LevelVoxel& operator[](int i) const { return array[i]; }
 
 	Container::iterator begin() { return array.begin(); }
 	Container::iterator end() { return array.end(); }

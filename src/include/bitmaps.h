@@ -11,23 +11,48 @@ class Screen;
 template <typename DataType = char>
 class ValueArray
 {
+public:
 	using Container = std::vector<DataType>;
+	using iterator = typename Container::iterator;
+	using const_iterator = typename Container::const_iterator;
 	/* Wasteful to copy in dynamically-allocated memory. But expecting we'll be keeping bitmaps in files in near future when it's gonna be needed. Hang on! */
+private:
 	Container data;
 public:
 	Size size;
-	typename Container::iterator begin() { return data.begin(); }
-	typename Container::iterator end() { return data.end(); }
-public:
+
 	ValueArray(Size size, std::initializer_list<DataType> data) : data(data), size(size)
 	{
 		assert(size.x * size.y == int(data.size()));
-	};
+	}
+	ValueArray(Size size): size(size)
+	{
+		data.resize(size.x * size.y);
+	}
+	
 	DataType& At(int index)
 	{
 		assert(index >= 0 && index < size.x * size.y);
 		return data[index];
 	}
+	DataType& operator[](int index)
+	{
+		return At(index);
+	}
+	[[nodiscard]] const DataType& At(int index) const
+	{
+		assert(index >= 0 && index < size.x * size.y);
+		return data[index];
+	}
+	[[nodiscard]] const DataType& operator[](int index) const
+	{
+		return At(index);
+	}
+
+	iterator begin() { return data.begin(); }
+	iterator end() { return data.end(); }
+	const_iterator cbegin() const { return data.cbegin(); }
+	const_iterator cend() const { return data.cend(); }
 };
 
 template <typename DataType>
