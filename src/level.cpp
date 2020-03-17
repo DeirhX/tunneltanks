@@ -10,6 +10,8 @@
 
 #include "exceptions.h"
 #include <cassert>
+
+#include "bitmap.h"
 #include "colors.h"
 #include "trace.h"
 
@@ -241,19 +243,18 @@ void Level::DumpBitmap(const char *filename) const
 {
 	//for (int i = 0; i < 20; ++i)
 	{
-		BMPFile* f = gamelib_bmp_new(this->size.x, this->size.y);
-
-		auto color_data = std::vector<Color>(this->size.x * this->size.y);
+		auto color_data = ColorBitmap{ this->size };
 
 		for (int i = 0; i < this->size.y * this->size.x; i++)
 			color_data[i] = GetVoxelColor(this->GetVoxelRaw(i));
 
 		{
 			auto trace = MeasureFunction<5>("DumpBitmap");
-			gamelib_bmp_set_data(f, color_data);
+			BmpFile::SaveToFile(color_data, filename);
 		}
-
-		gamelib_bmp_finalize(f, filename);
 	}
+
+	auto loaded = BmpFile::LoadFromFile(filename);
+	BmpFile::SaveToFile(loaded, "resaved");
 }
 

@@ -52,12 +52,6 @@ bool gamelib_get_fullscreen() ;
 /* TODO: Implement an API for locking/unlocking the pixel array. */
 int  gamelib_draw_box(Rect rect, Color c) ;
 
-/* Now, for a way to draw a bitmap, if the platform wants to... */
-typedef struct BMPFile BMPFile;
-BMPFile *gamelib_bmp_new      (int width, int height) ;
-//void     gamelib_bmp_set_pixel(BMPFile *f, int x, int y, Color c) ;
-void     gamelib_bmp_set_data(BMPFile* f, const std::vector<Color>& data);
-void     gamelib_bmp_finalize (BMPFile *f, const char *filename) ;
 
 /* A few outputting commands: */
 void     gamelib_print (const char *str, ...) ;

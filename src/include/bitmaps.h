@@ -29,6 +29,8 @@ public:
 	{
 		data.resize(size.x * size.y);
 	}
+
+	size_t GetLength() const { return data.size(); }
 	
 	DataType& At(int index)
 	{
@@ -70,6 +72,7 @@ protected:
 	void Draw(Screen* screen, Position screen_pos, Rect source_rect, GetColorFunc GetPixelColor); /* Color GetPixelColor(int index) */
 
 	Bitmap(Size size, std::initializer_list<DataType> data) : Base(size, data) { }
+	Bitmap(Size size) : Base(size) { }
 public:
 	[[nodiscard]] int ToIndex(Position position) const { return position.x + position.y * this->size.x; }
 };
@@ -80,6 +83,7 @@ class MonoBitmap : public Bitmap<char>
 	using Base = Bitmap<char>;
 public:
 	MonoBitmap(Size size, std::initializer_list<char> data) : Bitmap<char>(size, data) { }
+	MonoBitmap(Size size) : Bitmap<char>(size) { }
 	/* Draw entire bitmap */
 	void Draw(Screen* screen, Position position, Color color);
 	/* Draw portion of bitmap */
@@ -93,6 +97,7 @@ class ColorBitmap : public Bitmap<Color>
 	using Base = Bitmap<Color>;
 public:
 	ColorBitmap(Size size, std::initializer_list<Color> data) : Bitmap<Color>(size, data) { }
+	ColorBitmap(Size size) : Bitmap<Color>(size) { }
 	/* Draw entire bitmap */
 	void Draw(Screen* screen, Position screen_pos);
 	void Draw(Screen* screen, Position screen_pos, Color color_filter);
