@@ -163,7 +163,7 @@ namespace widgets {
 
 	void BitmapRender::Draw(Screen* screen)
 	{
-		this->data->Draw(screen, this->rect.pos, this->color);
+		this->data->Draw(screen, this->rect.pos, Rect{ {0,0}, {this->rect.size.x - 1,this->rect.size.y - 1} }, this->color);
 	}
 
 	void LivesLeft::Draw(Screen* screen)

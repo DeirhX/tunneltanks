@@ -34,8 +34,12 @@ class Bitmap : public ValueArray<char>
 {
 public:
 	Bitmap(Size size, std::initializer_list<char> data) : ValueArray<char>(size, data) { }
-	/* Note: No clipping */
+	/* Draw entire bitmap */
 	void Draw(Screen* screen, Position position, Color color);
+	/* Draw portion of bitmap */
+	void Draw(Screen* screen, Position screen_pos, Rect source_rect, Color color);
+private:
+	int ToIndex(Position position) { return position.x + position.y * size.x; }
 };
 
 namespace bitmaps

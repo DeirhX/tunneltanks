@@ -19,3 +19,14 @@ void Bitmap::Draw(Screen* screen, Position pos, Color color)
 		}
 	}
 }
+
+void Bitmap::Draw(Screen* screen, Position screen_pos, Rect source_rect, Color color)
+{
+	for(int x = source_rect.Left(); x <= source_rect.Right(); ++x)
+		for (int y = source_rect.Top(); y <= source_rect.Bottom(); ++y)
+		{
+			/* Draw its color or blank if it's a black/white bitmap */
+			auto draw_color = this->At(this->ToIndex({x, y})) ? color : Palette.Get(Colors::Blank);
+			screen->DrawPixel({ x + screen_pos.x, y + screen_pos.y }, draw_color);
+		}
+}
