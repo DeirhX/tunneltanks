@@ -36,8 +36,8 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 
 			/* Move the effect: */
 			p.steps_remain--;
-			p.pos.x += p.speed.x; p.pos.y += p.speed.y;
-			Position pos = { p.pos.x / 16, p.pos.y / 16 };
+			p.pos_to.x += p.speed.x; p.pos_to.y += p.speed.y;
+			Position pos = { p.pos_to.x / 16, p.pos_to.y / 16 };
 
 			/* Make sure we didn't hit a level detail: */
 			LevelVoxel c = level->GetVoxel(pos);
@@ -56,12 +56,12 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 			/* Bullet: */
 
 			for (i = 0; i < p.steps_remain; i++) {
-				p.pos_old.x = p.pos.x;     p.pos_old.y = p.pos.y;
-				p.pos.x += p.speed.x;		 p.pos.y += p.speed.y;
+				p.pos_from.x = p.pos_to.x;     p.pos_from.y = p.pos_to.y;
+				p.pos_to.x += p.speed.x;		 p.pos_to.y += p.speed.y;
 
 				/* Did we hit another tank? */
 				int hitTankColor = p.tank->GetColor();
-				Tank* hitTank = tankList->GetTankAtPoint(p.pos.x, p.pos.y, hitTankColor);
+				Tank* hitTank = tankList->GetTankAtPoint(p.pos_to.x, p.pos_to.y, hitTankColor);
 				if (hitTank) {
 					/* If we have an associated tank, return the shot: */
 					p.tank->ReturnBullet();
@@ -72,7 +72,7 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 					/* Add all of the effect particles: */
 
 					newly_added.reserve(newly_added.size() + EXPLOSION_HURT_COUNT);
-					for (Projectile& proj : Projectile::CreateExplosion(Position{ p.pos_old.x, p.pos_old.y }, level,
+					for (Projectile& proj : Projectile::CreateExplosion(Position{ p.pos_from.x, p.pos_from.y }, level,
 						EXPLOSION_HURT_COUNT,
 						EXPLOSION_HURT_RADIUS,
 						EXPLOSION_HURT_TTL))
@@ -86,14 +86,14 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 				}
 
 				/* Else, did we hit something in the level? */
-				LevelVoxel c = level->GetVoxel(p.pos);
+				LevelVoxel c = level->GetVoxel(p.pos_to);
 				if (Voxels::IsAnyCollision(c)) {
 					/* If we have an associated tank, return the shot: */
 					p.tank->ReturnBullet();
 
 					/* Add all of the effect particles: */
 					newly_added.reserve(newly_added.size() + EXPLOSION_DIRT_COUNT);
-					for (Projectile& proj : Projectile::CreateExplosion(Position{ p.pos_old.x, p.pos_old.y }, level,
+					for (Projectile& proj : Projectile::CreateExplosion(Position{ p.pos_from.x, p.pos_from.y }, level,
 						EXPLOSION_DIRT_COUNT,
 						EXPLOSION_DIRT_RADIUS,
 						EXPLOSION_DIRT_TTL))
@@ -118,10 +118,10 @@ void ProjectileList::Erase(DrawBuffer* drawBuffer, Level* level)
 	for (Projectile& p : container)
 	{
 		if (p.type == ProjectileType::Explosion)
-			level->CommitPixel(Position{ p.pos.x / 16, p.pos.y / 16 });
+			level->CommitPixel(Position{ p.pos_to.x / 16, p.pos_to.y / 16 });
 		else {
-			level->CommitPixel(Position{ p.pos.x, p.pos.y });
-			level->CommitPixel(Position{ p.pos_old.x, p.pos_old.y });
+			level->CommitPixel(Position{ p.pos_to.x, p.pos_to.y });
+			level->CommitPixel(Position{ p.pos_from.x, p.pos_from.y });
 		}
 	}
 }
@@ -132,10 +132,10 @@ void ProjectileList::Draw(DrawBuffer* drawBuffer)
 	for (Projectile& p : container)
 	{
 		if (p.type == ProjectileType::Explosion)
-			drawBuffer->SetPixel(Position{ p.pos.x / 16, p.pos.y / 16 }, Palette.Get(Colors::FireHot));
+			drawBuffer->SetPixel(Position{ p.pos_to.x / 16, p.pos_to.y / 16 }, Palette.Get(Colors::FireHot));
 		else {
-			drawBuffer->SetPixel(Position{ p.pos.x, p.pos.y }, Palette.Get(Colors::FireHot));
-			drawBuffer->SetPixel(Position{ p.pos_old.x, p.pos_old.y }, Palette.Get(Colors::FireCold));
+			drawBuffer->SetPixel(Position{ p.pos_to.x, p.pos_to.y }, Palette.Get(Colors::FireHot));
+			drawBuffer->SetPixel(Position{ p.pos_from.x, p.pos_from.y }, Palette.Get(Colors::FireCold));
 		}
 	}
 }

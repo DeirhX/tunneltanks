@@ -9,7 +9,7 @@
 
 
 Projectile::Projectile(Position position, Position origin, SpeedF speed, int life, ProjectileType type, Level* level, Tank* tank)
-    : pos(position), pos_old(origin), speed(int(speed.x), int(speed.y)), steps_remain(life), type(type), level(level), tank(tank), is_alive(true)
+    : pos_to(position), pos_from(origin), speed(int(speed.x), int(speed.y)), steps_remain(life), type(type), level(level), tank(tank), is_alive(true)
 {
 
 }
