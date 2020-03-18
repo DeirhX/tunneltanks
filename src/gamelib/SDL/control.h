@@ -4,7 +4,8 @@
 
 void smart_wait();
 
-/* The main loop function will call the draw func at regular intervals, and then
+/* The main loop function will call the 
+func at regular intervals, and then
  * flip the draw buffer: */
 template <typename AdvanceFunc>
 void gamelib_main_loop(AdvanceFunc advance_func) {

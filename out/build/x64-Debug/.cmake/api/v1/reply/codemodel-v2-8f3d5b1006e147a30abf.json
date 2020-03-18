@@ -1,0 +1,96 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.6"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "tunneltanks",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "dist-clean::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dist-clean-Debug-b8e384da5995637f18af.json",
+					"name" : "dist-clean",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "package-deb::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-package-deb-Debug-c964bb7ef2e1f5b11829.json",
+					"name" : "package-deb",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "package-rpm::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-package-rpm-Debug-0e7f8e9811abecfc6d31.json",
+					"name" : "package-rpm",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "package-tbz2::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-package-tbz2-Debug-e3f4adfed1fdbc5ffd43.json",
+					"name" : "package-tbz2",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "tunneltanks::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-tunneltanks-Debug-2911cc49abb70039af05.json",
+					"name" : "tunneltanks",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "H:/__ONDRA__/out/build/x64-Debug",
+		"source" : "H:/__ONDRA__"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 0
+	}
+}

@@ -5,6 +5,7 @@
 #include "tank.h"
 #include "random.h"
 #include "tweak.h"
+#include <bitmap.h>
 
 namespace widgets {
 
@@ -74,6 +75,9 @@ namespace widgets {
 
 				Color c = screen->GetDrawBuffer()->GetPixel(Position{ x + pos.x - this->rect.size.x / 2, y + pos.y - this->rect.size.y / 2 });
 				screen->DrawPixel({ screen_x, screen_y }, c);
+
+				ColorBitmap test_bmp = BmpFile::LoadFromFile("C:/Untitled1.bmp");
+				test_bmp.Draw(screen, Position(100, 80));
 			}
 		}
 
