@@ -102,15 +102,6 @@ int gamelib_draw_box(NativeRect rect, Color color) {
 	return 0;
 }
 
-template<typename Type>
-class holder_with_deleter : public std::unique_ptr<Type, void(*)(Type*)>
-{
-	using base = std::unique_ptr<Type, void(*)(Type*)>;
-public:
-	holder_with_deleter() : base{ nullptr, [](Type*){}} {};
-	holder_with_deleter(Type* value, void(*deleter)(Type*)) : base {value, deleter} {}
-};
-
 holder_with_deleter<SDL_Cursor> global_cursor;
 
 void gamelib_enable_cursor() { SDL_ShowCursor(SDL_ENABLE); }
@@ -119,7 +110,7 @@ void gamelib_disable_cursor()
 	int32_t cursorData[2] = { 0, 0 };
 	global_cursor = holder_with_deleter<SDL_Cursor>(
 		SDL_CreateCursor((Uint8*)cursorData, (Uint8*)cursorData, 8, 8, 4, 4),
-		[](SDL_Cursor* cursor) { /*SDL_FreeCursor(cursor);*/  });  /* No need for now because active one is freed automatically. Needed when we use more. */
+		[](SDL_Cursor* cursor) { /*SDL_FreeCursor(cursor);*/  });  /* No need for now because active one is freed automatically. TODO: Needed when we use more than one. */
 
 	SDL_SetCursor(global_cursor.get());
 	SDL_ShowCursor(SDL_DISABLE);

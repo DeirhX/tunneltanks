@@ -43,7 +43,7 @@ Tank* TankList::GetTankAtPoint(int x, int y, int ignored) {
 		pos.x = x - pos.x + 3; pos.y = y - pos.y + 3;
 		if(pos.x < 0 || pos.x > 6 || pos.y < 0 || pos.y > 6) continue;
 		
-		if(TANK_SPRITE[ tank.GetDirection() ][pos.y][pos.x])
+		if(TANK_SPRITE[ tank.GetDirection().ToIntDirection() ][pos.y][pos.x])
 			return &tank;
 	}
 	return nullptr;
@@ -64,7 +64,7 @@ bool TankList::CheckForCollision(Tank& tank, Position testPos, int testDirection
 		
 		/* Ok, if we're here, the two tanks are real close. Now it's time for
 		 * brute-force pixel checking: */
-		int dir = otherTank.GetDirection();
+		int dir = otherTank.GetDirection().ToIntDirection();
 		
 		/* Find the bounds of the two sprite's overlap: */
 		if(pos.x< testPos.x) { lx= testPos.x-3; ux= pos.x+3;   }

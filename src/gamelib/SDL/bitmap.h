@@ -9,7 +9,7 @@
 
 class BmpFile
 {
-	std::unique_ptr<SDL_Surface, void(*)(SDL_Surface*)> native_surface;
+	//holder_with_deleter<SDL_Surface> native_surface;
 public:
 	static void SaveToFile(const ColorBitmap& data, std::string_view file_name);
 	static ColorBitmap LoadFromFile(std::string_view file_name);

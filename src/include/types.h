@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <memory>
 
 /* Generic types that are used all over the place. 
    Conversions possible only when it is conceptually sensible - enforce clear semantics
@@ -77,17 +78,52 @@ inline Position operator+(Position v, Offset o) { return { v.x + o.x, v.y + o.y 
 inline Position operator+(Position v, Size o) { return { v.x + o.x, v.y + o.y }; }
 
 
-/* Oh no, a float! Can't we do without? */
+/* Integer direction. Take your numerical keyboard and subtract 1 */
 struct Direction
+{
+	int dir;
+	[[nodiscard]] int Get() const { return this->dir; }
+	int& Get() { return this->dir; }
+	void Set(int new_dir) { this->dir = new_dir; }
+	[[nodiscard]] Speed ToSpeed() const
+	{
+		return Speed{ static_cast<int>(this->dir) % 3 - 1, static_cast<int>(this->dir) / 3 - 1 };
+	}
+	static Direction FromSpeed(Speed speed)
+	{
+		return Direction{ speed.x + 1 + 3*(speed.y + 1) };
+	}
+	operator int() const { return dir; }
+	
+};
+/* Oh no, a float! Can't we do without? */
+/* TODO: we need actually just radians. But so often will we use the components it won't hurt to store them instead */
+struct DirectionF
 {
 	float x;
 	float y;
 public:
-	Direction() {};
-	Direction(float x, float y) : x(x), y(y) {}
+	DirectionF() = default;
+	DirectionF(float x, float y) : x(x), y(y) {}
+	DirectionF(Direction int_direction)
+	{
+		auto speed = int_direction.ToSpeed();
+		this->x = float(speed.x);
+		this->y = float(speed.y);
+	};
 	
-	float GetSize() { return std::sqrt(x * x + y * y); }
-	Direction Normalize() { auto size = GetSize(); assert(size); return size ? Direction{ x / size, y / size } : Direction { }; }
+	[[nodiscard]] float GetSize() const { return std::sqrt(x * x + y * y); }
+	[[nodiscard]] int ToIntDirection() const { return Direction::FromSpeed({ int(x), int(y) }); }
+	[[nodiscard]] Speed ToSpeed() const
+	{
+		return Speed{ int(x), int(y) };
+	}
+	[[nodiscard]] DirectionF Normalize() const
+	{
+		auto size = GetSize();
+		assert(size);
+		return size ? DirectionF{ x / size, y / size } : DirectionF{ };
+	}
 };
 
 /* Rectangle inside game world */
@@ -134,4 +170,14 @@ enum class Orientation
 {
 	Horizontal,
 	Vertical,
+};
+
+
+template<typename Type>
+class holder_with_deleter : public std::unique_ptr<Type, void(*)(Type*)>
+{
+	using base = std::unique_ptr<Type, void(*)(Type*)>;
+public:
+	holder_with_deleter() : base{ nullptr, [](Type*) {} } {};
+	holder_with_deleter(Type* value, void(*deleter)(Type*)) : base{ value, deleter } {}
 };

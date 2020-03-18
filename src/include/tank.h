@@ -35,7 +35,7 @@ class Tank
 
 	Position pos; /* Current tank position */
 	Speed speed; /* Velocity... ie: is it moving now? */
-	int direction; // TODO: Modernize
+	DirectionF direction; // TODO: Modernize
 
 	TankColor color; /* Unique id and also color of the tank */
 	TankBase* tank_base = nullptr; /* Base owned by the tank  */
@@ -63,7 +63,7 @@ public:
 
 	[[nodiscard]] Position GetPosition() const { return this->pos; }
 	[[nodiscard]] int GetColor() const { return this->color; }
-	[[nodiscard]] int GetDirection() const { return this->direction; }
+	[[nodiscard]] DirectionF GetDirection() const { return this->direction; }
 
 	[[nodiscard]] bool IsDead() const;
 	[[nodiscard]] bool IsValid() const { return this->is_valid; } // For ValueContainer

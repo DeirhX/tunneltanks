@@ -36,6 +36,7 @@ ControllerOutput KeyboardWithMouseController::ApplyControls(PublicTankInfo* tank
 	int x, y;
 	auto buttons = SDL_GetMouseState(&x, &y);
 	output.crosshair = { x, y };
+	output.is_shooting = buttons & SDL_BUTTON(1);
 //	output.turret_dir = tankPublic->level_view.Height
 	return output;
 }

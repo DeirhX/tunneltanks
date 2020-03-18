@@ -14,10 +14,10 @@
 
 void BmpFile::SaveToFile(const ColorBitmap& data, std::string_view file_name)
 {
-	auto native_surface = std::unique_ptr<SDL_Surface, void(*)(SDL_Surface*)>(
+	auto native_surface = holder_with_deleter<SDL_Surface>(
 		SDL_CreateRGBSurface(SDL_SWSURFACE, data.size.x, data.size.y, 24, 0, 0, 0, 0),
 		[](SDL_Surface* surface) {SDL_FreeSurface(surface); });
-
+		
 	if (!native_surface)
 		throw GameException("Failed to allocate surface");
 	/* Raising this semaphore so often is probably gonna hurt performance, but

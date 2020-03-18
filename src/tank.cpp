@@ -20,9 +20,10 @@ Tank::Tank(TankColor color, Level *lvl, ProjectileList*pl, TankBase* tank_base) 
 	// this->cached_slice = std::make_shared<LevelView>(this, lvl);
 	
 	/* Let's just make the starting direction random, because we can: */
-	this->direction = Random.Int(0, 7);
-	if(this->direction >= 4) this->direction ++;
+	auto dir = Direction{ Random.Int(0, 7) };
+	if(dir >= 4) dir.Get()++;
 	
+	this->direction = DirectionF{ dir };
 	this->level = lvl;
     this->projectile_list = pl;
 }
@@ -83,7 +84,7 @@ void Tank::DoMove(TankList *tl) {
             {
 				/* We will only move/rotate if we were able to get here without
 				 * digging, so we can avoid certain bizarre bugs: */
-				this->direction = newdir;
+				this->direction = DirectionF{ Direction {newdir } };
 				this->pos.x += this->speed.x; this->pos.y += this->speed.y;
 
 				/* Well, we moved, so let's charge ourselves: */
@@ -124,7 +125,7 @@ void Tank::Draw(DrawBuffer *drawBuff) const
 	
 	for(int y=0; y<7; y++)
 		for(int x=0; x<7; x++) {
-			char val = TANK_SPRITE[this->direction][y][x];
+			char val = TANK_SPRITE[this->direction.ToIntDirection()][y][x];
 			if(val)
 				drawBuff->SetPixel(Position{ this->pos.x + x - 3, this->pos.y + y - 3 }, Palette.GetTank(this->color)[val - 1]);
 		}
@@ -136,7 +137,7 @@ void Tank::Clear(DrawBuffer *drawBuff) const
 	
 	for(int y=0; y<7; y++)
 		for(int x=0; x<7; x++)
-			if(TANK_SPRITE[this->direction][y][x])
+			if(TANK_SPRITE[this->direction.ToIntDirection()][y][x])
 				level->CommitPixel(Position{ this->pos.x + x - 3, this->pos.y + y - 3 });
 }
 
