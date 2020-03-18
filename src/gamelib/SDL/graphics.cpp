@@ -1,10 +1,13 @@
 #include <SDL.h>
 
 #include <gamelib.h>
+#include <memory>
 #include <types.h>
 
 #include "sdldata.h"
 #include "require_sdl.h"
+
+//SdlScreen 
 
 /* Will select the best fullscreen resolution based on pixel count: */
 static SDL_Rect screen_get_best_resolution() {
@@ -91,7 +94,7 @@ bool gamelib_get_fullscreen() {
 }
 
 /* Will set a given rectangle to a given color. (NULL rect is fullscreen): */
-int gamelib_draw_box(Rect rect, Color color) {
+int gamelib_draw_box(NativeRect rect, Color color) {
 	Uint32 c = SDL_MapRGB(_DATA.s->format, color.r, color.g, color.b);
 	
 	auto r = SDL_Rect{(Sint16)rect.pos.x, (Sint16)rect.pos.y, (Uint16)rect.size.x, (Uint16)rect.size.y};
@@ -99,6 +102,28 @@ int gamelib_draw_box(Rect rect, Color color) {
 	return 0;
 }
 
+template<typename Type>
+class holder_with_deleter : public std::unique_ptr<Type, void(*)(Type*)>
+{
+	using base = std::unique_ptr<Type, void(*)(Type*)>;
+public:
+	holder_with_deleter() : base{ nullptr, [](Type*){}} {};
+	holder_with_deleter(Type* value, void(*deleter)(Type*)) : base {value, deleter} {}
+};
+
+holder_with_deleter<SDL_Cursor> global_cursor;
+
+void gamelib_enable_cursor() { SDL_ShowCursor(SDL_ENABLE); }
+void gamelib_disable_cursor()
+{
+	int32_t cursorData[2] = { 0, 0 };
+	global_cursor = holder_with_deleter<SDL_Cursor>(
+		SDL_CreateCursor((Uint8*)cursorData, (Uint8*)cursorData, 8, 8, 4, 4),
+		[](SDL_Cursor* cursor) { /*SDL_FreeCursor(cursor);*/  });  /* No need for now because active one is freed automatically. Needed when we use more. */
+
+	SDL_SetCursor(global_cursor.get());
+	SDL_ShowCursor(SDL_DISABLE);
+}
 /* The display is double-buffered, so double buffer it: *
 int gamelib_flip() {
 	SDL_Flip(_DATA.s);

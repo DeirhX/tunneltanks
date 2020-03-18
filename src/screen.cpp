@@ -22,10 +22,10 @@ void Screen::FillBackground() {
 	Size dim = gamelib_get_resolution();
 	
 	gamelib_draw_box({{ 0, 0}, dim}, Palette.Get(Colors::Background));
-	Position o;
+	NativeScreenPosition o;
 	for(o.y = 0; o.y<dim.y; o.y++) {
 		for(o.x = (o.y%2)*2; o.x<dim.x; o.x+=4) {
-			gamelib_draw_box(Rect{ o, Size {1,1} }, Palette.Get(Colors::BackgroundDot));
+			gamelib_draw_box(NativeRect{ o, Size {1,1} }, Palette.Get(Colors::BackgroundDot));
 		}
 	}
 }
@@ -35,7 +35,7 @@ void Screens::SinglePlayerScreenSetup(Screen* screen, World* world, Tank* player
 	int gui_shift = 0;
 	/* Tank view and status below it*/
 	auto window = std::make_unique<widgets::TankView>(Rect{ Position{ 2, 2 }, Size {GAME_WIDTH - 4, GAME_HEIGHT - 6 - tweak::screen::status_height} }, player);
-	auto crosshair = std::make_unique<widgets::Crosshair>(Position{ 0, 0 }, window.get());
+	auto crosshair = std::make_unique<widgets::Crosshair>(Position{ 0, 0 }, screen, window.get());
 	player->SetCrosshair(crosshair.get());
 
 	screen->AddWidget(std::move(window));
@@ -47,6 +47,8 @@ void Screens::SinglePlayerScreenSetup(Screen* screen, World* world, Tank* player
 	/* Add the E/S bitmaps: */
 	screen->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5), &bitmaps::GuiEnergy, Palette.Get(Colors::StatusEnergy));
 	screen->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5), &bitmaps::GuiHealth, Palette.Get(Colors::StatusHealth));
+
+	gamelib_disable_cursor();
 }
 
 void Screens::TwoPlayerScreenSetup(Screen* screen, World* world, Tank* player_one, Tank* player_two)
@@ -65,6 +67,7 @@ void Screens::TwoPlayerScreenSetup(Screen* screen, World* world, Tank* player_on
 	screen->AddBitmap(Rect(GAME_WIDTH / 2 - 2, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5), &bitmaps::GuiEnergy, Palette.Get(Colors::StatusEnergy));
 	screen->AddBitmap(Rect(GAME_WIDTH / 2 - 2, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5), &bitmaps::GuiHealth, Palette.Get(Colors::StatusHealth));
 
+	gamelib_enable_cursor();
 }
 
 
@@ -77,30 +80,31 @@ void Screen::DrawPixel(ScreenPosition pos, Color color) {
 		((pos.x + 1) * this->pixels_skip.x) / GAME_WIDTH,
 		((pos.y + 1) * this->pixels_skip.y) / GAME_HEIGHT };
 	
-	/* Final pixel position, adjusted by required scaling and offset */ 
-	pos.x = (pos.x * this->pixel_size.x) + this->screen_offset.x + adjusted_size.x;
-	pos.y = (pos.y * this->pixel_size.y) + this->screen_offset.y + adjusted_size.y;
+	/* Final pixel position, adjusted by required scaling and offset */
+	auto native_pos = NativeScreenPosition{
+		(pos.x * this->pixel_size.x) + this->screen_offset.x + adjusted_size.x,
+		(pos.y * this->pixel_size.y) + this->screen_offset.y + adjusted_size.y
+	};
 	
-	auto pixelSize = Size { /* Compute size based on needing uneven scaling or not */
+	auto final_size = Size { /* Compute size based on needing uneven scaling or not */
 		this->pixel_size.x + (adjusted_size.x != adjusted_next.x),
 		this->pixel_size.y + (adjusted_size.y != adjusted_next.y)
 	};
 	
-	gamelib_draw_box(Rect{ static_cast<Position>(pos), pixelSize }, color);
+	gamelib_draw_box(NativeRect{ native_pos, final_size }, color);
 }
 
-
-Position Screen::ScreenToWorld(ScreenPosition screen_pos) {
-
-	Position pos = (Position)screen_pos;
+ScreenPosition Screen::FromNativeScreen(NativeScreenPosition native_pos)
+{
+	auto pos = ScreenPosition{ native_pos.x, native_pos.y };
 	pos.x -= this->screen_offset.x;
-	pos.x -= pos.x/(int)this->pixel_size.x * (int)this->pixels_skip.x / GAME_WIDTH;
+	pos.x -= pos.x / (int)this->pixel_size.x * (int)this->pixels_skip.x / GAME_WIDTH;
 	pos.x /= (int)this->pixel_size.x;
 
 	pos.y -= this->screen_offset.y;
 	pos.y -= pos.y / (int)this->pixel_size.y * (int)this->pixels_skip.y / GAME_HEIGHT;
 	pos.y /= (int)this->pixel_size.y;
-	
+
 	return pos;
 }
 

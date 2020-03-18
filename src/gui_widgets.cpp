@@ -181,9 +181,9 @@ namespace widgets {
 		}
 	}
 
-	void Crosshair::SetCenter(ScreenPosition position)
+	void Crosshair::SetCenter(NativeScreenPosition position)
 	{
-		this->center = position;
-		this->rect = Rect{ position.x - this->data->size.x / 2, position.y - this->data->size.y / 2, this->data->size.x, this->data->size.y };
+		this->center = screen->FromNativeScreen(position);
+		this->rect = Rect{ this->center.x - this->data->size.x / 2, this->center.y - this->data->size.y / 2, this->data->size.x, this->data->size.y };
 	}
 }

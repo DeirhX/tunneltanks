@@ -55,7 +55,7 @@ public:
 	/* A few useful functions for external drawing: */
 	void DrawPixel(ScreenPosition pos, Color color);
 	/* These will say what virtual pixel a physical pixel resides on: */
-	Position ScreenToWorld(ScreenPosition pos);
+	ScreenPosition FromNativeScreen(NativeScreenPosition pos);
 	/*  Draw whatever it is now supposed to draw */
 	void DrawCurrentMode();
 

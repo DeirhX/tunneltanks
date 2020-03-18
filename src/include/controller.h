@@ -6,7 +6,7 @@ struct ControllerOutput
 	Speed speed = { };
 	bool is_shooting = false;
 	Direction turret_dir = { 0, 0 };
-	ScreenPosition crosshair = {};
+	NativeScreenPosition crosshair = {};
 };
 
 class Controller

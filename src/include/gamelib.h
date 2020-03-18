@@ -28,6 +28,9 @@ typedef int (*draw_func)(void *data);
 /* This lets you attach controllers to a tank: */
 int gamelib_tank_attach(class Tank *t, int tank_num, int num_players) ;
 
+void gamelib_disable_cursor();
+void gamelib_enable_cursor();
+
 /* TODO: This will need a means for configuring the controller... */
 
 /* Allow us to handle events in a fairly platform-neutral way: */
@@ -50,7 +53,7 @@ bool gamelib_get_fullscreen() ;
 
 /* We need a way to draw: */
 /* TODO: Implement an API for locking/unlocking the pixel array. */
-int  gamelib_draw_box(Rect rect, Color c) ;
+int  gamelib_draw_box(NativeRect rect, Color c) ;
 
 
 /* A few outputting commands: */

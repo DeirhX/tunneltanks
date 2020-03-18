@@ -70,12 +70,13 @@ namespace widgets
 	class Crosshair : public BitmapRender
 	{
 		ScreenPosition center = {};
+		Screen* screen = nullptr;
 		TankView* parent_view = nullptr;
 	public:
-		Crosshair(Position pos, TankView* parent_view)
-		: BitmapRender(Rect{ pos.x - 1, pos.y - 1, 3, 3 }, &bitmaps::Crosshair, Palette.Get(Colors::FireHot)), parent_view(parent_view) { }
+		Crosshair(Position pos, Screen* screen, TankView* parent_view)
+		: BitmapRender(Rect{ pos.x - 1, pos.y - 1, 3, 3 }, &bitmaps::Crosshair, Palette.Get(Colors::FireHot)), screen(screen), parent_view(parent_view) { }
 
-		void SetCenter(ScreenPosition position);
+		void SetCenter(NativeScreenPosition position);
 		//void Draw(Screen* screen) override;
 	};
 

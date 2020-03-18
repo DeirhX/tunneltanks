@@ -6,6 +6,8 @@
 /* Generic types that are used all over the place. 
    Conversions possible only when it is conceptually sensible - enforce clear semantics
 */
+
+/* Generic 2D vector. All things decay to it. */
 struct Vector
 {
 	int x = 0, y = 0;
@@ -13,12 +15,21 @@ struct Vector
 	constexpr Vector(int x, int y) : x(x), y(y) { }
 };
 
+/* Position relative to our logical Screen*/
 struct ScreenPosition : public Vector
 {
 	ScreenPosition() = default;
 	ScreenPosition(int x, int y) : Vector(x, y) {}
-
 };
+
+/* Position relative to native OS window. */
+struct NativeScreenPosition : public Vector
+{
+	NativeScreenPosition() = default;
+	NativeScreenPosition(int x, int y) : Vector(x, y) {}
+};
+
+
 struct Position : public Vector
 {
 	Position() = default;
@@ -79,7 +90,7 @@ public:
 	Direction Normalize() { auto size = GetSize(); assert(size); return size ? Direction{ x / size, y / size } : Direction { }; }
 };
 
-/* Rectangle */
+/* Rectangle inside game world */
 struct Rect {
 	Position pos;
 	Size size;
@@ -92,6 +103,14 @@ struct Rect {
 	int Top() const { return pos.y; }
 	int Right() const { return pos.x + size.x; }
 	int Bottom() const { return pos.y + size.y; }
+};
+
+/* Rectangle in native units of hosting window/surface */
+struct NativeRect : Rect
+{
+	NativeRect() = default;
+	NativeRect(NativeScreenPosition pos, Size size) : Rect{ pos.x, pos.y, size.x, size.y } { }
+	NativeRect(int pos_x, int pos_y, int size_x, int size_y) : Rect{ pos_x, pos_y, size_x, size_y } { }
 };
 
 struct Color
