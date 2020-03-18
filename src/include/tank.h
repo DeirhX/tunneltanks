@@ -35,7 +35,7 @@ class Tank
 
 	Position pos; /* Current tank position */
 	Speed speed; /* Velocity... ie: is it moving now? */
-	DirectionF direction; // TODO: Modernize
+	Direction direction; 
 
 	TankColor color; /* Unique id and also color of the tank */
 	TankBase* tank_base = nullptr; /* Base owned by the tank  */

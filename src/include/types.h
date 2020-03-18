@@ -91,38 +91,69 @@ struct Direction
 	}
 	static Direction FromSpeed(Speed speed)
 	{
-		return Direction{ speed.x + 1 + 3*(speed.y + 1) };
+		return Direction{ speed.x + 1 + 3 * (speed.y + 1) };
 	}
 	operator int() const { return dir; }
-	
+
 };
+
+
+/*
+ *  Float math. Needed for shooting.
+ */
+
+struct VectorF
+{
+	float x = 0, y = 0;
+	VectorF() = default;
+	constexpr VectorF(float x, float y) : x(x), y(y) { }
+	
+	[[nodiscard]] float GetSize() const { return std::sqrt(x * x + y * y); }
+	[[nodiscard]] bool IsNormalized() const { return GetSize() == 1.0f; }
+	[[nodiscard]] VectorF Normalize() const
+	{
+		auto size = GetSize();
+		assert(size);
+		if (size)
+			return { x / size, y / size };
+		else
+			return { };
+	}
+};
+//struct PositionF : public VectorF
+//{
+//	PositionF() = default;
+//	constexpr PositionF(float sx, float sy) : VectorF(sx, sy) {}
+//};
+struct SpeedF : public VectorF
+{
+	SpeedF() = default;
+	SpeedF(VectorF vector) : VectorF(vector) { }
+	constexpr SpeedF(float sx, float sy) : VectorF(sx, sy) {}
+};
+
 /* Oh no, a float! Can't we do without? */
 /* TODO: we need actually just radians. But so often will we use the components it won't hurt to store them instead */
-struct DirectionF
+struct DirectionF : VectorF
 {
-	float x;
-	float y;
 public:
 	DirectionF() = default;
-	DirectionF(float x, float y) : x(x), y(y) {}
+	DirectionF(VectorF vector) : VectorF(vector)  { }
+	DirectionF(float x, float y) : VectorF(x, y)
+	{
+		assert((x == 0 && y == 0) || this->IsNormalized());
+	}
 	DirectionF(Direction int_direction)
 	{
 		auto speed = int_direction.ToSpeed();
 		this->x = float(speed.x);
 		this->y = float(speed.y);
+		//assert(this->IsNormalized());
 	};
-	
-	[[nodiscard]] float GetSize() const { return std::sqrt(x * x + y * y); }
 	[[nodiscard]] int ToIntDirection() const { return Direction::FromSpeed({ int(x), int(y) }); }
 	[[nodiscard]] Speed ToSpeed() const
 	{
 		return Speed{ int(x), int(y) };
-	}
-	[[nodiscard]] DirectionF Normalize() const
-	{
-		auto size = GetSize();
-		assert(size);
-		return size ? DirectionF{ x / size, y / size } : DirectionF{ };
 	}
 };
 

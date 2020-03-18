@@ -29,14 +29,14 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 			/* Effect: */
 
 			/* Did this expire? */
-			if (!p.life) {
+			if (!p.steps_remain) {
 				Remove(p);
 				continue;
 			}
 
 			/* Move the effect: */
-			p.life--;
-			p.pos.x += p.step.x; p.pos.y += p.step.y;
+			p.steps_remain--;
+			p.pos.x += p.speed.x; p.pos.y += p.speed.y;
 			Position pos = { p.pos.x / 16, p.pos.y / 16 };
 
 			/* Make sure we didn't hit a level detail: */
@@ -55,9 +55,9 @@ void ProjectileList::Advance(Level* level, TankList* tankList)
 
 			/* Bullet: */
 
-			for (i = 0; i < p.life; i++) {
+			for (i = 0; i < p.steps_remain; i++) {
 				p.pos_old.x = p.pos.x;     p.pos_old.y = p.pos.y;
-				p.pos.x += p.step.x;		 p.pos.y += p.step.y;
+				p.pos.x += p.speed.x;		 p.pos.y += p.speed.y;
 
 				/* Did we hit another tank? */
 				int hitTankColor = p.tank->GetColor();

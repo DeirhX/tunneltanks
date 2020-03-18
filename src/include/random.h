@@ -10,9 +10,10 @@ public:
 	void Seed();
 	void Seed(int seed);
 
-	bool Bool(int odds_of_off_1000);
+	bool Bool(int odds_of_off_1000) { return Int(0, 999) < odds_of_off_1000; }
 	 template <typename IntegerType>
 	IntegerType Int(IntegerType min, IntegerType max);
+	float Float(float min, float max);
 };
 
 extern RandomGenerator Random;
@@ -20,9 +21,6 @@ extern RandomGenerator Random;
 template <typename IntegerType>
 IntegerType RandomGenerator::Int(IntegerType min, IntegerType max)
 {
-	//if (!is_seeded)
-	//	Seed();
-	
 	IntegerType range = max - min + 1;
 
 	if (max <= min) 

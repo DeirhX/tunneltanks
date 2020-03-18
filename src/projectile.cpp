@@ -8,8 +8,8 @@
 #include <tweak.h>
 
 
-Projectile::Projectile(Position position, Position origin, Speed speed, int life, ProjectileType type, Level* level, Tank* tank)
-    : pos(position), pos_old(origin), step(speed), life(life), type(type), level(level), tank(tank), is_alive(true)
+Projectile::Projectile(Position position, Position origin, SpeedF speed, int life, ProjectileType type, Level* level, Tank* tank)
+    : pos(position), pos_old(origin), speed(int(speed.x), int(speed.y)), steps_remain(life), type(type), level(level), tank(tank), is_alive(true)
 {
 
 }
@@ -24,7 +24,7 @@ std::vector<Projectile> Projectile::CreateExplosion(Position pos, Level* level, 
 		items.emplace_back(Projectile{
 			Position{pos.x * 16 + 8, pos.y * 16 + 8},
 			Position{pos.x, pos.y},
-			Speed { Random.Int(0,radius) - radius / 2, Random.Int(0,radius) - radius / 2},
+			SpeedF { float(Random.Int(0,radius) - radius / 2), float(Random.Int(0,radius) - radius / 2)},
 			Random.Int(0,ttl), ProjectileType::Explosion, level, nullptr });
 	}
 	return items;
@@ -32,10 +32,9 @@ std::vector<Projectile> Projectile::CreateExplosion(Position pos, Level* level, 
 
 Projectile Projectile::CreateBullet(Tank* tank)
 {
-	Speed speed = tank->GetDirection().ToSpeed();
 	return Projectile {
 	    tank->GetPosition(),
 	    tank->GetPosition(),
-	    speed, tweak::tank::BulletSpeed,
+		tank->GetDirection(), tweak::tank::BulletSpeed,
 	    ProjectileType::Bullet, tank->GetLevel(), tank };
 }

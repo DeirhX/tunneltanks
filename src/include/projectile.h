@@ -10,15 +10,21 @@ enum class ProjectileType {
 	Explosion,
 };
 
+class VoxelRaycast
+{
+	
+};
+
 struct Projectile {
 	Position pos;       /* The x,y of the 'hot' portion.  (#ff3408) */
 	Position pos_old;   /* The x,y of the 'cold' portion. (#ba0000) */
 
-	Speed    step;
-	int		 life;
+	//PositionF 
+	Speed    speed;
+	int      steps_remain;
 
-	ProjectileType	type;
-	bool	is_alive = false;
+	ProjectileType type;
+	bool     is_alive = false;
 
 	class Level* level;
 	class Tank* tank;
@@ -28,7 +34,7 @@ private:
 public:
 	static Projectile Invalid() { return Projectile(); }
 public:
-    Projectile(Position position, Position origin, Speed speed, int life, ProjectileType type, Level* level, Tank* tank);
+    Projectile(Position position, Position origin, SpeedF speed, int life, ProjectileType type, Level* level, Tank* tank);
 
 	static std::vector<Projectile> CreateExplosion(Position pos, Level* level, int count, int radius, int ttl);
 	static Projectile CreateBullet(Tank* tank);
@@ -37,3 +43,5 @@ public:
 	bool IsValid() const { return is_alive; }
 	void Invalidate() { is_alive = false; }
 };
+
+//class Bullet : public Projectile {};
