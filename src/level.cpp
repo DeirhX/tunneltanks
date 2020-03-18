@@ -253,8 +253,5 @@ void Level::DumpBitmap(const char *filename) const
 			BmpFile::SaveToFile(color_data, filename);
 		}
 	}
-
-	auto loaded = BmpFile::LoadFromFile(filename);
-	BmpFile::SaveToFile(loaded, "resaved");
 }
 

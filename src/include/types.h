@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cassert>
+#include <cmath>
+
 /* Generic types that are used all over the place. 
    Conversions possible only when it is conceptually sensible - enforce clear semantics
 */
@@ -63,6 +66,19 @@ inline Position operator+(Position v, Offset o) { return { v.x + o.x, v.y + o.y 
 inline Position operator+(Position v, Size o) { return { v.x + o.x, v.y + o.y }; }
 
 
+/* Oh no, a float! Can't we do without? */
+struct Direction
+{
+	float x;
+	float y;
+public:
+	Direction() {};
+	Direction(float x, float y) : x(x), y(y) {}
+	
+	float GetSize() { return std::sqrt(x * x + y * y); }
+	Direction Normalize() { auto size = GetSize(); assert(size); return size ? Direction{ x / size, y / size } : Direction { }; }
+};
+
 /* Rectangle */
 struct Rect {
 	Position pos;
@@ -95,7 +111,7 @@ struct Color32 {
 
 using TankColor = char;
 
-enum class Direction
+enum class Orientation
 {
 	Horizontal,
 	Vertical,

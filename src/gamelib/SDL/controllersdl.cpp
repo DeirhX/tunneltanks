@@ -29,6 +29,18 @@ ControllerOutput KeyboardController::ApplyControls(PublicTankInfo *tankPublic) {
 	};
 }
 
+
+ControllerOutput KeyboardWithMouseController::ApplyControls(PublicTankInfo* tankPublic)
+{
+	auto output = Base::ApplyControls(tankPublic);
+	int x, y;
+	auto buttons = SDL_GetMouseState(&x, &y);
+	output.crosshair = { x, y };
+//	output.turret_dir = tankPublic->level_view.Height
+	return output;
+}
+
+
 /*----------------------------------------------------------------------------*
  *   JOYSTICK                                                                 *
  *----------------------------------------------------------------------------*/
@@ -41,7 +53,6 @@ ControllerOutput KeyboardController::ApplyControls(PublicTankInfo *tankPublic) {
 /* This is the joystick value (between 1 and 32767) where a joystick axis gets
  * interpretted as going in that direction: */
 #define CUTOFF (10000)
-
 
 JoystickController::JoystickController() 
 {

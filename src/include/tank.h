@@ -7,6 +7,8 @@
 #include <level_view.h>
 #include <controllersdl.h>
 #include <projectile_list.h>
+
+#include "gui_widgets.h"
 //#include <world.h>
 
 struct LevelView;
@@ -50,12 +52,14 @@ class Tank
 
 	Level* level;
 	ProjectileList* projectile_list;
+	widgets::Crosshair* crosshair = nullptr;
 
 public:
 	void Invalidate() { this->is_valid = false; }
 	
 	Tank(TankColor color, Level* lvl, ProjectileList* pl, TankBase* tank_base);
 	void SetController(std::shared_ptr<Controller> newController) { this->controller = newController; }
+	void SetCrosshair(widgets::Crosshair* cross) { this->crosshair = cross; }
 
 	[[nodiscard]] Position GetPosition() const { return this->pos; }
 	[[nodiscard]] int GetColor() const { return this->color; }

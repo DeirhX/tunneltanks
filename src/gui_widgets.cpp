@@ -168,8 +168,8 @@ namespace widgets {
 
 	void LivesLeft::Draw(Screen* screen)
 	{
-		assert(direction == Direction::Vertical); // Implemennt horizontal when we need it
-		if (direction == Direction::Vertical) 
+		assert(direction == Orientation::Vertical); // Implemennt horizontal when we need it
+		if (direction == Orientation::Vertical) 
 		{
 			int y_pos = 0;
 			for (int life = 0; y_pos + 2 <= this->rect.size.y; ++life)
@@ -179,5 +179,11 @@ namespace widgets {
 				y_pos += 1 + this->data->size.y;
 			}
 		}
+	}
+
+	void Crosshair::SetCenter(ScreenPosition position)
+	{
+		this->center = position;
+		this->rect = Rect{ position.x - this->data->size.x / 2, position.y - this->data->size.y / 2, this->data->size.x, this->data->size.y };
 	}
 }

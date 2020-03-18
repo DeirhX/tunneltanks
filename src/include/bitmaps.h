@@ -127,4 +127,9 @@ namespace bitmaps
 	inline auto LifeDot = MonoBitmap(Size{ 2, 2 },
 		{1,1,
 		 1,1,});
+
+	inline auto Crosshair = MonoBitmap(Size{ 3, 3},
+		{ 0,1,0,
+		  1,1,1,
+		  0,1,0 });
 }

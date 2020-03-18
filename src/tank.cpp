@@ -234,6 +234,10 @@ void Tank::ApplyControllerOutput(ControllerOutput controls)
 {
 	this->speed = controls.speed;
 	this->is_shooting = controls.is_shooting;
+	if (this->crosshair)
+	{
+		this->crosshair->SetCenter(controls.crosshair);
+	}
 }
 
 bool Tank::IsDead() const

@@ -84,7 +84,7 @@ static int try_attach_joystick(Tank *t) {
 int gamelib_tank_attach(Tank *t, int tank_num, int num_players) {
 	if(num_players == 1 && tank_num == 0) {
 		if(!try_attach_joystick(t))
-			t->SetController(std::make_shared<KeyboardController>(ONE_KEYBOARD));
+			t->SetController(std::make_shared<KeyboardWithMouseController>(ONE_KEYBOARD));
 	
 	} else if(num_players == 2) {
 		if (tank_num == 0) {

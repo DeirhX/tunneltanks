@@ -1,7 +1,6 @@
 #pragma once
 #include "colors.h"
 #include "bitmaps.h"
-#include "tank.h"
 
 class Screen;
 class Tank;
@@ -55,17 +54,30 @@ namespace widgets
 
 	struct LivesLeft : public BitmapRender
 	{
-		Direction direction;
+		Orientation direction;
 		Tank* tank;
 	public:
-		LivesLeft(Rect rect, Direction direction, Tank* tank)
+		LivesLeft(Rect rect, Orientation direction, Tank* tank)
 		: BitmapRender(rect, &bitmaps::LifeDot, Palette.Get(Colors::LifeDot)), direction(direction), tank(tank)
 		{
-			assert(direction == Direction::Vertical && rect.size.x == this->data->size.x
-			    || direction == Direction::Horizontal && rect.size.y == this->data->size.y);
+			assert(direction == Orientation::Vertical && rect.size.x == this->data->size.x
+			    || direction == Orientation::Horizontal && rect.size.y == this->data->size.y);
 			
 		}
 		void Draw(Screen* screen) override;
 	};
+
+	class Crosshair : public BitmapRender
+	{
+		ScreenPosition center = {};
+		TankView* parent_view = nullptr;
+	public:
+		Crosshair(Position pos, TankView* parent_view)
+		: BitmapRender(Rect{ pos.x - 1, pos.y - 1, 3, 3 }, &bitmaps::Crosshair, Palette.Get(Colors::FireHot)), parent_view(parent_view) { }
+
+		void SetCenter(ScreenPosition position);
+		//void Draw(Screen* screen) override;
+	};
+
 
 }

@@ -34,10 +34,15 @@ void Screens::SinglePlayerScreenSetup(Screen* screen, World* world, Tank* player
 {
 	int gui_shift = 0;
 	/* Tank view and status below it*/
-	screen->AddWindow(Rect{ Position{ 2, 2 }, Size {GAME_WIDTH - 4, GAME_HEIGHT - 6 - tweak::screen::status_height} }, player);
+	auto window = std::make_unique<widgets::TankView>(Rect{ Position{ 2, 2 }, Size {GAME_WIDTH - 4, GAME_HEIGHT - 6 - tweak::screen::status_height} }, player);
+	auto crosshair = std::make_unique<widgets::Crosshair>(Position{ 0, 0 }, window.get());
+	player->SetCrosshair(crosshair.get());
+
+	screen->AddWidget(std::move(window));
+	screen->AddWidget(std::move(crosshair));
 	auto status_rect = Rect(9 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH - 16 - gui_shift, tweak::screen::status_height);
 	screen->AddStatus(status_rect, player, true);
-	screen->AddWidget(std::make_unique<widgets::LivesLeft>(Rect{ status_rect.Right() + 2, status_rect.Top() + 1, 2, tweak::screen::status_height }, Direction::Vertical, player));
+	screen->AddWidget(std::make_unique<widgets::LivesLeft>(Rect{ status_rect.Right() + 2, status_rect.Top() + 1, 2, tweak::screen::status_height }, Orientation::Vertical, player));
 	
 	/* Add the E/S bitmaps: */
 	screen->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5), &bitmaps::GuiEnergy, Palette.Get(Colors::StatusEnergy));
@@ -49,12 +54,12 @@ void Screens::TwoPlayerScreenSetup(Screen* screen, World* world, Tank* player_on
 	screen->AddWindow(Rect(2, 2, GAME_WIDTH / 2 - 3, GAME_HEIGHT - 6 - tweak::screen::status_height), player_one);
 	auto status_rect = Rect(3, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH / 2 - 5 - 2 - 4, tweak::screen::status_height);
 	screen->AddStatus(status_rect, player_one, false);
-	screen->AddWidget(std::make_unique<widgets::LivesLeft>(Rect{ status_rect.Right() + 2, status_rect.Top() + 1, 2, tweak::screen::status_height }, Direction::Vertical, player_one));
+	screen->AddWidget(std::make_unique<widgets::LivesLeft>(Rect{ status_rect.Right() + 2, status_rect.Top() + 1, 2, tweak::screen::status_height }, Orientation::Vertical, player_one));
 
 	screen->AddWindow(Rect(GAME_WIDTH / 2 + 1, 2, GAME_WIDTH / 2 - 3, GAME_HEIGHT - 6 - tweak::screen::status_height), player_two);
 	status_rect = Rect(GAME_WIDTH / 2 + 2 + 2, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH / 2 - 5 - 3 - 4, tweak::screen::status_height);
 	screen->AddStatus(status_rect, player_two, true);
-	screen->AddWidget(std::make_unique<widgets::LivesLeft>(Rect{ status_rect.Right() + 2, status_rect.Top() + 1, 2, tweak::screen::status_height }, Direction::Vertical, player_two));
+	screen->AddWidget(std::make_unique<widgets::LivesLeft>(Rect{ status_rect.Right() + 2, status_rect.Top() + 1, 2, tweak::screen::status_height }, Orientation::Vertical, player_two));
 
 	/* Add the GUI bitmaps: */
 	screen->AddBitmap(Rect(GAME_WIDTH / 2 - 2, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5), &bitmaps::GuiEnergy, Palette.Get(Colors::StatusEnergy));
@@ -192,7 +197,9 @@ void Screen::set_mode_map( Map *m) ;
 void Screen::AddWidget(std::unique_ptr<widgets::GuiWidget>&& widget)
 {
 	if (this->mode != SCREEN_DRAW_LEVEL) return;
+	//widgets::GuiWidget* raw_ptr = widget.get();
 	this->widgets.emplace_back(std::move(widget));
+	//return raw_ptr;
 }
 
 /* Window creation should only happen in Level-drawing mode: */
