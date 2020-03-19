@@ -97,12 +97,11 @@ void Tank::DoMove(TankList *tl) {
 	if(this->bullet_timer == 0) {
 		if(this->is_shooting && this->bullets_left > 0) {
 			
-			this->projectile_list->Add(Projectile{
-				this->GetPosition(),
+			this->projectile_list->Add(Bullet{
 				this->GetPosition(),
 				this->GetDirection(),
 				tweak::tank::BulletSpeed,
-				ProjectileType::Bullet, this->GetLevel(), this});
+				this->GetLevel(), this});
 
 			/* We just fired. Let's charge ourselves: */
 			this->AlterEnergy(tweak::tank::ShootCost);
@@ -228,7 +227,7 @@ void Tank::Die()
 	this->energy = 0;
 	this->respawn_timer = tweak::tank::RespawnDelay;
 
-	this->projectile_list->Add(Projectile::CreateExplosion(
+	this->projectile_list->Add(Explosion::Explode(
 		this->pos, this->level,
 		EXPLOSION_DEATH_COUNT,
 		EXPLOSION_DEATH_RADIUS,

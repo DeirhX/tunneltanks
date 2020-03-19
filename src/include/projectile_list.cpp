@@ -7,135 +7,138 @@
 #include "tank.h"
 #include "tanklist.h"
 
-Projectile& ProjectileList::Add(Projectile projectile)
+void ProjectileList::Add(std::vector<Shrapnel> array)
 {
-	return this->container.Add(projectile);
+    for (auto & shrapnel: array)
+        this->Add(shrapnel);
 }
 
-void ProjectileList::Add(std::vector<Projectile> projectiles)
+void ProjectileList::Shrink()
 {
-	for (auto& projectile : projectiles)
-		this->container.Add(projectile);
+    this->bullets.Shrink();
+    this->shrapnels.Shrink();
 }
 
-void ProjectileList::Advance(Level* level, TankList* tankList)
+void ProjectileList::Advance(Level * level, TankList * tankList)
 {
-	auto newly_added = std::vector<Projectile>{};
-	/* Iterate over the living objects: */
-	for (Projectile& p : container)
-	{
-		/* Is this a bullet, or an effect? */
-		if (p.type == ProjectileType::Explosion) {
-			/* Effect: */
+    auto newly_added = std::vector<Shrapnel>{};
 
-			/* Did this expire? */
-			if (!p.steps_remain) {
-				Remove(p);
-				continue;
-			}
+    for (Shrapnel & p : this->shrapnels)
+    {
+        /* Did this expire? */
+        if (!p.steps_remain)
+        {
+            Remove(p);
+            continue;
+        }
 
-			/* Move the effect: */
-			p.steps_remain--;
-			p.pos_to.x += p.speed.x; p.pos_to.y += p.speed.y;
-			Position pos = { p.pos_to.x / 16, p.pos_to.y / 16 };
+        /* Move the effect: */
+        p.steps_remain--;
+        p.pos.x += p.speed.x;
+        p.pos.y += p.speed.y;
+        Position pos = {p.pos.x / 16, p.pos.y / 16};
 
-			/* Make sure we didn't hit a level detail: */
-			LevelVoxel c = level->GetVoxel(pos);
-			if (Voxels::IsBlockingCollision(c)) {
-				Remove(p);
-				continue;
-			}
+        /* Make sure we didn't hit a level detail: */
+        LevelVoxel c = level->GetVoxel(pos);
+        if (Voxels::IsBlockingCollision(c))
+        {
+            Remove(p);
+            continue;
+        }
 
-			/* Effects blank everything out in their paths: */
-			level->SetVoxel(pos, Random.Bool(500) ? LevelVoxel::DecalHigh : LevelVoxel::DecalLow);
+        /* Effects blank everything out in their paths: */
+        level->SetVoxel(pos, Random.Bool(500) ? LevelVoxel::DecalHigh : LevelVoxel::DecalLow);
+    }
 
-		}
-		else {
-			int i;
+    /* Bullet: */
+    for (Bullet & p : this->bullets)
+    {
+        for (int i = 0; i < p.steps_remain; i++)
+        {
+            p.pos_blur_from.x = p.pos.x;
+            p.pos_blur_from.y = p.pos.y;
+            p.pos.x += p.speed.x;
+            p.pos.y += p.speed.y;
 
-			/* Bullet: */
+            /* Did we hit another tank? */
+            int hitTankColor = p.tank->GetColor();
+            Tank * hitTank = tankList->GetTankAtPoint(p.pos.x, p.pos.y, hitTankColor);
+            if (hitTank)
+            {
+                /* If we have an associated tank, return the shot: */
+                p.tank->ReturnBullet();
 
-			for (i = 0; i < p.steps_remain; i++) {
-				p.pos_from.x = p.pos_to.x;     p.pos_from.y = p.pos_to.y;
-				p.pos_to.x += p.speed.x;		 p.pos_to.y += p.speed.y;
+                /* Hurt the tank we hit: */
+                hitTank->AlterHealth(tweak::tank::ShotDamage);
 
-				/* Did we hit another tank? */
-				int hitTankColor = p.tank->GetColor();
-				Tank* hitTank = tankList->GetTankAtPoint(p.pos_to.x, p.pos_to.y, hitTankColor);
-				if (hitTank) {
-					/* If we have an associated tank, return the shot: */
-					p.tank->ReturnBullet();
+                /* Add all of the effect particles: */
 
-					/* Hurt the tank we hit: */
-					hitTank->AlterHealth(tweak::tank::ShotDamage);
+                newly_added.reserve(newly_added.size() + EXPLOSION_HURT_COUNT);
+                for (Shrapnel & shrapnel :
+                     Explosion::Explode(Position{p.pos_blur_from.x, p.pos_blur_from.y}, level,
+                                                 EXPLOSION_HURT_COUNT,
+                                                 EXPLOSION_HURT_RADIUS, EXPLOSION_HURT_TTL))
+                {
+                    newly_added.emplace_back(shrapnel);
+                }
 
-					/* Add all of the effect particles: */
+                /* Finally, remove it: */
+                Remove(p);
+                break;
+            }
 
-					newly_added.reserve(newly_added.size() + EXPLOSION_HURT_COUNT);
-					for (Projectile& proj : Projectile::CreateExplosion(Position{ p.pos_from.x, p.pos_from.y }, level,
-						EXPLOSION_HURT_COUNT,
-						EXPLOSION_HURT_RADIUS,
-						EXPLOSION_HURT_TTL))
-					{
-						newly_added.emplace_back(proj);
-					}
+            /* Else, did we hit something in the level? */
+            LevelVoxel c = level->GetVoxel(p.pos);
+            if (Voxels::IsAnyCollision(c))
+            {
+                /* If we have an associated tank, return the shot: */
+                p.tank->ReturnBullet();
 
-					/* Finally, remove it: */
-					Remove(p);
-					break;
-				}
+                /* Add all of the effect particles: */
+                newly_added.reserve(newly_added.size() + EXPLOSION_DIRT_COUNT);
+                for (Shrapnel & shrapnel :
+                     Explosion::Explode(Position{p.pos_blur_from.x, p.pos_blur_from.y}, level,
+                                                 EXPLOSION_DIRT_COUNT,
+                                                 EXPLOSION_DIRT_RADIUS, EXPLOSION_DIRT_TTL))
+                {
+                    newly_added.emplace_back(shrapnel);
+                }
 
-				/* Else, did we hit something in the level? */
-				LevelVoxel c = level->GetVoxel(p.pos_to);
-				if (Voxels::IsAnyCollision(c)) {
-					/* If we have an associated tank, return the shot: */
-					p.tank->ReturnBullet();
+                /* Finally, remove it: */
+                Remove(p);
+                break;
+            }
+        }
+    }
 
-					/* Add all of the effect particles: */
-					newly_added.reserve(newly_added.size() + EXPLOSION_DIRT_COUNT);
-					for (Projectile& proj : Projectile::CreateExplosion(Position{ p.pos_from.x, p.pos_from.y }, level,
-						EXPLOSION_DIRT_COUNT,
-						EXPLOSION_DIRT_RADIUS,
-						EXPLOSION_DIRT_TTL))
-					{
-						newly_added.emplace_back(proj);
-					}
-
-					/* Finally, remove it: */
-					Remove(p);
-					break;
-				}
-			}
-		}
-	}
-
-	Add(newly_added);
+    for (Shrapnel& new_spawn: newly_added)
+	    Add(new_spawn);
 	Shrink();
 }
 
 void ProjectileList::Erase(DrawBuffer* drawBuffer, Level* level)
 {
-	for (Projectile& p : container)
-	{
-		if (p.type == ProjectileType::Explosion)
-			level->CommitPixel(Position{ p.pos_to.x / 16, p.pos_to.y / 16 });
-		else {
-			level->CommitPixel(Position{ p.pos_to.x, p.pos_to.y });
-			level->CommitPixel(Position{ p.pos_from.x, p.pos_from.y });
-		}
-	}
+    for (Shrapnel & shrapnel : this->shrapnels)
+    {
+        level->CommitPixel(Position{shrapnel.pos.x / 16, shrapnel.pos.y / 16});
+    }
+    for (Bullet & bullet : this->bullets)
+    {
+        level->CommitPixel(Position{bullet.pos.x, bullet.pos.y});
+        level->CommitPixel(Position{bullet.pos_blur_from.x, bullet.pos_blur_from.y});
+    }
 }
 
 
 void ProjectileList::Draw(DrawBuffer* drawBuffer)
 {
-	for (Projectile& p : container)
-	{
-		if (p.type == ProjectileType::Explosion)
-			drawBuffer->SetPixel(Position{ p.pos_to.x / 16, p.pos_to.y / 16 }, Palette.Get(Colors::FireHot));
-		else {
-			drawBuffer->SetPixel(Position{ p.pos_to.x, p.pos_to.y }, Palette.Get(Colors::FireHot));
-			drawBuffer->SetPixel(Position{ p.pos_from.x, p.pos_from.y }, Palette.Get(Colors::FireCold));
-		}
-	}
+    for (Shrapnel & shrapnel : this->shrapnels)
+    {
+        drawBuffer->SetPixel(Position{shrapnel.pos.x / 16, shrapnel.pos.y / 16}, Palette.Get(Colors::FireHot));
+    }
+    for (Bullet & bullet : this->bullets)
+    {
+        drawBuffer->SetPixel(Position{bullet.pos.x, bullet.pos.y}, Palette.Get(Colors::FireHot));
+        drawBuffer->SetPixel(Position{bullet.pos_blur_from.x, bullet.pos_blur_from.y}, Palette.Get(Colors::FireCold));
+    }
 }

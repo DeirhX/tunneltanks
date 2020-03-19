@@ -17,8 +17,7 @@ class VoxelRaycast
 };
 
 struct Projectile {
-	Position pos_to;       /* The x,y of the 'hot' portion.  (#ff3408) */
-	Position pos_from;   /* The x,y of the 'cold' portion. (#ba0000) */
+    Position pos;       /* The x,y of the 'hot' portion.  (#ff3408) */
 
 	//PositionF 
 	Speed    speed;
@@ -27,35 +26,54 @@ struct Projectile {
 	bool	is_alive = false;
 
 	class Level* level;
-	class Tank* tank;
 
 private:
 	Projectile() = default; // Never use manually. Will be used inside intrusive containers
+protected:
+	Projectile(Position position, SpeedF speed, int life, Level* level)
+    : pos(position), speed(int(speed.x), int(speed.y)), steps_remain(life), level(level), is_alive(true)
+	{ }
 public:
-	Projectile(Position position, Position origin, SpeedF speed, int life, ProjectileType type, Level* level, Tank* tank);
-
-	ProjectileType type;
-	//virtual ProjectileType GetType() = 0;
-
-	static std::vector<Projectile> CreateExplosion(Position pos, Level* level, int count, int radius, int ttl);
-	static Projectile CreateBullet(Tank* tank);
+    virtual ~Projectile() = default;
+	virtual ProjectileType GetType() = 0;
 
 	bool IsInvalid() const { return !is_alive; }
 	bool IsValid() const { return is_alive; }
 	void Invalidate() { is_alive = false; }
 };
 
-class Bullet : public Projectile
+class MotionBlurProjectile : public Projectile
 {
-	Position pos_old;   /* The x,y of the 'cold' portion. (#ba0000) */
+public:
+    Position pos_blur_from; /* The x,y of the 'cold' portion. (#ba0000) */
+protected:
+    MotionBlurProjectile(Position position, SpeedF speed, int life, Level * level)
+    : Projectile(position, speed, life, level) { }
+};
+
+class Bullet : public MotionBlurProjectile
+{
+	using Base = MotionBlurProjectile;
+  public:
+    class Tank *tank;
+  public:
+    Bullet() = default;
+    Bullet(Position position, SpeedF speed, int life, Level *level, Tank *tank)
+        : Base(position, speed, life, level), tank(tank) { }
+    ProjectileType GetType() override { return ProjectileType::Bullet; }
 };
 
 class Shrapnel : public Projectile
 {
-
+  public:
+    Shrapnel() = default;
+    Shrapnel(Position position, SpeedF speed, int life, Level *level)
+        : Projectile(position, speed, life, level) { }
+    ProjectileType GetType() override { return ProjectileType::Shrapnel; }
 };
 
 class Explosion : public Projectile
 {
-	std::vector<Shrapnel>  shrapnel;
+public:
+    static std::vector<Shrapnel> Explode(Position pos, Level *level, int count, int radius, int ttl);
 };
