@@ -32,7 +32,7 @@ ControllerOutput do_start(PublicTankInfo *i, TwitchController *data) {
 	} else if(no_down) {
 		data->mode = TWITCH_EXIT_UP;
 	} else
-		data->mode = Random.Bool(500) ? TWITCH_EXIT_UP : TWITCH_EXIT_DOWN;
+		  data->mode = Random.Bool(500) ? TWITCH_EXIT_UP : TWITCH_EXIT_DOWN;
 	return { };
 }
 

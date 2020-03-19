@@ -1,5 +1,5 @@
-#include "base.h"
 #include "colors.h"
+#include "base.h"
 /* Various colors for use in the game: */
 #include <cassert>
 
@@ -9,81 +9,78 @@ ColorPalette Palette;
 
 ColorPalette::ColorPalette()
 {
-	Set(Colors::DirtHigh, Color(0xc3, 0x79, 0x30));
-	Set(Colors::DirtLow, Color(0xba, 0x59, 0x04));
-	Set(Colors::DirtGrow, Color(0x6a, 0x29, 0x02));
-	Set(Colors::Rock, Color(0x9a, 0x9a, 0x9a));
-	Set(Colors::FireHot, Color(0xff, 0x34, 0x08));
-	Set(Colors::FireCold, Color(0xba, 0x00, 0x00));
-	Set(Colors::Background, Color(0x00, 0x00, 0x00));
-	Set(Colors::BackgroundDot, Color(0x00, 0x00, 0x00));
-	Set(Colors::StatusBackground, Color(0x65, 0x65, 0x65));
-	Set(Colors::StatusEnergy, Color(0xf5, 0xeb, 0x1a));
-	Set(Colors::StatusHealth, Color(0x26, 0xf4, 0xf2));
-	Set(Colors::DecalLow, Color(0x28, 0x28, 0x28));
-	Set(Colors::DecalHigh, Color(0x48, 0x38, 0x2f));
-	//Set(Colors::LifeDot, Color(0x48, 0x38, 0x2f));
+    Set(Colors::DirtHigh, Color(0xc3, 0x79, 0x30));
+    Set(Colors::DirtLow, Color(0xba, 0x59, 0x04));
+    Set(Colors::DirtGrow, Color(0x6a, 0x29, 0x02));
+    Set(Colors::Rock, Color(0x9a, 0x9a, 0x9a));
+    Set(Colors::FireHot, Color(0xff, 0x34, 0x08));
+    Set(Colors::FireCold, Color(0xba, 0x00, 0x00));
+    Set(Colors::Background, Color(0x00, 0x00, 0x00));
+    Set(Colors::BackgroundDot, Color(0x00, 0x00, 0x00));
+    Set(Colors::StatusBackground, Color(0x65, 0x65, 0x65));
+    Set(Colors::StatusEnergy, Color(0xf5, 0xeb, 0x1a));
+    Set(Colors::StatusHealth, Color(0x26, 0xf4, 0xf2));
+    Set(Colors::DecalLow, Color(0x28, 0x28, 0x28));
+    Set(Colors::DecalHigh, Color(0x48, 0x38, 0x2f));
+    // Set(Colors::LifeDot, Color(0x48, 0x38, 0x2f));
 
-	SetPrimary(0, Color(0x00, 0x00, 0x00));
-	SetPrimary(1, Color(0xff, 0x00, 0x00));
-	SetPrimary(2, Color(0x00, 0xff, 0x00));
-	SetPrimary(3, Color(0xff, 0xff, 0x00));
-	SetPrimary(4, Color(0x00, 0x00, 0xff));
-	SetPrimary(5, Color(0xff, 0x00, 0xff));
-	SetPrimary(6, Color(0x00, 0xff, 0xff));
-	SetPrimary(7, Color(0xff, 0xff, 0xff));
+    SetPrimary(0, Color(0x00, 0x00, 0x00));
+    SetPrimary(1, Color(0xff, 0x00, 0x00));
+    SetPrimary(2, Color(0x00, 0xff, 0x00));
+    SetPrimary(3, Color(0xff, 0xff, 0x00));
+    SetPrimary(4, Color(0x00, 0x00, 0xff));
+    SetPrimary(5, Color(0xff, 0x00, 0xff));
+    SetPrimary(6, Color(0x00, 0xff, 0xff));
+    SetPrimary(7, Color(0xff, 0xff, 0xff));
 
-	/* Blue tank: */
-	SetTank(0, Color(0x2c, 0x2c, 0xff), Color(0x00, 0x00, 0xb6), Color(0xf3, 0xeb, 0x1c));
-	/* Green tank: */
-	SetTank(1, Color(0x00, 0xff, 0x00), Color(0x00, 0xaa, 0x00), Color(0xf3, 0xeb, 0x1c));
-	/* Red tank: */
-	SetTank(2, Color(0xff, 0x00, 0x00), Color(0xaa, 0x00, 0x00), Color(0xf3, 0xeb, 0x1c));
-	/* Pink tank: */
-	SetTank(3, Color(0xff, 0x99, 0x99), Color(0xaa, 0x44, 0x44), Color(0xf3, 0xeb, 0x1c));
-	/* Purple tank: */
-	SetTank(4, Color(0xff, 0x00, 0xff), Color(0xaa, 0x00, 0xaa), Color(0xf3, 0xeb, 0x1c));
-	/* White tank: */
-	SetTank(5, Color(0xee, 0xee, 0xee), Color(0x99, 0x99, 0x99), Color(0xf3, 0xeb, 0x1c));
-	/* Aqua tank: */
-	SetTank(6, Color(0x00, 0xff, 0xff), Color(0x00, 0xaa, 0xaa), Color(0xf3, 0xeb, 0x1c));
-	/* Gray tank: */
-	SetTank(7, Color(0x66, 0x66, 0x66), Color(0x33, 0x33, 0x33), Color(0xf3, 0xeb, 0x1c));
+    /* Blue tank: */
+    SetTank(0, Color(0x2c, 0x2c, 0xff), Color(0x00, 0x00, 0xb6), Color(0xf3, 0xeb, 0x1c));
+    /* Green tank: */
+    SetTank(1, Color(0x00, 0xff, 0x00), Color(0x00, 0xaa, 0x00), Color(0xf3, 0xeb, 0x1c));
+    /* Red tank: */
+    SetTank(2, Color(0xff, 0x00, 0x00), Color(0xaa, 0x00, 0x00), Color(0xf3, 0xeb, 0x1c));
+    /* Pink tank: */
+    SetTank(3, Color(0xff, 0x99, 0x99), Color(0xaa, 0x44, 0x44), Color(0xf3, 0xeb, 0x1c));
+    /* Purple tank: */
+    SetTank(4, Color(0xff, 0x00, 0xff), Color(0xaa, 0x00, 0xaa), Color(0xf3, 0xeb, 0x1c));
+    /* White tank: */
+    SetTank(5, Color(0xee, 0xee, 0xee), Color(0x99, 0x99, 0x99), Color(0xf3, 0xeb, 0x1c));
+    /* Aqua tank: */
+    SetTank(6, Color(0x00, 0xff, 0xff), Color(0x00, 0xaa, 0xaa), Color(0xf3, 0xeb, 0x1c));
+    /* Gray tank: */
+    SetTank(7, Color(0x66, 0x66, 0x66), Color(0x33, 0x33, 0x33), Color(0xf3, 0xeb, 0x1c));
 }
 
 Color ColorPalette::Get(Colors colorName)
 {
-	assert(colorName >= Colors::First && colorName < Colors::Size);
-	return Values[static_cast<int>(colorName)];
+    assert(colorName >= Colors::First && colorName < Colors::Size);
+    return Values[static_cast<int>(colorName)];
 }
 
 Color ColorPalette::GetPrimary(TankColor index)
 {
-	assert(index >= 0 && index < PrimaryColors);
-	return Primaries[index];
+    assert(index >= 0 && index < PrimaryColors);
+    return Primaries[index];
 }
 
-Color* ColorPalette::GetTank(TankColor index)
+Color *ColorPalette::GetTank(TankColor index)
 {
-	assert(index >= 0 && index < PrimaryColors);
-	return Tanks[index];
+    assert(index >= 0 && index < PrimaryColors);
+    return Tanks[index];
 }
 
-void ColorPalette::Set(Colors colorName, Color color)
-{
-	Values[static_cast<int>(colorName)] = color;
-}
+void ColorPalette::Set(Colors colorName, Color color) { Values[static_cast<int>(colorName)] = color; }
 
 void ColorPalette::SetPrimary(TankColor index, Color color)
 {
-	assert(index >= 0 && index < PrimaryColors);
-	Primaries[index] = color;
+    assert(index >= 0 && index < PrimaryColors);
+    Primaries[index] = color;
 }
 
 void ColorPalette::SetTank(TankColor index, Color color_1, Color color_2, Color color_3)
 {
-	assert(index >= 0 && index < PrimaryColors);
-	Tanks[index][0] = color_1;
-	Tanks[index][1] = color_2;
-	Tanks[index][2] = color_3;
+    assert(index >= 0 && index < PrimaryColors);
+    Tanks[index][0] = color_1;
+    Tanks[index][1] = color_2;
+    Tanks[index][2] = color_3;
 }

@@ -13,7 +13,7 @@ enum class ProjectileType {
 
 class VoxelRaycast
 {
-	
+
 };
 
 struct Projectile {
@@ -24,7 +24,7 @@ struct Projectile {
 	Speed    speed;
 	int      steps_remain;
 
-	bool     is_alive = false;
+	bool	is_alive = false;
 
 	class Level* level;
 	class Tank* tank;
@@ -32,7 +32,7 @@ struct Projectile {
 private:
 	Projectile() = default; // Never use manually. Will be used inside intrusive containers
 public:
-    Projectile(Position position, Position origin, SpeedF speed, int life, ProjectileType type, Level* level, Tank* tank);
+	Projectile(Position position, Position origin, SpeedF speed, int life, ProjectileType type, Level* level, Tank* tank);
 
 	ProjectileType type;
 	//virtual ProjectileType GetType() = 0;
@@ -52,7 +52,7 @@ class Bullet : public Projectile
 
 class Shrapnel : public Projectile
 {
-	
+
 };
 
 class Explosion : public Projectile
