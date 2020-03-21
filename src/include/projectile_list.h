@@ -4,19 +4,21 @@
 
 class ProjectileList
 {
-    /*
-    ValueContainer<Bullet> bullets;
-    ValueContainer<Shrapnel> shrapnels;
-    */
-    MultiTypeContainer<Bullet, Shrapnel> items;
+    MultiTypeContainer<Bullet, Shrapnel> items;               /* Live items. Unmodified except for BEFORE Advance */
+    MultiTypeContainer<Bullet, Shrapnel> newly_created_items; /* Items here will be integrated into main vector on Advance */
   public:
+    ProjectileList() = default;
     template <typename TProjectile>
-    TProjectile & Add(TProjectile projectile)
+    TProjectile & Add(TProjectile&& projectile)
     {
-        return this->items.Add(projectile);
+        return this->newly_created_items.Add(projectile);
     }
-    //Shrapnel & Add(Shrapnel projectile) { return this->shrapnels.Add(projectile); }
-    void Add(std::vector<Shrapnel> array);
+    template <typename TProjectile>
+    void Add(std::vector<TProjectile>&& array)
+    {
+        for (auto & projectile : array)
+            this->Add(projectile);
+    }
 
     void Remove(Projectile & projectile) { projectile.Invalidate(); }
     void Shrink();

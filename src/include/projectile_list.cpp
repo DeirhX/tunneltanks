@@ -7,11 +7,6 @@
 #include "tank.h"
 #include "tanklist.h"
 
-void ProjectileList::Add(std::vector<Shrapnel> array)
-{
-    for (auto & shrapnel: array)
-        this->Add(shrapnel);
-}
 
 void ProjectileList::Shrink()
 {
@@ -20,10 +15,14 @@ void ProjectileList::Shrink()
 
 void ProjectileList::Advance(Level * level, TankList * tankList)
 {
-    /* Create copies to not be influenced by possible container modification*/
+    /* Append everything that was created last tick */
+    this->items.MergeFrom(this->newly_created_items);
+    this->newly_created_items.RemoveAll();
+    Shrink();
+
+    /* Advance everything */
     this->items.ForEach([tankList](Projectile & item) { item.Advance(tankList); });
 
-    Shrink();
 }
 
 void ProjectileList::Erase(DrawBuffer* drawBuffer, Level* level)
