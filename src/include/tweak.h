@@ -78,6 +78,8 @@ namespace tank {
 	constexpr int ShotDamage = -160;
 	constexpr int HomeHealSpeed = 3;
 
+    constexpr int TurretLength = 3;
+
 }
 /* Constants for drawing static: (The bottom 3 constants are out of 1000) */
 #define STATIC_THRESHOLD               (tweak::tank::StartingFuel/5)
@@ -92,21 +94,24 @@ namespace tank {
 /* The starting number of items in the Projectile Buffer's cache: */
 #define PROJECTILE_BUFFER_START_SIZE   32
 
-/* The radius/number/ttl of particles in various special effects: */
-/* TODO: radius would probably be better named as 'speed' or the like... */
-
-#define EXPLOSION_DIRT_COUNT           10
-#define EXPLOSION_DIRT_RADIUS          12
-#define EXPLOSION_DIRT_TTL             10
-
-#define EXPLOSION_HURT_COUNT           14
-#define EXPLOSION_HURT_RADIUS          18
-#define EXPLOSION_HURT_TTL             13
-
-#define EXPLOSION_DEATH_COUNT          100
-#define EXPLOSION_DEATH_RADIUS         8
-#define EXPLOSION_DEATH_TTL            72
-
+namespace explosion::dirt
+{
+constexpr int ShrapnelCount = 10;
+constexpr int Speed = 12;
+constexpr int Frames = 10;
+} // namespace explosion::dirt
+namespace explosion::normal
+{
+constexpr int ShrapnelCount = 14;
+constexpr int Speed = 18;
+constexpr int Frames = 13;
+} // namespace explosion::normal
+namespace explosion::death
+{
+constexpr int ShrapnelCount = 100;
+constexpr int Speed = 8;
+constexpr int Frames = 72;
+} // namespace explosion::death
 /* Characters used in level structures for things: */
 
 /* Default to keeping memory stats: */

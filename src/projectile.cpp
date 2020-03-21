@@ -31,8 +31,8 @@ void Bullet::Advance(TankList * tankList)
             /* Add all of the effect particles: */
 
             for (Shrapnel & shrapnel :
-                 Explosion::Explode(this->pos_blur_from.ToIntPosition(), level, EXPLOSION_HURT_COUNT,
-                                    EXPLOSION_HURT_RADIUS, EXPLOSION_HURT_TTL))
+                 Explosion::Explode(this->pos_blur_from.ToIntPosition(), level, tweak::explosion::normal::ShrapnelCount,
+                                    tweak::explosion::normal::Speed, tweak::explosion::normal::Frames))
             {
                 tankList->projectile_list->Add(shrapnel);
             }
@@ -49,8 +49,8 @@ void Bullet::Advance(TankList * tankList)
             this->tank->ReturnBullet();
 
             for (Shrapnel & shrapnel :
-                 Explosion::Explode(this->pos_blur_from.ToIntPosition(), level, EXPLOSION_DIRT_COUNT,
-                                    EXPLOSION_DIRT_RADIUS, EXPLOSION_DIRT_TTL))
+                 Explosion::Explode(this->pos_blur_from.ToIntPosition(), level, tweak::explosion::dirt::ShrapnelCount,
+                                    tweak::explosion::dirt::Speed, tweak::explosion::dirt::Frames))
             {
                 tankList->projectile_list->Add(shrapnel);
             }

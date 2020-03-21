@@ -29,6 +29,11 @@ enum class CollisionType
     Blocked /* Hit a rock/base/tank/something we can't drive over. */
 };
 
+class TankTurret
+{
+
+};
+
 class Tank
 {
     bool is_valid = false;
