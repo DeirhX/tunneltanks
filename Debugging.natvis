@@ -12,4 +12,19 @@
   <Type Name="Vector">
     <DisplayString>{{ x={x}, y={y} }}</DisplayString>
   </Type>
+  <Type Name="Offset">
+    <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+  </Type>
+  <Type Name="PositionF">
+    <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+  </Type>
+  <Type Name="OffsetF">
+    <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+  </Type>
+  <Type Name="SpeedF">
+    <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+  </Type>
+  <Type Name="VectorF">
+    <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+  </Type>
 </AutoVisualizer>

@@ -34,7 +34,7 @@ void GameMode::AssumeAIControl(TankList *tl, Level *lvl, TankColor starting_id) 
 }
 
 
-std::unique_ptr<SinglePlayerMode> SinglePlayerMode::Setup(Screen* screen, World* world)
+std::unique_ptr<SinglePlayerMode> SinglePlayerMode::Setup(Screen * screen, World * world, bool use_ai)
 {
 
 	/* Ready the tank! */
@@ -44,7 +44,8 @@ std::unique_ptr<SinglePlayerMode> SinglePlayerMode::Setup(Screen* screen, World*
 	Screens::SinglePlayerScreenSetup(screen, world, t);
 
 	/* Fill up the rest of the slots with Twitches: */
-	GameMode::AssumeAIControl(world->GetTankList(), world->GetLevel(), 1);
+    if (use_ai)
+	    GameMode::AssumeAIControl(world->GetTankList(), world->GetLevel(), 1);
 
 	return std::unique_ptr<SinglePlayerMode>{ new SinglePlayerMode(screen, world) }; // Can't make unique, private constructor
 }
@@ -56,7 +57,7 @@ void SinglePlayerMode::TearDown()
 	this->world = nullptr;
 }
 
-std::unique_ptr<LocalTwoPlayerMode> LocalTwoPlayerMode::Setup(Screen* screen, World* world)
+std::unique_ptr<LocalTwoPlayerMode> LocalTwoPlayerMode::Setup(Screen* screen, World* world, bool use_ai)
 {
 	/* Ready the tanks! */
 	Tank* player_one = world->GetTankList()->AddTank(0, world->GetLevel()->GetSpawn(0));
@@ -69,7 +70,8 @@ std::unique_ptr<LocalTwoPlayerMode> LocalTwoPlayerMode::Setup(Screen* screen, Wo
 
 	Screens::TwoPlayerScreenSetup(screen, world, player_one, player_two);
 	/* Fill up the rest of the slots with Twitches: */
-	GameMode::AssumeAIControl(world->GetTankList(), world->GetLevel(), 2);
+	if (use_ai)
+		GameMode::AssumeAIControl(world->GetTankList(), world->GetLevel(), 2);
 
 	return std::unique_ptr<LocalTwoPlayerMode>{ new LocalTwoPlayerMode(screen, world) }; // Can't make unique, private constructor
 }
@@ -139,8 +141,8 @@ Game::Game(GameConfig config) {
 	/* Set up the players/GUI inside the world */
 	if (this->config.player_count > gamelib_get_max_players())
 		throw GameException("Tried to use more players than the platform can support.");
-	if     (this->config.player_count == 1) this->mode = SinglePlayerMode::Setup(this->screen.get(), this->world.get());
-	else if(this->config.player_count == 2) this->mode = LocalTwoPlayerMode::Setup(this->screen.get(), this->world.get());
+	if     (this->config.player_count == 1) this->mode = SinglePlayerMode::Setup(this->screen.get(), this->world.get(), this->config.use_ai);
+	else if(this->config.player_count == 2) this->mode = LocalTwoPlayerMode::Setup(this->screen.get(), this->world.get(), this->config.use_ai);
 	else {
 		ERR_OUT("Don't know how to draw more than 2 players at once...");
 		exit(1);

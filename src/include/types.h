@@ -147,12 +147,8 @@ inline OffsetF operator*(float m, OffsetF o) { return {o.x * m, o.y * m}; }
 inline OffsetF operator/(OffsetF o, float d) { return {o.x / d, o.y / d}; }
 inline OffsetF operator-(PositionF p, PositionF o) { return {p.x - o.x, p.y - o.y}; }
 inline PositionF operator+(PositionF v, OffsetF o) { return {v.x + o.x, v.y + o.y}; }
-inline PositionF & operator+=(PositionF v, OffsetF o)
-{
-    v.x += o.x;
-    v.y += o.y;
-    return v;
-}
+inline PositionF & operator+=(PositionF v, OffsetF o) { v.x += o.x; v.y += o.y; return v; }
+inline bool operator==(PositionF l, PositionF r) { return l.x == r.x && l.y == r.y; }
 
 /* Oh no, a float! Can't we do without? */
 /* TODO: we need actually just radians. But so often will we use the components it won't hurt to store them instead */

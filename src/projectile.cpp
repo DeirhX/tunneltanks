@@ -12,12 +12,10 @@
 
 void Bullet::Advance(TankList * tankList)
 {
-    for (int i = 0; i < this->simulation_steps; i++)
+    auto IteratePositions = [this, tankList](PositionF tested_pos, PositionF prev_pos)
     {
-        this->pos_blur_from.x = this->pos.x;
-        this->pos_blur_from.y = this->pos.y;
-        this->pos.x += this->speed.x;
-        this->pos.y += this->speed.y;
+        this->pos = tested_pos;
+        this->pos_blur_from = prev_pos;
 
         /* Did we hit another tank? */
         TankColor hitTankColor = this->tank->GetColor();
@@ -31,7 +29,6 @@ void Bullet::Advance(TankList * tankList)
             hitTank->AlterHealth(tweak::tank::ShotDamage);
 
             /* Add all of the effect particles: */
-            
 
             for (Shrapnel & shrapnel :
                  Explosion::Explode(this->pos_blur_from.ToIntPosition(), level, EXPLOSION_HURT_COUNT,
@@ -41,7 +38,7 @@ void Bullet::Advance(TankList * tankList)
             }
             /* Finally, remove it: */
             this->Invalidate();
-            return;
+            return false;
         }
 
         /* Else, did we hit something in the level? */
@@ -59,9 +56,12 @@ void Bullet::Advance(TankList * tankList)
             }
             /* Finally, remove it: */
             this->Invalidate();
-            return;
+            return false;
         }
-    }
+
+        return true;
+    };
+    Raycaster::Cast(this->pos, this->pos + (this->speed * float(this->simulation_steps)), IteratePositions);
 }
 
 void Bullet::Draw(DrawBuffer * drawBuffer)

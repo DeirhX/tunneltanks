@@ -28,6 +28,7 @@ int main(int argc, char *argv[]) {
 	Size size{ 1000, 500 };
 	char *id = NULL, *outfile_name = NULL;
 	int seed = 0, manual_seed=0;
+    bool no_ai = false;
 	
 	/* Iterate through the CLAs: */
 	for(i=1; i<argc; i++) {
@@ -51,7 +52,8 @@ int main(int argc, char *argv[]) {
 			gamelib_print("--help             Display this help message and exit.\n\n");
 			
 			gamelib_print("--single           Only have one user-controlled tank.\n");
-			gamelib_print("--double           Have two user-controlled tanks. (Default)\n\n");
+			gamelib_print("--double           Have two user-controlled tanks. (Default)\n");
+            gamelib_print("--no-ai            No AI-controlled players.\n\n");
 			
 			gamelib_print("--show-levels      List all available level generators.\n");
 			gamelib_print("--level <GEN>      Use <GEN> as the level generator.\n");
@@ -71,9 +73,14 @@ int main(int argc, char *argv[]) {
 		} else if( !strcmp("--single", argv[i]) ) {
 			player_count = 1;
 		
-		} else if( !strcmp("--double", argv[i]) ) {
-			player_count = 2;
-		
+		}
+        else if (!strcmp("--double", argv[i]))
+        {
+            player_count = 2;
+        }
+        else if (!strcmp("--no-ai", argv[i]))
+        {
+            no_ai = true;
 		
 		} else if( !strcmp("--show-levels", argv[i]) ) {
 			print_levels(stdout);
@@ -132,6 +139,7 @@ int main(int argc, char *argv[]) {
 		.is_debug = !!debug,
 		.is_fullscreen = !!fullscreen,
 		.player_count = player_count,
+		.use_ai = !no_ai,
 	};
 	{
 		auto gd = std::make_unique<Game>(config);

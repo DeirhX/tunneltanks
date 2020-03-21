@@ -13,6 +13,7 @@ struct GameConfig {
 	bool is_fullscreen;
 	int player_count;
 	int rand_seed;
+    bool use_ai = true;
 };
 
 class Game
@@ -56,7 +57,7 @@ class SinglePlayerMode : public GameMode
 private:
 	SinglePlayerMode(Screen* screen, World* world) : GameMode(screen, world) {}
 public:
-	static std::unique_ptr<SinglePlayerMode> Setup(Screen* screen, World* world);
+	static std::unique_ptr<SinglePlayerMode> Setup(Screen* screen, World* world, bool use_ai);
 	void TearDown() override;
 };
 
@@ -65,6 +66,6 @@ class LocalTwoPlayerMode : public GameMode
 private:
 	LocalTwoPlayerMode(Screen* screen, World* world) : GameMode(screen, world) {}
 public:
-	static std::unique_ptr<LocalTwoPlayerMode> Setup(Screen* screen, World* world);
+    static std::unique_ptr<LocalTwoPlayerMode> Setup(Screen * screen, World * world, bool use_ai);
 	void TearDown() override;
 };
