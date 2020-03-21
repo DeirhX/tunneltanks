@@ -1,8 +1,5 @@
-#include "base.h"
 #include "scene.h"
+#include "base.h"
 #include "tank.h"
 
-void MainGameScene::Advance()
-{
-
-}
+void MainGameScene::Advance() {}

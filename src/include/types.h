@@ -14,7 +14,7 @@ struct Vector
 {
     int x = 0, y = 0;
     Vector() = default;
-    constexpr Vector(int x, int y) : x(x), y(y) {}
+    constexpr Vector(int x, int y) noexcept : x(x), y(y) {}
 };
 
 /* Position relative to our logical Screen*/
@@ -67,19 +67,19 @@ struct Offset : public Vector
  *   Size * scalar -> Size
  */
 
-inline Vector operator+(Vector v, Vector o) { return {v.x + o.x, v.y + o.y}; }
-inline Vector operator-(Vector v, Vector o) { return {v.x - o.x, v.y - o.y}; }
-inline Offset operator*(Speed s, int t) { return {s.x * t, s.y * t}; }
-inline Offset operator*(int t, Speed s) { return {s.x * t, s.y * t}; }
-inline Size operator*(Size s, int t) { return {s.x * t, s.y * t}; }
-inline Size operator*(int t, Size s) { return {s.x * t, s.y * t}; }
-inline Size operator/(Size s, int t) { return {s.x / t, s.y / t}; }
-inline Offset operator+(Offset o, Size s) { return {o.x + s.x, o.y + s.y}; }
-inline Offset operator-(Offset o, Size s) { return {o.x - s.x, o.y - s.y}; }
-inline Offset operator-(Position p, Position o) { return {p.x - o.x, p.y - o.y}; }
-inline Position operator+(Position v, Offset o) { return {v.x + o.x, v.y + o.y}; }
-inline Position operator+(Position v, Size o) { return {v.x + o.x, v.y + o.y}; }
-inline bool operator==(Position l, Position r) { return l.x == r.x && l.y == r.y; }
+inline Vector operator+(Vector v, Vector o) noexcept { return {v.x + o.x, v.y + o.y}; }
+inline Vector operator-(Vector v, Vector o) noexcept { return {v.x - o.x, v.y - o.y}; }
+inline Offset operator*(Speed s, int t) noexcept { return {s.x * t, s.y * t}; }
+inline Offset operator*(int t, Speed s) noexcept { return {s.x * t, s.y * t}; }
+inline Size operator*(Size s, int t) noexcept { return {s.x * t, s.y * t}; }
+inline Size operator*(int t, Size s) noexcept { return {s.x * t, s.y * t}; }
+inline Size operator/(Size s, int t) noexcept { return {s.x / t, s.y / t}; }
+inline Offset operator+(Offset o, Size s) noexcept { return {o.x + s.x, o.y + s.y}; }
+inline Offset operator-(Offset o, Size s) noexcept { return {o.x - s.x, o.y - s.y}; }
+inline Offset operator-(Position p, Position o) noexcept { return {p.x - o.x, p.y - o.y}; }
+inline Position operator+(Position v, Offset o) noexcept { return {v.x + o.x, v.y + o.y}; }
+inline Position operator+(Position v, Size o) noexcept { return {v.x + o.x, v.y + o.y}; }
+inline bool operator==(Position l, Position r) noexcept { return l.x == r.x && l.y == r.y; }
 
 /* Integer direction. Take your numerical keyboard and subtract 1 */
 struct Direction
@@ -146,16 +146,16 @@ struct OffsetF : public VectorF
     constexpr OffsetF(float sx, float sy) : VectorF(sx, sy) {}
     explicit OffsetF(Offset int_offset) : VectorF(float(int_offset.x), float(int_offset.y)) {}
 };
-inline VectorF operator+(VectorF v, VectorF o) { return {v.x + o.x, v.y + o.y}; }
-inline VectorF operator-(VectorF v, VectorF o) { return {v.x - o.x, v.y - o.y}; }
-inline OffsetF operator*(SpeedF s, float t) { return {s.x * t, s.y * t}; }
-inline OffsetF operator*(float t, SpeedF s) { return {s.x * t, s.y * t}; }
-inline OffsetF operator*(OffsetF o, float m) { return {o.x * m, o.y * m}; }
-inline OffsetF operator*(float m, OffsetF o) { return {o.x * m, o.y * m}; }
-inline OffsetF operator/(OffsetF o, float d) { return {o.x / d, o.y / d}; }
-inline OffsetF operator-(PositionF p, PositionF o) { return {p.x - o.x, p.y - o.y}; }
-inline PositionF operator+(PositionF v, OffsetF o) { return {v.x + o.x, v.y + o.y}; }
-inline PositionF & operator+=(PositionF v, OffsetF o)
+inline VectorF operator+(VectorF v, VectorF o) noexcept { return {v.x + o.x, v.y + o.y}; }
+inline VectorF operator-(VectorF v, VectorF o) noexcept { return {v.x - o.x, v.y - o.y}; }
+inline OffsetF operator*(SpeedF s, float t) noexcept { return {s.x * t, s.y * t}; }
+inline OffsetF operator*(float t, SpeedF s) noexcept { return {s.x * t, s.y * t}; }
+inline OffsetF operator*(OffsetF o, float m) noexcept { return {o.x * m, o.y * m}; }
+inline OffsetF operator*(float m, OffsetF o) noexcept { return {o.x * m, o.y * m}; }
+inline OffsetF operator/(OffsetF o, float d) noexcept { return {o.x / d, o.y / d}; }
+inline OffsetF operator-(PositionF p, PositionF o) noexcept { return {p.x - o.x, p.y - o.y}; }
+inline PositionF operator+(PositionF v, OffsetF o) noexcept { return {v.x + o.x, v.y + o.y}; }
+inline PositionF & operator+=(PositionF v, OffsetF o) noexcept
 {
     v.x += o.x;
     v.y += o.y;

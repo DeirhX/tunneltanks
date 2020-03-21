@@ -1,5 +1,6 @@
 #pragma once
 
+#include <controller.h>
 
 /* Our first AI: Twitch! (note: the 'I' in 'AI' is being used VERY loosely) */
 

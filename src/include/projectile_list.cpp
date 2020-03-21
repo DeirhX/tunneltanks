@@ -1,17 +1,13 @@
-#include "base.h"
-#include "projectile.h"
 #include "projectile_list.h"
-#include "level.h"
-#include "random.h"
+#include "base.h"
 #include "colors.h"
+#include "level.h"
+#include "projectile.h"
+#include "random.h"
 #include "tank.h"
 #include "tanklist.h"
 
-
-void ProjectileList::Shrink()
-{
-    this->items.Shrink();
-}
+void ProjectileList::Shrink() { this->items.Shrink(); }
 
 void ProjectileList::Advance(Level * level, TankList * tankList)
 {
@@ -22,16 +18,14 @@ void ProjectileList::Advance(Level * level, TankList * tankList)
 
     /* Advance everything */
     this->items.ForEach([tankList](Projectile & item) { item.Advance(tankList); });
-
 }
 
-void ProjectileList::Erase(LevelDrawBuffer* drawBuffer, Level* level)
+void ProjectileList::Erase(LevelDrawBuffer * drawBuffer, Level * level)
 {
     this->items.ForEach([drawBuffer, level](Projectile & item) { item.Erase(drawBuffer, level); });
 }
 
-
-void ProjectileList::Draw(LevelDrawBuffer* drawBuffer)
+void ProjectileList::Draw(LevelDrawBuffer * drawBuffer)
 {
     this->items.ForEach([drawBuffer](Projectile & item) { item.Draw(drawBuffer); });
 }

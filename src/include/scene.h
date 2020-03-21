@@ -4,14 +4,14 @@
 
 class Scene
 {
-	virtual void Advance() = 0;
+    virtual void Advance() = 0;
 };
 
 class MainGameScene : public Scene
 {
-public:
-	TankList tank_list;
-	ProjectileList projectiles;
+  public:
+    TankList tank_list;
+    ProjectileList projectiles;
 
-	void Advance() override;
+    void Advance() override;
 };
