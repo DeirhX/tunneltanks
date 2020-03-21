@@ -62,7 +62,7 @@ public:
 	void SetCrosshair(widgets::Crosshair* cross) { this->crosshair = cross; }
 
 	[[nodiscard]] Position GetPosition() const { return this->pos; }
-	[[nodiscard]] int GetColor() const { return this->color; }
+	[[nodiscard]] TankColor GetColor() const { return this->color; }
 	[[nodiscard]] DirectionF GetDirection() const { return this->direction; }
 
 	[[nodiscard]] bool IsDead() const;

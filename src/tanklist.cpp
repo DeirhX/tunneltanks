@@ -33,15 +33,18 @@ void TankList::RemoveTank(TankColor color)
 	(*found).Invalidate();
 }
 
-Tank* TankList::GetTankAtPoint(int x, int y, int ignored) {
+Tank* TankList::GetTankAtPoint(Position query_pos, TankColor ignored) {
 	
 	for(Tank& tank : *this) 
 	{
-		if(tank.GetColor() == ignored || tank.IsDead()) continue;
+		if(tank.GetColor() == ignored || tank.IsDead()) 
+			continue;
 		
 		Position pos = tank.GetPosition();
-		pos.x = x - pos.x + 3; pos.y = y - pos.y + 3;
-		if(pos.x < 0 || pos.x > 6 || pos.y < 0 || pos.y > 6) continue;
+        pos.x = query_pos.x - pos.x + 3;
+        pos.y = query_pos.y - pos.y + 3;
+        if (pos.x < 0 || pos.x > 6 || pos.y < 0 || pos.y > 6)
+            continue; /* Early exit, outside bounding box*/
 		
 		if(TANK_SPRITE[ tank.GetDirection().ToIntDirection() ][pos.y][pos.x])
 			return &tank;

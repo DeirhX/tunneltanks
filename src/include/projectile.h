@@ -15,9 +15,8 @@ enum class ProjectileType
 /* Projectile base class */
 struct Projectile
 {
-    Position pos; 
-    // PositionF
-    Speed speed;
+    PositionF pos; 
+    SpeedF speed;
     int simulation_steps;
     bool is_alive = false;
     class Level * level;
@@ -26,7 +25,7 @@ struct Projectile
     Projectile() = default; // Never use manually. Will be used inside intrusive containers
   protected:
     Projectile(Position position, SpeedF speed, int life, Level * level)
-        : pos(position), speed(int(speed.x), int(speed.y)), simulation_steps(life), is_alive(true), level(level) {  }
+        : pos(position), speed(speed.x, speed.y), simulation_steps(life), is_alive(true), level(level) {  }
 
   public:
     virtual ~Projectile() = default;
@@ -44,7 +43,7 @@ struct Projectile
 class MotionBlurProjectile : public Projectile
 {
   public:
-    Position pos_blur_from; /* The x,y of the 'cold' portion. (#ba0000) */
+    PositionF pos_blur_from; /* The x,y of the 'cold' portion. (#ba0000) */
   protected:
     MotionBlurProjectile(Position position, SpeedF speed, int life, Level * level)
         : Projectile(position, speed, life, level) { }
@@ -59,7 +58,7 @@ class Bullet : public MotionBlurProjectile
     class Tank * tank;
 
   public:
-    Bullet() = default;
+    //Bullet() = default;
     Bullet(Position position, SpeedF speed, int life, Level * level, Tank * tank)
         : Base(position, speed, life, level), tank(tank) { }
     ProjectileType GetType() override { return ProjectileType::Bullet; }
@@ -73,7 +72,7 @@ class Bullet : public MotionBlurProjectile
 class Shrapnel : public Projectile
 {
   public:
-    Shrapnel() = default;
+    //Shrapnel() = default;
     Shrapnel(Position position, SpeedF speed, int life, Level * level) : Projectile(position, speed, life, level) {}
     ProjectileType GetType() override { return ProjectileType::Shrapnel; }
 

@@ -246,6 +246,9 @@
     <ClInclude Include="src\include\containers_queue.h">
       <Filter>src\system</Filter>
     </ClInclude>
+    <ClInclude Include="src\include\raycaster.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

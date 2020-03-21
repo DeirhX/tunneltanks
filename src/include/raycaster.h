@@ -19,8 +19,8 @@ class Raycaster
         for (int i = 0; i <= steps; ++i)
         {
             PositionF new_pos = curr_pos + one_step;
-            const auto prev = Position{static_cast<int>(std::round(curr_pos.x)), static_cast<int>(std::round(curr_pos.y))};
-            const auto next = Position{static_cast<int>(std::round(new_pos.x)), static_cast<int>(std::round(new_pos.y))};
+            const auto prev = curr_pos.ToIntPosition();
+            const auto next = new_pos.ToIntPosition();
             /* We might be still at the same pixel */
             if (prev == next)
                 continue;

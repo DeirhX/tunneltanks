@@ -89,6 +89,7 @@
     <ClInclude Include="src\include\projectile.h" />
     <ClInclude Include="src\include\projectile_list.h" />
     <ClInclude Include="src\include\random.h" />
+    <ClInclude Include="src\include\raycaster.h" />
     <ClInclude Include="src\include\scene.h" />
     <ClInclude Include="src\include\screen.h" />
     <ClInclude Include="src\include\tank.h" />

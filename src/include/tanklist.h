@@ -17,7 +17,7 @@ public:
 
 	Tank* AddTank(TankColor id, TankBase* tank_base);
 	void RemoveTank(TankColor id);
-	Tank* GetTankAtPoint(int x, int y, int ignored);
+    Tank * GetTankAtPoint(Position query_pos, TankColor ignored);
 	bool CheckForCollision(Tank& tank, Position testPos, int testDirection);
 
 	// iterable

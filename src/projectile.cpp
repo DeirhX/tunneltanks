@@ -8,6 +8,7 @@
 #include <tweak.h>
 
 #include "tanklist.h"
+#include "raycaster.h"
 
 void Bullet::Advance(TankList * tankList)
 {
@@ -19,8 +20,8 @@ void Bullet::Advance(TankList * tankList)
         this->pos.y += this->speed.y;
 
         /* Did we hit another tank? */
-        int hitTankColor = this->tank->GetColor();
-        Tank * hitTank = tankList->GetTankAtPoint(this->pos.x, this->pos.y, hitTankColor);
+        TankColor hitTankColor = this->tank->GetColor();
+        Tank * hitTank = tankList->GetTankAtPoint(this->pos.ToIntPosition(), hitTankColor);
         if (hitTank)
         {
             /* If we have an associated tank, return the shot: */
@@ -33,7 +34,7 @@ void Bullet::Advance(TankList * tankList)
             
 
             for (Shrapnel & shrapnel :
-                 Explosion::Explode(Position{this->pos_blur_from.x, this->pos_blur_from.y}, level, EXPLOSION_HURT_COUNT,
+                 Explosion::Explode(this->pos_blur_from.ToIntPosition(), level, EXPLOSION_HURT_COUNT,
                                     EXPLOSION_HURT_RADIUS, EXPLOSION_HURT_TTL))
             {
                 tankList->projectile_list->Add(shrapnel);
@@ -44,14 +45,14 @@ void Bullet::Advance(TankList * tankList)
         }
 
         /* Else, did we hit something in the level? */
-        LevelVoxel c = level->GetVoxel(this->pos);
+        LevelVoxel c = level->GetVoxel(this->pos.ToIntPosition());
         if (Voxels::IsAnyCollision(c))
         {
             /* If we have an associated tank, return the shot: */
             this->tank->ReturnBullet();
 
             for (Shrapnel & shrapnel :
-                 Explosion::Explode(Position{this->pos_blur_from.x, this->pos_blur_from.y}, level, EXPLOSION_DIRT_COUNT,
+                 Explosion::Explode(this->pos_blur_from.ToIntPosition(), level, EXPLOSION_DIRT_COUNT,
                                     EXPLOSION_DIRT_RADIUS, EXPLOSION_DIRT_TTL))
             {
                 tankList->projectile_list->Add(shrapnel);
@@ -65,14 +66,14 @@ void Bullet::Advance(TankList * tankList)
 
 void Bullet::Draw(DrawBuffer * drawBuffer)
 {
-    drawBuffer->SetPixel(Position{this->pos.x, this->pos.y}, Palette.Get(Colors::FireHot));
-    drawBuffer->SetPixel(Position{this->pos_blur_from.x, this->pos_blur_from.y}, Palette.Get(Colors::FireCold));
+    drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::FireHot));
+    drawBuffer->SetPixel(this->pos_blur_from.ToIntPosition(), Palette.Get(Colors::FireCold));
 }
 
 void Bullet::Erase(DrawBuffer * drawBuffer, Level *)
 {
-    level->CommitPixel(Position{this->pos.x, this->pos.y});
-    level->CommitPixel(Position{this->pos_blur_from.x, this->pos_blur_from.y});
+    level->CommitPixel(this->pos.ToIntPosition());
+    level->CommitPixel(this->pos_blur_from.ToIntPosition());
 }
 
 void Shrapnel::Advance(TankList * tankList)
@@ -88,10 +89,9 @@ void Shrapnel::Advance(TankList * tankList)
     this->simulation_steps--;
     this->pos.x += this->speed.x;
     this->pos.y += this->speed.y;
-    Position adjusted_pos = {this->pos.x / 16, this->pos.y / 16};
 
     /* Make sure we didn't hit a level detail: */
-    LevelVoxel c = level->GetVoxel(adjusted_pos);
+    LevelVoxel c = level->GetVoxel(this->pos.ToIntPosition());
     if (Voxels::IsBlockingCollision(c))
     {
         this->Invalidate();
@@ -99,17 +99,17 @@ void Shrapnel::Advance(TankList * tankList)
     }
 
     /* Effects blank everything out in their paths: */
-    level->SetVoxel(adjusted_pos, Random.Bool(500) ? LevelVoxel::DecalHigh : LevelVoxel::DecalLow);
+    level->SetVoxel(this->pos.ToIntPosition(), Random.Bool(500) ? LevelVoxel::DecalHigh : LevelVoxel::DecalLow);
 }
 
 void Shrapnel::Draw(DrawBuffer * drawBuffer)
 {
-    drawBuffer->SetPixel(Position{this->pos.x / 16, this->pos.y / 16}, Palette.Get(Colors::FireHot));
+    drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::FireHot));
 }
 
 void Shrapnel::Erase(DrawBuffer * drawBuffer, Level *)
 {
-    level->CommitPixel(Position{this->pos.x / 16, this->pos.y / 16});
+    level->CommitPixel(this->pos.ToIntPosition());
 }
 
 std::vector<Shrapnel> Explosion::Explode(Position pos, Level *level, int count, int radius, int ttl)
@@ -122,8 +122,8 @@ std::vector<Shrapnel> Explosion::Explode(Position pos, Level *level, int count, 
     for (int i = 0; i < count; i++)
     {
         items.emplace_back(
-            Shrapnel{Position{pos.x * 16 + 8, pos.y * 16 + 8},
-                       SpeedF{float(Random.Int(0, radius) - radius / 2), float(Random.Int(0, radius) - radius / 2)},
+            Shrapnel{Position{pos.x, pos.y},
+                     SpeedF{Random.Float(-radius / 32.f, radius / 32.f), Random.Float(-radius / 32.f, radius / 32.f)},
                        Random.Int(0, ttl), level});
     }
     return items;
