@@ -124,35 +124,6 @@ class ValueContainer
     iterator end() { return iterator(container, container.size()); }
 };
 
-/*
-template <class TElement>
-struct QueueHandler
-{
-    TElement & Add(const TElement & item)
-    {
-        return this->items.Add(item);
-    }
-    template <typename... ConstructionArgs>
-    TElement & ConstructElement(ConstructionArgs args...)
-    {
-        return this->items.ConstructElement(std::forward<ConstructionArgs>(args)...);
-    }
-    void Remove(TElement & item) { this->items.Remove(item); }
-    auto Size() { return container.size(); };
-    TElement & operator[](int index) { return container[index]; }
-
-  private:
-    ValueContainer<TElement> items;
-};
-
-template <class... Args>
-struct GenericMessenger : QueueHandler<Args>...
-{
-    // some struct body
-};
-
-GenericMessenger<int, float, std::string> q;
-*/
 
 template <typename... TValues>
 class MultiTypeContainer
@@ -165,13 +136,17 @@ class MultiTypeContainer
     {
         return std::get<ValueContainer<TValue>>(this->items).Add(item);
     }
-    /*
+    
     template <typename TValue, typename... ConstructionArgs>
-    TValue & ConstructElement(ConstructionArgs && args...)
+    TValue & ConstructElement(ConstructionArgs &&... args)
     {
         return std::get<TValue>(this->items).ConstructElement(std::forward<ConstructionArgs>(args)...);
     }
-    */
+    template <typename TValue>
+    void Remove(TValue & item)
+    {
+        return std::get<ValueContainer<TValue>>(this->items).Remove(item);
+    }
     void Shrink()
     {
         std::apply([](auto&... cont) { (..., cont.Shrink()); }, items);
@@ -194,40 +169,11 @@ class MultiTypeContainer
         };
         for_each_element(std::get<ValueContainer<TValue>>(items));
     }
-    /*
-    template <typename TValue>
-    void Remove(TValue & item) { this->items.Remove(item); }
-    auto Size() { return container.size(); };
-    TValue & operator[](int index) { return container[index]; }
-    */
-
+    size_t Size()
+    {
+        size_t total_size = 0;
+        auto for_each_element = [&total_size](auto & container) { total_size += container.size();  };
+        std::apply([for_each_element](auto &... cont) { (..., for_each_element(cont)); }, items);
+        return total_size;
+    };
 };
-
-/*
-template <typename TupleType>
-class multi_type_container_base
-{
-};
-
-template <typename TupleType, typename TValue>
-class multi_type_container_base : multi_type_container_base<TupleType>
-{
-};
-*/
-/*
-
-template <typename TupleType, typename TValue, typename... TValues>
-class multi_type_container_base : multi_type_container_base<TupleType, TValues...>
-{
-};
-
-
-
-
-
-template <typename... TValues>
-class multi_type_container : public multi_type_container_base<std::tuple<ValueContainer<TValues>...>, TValues...>
-{
-};
-
-*/
