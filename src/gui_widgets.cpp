@@ -101,7 +101,7 @@ void TankView::Draw(Screen *screen)
 Position TankView::TranslatePosition(ScreenPosition screen_pos) const
 {
     assert(this->rect.IsInside(screen_pos));
-    Offset offset = Position{screen_pos} - this->rect.pos + (this->rect.size / 2);
+    Offset offset = Position{screen_pos} - this->rect.pos - (this->rect.size / 2);
     return this->tank->GetPosition() + offset;
 }
 

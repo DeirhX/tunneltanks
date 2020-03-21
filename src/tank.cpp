@@ -97,12 +97,13 @@ void Tank::DoMove(TankList *tl) {
 	if(this->bullet_timer == 0) {
 		if(this->is_shooting && this->bullets_left > 0) 
 		{
+            /* TODO: Rotate actual turret, this is a lame hax */
             Position crosshair_pos = this->crosshair->GetWorldPosition();
             DirectionF turret_dir = DirectionF{OffsetF(crosshair_pos - this->GetPosition()).Normalize()};
 
 			this->projectile_list->Add(Bullet{
 				this->GetPosition(),
-				this->GetDirection(),
+				turret_dir,
 				tweak::tank::BulletSpeed,
 				this->GetLevel(), this});
 

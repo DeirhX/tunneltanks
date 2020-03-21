@@ -75,6 +75,7 @@ inline Size operator*(Size s, int t) { return {s.x * t, s.y * t}; }
 inline Size operator*(int t, Size s) { return {s.x * t, s.y * t}; }
 inline Size operator/(Size s, int t) { return {s.x / t, s.y / t}; }
 inline Offset operator+(Offset o, Size s) { return {o.x + s.x, o.y + s.y}; }
+inline Offset operator-(Offset o, Size s) { return {o.x - s.x, o.y - s.y}; }
 inline Offset operator-(Position p, Position o) { return {p.x - o.x, p.y - o.y}; }
 inline Position operator+(Position v, Offset o) { return {v.x + o.x, v.y + o.y}; }
 inline Position operator+(Position v, Size o) { return {v.x + o.x, v.y + o.y}; }
