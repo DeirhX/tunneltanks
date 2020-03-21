@@ -243,6 +243,9 @@
     <ClInclude Include="src\gamelib\SDL\bitmap.h">
       <Filter>sdl_interface</Filter>
     </ClInclude>
+    <ClInclude Include="src\include\containers_queue.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

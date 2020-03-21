@@ -4,12 +4,18 @@
 
 class ProjectileList
 {
+    /*
     ValueContainer<Bullet> bullets;
     ValueContainer<Shrapnel> shrapnels;
-
+    */
+    MultiTypeContainer<Bullet, Shrapnel> items;
   public:
-    Bullet & Add(Bullet projectile) { return this->bullets.Add(projectile); }
-    Shrapnel & Add(Shrapnel projectile) { return this->shrapnels.Add(projectile); }
+    template <typename TProjectile>
+    TProjectile & Add(TProjectile projectile)
+    {
+        return this->items.Add(projectile);
+    }
+    //Shrapnel & Add(Shrapnel projectile) { return this->shrapnels.Add(projectile); }
     void Add(std::vector<Shrapnel> array);
 
     void Remove(Projectile & projectile) { projectile.Invalidate(); }

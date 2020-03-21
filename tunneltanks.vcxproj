@@ -68,6 +68,7 @@
     <ClInclude Include="src\include\aitwitch.h" />
     <ClInclude Include="src\include\colors.h" />
     <ClInclude Include="src\include\containers.h" />
+    <ClInclude Include="src\include\containers_queue.h" />
     <ClInclude Include="src\include\controller.h" />
     <ClInclude Include="src\include\drawbuffer.h" />
     <ClInclude Include="src\include\game.h" />

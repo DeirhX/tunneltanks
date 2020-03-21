@@ -14,6 +14,8 @@
 
 #include <atomic>
 #include <future>
+
+#include "containers_queue.h"
 #include "parallelism.h"
 
 namespace levelgen::toast {
