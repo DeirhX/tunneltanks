@@ -192,7 +192,17 @@ public:
 struct Color32 {
 	unsigned char r{}, g{}, b{}, a{};
 	Color32() = default;
+    Color32(Color color): Color32(color.r, color.g, color.b, 255) { }
 	Color32(unsigned char r, unsigned char g, unsigned char b, unsigned char a) : r(r), g(g), b(b), a(a) { }
+    Color BlendWith(Color other) const
+    {
+        if (a == 255)
+            return Color(r, g, b);
+        return Color((this->r * this->a) / 255 + other.r * (255 - this->a),
+                     (this->g * this->a) / 255 + other.g * (255 - this->a),
+					 (this->b * this->a) / 255 + other.b * (255 - this->a));
+    }
+    explicit operator Color() const { return Color(r, g, b); }
 };
 
 using TankColor = char;

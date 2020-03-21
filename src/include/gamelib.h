@@ -53,7 +53,7 @@ bool gamelib_get_fullscreen() ;
 
 /* We need a way to draw: */
 /* TODO: Implement an API for locking/unlocking the pixel array. */
-int  gamelib_draw_box(NativeRect rect, Color c) ;
+int  gamelib_draw_box(NativeRect rect, Color32 c) ;
 
 
 /* A few outputting commands: */

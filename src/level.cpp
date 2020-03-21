@@ -221,15 +221,15 @@ BaseCollision Level::CheckBaseCollision(Position pos, TankColor color)
 	return BaseCollision::None;
 }
 
-Color Level::GetVoxelColor(LevelVoxel voxel)
+Color32 Level::GetVoxelColor(LevelVoxel voxel)
 {
-	if (voxel == LevelVoxel::DirtHigh)	   return Palette.Get(Colors::DirtHigh);
-	else if (voxel == LevelVoxel::DirtLow) return Palette.Get(Colors::DirtLow);
-	else if (voxel == LevelVoxel::DirtGrow)return Palette.Get(Colors::DirtGrow);
-	else if (voxel == LevelVoxel::Rock)    return Palette.Get(Colors::Rock);
-	else if (voxel == LevelVoxel::DecalLow)   return Palette.Get(Colors::DecalLow);
-	else if (voxel == LevelVoxel::DecalHigh)   return Palette.Get(Colors::DecalHigh);
-	else if (voxel == LevelVoxel::Blank)   return Palette.Get(Colors::Blank);
+	if (voxel == LevelVoxel::DirtHigh)	     return Palette.Get(Colors::DirtHigh);
+	else if (voxel == LevelVoxel::DirtLow)   return Palette.Get(Colors::DirtLow);
+	else if (voxel == LevelVoxel::DirtGrow)  return Palette.Get(Colors::DirtGrow);
+	else if (voxel == LevelVoxel::Rock)      return Palette.Get(Colors::Rock);
+	else if (voxel == LevelVoxel::DecalLow)  return Palette.Get(Colors::DecalLow);
+	else if (voxel == LevelVoxel::DecalHigh) return Palette.Get(Colors::DecalHigh);
+	else if (voxel == LevelVoxel::Blank)     return Palette.Get(Colors::Blank);
 	else if (Voxels::IsBase(voxel))
 		return Palette.GetTank(static_cast<char>(voxel) - static_cast<char>(LevelVoxel::BaseMin))[0];
 	else {
@@ -246,7 +246,7 @@ void Level::DumpBitmap(const char *filename) const
 		auto color_data = ColorBitmap{ this->size };
 
 		for (int i = 0; i < this->size.y * this->size.x; i++)
-			color_data[i] = GetVoxelColor(this->GetVoxelRaw(i));
+            color_data[i] = static_cast<Color>(GetVoxelColor(this->GetVoxelRaw(i)));
 
 		{
 			auto trace = MeasureFunction<5>("DumpBitmap");

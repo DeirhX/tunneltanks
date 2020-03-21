@@ -24,25 +24,28 @@ void Bitmap<DataType>::Draw(Screen *screen, Position position, GetColorFunc GetP
 
 template <typename DataType>
 template <typename GetColorFunc>
-void Bitmap<DataType>::Draw(Screen *screen, Position screen_pos, Rect source_rect, GetColorFunc GetPixelColor)
+void Bitmap<DataType>::Draw(Screen * screen, Position screen_pos, Rect source_rect,
+                            GetColorFunc GetPixelColor) /* return Color */
 {
     for (int x = source_rect.Left(); x <= source_rect.Right(); ++x)
         for (int y = source_rect.Top(); y <= source_rect.Bottom(); ++y)
         {
-            /* Draw its color or blank if it's a black/white bitmap */
+            /* Draw its color or transparent nothing if it's a black/white bitmap */
             screen->DrawPixel({x + screen_pos.x, y + screen_pos.y}, GetPixelColor(this->ToIndex({x, y})));
         }
 }
 
-void MonoBitmap::Draw(Screen *screen, Position screen_pos, Color color)
+void MonoBitmap::Draw(Screen *screen, Position screen_pos, Color32 color)
 {
     Base::Draw(screen, screen_pos,
-               [this, color](int index) { return this->At(index) ? color : Palette.Get(Colors::Blank); });
+               [this, color](int index) { return this->At(index) ? color : 
+                    Palette.Get(Colors::Transparent); });
 }
-void MonoBitmap::Draw(Screen *screen, Position screen_pos, Rect source_rect, Color color)
+void MonoBitmap::Draw(Screen *screen, Position screen_pos, Rect source_rect, Color32 color)
 {
     Base::Draw(screen, screen_pos, source_rect,
-               [this, color](int index) { return this->At(index) ? color : Palette.Get(Colors::Blank); });
+               [this, color](int index) { return this->At(index) ? color : 
+                    Palette.Get(Colors::Transparent); });
 }
 
 void ColorBitmap::Draw(Screen *screen, Position screen_pos)

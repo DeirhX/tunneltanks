@@ -52,10 +52,10 @@ struct BitmapRender : public GuiWidget
 {
     Rect rect;
     MonoBitmap *data;
-    Color color;
+    Color32 color;
 
   public:
-    BitmapRender(Rect rect, MonoBitmap *bitmap_data, Color color) : rect(rect), data(bitmap_data), color(color) {}
+    BitmapRender(Rect rect, MonoBitmap *bitmap_data, Color32 color) : rect(rect), data(bitmap_data), color(color) {}
     void Draw(Screen *screen) override;
 };
 
@@ -82,7 +82,7 @@ class Crosshair : public BitmapRender
 
   public:
     Crosshair(Position pos, Screen *screen, TankView *parent_view)
-        : BitmapRender(Rect{pos.x - 1, pos.y - 1, 3, 3}, &bitmaps::Crosshair, Palette.Get(Colors::FireHot)),
+        : BitmapRender(Rect{pos.x - 1, pos.y - 1, 3, 3}, &bitmaps::Crosshair, Palette.Get(Colors::FireCold)),
           screen(screen), parent_view(parent_view)
     {
     }

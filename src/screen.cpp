@@ -31,7 +31,7 @@ void Screen::FillBackground()
     }
 }
 
-void Screens::SinglePlayerScreenSetup(Screen *screen, World *world, Tank *player)
+void Screens::SinglePlayerScreenSetup(Screen * screen, World * world, Tank * player)
 {
     int gui_shift = 0;
     /* Tank view and status below it*/
@@ -50,15 +50,15 @@ void Screens::SinglePlayerScreenSetup(Screen *screen, World *world, Tank *player
         player));
 
     /* Add the E/S bitmaps: */
-    screen->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5), &bitmaps::GuiEnergy,
-                      Palette.Get(Colors::StatusEnergy));
+    screen->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5), 
+                      &bitmaps::GuiEnergy, static_cast<Color>(Palette.Get(Colors::StatusEnergy)));
     screen->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5),
-                      &bitmaps::GuiHealth, Palette.Get(Colors::StatusHealth));
+                      &bitmaps::GuiHealth, static_cast<Color>(Palette.Get(Colors::StatusHealth)));
 
     gamelib_disable_cursor();
 }
 
-void Screens::TwoPlayerScreenSetup(Screen *screen, World *world, Tank *player_one, Tank *player_two)
+void Screens::TwoPlayerScreenSetup(Screen * screen, World * world, Tank * player_one, Tank * player_two)
 {
     screen->AddWindow(Rect(2, 2, GAME_WIDTH / 2 - 3, GAME_HEIGHT - 6 - tweak::screen::status_height), player_one);
     auto status_rect = Rect(3, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH / 2 - 5 - 2 - 4,
@@ -79,15 +79,17 @@ void Screens::TwoPlayerScreenSetup(Screen *screen, World *world, Tank *player_on
 
     /* Add the GUI bitmaps: */
     screen->AddBitmap(Rect(GAME_WIDTH / 2 - 2, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5),
-                      &bitmaps::GuiEnergy, Palette.Get(Colors::StatusEnergy));
+                      &bitmaps::GuiEnergy, static_cast<Color>(Palette.Get(Colors::StatusEnergy)));
     screen->AddBitmap(Rect(GAME_WIDTH / 2 - 2, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5),
-                      &bitmaps::GuiHealth, Palette.Get(Colors::StatusHealth));
+                      &bitmaps::GuiHealth, static_cast<Color>(Palette.Get(Colors::StatusHealth)));
 
     gamelib_enable_cursor();
 }
 
-void Screen::DrawPixel(ScreenPosition pos, Color color)
+void Screen::DrawPixel(ScreenPosition pos, Color32 color)
 {
+    if (color.a == 0)
+        return;
 
     Offset adjusted_size = {/* Make some pixels uniformly larger to fill in given space relatively evenly  */
                             (pos.x * this->pixels_skip.x) / GAME_WIDTH, (pos.y * this->pixels_skip.y) / GAME_HEIGHT};
@@ -121,8 +123,10 @@ ScreenPosition Screen::FromNativeScreen(NativeScreenPosition native_pos)
 
 void Screen::DrawLevel()
 {
-
-    std::for_each(this->widgets.begin(), this->widgets.end(), [this](auto &item) { item->Draw(this); });
+    /* Erase everything */
+    gamelib_draw_box(NativeRect{{0, 0}, gamelib_get_resolution()}, Palette.Get(Colors::Blank));
+    /* Draw everything */
+    std::for_each(this->widgets.begin(), this->widgets.end(), [this](auto & item) { item->Draw(this); });
 }
 
 void Screen::DrawCurrentMode()
@@ -209,7 +213,7 @@ void Screen::Resize(Size size)
 }
 
 /* Set the current drawing mode: */
-void Screen::SetLevelDrawMode(DrawBuffer *b)
+void Screen::SetLevelDrawMode(DrawBuffer * b)
 {
     this->mode = SCREEN_DRAW_LEVEL;
     this->drawBuffer = b;
@@ -220,7 +224,7 @@ void Screen::set_mode_menu( Menu *m) ;
 void Screen::set_mode_map( Map *m) ;
 */
 
-void Screen::AddWidget(std::unique_ptr<widgets::GuiWidget> &&widget)
+void Screen::AddWidget(std::unique_ptr<widgets::GuiWidget> && widget)
 {
     if (this->mode != SCREEN_DRAW_LEVEL)
         return;
@@ -230,7 +234,7 @@ void Screen::AddWidget(std::unique_ptr<widgets::GuiWidget> &&widget)
 }
 
 /* Window creation should only happen in Level-drawing mode: */
-void Screen::AddWindow(Rect rect, Tank *task)
+void Screen::AddWindow(Rect rect, Tank * task)
 {
     if (this->mode != SCREEN_DRAW_LEVEL)
         return;
@@ -238,7 +242,7 @@ void Screen::AddWindow(Rect rect, Tank *task)
 }
 
 /* We can add the health/energy status bars here: */
-void Screen::AddStatus(Rect rect, Tank *tank, bool decreases_to_left)
+void Screen::AddStatus(Rect rect, Tank * tank, bool decreases_to_left)
 {
     /* Verify that we're in the right mode, and that we have room: */
     if (this->mode != SCREEN_DRAW_LEVEL)
@@ -255,7 +259,7 @@ void Screen::AddStatus(Rect rect, Tank *tank, bool decreases_to_left)
  * value, especially if the bit depth is changed...
  * TODO: That really isn't needed anymore, since we haven't cached mapped RGB
  *       values since the switch to gamelib... */
-void Screen::AddBitmap(Rect rect, MonoBitmap *new_bitmap, Color color)
+void Screen::AddBitmap(Rect rect, MonoBitmap * new_bitmap, Color color)
 {
     /* Bitmaps are only for game mode: */
     if (this->mode != SCREEN_DRAW_LEVEL)

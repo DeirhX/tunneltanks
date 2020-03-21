@@ -129,7 +129,7 @@ Game::Game(GameConfig config) {
 		level->DumpBitmap("debug_start.bmp");
 	
 	/* Push the level to the draw buffer */
-	this->draw_buffer->SetDefaultColor(Palette.Get(Colors::Rock));
+    this->draw_buffer->SetDefaultColor(static_cast<Color>(Palette.Get(Colors::Rock)));
 	level->CommitAll();
 	this->screen->SetLevelDrawMode(this->draw_buffer.get());
 

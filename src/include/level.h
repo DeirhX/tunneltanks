@@ -104,7 +104,7 @@ public:
 	void DumpBitmap(const char* filename) const;
 
 	/* Color lookup. Can be somewhere else. */
-	static Color GetVoxelColor(LevelVoxel voxel);
+	static Color32 GetVoxelColor(LevelVoxel voxel);
 	
 	/* Count neighbors is used when level building and for ad-hoc queries (e.g. dirt regeneration) */
 	int CountNeighborValues(Position pos);

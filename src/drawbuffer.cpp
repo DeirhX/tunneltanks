@@ -8,11 +8,12 @@
 
 DrawBuffer::DrawBuffer(Size size) : size(size), default_color(0, 0, 0) { pixel_data.reset(new Color[size.x * size.y]); }
 
-void DrawBuffer::SetPixel(Position offset, Color color)
+void DrawBuffer::SetPixel(Position offset, Color32 color)
 {
     if (offset.x < 0 || offset.y < 0 || offset.x >= size.x || offset.y >= size.y)
         return;
-    pixel_data.get()[offset.y * size.x + offset.x] = color;
+    auto& pixel_color = pixel_data.get()[offset.y * size.x + offset.x];
+    pixel_color = color.BlendWith(pixel_color);
 }
 
 Color DrawBuffer::GetPixel(Position offset)

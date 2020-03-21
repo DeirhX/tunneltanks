@@ -12,7 +12,7 @@ public:
 	DrawBuffer(Size size);
 	Color& DefaultColor() { return default_color; }
 	void SetDefaultColor(Color color) { default_color = color; }
-	void SetPixel(Position pos, Color color);
+	void SetPixel(Position pos, Color32 color);
 	Color GetPixel(Position pos);
 };
 

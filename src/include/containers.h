@@ -144,7 +144,6 @@ class MultiTypeContainer
 {
   private:
     std::tuple<ValueContainer<TValues>...> items;
-
   private:
     MultiTypeContainer(MultiTypeContainer &) = default; /* Do not allow implicit copy. It's most likely a mistake. */
   public:

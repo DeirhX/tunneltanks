@@ -79,9 +79,9 @@ class MonoBitmap : public Bitmap<char>
     MonoBitmap(Size size, std::initializer_list<char> data) : Bitmap<char>(size, data) {}
     MonoBitmap(Size size) : Bitmap<char>(size) {}
     /* Draw entire bitmap */
-    void Draw(Screen *screen, Position position, Color color);
+    void Draw(Screen *screen, Position position, Color32 color);
     /* Draw portion of bitmap */
-    void Draw(Screen *screen, Position screen_pos, Rect source_rect, Color color);
+    void Draw(Screen *screen, Position screen_pos, Rect source_rect, Color32 color);
 
   private:
     // int ToIndex(Position position) const { return position.x + position.y * size.x; }

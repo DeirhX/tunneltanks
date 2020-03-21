@@ -5,6 +5,7 @@ enum class Colors
 {
     First = 0,
     Blank = 0,
+    Transparent,
     DirtHigh,
     DirtLow,
     DirtGrow,
@@ -27,19 +28,20 @@ struct ColorPalette
   private:
     constexpr static int PrimaryColors = 8;
 
-    Color Values[static_cast<int>(Colors::Size)];
+    Color32 Values[static_cast<int>(Colors::Size)];
     Color Primaries[PrimaryColors];
     Color Tanks[PrimaryColors][3];
 
   public:
     ColorPalette();
 
-    Color Get(Colors colorName);
+    Color32 Get(Colors colorName);
+    //Color GetNoAlpha(Colors colorName);
     Color GetPrimary(TankColor index);
     Color *GetTank(TankColor index);
 
   private:
-    void Set(Colors colorName, Color color);
+    void Set(Colors colorName, Color32 color);
     void SetPrimary(TankColor index, Color color);
     void SetTank(TankColor index, Color color_1, Color color_2, Color color_3);
 };
