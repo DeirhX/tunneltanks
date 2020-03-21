@@ -118,11 +118,9 @@ struct PositionF : public VectorF
 {
     PositionF() = default;
     constexpr PositionF(float sx, float sy) : VectorF(sx, sy) {}
-    explicit PositionF(Position pos) : PositionF{static_cast<float>(pos.x), static_cast<float>(pos.y)} {}
-    static PositionF FromIntPosition(Position pos)
-    {
-        return PositionF{static_cast<float>(pos.x) + 0.5f, static_cast<float>(pos.y) + 0.5f}; /* Should become center of the pixel */
-    }
+    explicit PositionF(Position pos) /* Should become center of the pixel */
+        : PositionF{static_cast<float>(pos.x) + 0.5f, static_cast<float>(pos.y) + 0.5f} {} 
+    static PositionF FromIntPosition(Position pos) { return PositionF{pos}; }
     [[nodiscard]] Position ToIntPosition() const { return Position{static_cast<int>(this->x), static_cast<int>(this->y)}; }
 };
 struct SpeedF : public VectorF
