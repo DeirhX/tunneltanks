@@ -22,7 +22,7 @@ public:
 	level(std::move(level))
 	{
 	}
-	void Advance(class DrawBuffer* drawBuffer);
+	void Advance(class LevelDrawBuffer* drawBuffer);
 
 	TankList* GetTankList() { return this->tank_list.get(); }
 	ProjectileList* GetProjectileList() { return this->projectile_list.get(); }

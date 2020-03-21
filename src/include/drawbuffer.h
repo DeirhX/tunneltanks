@@ -1,18 +1,18 @@
 #pragma once
 #include <memory>
 #include <types.h>
+#include <vector>
 
-class DrawBuffer
+class LevelDrawBuffer
 {
-	std::unique_ptr<Color> pixel_data;
-	Size size;
-	Color default_color;
+    std::vector<Color> pixel_data;
+    Size size;
+    Color default_color;
 
-public:
-	DrawBuffer(Size size);
-	Color& DefaultColor() { return default_color; }
-	void SetDefaultColor(Color color) { default_color = color; }
-	void SetPixel(Position pos, Color32 color);
-	Color GetPixel(Position pos);
+  public:
+    LevelDrawBuffer(Size size);
+    Color & DefaultColor() { return default_color; }
+    void SetDefaultColor(Color color) { default_color = color; }
+    void SetPixel(Position pos, Color32 color);
+    Color GetPixel(Position pos);
 };
-

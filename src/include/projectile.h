@@ -31,8 +31,8 @@ struct Projectile
     virtual ~Projectile() = default;
     virtual ProjectileType GetType() = 0;
     virtual void Advance(class TankList * tankList) = 0;
-    virtual void Draw(class DrawBuffer * drawBuffer) = 0;
-    virtual void Erase(DrawBuffer * drawBuffer, Level * level) = 0;
+    virtual void Draw(class LevelDrawBuffer * drawBuffer) = 0;
+    virtual void Erase(LevelDrawBuffer * drawBuffer, Level * level) = 0;
 
     bool IsInvalid() const { return !is_alive; }
     bool IsValid() const { return is_alive; }
@@ -64,8 +64,8 @@ class Bullet : public MotionBlurProjectile
     ProjectileType GetType() override { return ProjectileType::Bullet; }
 
     void Advance(class TankList * tankList) override;
-    void Draw(class DrawBuffer * drawBuffer) override;
-    void Erase(DrawBuffer * drawBuffer, Level * level) override;
+    void Draw(class LevelDrawBuffer * drawBuffer) override;
+    void Erase(LevelDrawBuffer * drawBuffer, Level * level) override;
 };
 
 /* Non-damaging, non-collidable projectile spawned by the environment */
@@ -77,8 +77,8 @@ class Shrapnel : public Projectile
     ProjectileType GetType() override { return ProjectileType::Shrapnel; }
 
     void Advance(class TankList * tankList) override;
-    void Draw(class DrawBuffer * drawBuffer) override;
-    void Erase(DrawBuffer * drawBuffer, Level * level) override;
+    void Draw(class LevelDrawBuffer * drawBuffer) override;
+    void Erase(LevelDrawBuffer * drawBuffer, Level * level) override;
 };
 
 /* Helper class for MaSs DeStRuCtIoN! */

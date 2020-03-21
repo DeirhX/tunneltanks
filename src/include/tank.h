@@ -85,8 +85,8 @@ public:
 
 	CollisionType GetCollision(int dir, Position pos, TankList* tl);
 
-	void Clear(DrawBuffer* drawBuff) const;
-	void Draw(DrawBuffer* drawBuff) const;
+	void Clear(LevelDrawBuffer* drawBuff) const;
+	void Draw(LevelDrawBuffer* drawBuff) const;
 
 	void ReturnBullet();
 private:

@@ -213,7 +213,7 @@ void Screen::Resize(Size size)
 }
 
 /* Set the current drawing mode: */
-void Screen::SetLevelDrawMode(DrawBuffer * b)
+void Screen::SetLevelDrawMode(LevelDrawBuffer * b)
 {
     this->mode = SCREEN_DRAW_LEVEL;
     this->drawBuffer = b;

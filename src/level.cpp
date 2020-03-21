@@ -21,7 +21,7 @@ LevelData::LevelData(Size size) : array(size)
 	
 }
 
-Level::Level(Size size, DrawBuffer* draw_buffer)
+Level::Level(Size size, LevelDrawBuffer* draw_buffer)
 	: size(size), drawBuffer (draw_buffer), data(size)
 {
 	std::fill(this->data.array.begin(), this->data.array.end(), LevelVoxel::LevelGenRock);

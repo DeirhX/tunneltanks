@@ -26,8 +26,10 @@ class TankView : public GuiWidget
   public:
     TankView(Rect rect, class Tank *tank) : rect(rect), tank(tank) {}
     void Draw(Screen *screen) override;
+    Position TranslatePosition(ScreenPosition screen_position) const;
+    Rect GetRect() const { return rect; }
 
-  private:
+private:
     /* Will randomly draw static to a window, based on a tank's health.  */
     void DrawStatic(Screen *screen);
 };
@@ -87,7 +89,9 @@ class Crosshair : public BitmapRender
     {
     }
 
-    void SetCenter(NativeScreenPosition position);
+    void SetScreenPosition(NativeScreenPosition position);
+    [[nodiscard]] ScreenPosition GetScreenPosition() { return center; }
+    Position GetWorldPosition() { return parent_view->TranslatePosition(GetScreenPosition()); }
     // void Draw(Screen* screen) override;
 };
 

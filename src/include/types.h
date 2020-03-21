@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <memory>
@@ -21,6 +22,7 @@ struct ScreenPosition : public Vector
 {
     ScreenPosition() = default;
     ScreenPosition(int x, int y) : Vector(x, y) {}
+    explicit ScreenPosition(Vector vec) : Vector(vec) {}
 };
 
 /* Position relative to native OS window. */
@@ -72,6 +74,7 @@ inline Offset operator*(int t, Speed s) { return {s.x * t, s.y * t}; }
 inline Size operator*(Size s, int t) { return {s.x * t, s.y * t}; }
 inline Size operator*(int t, Size s) { return {s.x * t, s.y * t}; }
 inline Size operator/(Size s, int t) { return {s.x / t, s.y / t}; }
+inline Offset operator+(Offset o, Size s) { return {o.x + s.x, o.y + s.y}; }
 inline Offset operator-(Position p, Position o) { return {p.x - o.x, p.y - o.y}; }
 inline Position operator+(Position v, Offset o) { return {v.x + o.x, v.y + o.y}; }
 inline Position operator+(Position v, Size o) { return {v.x + o.x, v.y + o.y}; }
@@ -119,9 +122,14 @@ struct PositionF : public VectorF
     PositionF() = default;
     constexpr PositionF(float sx, float sy) : VectorF(sx, sy) {}
     explicit PositionF(Position pos) /* Should become center of the pixel */
-        : PositionF{static_cast<float>(pos.x) + 0.5f, static_cast<float>(pos.y) + 0.5f} {} 
+        : PositionF{static_cast<float>(pos.x) + 0.5f, static_cast<float>(pos.y) + 0.5f}
+    {
+    }
     static PositionF FromIntPosition(Position pos) { return PositionF{pos}; }
-    [[nodiscard]] Position ToIntPosition() const { return Position{static_cast<int>(this->x), static_cast<int>(this->y)}; }
+    [[nodiscard]] Position ToIntPosition() const
+    {
+        return Position{static_cast<int>(this->x), static_cast<int>(this->y)};
+    }
 };
 struct SpeedF : public VectorF
 {
@@ -135,6 +143,7 @@ struct OffsetF : public VectorF
     OffsetF() = default;
     OffsetF(VectorF vector) : VectorF(vector) {}
     constexpr OffsetF(float sx, float sy) : VectorF(sx, sy) {}
+    explicit OffsetF(Offset int_offset) : VectorF(float(int_offset.x), float(int_offset.y)) {}
 };
 inline VectorF operator+(VectorF v, VectorF o) { return {v.x + o.x, v.y + o.y}; }
 inline VectorF operator-(VectorF v, VectorF o) { return {v.x - o.x, v.y - o.y}; }
@@ -145,7 +154,12 @@ inline OffsetF operator*(float m, OffsetF o) { return {o.x * m, o.y * m}; }
 inline OffsetF operator/(OffsetF o, float d) { return {o.x / d, o.y / d}; }
 inline OffsetF operator-(PositionF p, PositionF o) { return {p.x - o.x, p.y - o.y}; }
 inline PositionF operator+(PositionF v, OffsetF o) { return {v.x + o.x, v.y + o.y}; }
-inline PositionF & operator+=(PositionF v, OffsetF o) { v.x += o.x; v.y += o.y; return v; }
+inline PositionF & operator+=(PositionF v, OffsetF o)
+{
+    v.x += o.x;
+    v.y += o.y;
+    return v;
+}
 inline bool operator==(PositionF l, PositionF r) { return l.x == r.x && l.y == r.y; }
 
 /* Oh no, a float! Can't we do without? */
@@ -181,6 +195,14 @@ struct Rect
     int Top() const { return pos.y; }
     int Right() const { return pos.x + size.x; }
     int Bottom() const { return pos.y + size.y; }
+    bool IsInside(Vector vec) const
+    {
+        return vec.x >= this->Left() && vec.x <= this->Right() && vec.y >= this->Top() && vec.y <= this->Bottom();
+    }
+    [[nodiscard]] Vector MakeInside(Vector vec) const
+    {
+        return {std::clamp(vec.x, this->Left(), this->Right()), std::clamp(vec.y, this->Top(), this->Bottom())};
+    }
 };
 
 /* Rectangle in native units of hosting window/surface */

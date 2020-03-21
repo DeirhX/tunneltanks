@@ -95,8 +95,11 @@ void Tank::DoMove(TankList *tl) {
 	
 	/* Handle all shooting logic: */
 	if(this->bullet_timer == 0) {
-		if(this->is_shooting && this->bullets_left > 0) {
-			
+		if(this->is_shooting && this->bullets_left > 0) 
+		{
+            Position crosshair_pos = this->crosshair->GetWorldPosition();
+            DirectionF turret_dir = DirectionF{OffsetF(crosshair_pos - this->GetPosition()).Normalize()};
+
 			this->projectile_list->Add(Bullet{
 				this->GetPosition(),
 				this->GetDirection(),
@@ -123,7 +126,7 @@ void Tank::TryBaseHeal()
 		this->AlterEnergy(tweak::tank::EnemyChargeSpeed);
 }
 
-void Tank::Draw(DrawBuffer *drawBuff) const
+void Tank::Draw(LevelDrawBuffer *drawBuff) const
 {
 	if(!this->health) return;
 	
@@ -135,7 +138,7 @@ void Tank::Draw(DrawBuffer *drawBuff) const
 		}
 }
 
-void Tank::Clear(DrawBuffer *drawBuff) const
+void Tank::Clear(LevelDrawBuffer *drawBuff) const
 {
 	if(!this->health) return;
 	
@@ -241,7 +244,7 @@ void Tank::ApplyControllerOutput(ControllerOutput controls)
 	this->is_shooting = controls.is_shooting;
 	if (this->crosshair)
 	{
-		this->crosshair->SetCenter(controls.crosshair);
+		this->crosshair->SetScreenPosition(controls.crosshair);
 	}
 }
 

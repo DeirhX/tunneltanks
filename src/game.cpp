@@ -104,7 +104,7 @@ Game::Game(GameConfig config) {
 	
 	/* Initialize most of the structures: */
 	this->screen   = std::make_unique<Screen>(this->config.is_fullscreen);
-	this->draw_buffer   = std::make_unique<DrawBuffer>(this->config.size);
+	this->draw_buffer   = std::make_unique<LevelDrawBuffer>(this->config.size);
 	
 	/* Generate our random level: */
 	int TestIterations = 10;

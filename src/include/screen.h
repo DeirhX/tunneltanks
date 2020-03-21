@@ -22,7 +22,6 @@ struct GUIController
 
 class Screen
 {
-
     bool is_fullscreen;
 
     Size screen_size = {};
@@ -31,12 +30,10 @@ class Screen
     Size pixels_skip = {};
 
     std::vector<std::unique_ptr<widgets::GuiWidget>> widgets;
-    /*std::vector<std::unique_ptr<widgets::StatusBar>> statuses;
-    std::vector<std::unique_ptr<widgets::BitmapRender>> bitmaps;*/
 
     GUIController controller;
     ScreenDrawMode mode = SCREEN_DRAW_INVALID;
-    DrawBuffer *drawBuffer = nullptr;
+    LevelDrawBuffer *drawBuffer = nullptr;
 
   public:
     Screen(bool is_fullscreen);
@@ -47,9 +44,9 @@ class Screen
     void Resize(Size size);
 
     /* Set the current drawing mode: */
-    void SetLevelDrawMode(DrawBuffer *b);
+    void SetLevelDrawMode(LevelDrawBuffer *b);
     /* Source contents of the screen */
-    DrawBuffer *GetDrawBuffer() { return drawBuffer; }
+    LevelDrawBuffer *GetDrawBuffer() { return drawBuffer; }
 
     /* A few useful functions for external drawing: */
     void DrawPixel(ScreenPosition pos, Color32 color);

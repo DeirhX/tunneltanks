@@ -25,13 +25,13 @@ void ProjectileList::Advance(Level * level, TankList * tankList)
 
 }
 
-void ProjectileList::Erase(DrawBuffer* drawBuffer, Level* level)
+void ProjectileList::Erase(LevelDrawBuffer* drawBuffer, Level* level)
 {
     this->items.ForEach([drawBuffer, level](Projectile & item) { item.Erase(drawBuffer, level); });
 }
 
 
-void ProjectileList::Draw(DrawBuffer* drawBuffer)
+void ProjectileList::Draw(LevelDrawBuffer* drawBuffer)
 {
     this->items.ForEach([drawBuffer](Projectile & item) { item.Draw(drawBuffer); });
 }

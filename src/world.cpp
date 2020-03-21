@@ -4,7 +4,7 @@
 #include "game.h"
 
 
-void World::Advance(class DrawBuffer* draw_buffer)
+void World::Advance(class LevelDrawBuffer* draw_buffer)
 {
 	++this->advance_count;
 	RegrowPass();

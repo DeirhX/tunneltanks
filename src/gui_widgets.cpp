@@ -81,8 +81,7 @@ void widgets::TankView::DrawStatic(Screen *screen)
 /* Will draw a window using the level's drawbuffer: */
 void TankView::Draw(Screen *screen)
 {
-
-    Position pos = this->tank->GetPosition();
+    Position tank_pos = this->tank->GetPosition();
 
     for (int y = 0; y < this->rect.size.y; y++) {
         for (int x = 0; x < this->rect.size.x; x++)
@@ -90,7 +89,7 @@ void TankView::Draw(Screen *screen)
             int screen_x = x + this->rect.pos.x, screen_y = y + this->rect.pos.y;
 
             Color c = screen->GetDrawBuffer()->GetPixel(
-                Position{x + pos.x - this->rect.size.x / 2, y + pos.y - this->rect.size.y / 2});
+                Position{x + tank_pos.x - this->rect.size.x / 2, y + tank_pos.y - this->rect.size.y / 2});
             screen->DrawPixel({screen_x, screen_y}, c);
         }
     }
@@ -99,7 +98,14 @@ void TankView::Draw(Screen *screen)
     this->DrawStatic(screen);
 }
 
-/* Will draw two bars indicating the charge/health of a tank: */
+Position TankView::TranslatePosition(ScreenPosition screen_pos) const
+{
+    assert(this->rect.IsInside(screen_pos));
+    Offset offset = Position{screen_pos} - this->rect.pos + (this->rect.size / 2);
+    return this->tank->GetPosition() + offset;
+}
+
+            /* Will draw two bars indicating the charge/health of a tank: */
 /* TODO: This currently draws every frame. Can we make a dirty flag, and only
  *       redraw when it's needed? Also, can we put some of these calculations in
  *       the StatusBar structure, so they don't have to be done every frame? */
@@ -200,9 +206,10 @@ void LivesLeft::Draw(Screen *screen)
     }
 }
 
-void Crosshair::SetCenter(NativeScreenPosition position)
+void Crosshair::SetScreenPosition(NativeScreenPosition position)
 {
     this->center = screen->FromNativeScreen(position);
+    this->center = ScreenPosition{this->parent_view->GetRect().MakeInside(this->center)};
     this->rect = Rect{this->center.x - this->data->size.x / 2, this->center.y - this->data->size.y / 2,
                       this->data->size.x, this->data->size.y};
 }

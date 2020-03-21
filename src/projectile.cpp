@@ -64,13 +64,13 @@ void Bullet::Advance(TankList * tankList)
     Raycaster::Cast(this->pos, this->pos + (this->speed * float(this->simulation_steps)), IteratePositions);
 }
 
-void Bullet::Draw(DrawBuffer * drawBuffer)
+void Bullet::Draw(LevelDrawBuffer * drawBuffer)
 {
     drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::FireHot));
     drawBuffer->SetPixel(this->pos_blur_from.ToIntPosition(), Palette.Get(Colors::FireCold));
 }
 
-void Bullet::Erase(DrawBuffer * drawBuffer, Level *)
+void Bullet::Erase(LevelDrawBuffer * drawBuffer, Level *)
 {
     level->CommitPixel(this->pos.ToIntPosition());
     level->CommitPixel(this->pos_blur_from.ToIntPosition());
@@ -102,12 +102,12 @@ void Shrapnel::Advance(TankList * tankList)
     level->SetVoxel(this->pos.ToIntPosition(), Random.Bool(500) ? LevelVoxel::DecalHigh : LevelVoxel::DecalLow);
 }
 
-void Shrapnel::Draw(DrawBuffer * drawBuffer)
+void Shrapnel::Draw(LevelDrawBuffer * drawBuffer)
 {
     drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::FireHot));
 }
 
-void Shrapnel::Erase(DrawBuffer * drawBuffer, Level *)
+void Shrapnel::Erase(LevelDrawBuffer * drawBuffer, Level *)
 {
     level->CommitPixel(this->pos.ToIntPosition());
 }

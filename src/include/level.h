@@ -79,11 +79,11 @@ public:
 private:
 	LevelData data;
 	Size size;
-	DrawBuffer* drawBuffer;
+	LevelDrawBuffer* drawBuffer;
 	std::vector<std::unique_ptr<TankBase>> spawn;
 
 public:
-	Level(Size size, DrawBuffer* db);
+	Level(Size size, LevelDrawBuffer* db);
 
 	Size GetSize() const { return size; };
 
