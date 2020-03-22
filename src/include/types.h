@@ -257,3 +257,9 @@ class holder_with_deleter : public std::unique_ptr<Type, void (*)(Type *)>
     holder_with_deleter() : base{nullptr, [](Type *) {}} {};
     holder_with_deleter(Type * value, void (*deleter)(Type *)) : base{value, deleter} {}
 };
+
+template <typename TEnum>
+bool HasFlag(TEnum value, TEnum flag)
+{
+    return (static_cast<std::underlying_type_t<TEnum>>(value) & static_cast<std::underlying_type_t<TEnum>>(value)) != 0;
+}
