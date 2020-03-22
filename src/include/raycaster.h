@@ -5,9 +5,17 @@
 class Raycaster
 {
 public:
+    enum class VisitFlags
+    {
+        PixelsMustTouchCorners = 0x0,
+        PixelsMustTouchSides = 0x1,
+    };
     /* Visit all pixels through which a ray cast between two positions would go */
+    /* visit_partial: PixelsMustTouchCorners - visited pixels can touch diagonally or side-by-side
+     *                PixelsMustTouchSides  - include more pixels so that visited pixels must always side (exception: direct diagonal direction)
+     */
     template <typename TVisit>
-    static void Cast(PositionF from, PositionF to, TVisit visitor) /* Visitor(PositionF tested_pos, PositionF previous_pos) -> bool should continue? */
+    static void Cast(PositionF from, PositionF to, TVisit visitor, VisitFlags flags = VisitFlags::PixelsMustTouchSides) /* Visitor(PositionF tested_pos, PositionF previous_pos) -> bool should continue? */
     {
         if (from == to)
         {
@@ -32,8 +40,9 @@ public:
                 curr_pos = new_pos;
                 continue;
             }
-            /* Check if we went over the edge of one more pixel*/
-            if (prev.x != next.x && prev.y != next.y && std::abs(one_step.x) != std::abs(one_step.y))
+            /* Check if we went over the edge of one more pixel. Do this only if visit_partial was requested */
+            if ((flags & VisitFlags::PixelsMustTouchSides) && prev.x != next.x && prev.y != next.y &&
+                std::abs(one_step.x) != std::abs(one_step.y))
             {
                 /* Detect the touched pixel and visit it as well */
                 Position touched_pos;

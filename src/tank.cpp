@@ -13,8 +13,43 @@
 #include <tweak.h>
 #include <world.h>
 
+#include "raycaster.h"
+
+
+void TankTurret::Advance(Position tank_position, widgets::Crosshair * crosshair)
+{
+    Position crosshair_pos = crosshair->GetWorldPosition();
+    this->direction = DirectionF{OffsetF(crosshair_pos - tank_position).Normalize()};
+
+    int turret_len = 0;
+    this->TurretVoxels[turret_len++] = tank_position;
+  
+    auto visitor = [this, &turret_len](PositionF current, PositionF previous)
+    {
+        if (turret_len >= tweak::tank::TurretLength)
+            return false;
+
+        this->TurretVoxels[turret_len++] = current.ToIntPosition();
+        return true;
+    };
+    Raycaster::Cast(PositionF(tank_position), PositionF(tank_position) + (this->direction * float(tweak::tank::TurretLength)),
+                    visitor, Raycaster::VisitFlags::PixelsMustTouchCorners);
+}
+
+void TankTurret::Draw(LevelDrawBuffer * drawBuff) const
+{
+    for (const Position & pos : this->TurretVoxels)
+    {
+        drawBuff->SetPixel(pos, color);
+    }
+}
+
+/*  /\
+ * TANK
+ */    
+
 Tank::Tank(TankColor color, Level * lvl, ProjectileList * pl, TankBase * tank_base)
-    : pos(tank_base->GetPosition()), color(color), is_valid(true), tank_base(tank_base)
+    : is_valid(true), pos(tank_base->GetPosition()), color(color), tank_base(tank_base), turret(Palette.GetTank(color)[2])
 {
     // this->cached_slice = std::make_shared<LevelView>(this, lvl);
 
@@ -58,7 +93,7 @@ CollisionType Tank::GetCollision(int dir, Position position, TankList * tl)
     return out;
 }
 
-void Tank::DoMove(TankList * tl)
+void Tank::HandleMove(TankList * tl)
 {
 
     /* Don't let this tank do anything if it is dead: */
@@ -104,17 +139,19 @@ void Tank::DoMove(TankList * tl)
         }
     }
 
+}
+
+void Tank::HandleShoot()
+{
     /* Handle all shooting logic: */
     if (this->bullet_timer == 0)
     {
         if (this->is_shooting && this->bullets_left > 0)
         {
             /* TODO: Rotate actual turret, this is a lame hax */
-            Position crosshair_pos = this->crosshair->GetWorldPosition();
-            DirectionF turret_dir = DirectionF{OffsetF(crosshair_pos - this->GetPosition()).Normalize()};
 
             this->projectile_list->Add(
-                Bullet{this->GetPosition(), turret_dir, tweak::tank::BulletSpeed, this->GetLevel(), this});
+                Bullet{this->GetPosition(), this->turret.GetDirection(), tweak::tank::BulletSpeed, this->GetLevel(), this});
 
             /* We just fired. Let's charge ourselves: */
             this->AlterEnergy(tweak::tank::ShootCost);
@@ -153,6 +190,8 @@ void Tank::Draw(LevelDrawBuffer * drawBuff) const
                 drawBuff->SetPixel(Position{this->pos.x + x - 3, this->pos.y + y - 3},
                                    Palette.GetTank(this->color)[val - 1]);
         }
+
+    this->turret.Draw(drawBuff);
 }
 
 void Tank::Clear(LevelDrawBuffer * drawBuff) const
@@ -173,13 +212,18 @@ void Tank::Advance(World * world)
     if (!this->IsDead())
     {
         this->AlterEnergy(tweak::tank::IdleCost);
-
         this->TryBaseHeal();
+
         /* Solve collisions with other tanks */
-        this->DoMove(world->GetTankList());
+        this->HandleMove(world->GetTankList());
+
+        /* Turn turret and shoot if desired*/
+        this->turret.Advance(this->GetPosition(), this->crosshair);
+        this->HandleShoot();
     }
     else
     {
+        /* DEaD. Handle respawning. */
         --this->respawn_timer;
         if (!this->respawn_timer)
         {

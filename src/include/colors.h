@@ -20,6 +20,7 @@ enum class Colors
     LifeDot = StatusHealth,
     DecalHigh,
     DecalLow,
+    TankTurret,
     Size,
 };
 

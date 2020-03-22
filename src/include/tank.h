@@ -31,20 +31,32 @@ enum class CollisionType
 
 class TankTurret
 {
+    std::array<Position, tweak::tank::TurretLength> TurretVoxels;
+    Color color;
+    DirectionF direction = {};
+  public:
+    TankTurret(Color turret_color) : color(turret_color) {}
+    DirectionF GetDirection() const { return this->direction; }
+
+    void Advance(Position tank_position, widgets::Crosshair * crosshair); 
+    void Draw(LevelDrawBuffer * drawBuff) const;
 
 };
 
-class Tank
+class Tank final
 {
     bool is_valid = false;
     bool is_shooting = false;
 
     Position pos; /* Current tank position */
     Speed speed;  /* Velocity... ie: is it moving now? */
-    Direction direction;
+    Direction direction = {};
 
     TankColor color;                /* Unique id and also color of the tank */
     TankBase * tank_base = nullptr; /* Base owned by the tank  */
+    TankTurret turret;              /* Turret of the tank */
+    widgets::Crosshair * crosshair = nullptr; /* Crosshair used for aiming */
+
 
     int bullet_timer = tweak::tank::BulletDelay;
     int bullets_left = tweak::tank::BulletMax;
@@ -58,7 +70,6 @@ class Tank
 
     Level * level;
     ProjectileList * projectile_list;
-    widgets::Crosshair * crosshair = nullptr;
 
   public:
     void Invalidate() { this->is_valid = false; }
@@ -97,6 +108,7 @@ class Tank
     void ReturnBullet();
 
   private:
-    void DoMove(class TankList * tl);
+    void HandleMove(class TankList * tl);
+    void HandleShoot();
     void TryBaseHeal();
 };

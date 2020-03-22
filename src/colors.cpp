@@ -24,6 +24,7 @@ ColorPalette::ColorPalette()
     Set(Colors::StatusHealth, Color(0x26, 0xf4, 0xf2));
     Set(Colors::DecalLow, Color(0x28, 0x28, 0x28));
     Set(Colors::DecalHigh, Color(0x48, 0x38, 0x2f));
+    Set(Colors::TankTurret, Color(0xf3, 0xeb, 0x1c));
     // Set(Colors::LifeDot, Color(0x48, 0x38, 0x2f));
 
     SetPrimary(0, Color(0x00, 0x00, 0x00));

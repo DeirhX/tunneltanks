@@ -146,24 +146,6 @@ struct OffsetF : public VectorF
     constexpr OffsetF(float sx, float sy) : VectorF(sx, sy) {}
     explicit OffsetF(Offset int_offset) : VectorF(float(int_offset.x), float(int_offset.y)) {}
 };
-inline VectorF operator+(VectorF v, VectorF o) noexcept { return {v.x + o.x, v.y + o.y}; }
-inline VectorF operator-(VectorF v, VectorF o) noexcept { return {v.x - o.x, v.y - o.y}; }
-inline OffsetF operator*(SpeedF s, float t) noexcept { return {s.x * t, s.y * t}; }
-inline OffsetF operator*(float t, SpeedF s) noexcept { return {s.x * t, s.y * t}; }
-inline OffsetF operator*(OffsetF o, float m) noexcept { return {o.x * m, o.y * m}; }
-inline OffsetF operator*(float m, OffsetF o) noexcept { return {o.x * m, o.y * m}; }
-inline OffsetF operator/(OffsetF o, float d) noexcept { return {o.x / d, o.y / d}; }
-inline OffsetF operator-(PositionF p, PositionF o) noexcept { return {p.x - o.x, p.y - o.y}; }
-inline PositionF operator+(PositionF v, OffsetF o) noexcept { return {v.x + o.x, v.y + o.y}; }
-inline PositionF & operator+=(PositionF v, OffsetF o) noexcept
-{
-    v.x += o.x;
-    v.y += o.y;
-    return v;
-}
-inline bool operator==(PositionF l, PositionF r) { return l.x == r.x && l.y == r.y; }
-
-/* Oh no, a float! Can't we do without? */
 /* TODO: we need actually just radians. But so often will we use the components it won't hurt to store them instead */
 struct DirectionF : VectorF
 {
@@ -181,6 +163,20 @@ struct DirectionF : VectorF
     [[nodiscard]] int ToIntDirection() const { return Direction::FromSpeed({int(x), int(y)}); }
     [[nodiscard]] Speed ToSpeed() const { return Speed{int(x), int(y)}; }
 };
+
+inline VectorF operator+(VectorF v, VectorF o) noexcept { return {v.x + o.x, v.y + o.y}; }
+inline VectorF operator-(VectorF v, VectorF o) noexcept { return {v.x - o.x, v.y - o.y}; }
+inline OffsetF operator*(SpeedF s, float t) noexcept { return {s.x * t, s.y * t}; }
+inline OffsetF operator*(float t, SpeedF s) noexcept { return {s.x * t, s.y * t}; }
+inline OffsetF operator*(OffsetF o, float m) noexcept { return {o.x * m, o.y * m}; }
+inline OffsetF operator*(float m, OffsetF o) noexcept { return {o.x * m, o.y * m}; }
+inline OffsetF operator/(OffsetF o, float d) noexcept { return {o.x / d, o.y / d}; }
+inline OffsetF operator-(PositionF p, PositionF o) noexcept { return {p.x - o.x, p.y - o.y}; }
+inline PositionF operator+(PositionF v, OffsetF o) noexcept { return {v.x + o.x, v.y + o.y}; }
+inline PositionF & operator+=(PositionF v, OffsetF o) noexcept { v.x += o.x; v.y += o.y; return v; }
+inline bool operator==(PositionF l, PositionF r) { return l.x == r.x && l.y == r.y; }
+inline OffsetF operator*(DirectionF d, float m) noexcept { return {d.x * m, d.y * m}; }
+inline OffsetF operator*(float m, DirectionF d) noexcept { return {m * d.x, m * d.y}; }
 
 /* Rectangle inside game world */
 struct Rect

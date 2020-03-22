@@ -91,26 +91,23 @@ namespace tank {
 #define BASE_SIZE                      35
 #define BASE_DOOR_SIZE                 7
 
-/* The starting number of items in the Projectile Buffer's cache: */
-#define PROJECTILE_BUFFER_START_SIZE   32
-
 namespace explosion::dirt
 {
-constexpr int ShrapnelCount = 10;
-constexpr int Speed = 12;
-constexpr int Frames = 10;
+    constexpr int ShrapnelCount = 10;
+    constexpr int Speed = 12;
+    constexpr int Frames = 10;
 } // namespace explosion::dirt
 namespace explosion::normal
 {
-constexpr int ShrapnelCount = 14;
-constexpr int Speed = 18;
-constexpr int Frames = 13;
+    constexpr int ShrapnelCount = 14;
+    constexpr int Speed = 18;
+    constexpr int Frames = 13;
 } // namespace explosion::normal
 namespace explosion::death
 {
-constexpr int ShrapnelCount = 100;
-constexpr int Speed = 8;
-constexpr int Frames = 72;
+    constexpr int ShrapnelCount = 100;
+    constexpr int Speed = 8;
+    constexpr int Frames = 72;
 } // namespace explosion::death
 /* Characters used in level structures for things: */
 
