@@ -108,13 +108,16 @@ ControllerOutput GamePadController::ApplyControls(PublicTankInfo * tankPublic)
 
     float aim_x = float(rx) / std::numeric_limits<short>::max();
     float aim_y = float(ry) / std::numeric_limits<short>::max();
+    /* Square it to get quadratic falloff */
+    aim_x = std::abs(std::pow(aim_x, 3)) * (aim_x < 0 ? -1.f : 1.f);
+    aim_y = std::abs(std::pow(aim_y, 3)) *(aim_y < 0 ? -1.f : 1.f);
 
     if (std::abs(rx) > 3000 || std::abs(ry) > 3000)
-        gamelib_print("Right stick: %d, %d", rx, ry);
+        gamelib_print("Right stick: %d, %d           \r", rx, ry);
     output.is_crosshair_absolute = false;
     output.crosshair_offset = {int(tweak::control::GamePadAimSensitivity * aim_x), int(tweak::control::GamePadAimSensitivity * aim_y)};
 
-    output.is_shooting = SDL_JoystickGetButton(this->joystick, 0);
+    output.is_shooting = SDL_JoystickGetButton(this->joystick, 4);
     
     return output;
 }
