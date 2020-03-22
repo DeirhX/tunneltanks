@@ -23,11 +23,12 @@ public:
 };
 
 /* The SDL-based keyboard controller: */
-class JoystickController : public Controller
+class GamePadController : public Controller
 {
 	SDL_Joystick* joystick;
 public:
-	JoystickController();
+	GamePadController();
+	~GamePadController();
 	ControllerOutput ApplyControls(PublicTankInfo* tankPublic) override;
 
 	bool IsPlayer() override { return true; }
