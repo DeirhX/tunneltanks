@@ -78,7 +78,7 @@ namespace tank {
 	constexpr int ShotDamage = -160;
 	constexpr int HomeHealSpeed = 3;
 
-    constexpr int TurretLength = 3;
+    constexpr int TurretLength = 4;
 
 }
 /* Constants for drawing static: (The bottom 3 constants are out of 1000) */

@@ -40,6 +40,7 @@ class TankTurret
 
     void Advance(Position tank_position, widgets::Crosshair * crosshair); 
     void Draw(LevelDrawBuffer * drawBuff) const;
+    void Erase(Level * level) const;
 
 };
 

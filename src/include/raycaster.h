@@ -41,7 +41,7 @@ public:
                 continue;
             }
             /* Check if we went over the edge of one more pixel. Do this only if visit_partial was requested */
-            if ((flags) & (VisitFlags::PixelsMustTouchSides) && prev.x != next.x && prev.y != next.y &&
+            if (HasFlag(flags, VisitFlags::PixelsMustTouchSides) && prev.x != next.x && prev.y != next.y &&
                 std::abs(one_step.x) != std::abs(one_step.y))
             {
                 /* Detect the touched pixel and visit it as well */

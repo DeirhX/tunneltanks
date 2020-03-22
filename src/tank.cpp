@@ -40,7 +40,15 @@ void TankTurret::Draw(LevelDrawBuffer * drawBuff) const
 {
     for (const Position & pos : this->TurretVoxels)
     {
-        drawBuff->SetPixel(pos, color);
+        drawBuff->SetPixel(pos, this->color);
+    }
+}
+
+void TankTurret::Erase(Level * level) const
+{
+    for (const Position & pos : this->TurretVoxels)
+    {
+        level->CommitPixel(pos);
     }
 }
 
@@ -203,6 +211,8 @@ void Tank::Clear(LevelDrawBuffer * drawBuff) const
         for (int x = 0; x < 7; x++)
             if (TANK_SPRITE[this->direction][y][x])
                 level->CommitPixel(Position{this->pos.x + x - 3, this->pos.y + y - 3});
+
+    this->turret.Erase(level);
 }
 
 void Tank::ReturnBullet() { this->bullets_left++; }
