@@ -33,7 +33,7 @@ class TankTurret
 {
     std::array<Position, tweak::tank::TurretLength> TurretVoxels;
     Color color;
-    DirectionF direction = {};
+    DirectionF direction = {1.0, 0};
   public:
     TankTurret(Color turret_color) : color(turret_color) {}
     DirectionF GetDirection() const { return this->direction; }
@@ -41,7 +41,7 @@ class TankTurret
     void Advance(Position tank_position, widgets::Crosshair * crosshair); 
     void Draw(LevelDrawBuffer * drawBuff) const;
     void Erase(Level * level) const;
-
+    void SetDirection(DirectionF new_dir) { this->direction = new_dir; }
 };
 
 class Tank final

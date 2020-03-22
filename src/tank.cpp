@@ -18,9 +18,11 @@
 
 void TankTurret::Advance(Position tank_position, widgets::Crosshair * crosshair)
 {
-    Position crosshair_pos = crosshair->GetWorldPosition();
-    this->direction = DirectionF{OffsetF(crosshair_pos - tank_position).Normalize()};
-
+    if (crosshair)
+    {
+        Position crosshair_pos = crosshair->GetWorldPosition();
+        this->direction = DirectionF{OffsetF(crosshair_pos - tank_position).Normalize()};
+    }
     int turret_len = 0;
     this->TurretVoxels[turret_len++] = tank_position;
   
@@ -103,7 +105,6 @@ CollisionType Tank::GetCollision(int dir, Position position, TankList * tl)
 
 void Tank::HandleMove(TankList * tl)
 {
-
     /* Don't let this tank do anything if it is dead: */
     if (!this->health)
         return;
@@ -125,6 +126,7 @@ void Tank::HandleMove(TankList * tl)
     if (this->speed.x != 0 || this->speed.y != 0)
     {
         int newdir = static_cast<int>((this->speed.x + 1) + (this->speed.y + 1) * 3);
+        this->turret.SetDirection(DirectionF{Direction{newdir}});
 
         CollisionType collision = this->GetCollision(newdir, this->pos + 1 * this->speed, tl);
         /* Now, is there room to move forward in that direction? */
