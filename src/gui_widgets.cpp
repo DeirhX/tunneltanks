@@ -105,6 +105,12 @@ Position TankView::TranslatePosition(ScreenPosition screen_pos) const
     return this->tank->GetPosition() + offset;
 }
 
+ScreenPosition TankView::TranslatePosition(Position world_pos) const
+{
+    Offset tank_offset = world_pos - this->tank->GetPosition();
+    return ScreenPosition{tank_offset + this->rect.pos + this->rect.size / 2};
+}
+
             /* Will draw two bars indicating the charge/health of a tank: */
 /* TODO: This currently draws every frame. Can we make a dirty flag, and only
  *       redraw when it's needed? Also, can we put some of these calculations in
@@ -206,11 +212,29 @@ void LivesLeft::Draw(Screen *screen)
     }
 }
 
+void Crosshair::UpdateVisual()
+{
+    this->rect = Rect{this->center.x - this->data->size.x / 2, this->center.y - this->data->size.y / 2,
+                      this->data->size.x, this->data->size.y};
+}
+
+void Crosshair::MoveRelative(const Offset & offset)
+{
+    this->center += offset;
+    this->center = ScreenPosition{this->parent_view->GetRect().MakeInside(this->center)};
+    this->UpdateVisual();
+}
+
 void Crosshair::SetScreenPosition(NativeScreenPosition position)
 {
     this->center = screen->FromNativeScreen(position);
     this->center = ScreenPosition{this->parent_view->GetRect().MakeInside(this->center)};
-    this->rect = Rect{this->center.x - this->data->size.x / 2, this->center.y - this->data->size.y / 2,
-                      this->data->size.x, this->data->size.y};
+    this->UpdateVisual();
+}
+
+void Crosshair::SetWorldPosition(const Position & position)
+{
+    this->center = parent_view->TranslatePosition(position);
+    this->UpdateVisual();
 }
 } // namespace widgets

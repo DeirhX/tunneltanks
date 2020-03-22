@@ -52,6 +52,7 @@ class Screen
     void DrawPixel(ScreenPosition pos, Color32 color);
     /* These will say what virtual pixel a physical pixel resides on: */
     ScreenPosition FromNativeScreen(NativeScreenPosition pos);
+    //NativeScreenPosition ToNativeScreen(ScreenPosition pos);
     /*  Draw whatever it is now supposed to draw */
     void DrawCurrentMode();
 

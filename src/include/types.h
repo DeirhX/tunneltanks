@@ -80,6 +80,12 @@ inline Offset operator-(Position p, Position o) noexcept { return {p.x - o.x, p.
 inline Position operator+(Position v, Offset o) noexcept { return {v.x + o.x, v.y + o.y}; }
 inline Position operator+(Position v, Size o) noexcept { return {v.x + o.x, v.y + o.y}; }
 inline bool operator==(Position l, Position r) noexcept { return l.x == r.x && l.y == r.y; }
+inline ScreenPosition & operator+=(ScreenPosition & p, Offset o) noexcept
+{
+    p.x += o.x;
+    p.y += o.y;
+    return p;
+}
 
 /* Integer direction. Take your numerical keyboard and subtract 1 */
 struct Direction
@@ -172,9 +178,12 @@ inline OffsetF operator*(OffsetF o, float m) noexcept { return {o.x * m, o.y * m
 inline OffsetF operator*(float m, OffsetF o) noexcept { return {o.x * m, o.y * m}; }
 inline OffsetF operator/(OffsetF o, float d) noexcept { return {o.x / d, o.y / d}; }
 inline OffsetF operator-(PositionF p, PositionF o) noexcept { return {p.x - o.x, p.y - o.y}; }
+inline bool operator==(OffsetF l, OffsetF r) { return l.x == r.x && l.y == r.y; }
+inline bool operator!=(OffsetF l, OffsetF r) { return l.x != r.x || l.y != r.y; }
 inline PositionF operator+(PositionF v, OffsetF o) noexcept { return {v.x + o.x, v.y + o.y}; }
 inline PositionF & operator+=(PositionF v, OffsetF o) noexcept { v.x += o.x; v.y += o.y; return v; }
 inline bool operator==(PositionF l, PositionF r) { return l.x == r.x && l.y == r.y; }
+inline bool operator!=(PositionF l, PositionF r) { return l.x != r.x || l.y != r.y; }
 inline OffsetF operator*(DirectionF d, float m) noexcept { return {d.x * m, d.y * m}; }
 inline OffsetF operator*(float m, DirectionF d) noexcept { return {m * d.x, m * d.y}; }
 

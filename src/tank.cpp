@@ -15,27 +15,28 @@
 
 #include "raycaster.h"
 
-
 void TankTurret::Advance(Position tank_position, widgets::Crosshair * crosshair)
 {
     if (crosshair)
     {
         Position crosshair_pos = crosshair->GetWorldPosition();
-        this->direction = DirectionF{OffsetF(crosshair_pos - tank_position).Normalize()};
+        auto turret_dir = OffsetF(crosshair_pos - tank_position);
+        if (turret_dir != OffsetF{})
+            this->direction = DirectionF{turret_dir.Normalize()};
     }
     int turret_len = 0;
     this->TurretVoxels[turret_len++] = tank_position;
-  
-    auto visitor = [this, &turret_len](PositionF current, PositionF previous)
-    {
+
+    auto visitor = [this, &turret_len](PositionF current, PositionF previous) {
         if (turret_len >= tweak::tank::TurretLength)
             return false;
 
         this->TurretVoxels[turret_len++] = current.ToIntPosition();
         return true;
     };
-    Raycaster::Cast(PositionF(tank_position), PositionF(tank_position) + (this->direction * float(tweak::tank::TurretLength)),
-                    visitor, Raycaster::VisitFlags::PixelsMustTouchCorners);
+    Raycaster::Cast(PositionF(tank_position),
+                    PositionF(tank_position) + (this->direction * float(tweak::tank::TurretLength)), visitor,
+                    Raycaster::VisitFlags::PixelsMustTouchCorners);
 }
 
 void TankTurret::Draw(LevelDrawBuffer * drawBuff) const
@@ -56,10 +57,11 @@ void TankTurret::Erase(Level * level) const
 
 /*  /\
  * TANK
- */    
+ */
 
 Tank::Tank(TankColor color, Level * lvl, ProjectileList * pl, TankBase * tank_base)
-    : is_valid(true), pos(tank_base->GetPosition()), color(color), tank_base(tank_base), turret(Palette.GetTank(color)[2])
+    : is_valid(true), pos(tank_base->GetPosition()), color(color), tank_base(tank_base),
+      turret(Palette.GetTank(color)[2])
 {
     // this->cached_slice = std::make_shared<LevelView>(this, lvl);
 
@@ -71,6 +73,12 @@ Tank::Tank(TankColor color, Level * lvl, ProjectileList * pl, TankBase * tank_ba
     this->direction = dir; // DirectionF{ dir };
     this->level = lvl;
     this->projectile_list = pl;
+}
+
+void Tank::SetCrosshair(widgets::Crosshair * cross)
+{
+    this->crosshair = cross;
+    this->crosshair->SetWorldPosition(this->GetPosition() + Offset{0, -10});
 }
 
 /* We don't use the Tank structure in this function, since we are checking the
@@ -148,7 +156,6 @@ void Tank::HandleMove(TankList * tl)
             }
         }
     }
-
 }
 
 void Tank::HandleShoot()
@@ -160,8 +167,8 @@ void Tank::HandleShoot()
         {
             /* TODO: Rotate actual turret, this is a lame hax */
 
-            this->projectile_list->Add(
-                Bullet{this->GetPosition(), this->turret.GetDirection(), tweak::tank::BulletSpeed, this->GetLevel(), this});
+            this->projectile_list->Add(Bullet{this->GetPosition(), this->turret.GetDirection(),
+                                              tweak::tank::BulletSpeed, this->GetLevel(), this});
 
             /* We just fired. Let's charge ourselves: */
             this->AlterEnergy(tweak::tank::ShootCost);
@@ -307,8 +314,8 @@ void Tank::Die()
     this->energy = 0;
     this->respawn_timer = tweak::tank::RespawnDelay;
 
-    this->projectile_list->Add(
-        Explosion::Explode(this->pos, this->level, tweak::explosion::death::ShrapnelCount, tweak::explosion::death::Speed, tweak::explosion::death::Frames));
+    this->projectile_list->Add(Explosion::Explode(this->pos, this->level, tweak::explosion::death::ShrapnelCount,
+                                                  tweak::explosion::death::Speed, tweak::explosion::death::Frames));
 }
 
 void Tank::ApplyControllerOutput(ControllerOutput controls)
@@ -317,7 +324,14 @@ void Tank::ApplyControllerOutput(ControllerOutput controls)
     this->is_shooting = controls.is_shooting;
     if (this->crosshair)
     {
-        this->crosshair->SetScreenPosition(controls.crosshair);
+        if (controls.is_crosshair_absolute)
+        {
+            this->crosshair->SetScreenPosition(controls.crosshair);
+        }
+        else
+        {
+            this->crosshair->MoveRelative(controls.crosshair_offset);
+        }
     }
 }
 

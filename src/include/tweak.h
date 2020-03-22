@@ -91,6 +91,13 @@ namespace tank {
 #define BASE_SIZE                      35
 #define BASE_DOOR_SIZE                 7
 
+namespace control
+{
+    constexpr int GamePadMovementThreshold = 10000;
+    constexpr int GamePadAimSensitivity = 30;
+    constexpr int GamePadAimThreshold = 3000;
+    }
+
 namespace explosion::dirt
 {
     constexpr int ShrapnelCount = 10;

@@ -77,7 +77,7 @@ class Tank final
 
     Tank(TankColor color, Level * lvl, ProjectileList * pl, TankBase * tank_base);
     void SetController(std::shared_ptr<Controller> newController) { this->controller = newController; }
-    void SetCrosshair(widgets::Crosshair * cross) { this->crosshair = cross; }
+    void SetCrosshair(widgets::Crosshair * cross);
 
     [[nodiscard]] Position GetPosition() const { return this->pos; }
     [[nodiscard]] TankColor GetColor() const { return this->color; }

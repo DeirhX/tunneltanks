@@ -83,6 +83,7 @@ static bool try_attach_gamepad(Tank * tank, int gamepad_num)
     catch (const GameException & ex)
     {
         gamelib_print("Failed to use joystick #%d: %s\n", gamepad_num, ex.what());
+        return false;
     }
     return true;
 }

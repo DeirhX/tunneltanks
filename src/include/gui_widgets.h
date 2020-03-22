@@ -27,6 +27,7 @@ class TankView : public GuiWidget
     TankView(Rect rect, class Tank *tank) : rect(rect), tank(tank) {}
     void Draw(Screen *screen) override;
     Position TranslatePosition(ScreenPosition screen_position) const;
+    ScreenPosition TranslatePosition(Position screen_position) const;
     Rect GetRect() const { return rect; }
 
 private:
@@ -86,13 +87,14 @@ class Crosshair : public BitmapRender
     Crosshair(Position pos, Screen *screen, TankView *parent_view)
         : BitmapRender(Rect{pos.x - 1, pos.y - 1, 3, 3}, &bitmaps::Crosshair, Palette.Get(Colors::FireCold)),
           screen(screen), parent_view(parent_view)
-    {
-    }
+    {  }
 
+    void UpdateVisual();
+    void MoveRelative(const Offset & offset);
     void SetScreenPosition(NativeScreenPosition position);
-    [[nodiscard]] ScreenPosition GetScreenPosition() { return center; }
+    [[nodiscard]] ScreenPosition GetScreenPosition() { return this->center; }
     Position GetWorldPosition() { return parent_view->TranslatePosition(GetScreenPosition()); }
-    // void Draw(Screen* screen) override;
+    void SetWorldPosition(const Position & position);
 };
 
 } // namespace widgets

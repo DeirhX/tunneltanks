@@ -121,7 +121,12 @@ ScreenPosition Screen::FromNativeScreen(NativeScreenPosition native_pos)
     return pos;
 }
 
-void Screen::DrawLevel()
+//NativeScreenPosition Screen::ToNativeScreen(ScreenPosition pos)
+//{
+//
+//}
+
+    void Screen::DrawLevel()
 {
     /* Erase everything */
     gamelib_draw_box(NativeRect{{0, 0}, gamelib_get_resolution()}, Palette.Get(Colors::Blank));

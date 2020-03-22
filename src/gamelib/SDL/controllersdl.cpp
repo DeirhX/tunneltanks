@@ -33,6 +33,7 @@ ControllerOutput KeyboardWithMouseController::ApplyControls(PublicTankInfo * tan
     auto output = Base::ApplyControls(tankPublic);
     int x, y;
     auto buttons = SDL_GetMouseState(&x, &y);
+    output.is_crosshair_absolute = true;
     output.crosshair = {x, y};
     output.is_shooting = buttons & SDL_BUTTON(1);
     return output;
@@ -44,7 +45,6 @@ ControllerOutput KeyboardWithMouseController::ApplyControls(PublicTankInfo * tan
 
 /* This is the joystick value (between 1 and 32767) where a joystick axis gets
  * interpretted as going in that direction: */
-constexpr int GamePadMoveTankCutoff = 10000;
 
 GamePadController::GamePadController()
 {
@@ -77,21 +77,44 @@ GamePadController::~GamePadController()
 
 ControllerOutput GamePadController::ApplyControls(PublicTankInfo * tankPublic)
 {
-    /* Where is this joystick pointing? */
-    Sint32 jx = SDL_JoystickGetAxis(this->joystick, 0);
-    Sint32 jy = SDL_JoystickGetAxis(this->joystick, 1);
+    /* Where is this joystick pointing? Corresponds to left analog stick. Value range is -32K to +32K */
+    Sint32 lx = SDL_JoystickGetAxis(this->joystick, 0);
+    Sint32 ly = SDL_JoystickGetAxis(this->joystick, 1);
 
     auto output = ControllerOutput{};
-    Uint32 dist = jx * jx + jy * jy;
+    Uint32 dist = lx * lx + ly * ly;
     /* Don't do jack if the joystick is too close to its origin: */
-    if (dist >= GamePadMoveTankCutoff * GamePadMoveTankCutoff)
+    if (dist >= tweak::control::GamePadMovementThreshold * tweak::control::GamePadMovementThreshold)
     {
-        int tx = (jx == 0) ? 0 : (abs(jy * 1000 / jx) < 2000);
-        int ty = (jx == 0) ? 1 : (abs(jy * 1000 / jx) > 500);
+        int tx = (lx == 0) ? 0 : (abs(ly * 1000 / lx) < 2000);
+        int ty = (lx == 0) ? 1 : (abs(ly * 1000 / lx) > 500);
 
-        output.speed = {tx * (jx > 0 ? 1 : -1), ty * (jy > 0 ? 1 : -1)};
+        output.speed = {tx * (lx > 0 ? 1 : -1), ty * (ly > 0 ? 1 : -1)};
     }
-    output.is_shooting = SDL_JoystickGetButton(this->joystick, 0);
 
+    /* Get right analog stick */
+    Sint32 rx = SDL_JoystickGetAxis(this->joystick, 4);
+    Sint32 ry = SDL_JoystickGetAxis(this->joystick, 3);
+
+    /* Apply aim threshold - even in neutral state the analog input is never truly 0 */
+    if (rx > 0)
+        rx = std::max(0, rx - tweak::control::GamePadAimThreshold);
+    else
+        rx = std::min(0, rx + tweak::control::GamePadAimThreshold);
+    if (ry > 0)
+        ry = std::max(0, ry - tweak::control::GamePadAimThreshold);
+    else
+        ry = std::min(0, ry + tweak::control::GamePadAimThreshold);
+
+    float aim_x = float(rx) / std::numeric_limits<short>::max();
+    float aim_y = float(ry) / std::numeric_limits<short>::max();
+
+    if (std::abs(rx) > 3000 || std::abs(ry) > 3000)
+        gamelib_print("Right stick: %d, %d", rx, ry);
+    output.is_crosshair_absolute = false;
+    output.crosshair_offset = {int(tweak::control::GamePadAimSensitivity * aim_x), int(tweak::control::GamePadAimSensitivity * aim_y)};
+
+    output.is_shooting = SDL_JoystickGetButton(this->joystick, 0);
+    
     return output;
 }
