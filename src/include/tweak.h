@@ -95,8 +95,9 @@ namespace control
 {
     constexpr int GamePadMovementThreshold = 10000;
     constexpr int GamePadAimSensitivity = 30;
-    constexpr int GamePadAimThreshold = 1000;
-    }
+    constexpr int GamePadAimThreshold = 3000;
+    constexpr float GamePadCrosshairRadius = 25.f;
+}
 
 namespace explosion::dirt
 {

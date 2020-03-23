@@ -218,11 +218,17 @@ void Crosshair::UpdateVisual()
                       this->data->size.x, this->data->size.y};
 }
 
-void Crosshair::MoveRelative(const Offset & offset)
+void Crosshair::MoveRelative(Offset offset)
 {
     this->center += offset;
     this->center = ScreenPosition{this->parent_view->GetRect().MakeInside(this->center)};
     this->UpdateVisual();
+}
+
+void Crosshair::SetRelativePosition(const Tank * tank, DirectionF direction)
+{
+    SetWorldPosition(tank->GetPosition() + Offset{tweak::control::GamePadCrosshairRadius * direction});
+    is_hidden = (direction == DirectionF{});
 }
 
 void Crosshair::SetScreenPosition(NativeScreenPosition position)
@@ -230,11 +236,19 @@ void Crosshair::SetScreenPosition(NativeScreenPosition position)
     this->center = screen->FromNativeScreen(position);
     this->center = ScreenPosition{this->parent_view->GetRect().MakeInside(this->center)};
     this->UpdateVisual();
+    is_hidden = false;
 }
 
-void Crosshair::SetWorldPosition(const Position & position)
+void Crosshair::SetWorldPosition(Position position)
 {
     this->center = parent_view->TranslatePosition(position);
     this->UpdateVisual();
+    is_hidden = false;
+}
+
+void Crosshair::Draw(Screen * screen)
+{
+    if (!is_hidden)
+        Parent::Draw(screen);
 }
 } // namespace widgets

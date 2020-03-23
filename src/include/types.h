@@ -151,6 +151,7 @@ struct OffsetF : public VectorF
     OffsetF(VectorF vector) : VectorF(vector) {}
     constexpr OffsetF(float sx, float sy) : VectorF(sx, sy) {}
     explicit OffsetF(Offset int_offset) : VectorF(float(int_offset.x), float(int_offset.y)) {}
+    explicit operator Offset() const { return Offset{int(this->x), int(this->y) }; }
 };
 /* TODO: we need actually just radians. But so often will we use the components it won't hurt to store them instead */
 struct DirectionF : VectorF

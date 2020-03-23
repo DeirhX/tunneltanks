@@ -34,7 +34,7 @@ ControllerOutput KeyboardWithMouseController::ApplyControls(PublicTankInfo * tan
     int x, y;
     auto buttons = SDL_GetMouseState(&x, &y);
     output.is_crosshair_absolute = true;
-    output.crosshair = {x, y};
+    output.crosshair_screen_pos = {x, y};
     output.is_shooting = buttons & SDL_BUTTON(1);
     return output;
 }
@@ -103,22 +103,18 @@ ControllerOutput GamePadController::ApplyControls(PublicTankInfo * tankPublic)
     else
         ry = std::min(0, ry + tweak::control::GamePadAimThreshold);
 
-    float aim_x = float(rx) / std::numeric_limits<short>::max();
-    float aim_y = float(ry) / std::numeric_limits<short>::max();
-
-    /* Square it to get quadratic falloff */
-    aim_x = std::abs(std::pow(aim_x, 3)) * (aim_x < 0 ? -1.f : 1.f);
-    aim_y = std::abs(std::pow(aim_y, 3)) * (aim_y < 0 ? -1.f : 1.f);
+    // gamelib_print("Right stick: %d, %d           \r", rx, ry);
 
     /* Finally apply to crosshair */
-    if (std::abs(rx) > 3000 || std::abs(ry) > 3000)
-        gamelib_print("Right stick: %d, %d           \r", rx, ry);
+    VectorF aim_dir = VectorF{float(rx), float(ry)} / std::numeric_limits<short>::max();
+    if (aim_dir != VectorF{})
+        output.crosshair_direction = DirectionF{aim_dir.Normalize()};
+    else
+        output.crosshair_direction = {};
     output.is_crosshair_absolute = false;
-    output.crosshair_offset = {int(tweak::control::GamePadAimSensitivity * aim_x),
-                               int(tweak::control::GamePadAimSensitivity * aim_y)};
 
     /* Can't use lower buttons in SDL1. FU. */
-    output.is_shooting = SDL_JoystickGetButton(this->joystick, 12);
-
+    output.is_shooting = SDL_JoystickGetButton(this->joystick, 5) || SDL_JoystickGetButton(this->joystick, 4);
+  
     return output;
 }
