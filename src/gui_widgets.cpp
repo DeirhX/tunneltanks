@@ -246,9 +246,9 @@ void Crosshair::SetWorldPosition(Position position)
     is_hidden = false;
 }
 
-void Crosshair::Draw(Screen * screen)
+void Crosshair::Draw(Screen *)
 {
     if (!is_hidden)
-        Parent::Draw(screen);
+        Parent::Draw(this->screen);
 }
 } // namespace widgets

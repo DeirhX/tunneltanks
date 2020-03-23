@@ -22,12 +22,25 @@ public:
 	ControllerOutput ApplyControls(PublicTankInfo* tankPublic) override;
 };
 
+
 /* The SDL-based keyboard controller: */
+struct GamePadMapping
+{
+    int MoveHorizontalAxis;
+    int MoveVerticalAxis;
+    int AimHorizontalAxis;
+    int AimVerticalAxis;
+    int ShootPrimary;
+    int ShootSecondary;
+};
+
 class GamePadController : public Controller
 {
 	SDL_Joystick* joystick;
-public:
-	GamePadController();
+    GamePadMapping mapping;
+
+  public:
+	GamePadController(int joy_index);
 	~GamePadController();
 	ControllerOutput ApplyControls(PublicTankInfo* tankPublic) override;
 

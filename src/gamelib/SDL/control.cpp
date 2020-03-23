@@ -77,7 +77,7 @@ static bool try_attach_gamepad(Tank * tank, int gamepad_num)
         return false;
     try
     {
-        tank->SetController(std::make_shared<GamePadController>());
+        tank->SetController(std::make_shared<GamePadController>(gamepad_num));
         gamelib_print("Using Joystick #%d for player %d\n", gamepad_num, int(tank->GetColor()));
     }
     catch (const GameException & ex)
@@ -94,6 +94,7 @@ static bool try_attach_gamepad(Tank * tank, int gamepad_num)
 
 void gamelib_tank_attach(Tank * tank, int tank_num, int num_players)
 {
+    static bool used_controller = false; /* TODO: put into class state */
     if (num_players == 1 && tank_num == 0)
     {
         if (!try_attach_gamepad(tank, tank_num))
@@ -103,17 +104,18 @@ void gamelib_tank_attach(Tank * tank, int tank_num, int num_players)
     {
         if (tank_num == 0)
         {
-            if (!try_attach_gamepad(tank, tank_num))
-                tank->SetController(std::make_shared<KeyboardController>(TWO_KEYBOARD_A));
+            if (!try_attach_gamepad(tank, tank_num)) /* Controller #0 */
+                tank->SetController(std::make_shared<KeyboardWithMouseController>(ONE_KEYBOARD));
+            else
+                used_controller = true;
         }
         else if (tank_num == 1)
         {
-            if (!try_attach_gamepad(tank, tank_num))
+            if (!try_attach_gamepad(tank, tank_num)) /* Controller #1 */
             {
-                //if (SDL_NumJoysticks())
-                //    tank->SetController(std::make_shared<KeyboardController>(ONE_KEYBOARD));
-                //else
-                tank->SetController(std::make_shared<KeyboardController>(TWO_KEYBOARD_B));
+                if (!used_controller)
+                    throw NoControllersException("At least one controller needs to be attached for two-player mode");
+                tank->SetController(std::make_shared<KeyboardWithMouseController>(ONE_KEYBOARD));
             }
         }
     }

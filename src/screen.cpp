@@ -60,7 +60,14 @@ void Screens::SinglePlayerScreenSetup(Screen * screen, World * world, Tank * pla
 
 void Screens::TwoPlayerScreenSetup(Screen * screen, World * world, Tank * player_one, Tank * player_two)
 {
-    screen->AddWindow(Rect(2, 2, GAME_WIDTH / 2 - 3, GAME_HEIGHT - 6 - tweak::screen::status_height), player_one);
+    auto window_rect = Rect(2, 2, GAME_WIDTH / 2 - 3, GAME_HEIGHT - 6 - tweak::screen::status_height);
+    auto window = std::make_unique<widgets::TankView>(window_rect, player_one);
+    auto crosshair = std::make_unique<widgets::Crosshair>(window_rect.Center(), screen, window.get());
+    player_one->SetCrosshair(crosshair.get());
+
+    screen->AddWidget(std::move(window));
+    screen->AddWidget(std::move(crosshair));
+
     auto status_rect = Rect(3, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH / 2 - 5 - 2 - 4,
                             tweak::screen::status_height);
     screen->AddStatus(status_rect, player_one, false);
@@ -68,8 +75,14 @@ void Screens::TwoPlayerScreenSetup(Screen * screen, World * world, Tank * player
         Rect{status_rect.Right() + 2, status_rect.Top() + 1, 2, tweak::screen::status_height}, Orientation::Vertical,
         player_one));
 
-    screen->AddWindow(Rect(GAME_WIDTH / 2 + 1, 2, GAME_WIDTH / 2 - 3, GAME_HEIGHT - 6 - tweak::screen::status_height),
-                      player_two);
+    window_rect = Rect(GAME_WIDTH / 2 + 1, 2, GAME_WIDTH / 2 - 3, GAME_HEIGHT - 6 - tweak::screen::status_height);
+    window = std::make_unique<widgets::TankView>(window_rect, player_two);
+    crosshair = std::make_unique<widgets::Crosshair>(window_rect.Center(), screen, window.get());
+    player_two->SetCrosshair(crosshair.get());
+
+    screen->AddWidget(std::move(window));
+    screen->AddWidget(std::move(crosshair));
+
     status_rect = Rect(GAME_WIDTH / 2 + 2 + 2, GAME_HEIGHT - 2 - tweak::screen::status_height,
                        GAME_WIDTH / 2 - 5 - 3 - 4, tweak::screen::status_height);
     screen->AddStatus(status_rect, player_two, true);
@@ -83,7 +96,7 @@ void Screens::TwoPlayerScreenSetup(Screen * screen, World * world, Tank * player
     screen->AddBitmap(Rect(GAME_WIDTH / 2 - 2, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5),
                       &bitmaps::GuiHealth, static_cast<Color>(Palette.Get(Colors::StatusHealth)));
 
-    gamelib_enable_cursor();
+    gamelib_disable_cursor();
 }
 
 void Screen::DrawPixel(ScreenPosition pos, Color32 color)

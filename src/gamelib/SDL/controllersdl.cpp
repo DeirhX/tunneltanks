@@ -46,27 +46,50 @@ ControllerOutput KeyboardWithMouseController::ApplyControls(PublicTankInfo * tan
 /* This is the joystick value (between 1 and 32767) where a joystick axis gets
  * interpretted as going in that direction: */
 
-GamePadController::GamePadController()
+constexpr GamePadMapping XBox360Pad = {
+    .MoveHorizontalAxis = 0,
+    .MoveVerticalAxis   = 1,
+    .AimHorizontalAxis  = 4,
+    .AimVerticalAxis    = 3,
+    .ShootPrimary       = 4,
+    .ShootSecondary     = 5,
+};
+
+constexpr GamePadMapping PS4Pad = {
+    .MoveHorizontalAxis = 0,
+    .MoveVerticalAxis = 1,
+    .AimHorizontalAxis = 2,
+    .AimVerticalAxis = 3,
+    .ShootPrimary = 4,
+    .ShootSecondary = 5,
+};
+
+GamePadController::GamePadController(int joy_index)
 {
     /* Make sure that this is even a joystick to connect to: */
-    if (SDL_NumJoysticks() == 0)
+    if (SDL_NumJoysticks() < joy_index)
     {
-        throw GameException("No joysticks connected.\n");
+        throw NoControllersException("Not enough joysticks connected.\n");
     }
 
-    this->joystick = SDL_JoystickOpen(0);
+    this->joystick = SDL_JoystickOpen(joy_index);
 
     if (this->joystick)
     {
-        gamelib_print("Using Joystick #0:\n");
-        gamelib_print("  Name:    %s\n", SDL_JoystickName(0));
+        gamelib_print("Using Joystick #:\n", joy_index);
+        gamelib_print("  Name:    %s\n", SDL_JoystickName(joy_index));
         gamelib_print("  Axes:    %d\n", SDL_JoystickNumAxes(this->joystick));
         gamelib_print("  Buttons: %d\n", SDL_JoystickNumButtons(this->joystick));
         gamelib_print("  Balls:   %d\n", SDL_JoystickNumBalls(this->joystick));
+
+        if (!strcmp(SDL_JoystickName(joy_index), "Wireless Controller"))
+            this->mapping = PS4Pad;
+        else
+            this->mapping = XBox360Pad;
     }
     else
     {
-        throw GameException("Failed to open Joystick #0");
+        throw NoControllersException("Failed to open Joystick");
     }
 }
 
@@ -75,8 +98,8 @@ GamePadController::~GamePadController() { SDL_JoystickClose(this->joystick); }
 ControllerOutput GamePadController::ApplyControls(PublicTankInfo * tankPublic)
 {
     /* Where is this joystick pointing? Corresponds to left analog stick. Value range is -32K to +32K */
-    Sint32 lx = SDL_JoystickGetAxis(this->joystick, 0);
-    Sint32 ly = SDL_JoystickGetAxis(this->joystick, 1);
+    Sint32 lx = SDL_JoystickGetAxis(this->joystick, this->mapping.MoveHorizontalAxis);
+    Sint32 ly = SDL_JoystickGetAxis(this->joystick, this->mapping.MoveVerticalAxis);
 
     auto output = ControllerOutput{};
     Uint32 dist = lx * lx + ly * ly;
@@ -90,8 +113,8 @@ ControllerOutput GamePadController::ApplyControls(PublicTankInfo * tankPublic)
     }
 
     /* Get right analog stick */
-    Sint32 rx = SDL_JoystickGetAxis(this->joystick, 4);
-    Sint32 ry = SDL_JoystickGetAxis(this->joystick, 3);
+    Sint32 rx = SDL_JoystickGetAxis(this->joystick, this->mapping.AimHorizontalAxis);
+    Sint32 ry = SDL_JoystickGetAxis(this->joystick, this->mapping.AimVerticalAxis);
 
     /* Apply aim threshold - even in neutral state the analog input is never truly 0 */
     if (rx > 0)
@@ -103,7 +126,7 @@ ControllerOutput GamePadController::ApplyControls(PublicTankInfo * tankPublic)
     else
         ry = std::min(0, ry + tweak::control::GamePadAimThreshold);
 
-    // gamelib_print("Right stick: %d, %d           \r", rx, ry);
+    //gamelib_print("Right stick: %d, %d           \r", rx, ry);
 
     /* Finally apply to crosshair */
     VectorF aim_dir = VectorF{float(rx), float(ry)} / std::numeric_limits<short>::max();
@@ -114,7 +137,8 @@ ControllerOutput GamePadController::ApplyControls(PublicTankInfo * tankPublic)
     output.is_crosshair_absolute = false;
 
     /* Can't use lower buttons in SDL1. FU. */
-    output.is_shooting = SDL_JoystickGetButton(this->joystick, 5) || SDL_JoystickGetButton(this->joystick, 4);
+    output.is_shooting = SDL_JoystickGetButton(this->joystick, this->mapping.ShootPrimary) ||
+                         SDL_JoystickGetButton(this->joystick, this->mapping.ShootSecondary);
   
     return output;
 }

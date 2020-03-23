@@ -210,6 +210,10 @@ struct Rect
     {
         return {std::clamp(vec.x, this->Left(), this->Right()), std::clamp(vec.y, this->Top(), this->Bottom())};
     }
+    [[nodiscard]] Position Center() const
+    {
+        return { pos.x + size.x / 2, pos.y + size.y / 2 };
+    }
 };
 
 /* Rectangle in native units of hosting window/surface */
