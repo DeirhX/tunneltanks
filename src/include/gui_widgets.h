@@ -7,6 +7,15 @@ class Tank;
 
 namespace widgets
 {
+struct SharedLayout
+{
+    constexpr static Size padding = Size{0, 0};
+    constexpr static int status_border = 1;
+    constexpr static int status_padding_top = 2;
+    constexpr static int lives_left_padding = 1;
+    constexpr static int status_height = 11;
+};
+
 class GuiWidget
 {
   public:

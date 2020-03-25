@@ -94,8 +94,8 @@ Game::Game(GameConfig config)
     this->is_debug = config.is_debug;
 
     /* The hell was I thinking?
-	out->data.config.w = GAME_WIDTH;
-	out->data.config.h = GAME_HEIGHT;
+	out->data.config.w = tweak::GameSize.x;
+	out->data.config.h = tweak::GameSize.y;
 	*/
     if (gamelib_get_can_window())
         this->config.is_fullscreen = false;

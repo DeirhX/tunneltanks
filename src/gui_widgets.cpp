@@ -126,27 +126,27 @@ void StatusBar::Draw(Screen *screen)
     /* How many pixels are filled in? */
     int energy_filled = this->tank->GetEnergy();
     int health_filled = this->tank->GetHealth();
-    int half_energy_pixel = tweak::tank::StartingFuel / ((this->rect.size.x - tweak::screen::status_border * 2) * 2);
+    int half_energy_pixel = tweak::tank::StartingFuel / ((this->rect.size.x - SharedLayout::status_border * 2) * 2);
 
     energy_filled += half_energy_pixel;
 
-    energy_filled *= (this->rect.size.x - tweak::screen::status_border * 2);
+    energy_filled *= (this->rect.size.x - SharedLayout::status_border * 2);
     energy_filled /= tweak::tank::StartingFuel;
-    health_filled *= (this->rect.size.x - tweak::screen::status_border * 2);
+    health_filled *= (this->rect.size.x - SharedLayout::status_border * 2);
     health_filled /= tweak::tank::StartingShield;
 
     /* If we are decreasing to the right, we need to invert those values: */
     if (!this->decreases_to_left)
     {
-        energy_filled = this->rect.size.x - tweak::screen::status_border - energy_filled;
-        health_filled = this->rect.size.x - tweak::screen::status_border - health_filled;
+        energy_filled = this->rect.size.x - SharedLayout::status_border - energy_filled;
+        health_filled = this->rect.size.x - SharedLayout::status_border - health_filled;
 
-        /* Else, we still need to shift it to the right by tweak::screen::status_border: */
+        /* Else, we still need to shift it to the right by SharedLayout::status_border: */
     }
     else
     {
-        energy_filled += tweak::screen::status_border;
-        health_filled += tweak::screen::status_border;
+        energy_filled += SharedLayout::status_border;
+        health_filled += SharedLayout::status_border;
     }
 
     /* Ok, lets draw this thing: */
@@ -159,13 +159,13 @@ void StatusBar::Draw(Screen *screen)
                 continue;
 
             /* Outer border draws background: */
-            else if (y < tweak::screen::status_border || y >= this->rect.size.y - tweak::screen::status_border ||
-                     x < tweak::screen::status_border || x >= this->rect.size.x - tweak::screen::status_border)
+            else if (y < SharedLayout::status_border || y >= this->rect.size.y - SharedLayout::status_border ||
+                     x < SharedLayout::status_border || x >= this->rect.size.x - SharedLayout::status_border)
                 c = Palette.Get(Colors::StatusBackground);
 
             /* We round the corners here a little bit too: */
-            else if ((x == tweak::screen::status_border || x == this->rect.size.x - tweak::screen::status_border - 1) &&
-                     (y == tweak::screen::status_border || y == this->rect.size.y - tweak::screen::status_border - 1))
+            else if ((x == SharedLayout::status_border || x == this->rect.size.x - SharedLayout::status_border - 1) &&
+                     (y == SharedLayout::status_border || y == this->rect.size.y - SharedLayout::status_border - 1))
                 c = Palette.Get(Colors::StatusBackground);
 
             /* Middle seperator draws as backround, as well: */

@@ -31,71 +31,110 @@ void Screen::FillBackground()
     }
 }
 
+struct SinglePlayerLayout : public widgets::SharedLayout
+{
+    /* Player world view */
+    constexpr static Offset view_offset = Offset{2, 2};
+    constexpr static ScreenRect player_view_rect =
+        ScreenRect{ScreenPosition{view_offset + padding},
+                   Size{tweak::GameSize.x - 2 * (view_offset.x + padding.x),
+                        tweak::GameSize.y - 2 * (view_offset.y + padding.y) - status_padding_top - status_height}};
+
+    /* Health + Energy bar */
+    constexpr static ScreenRect tank_health_bars_rect =
+        ScreenRect{ScreenPosition{9 + padding.x, tweak::GameSize.y - 2 - status_height - padding.y},
+                   Size{tweak::GameSize.x - 16 - 2 * padding.x, status_height}};
+    constexpr static ScreenRect energy_letter_rect = {ScreenPosition{3, tank_health_bars_rect.Top()}, Size{4, 5}};
+    constexpr static ScreenRect health_letter_rect = {ScreenPosition{3, tank_health_bars_rect.Top() + 6}, Size{4, 5}};
+
+    /* Lives remaining view */
+    constexpr static ScreenRect lives_left_rect =
+        ScreenRect{tank_health_bars_rect.Right() + 2, tank_health_bars_rect.Top() + 1, 2, status_height};
+
+};
+
+struct TwoPlayerLayout : public SinglePlayerLayout
+{
+    /* Player world view */
+    constexpr static Offset view_offset = Offset{2, 2};
+    constexpr static ScreenRect player_view_one = {
+        ScreenPosition{player_view_rect.pos}, Size{player_view_rect.size - Size{player_view_rect.size.x / 2 + 1, 0}}};
+    constexpr static ScreenRect player_view_two = {ScreenPosition{player_view_one.Right() + 2, player_view_rect.pos.y},
+                                                   Size{player_view_one.size}};
+    /* Health + Energy bar */
+    constexpr static ScreenRect health_energy_one = 
+        {ScreenPosition{view_offset.x, tank_health_bars_rect.pos.y},
+        Size{player_view_one.size.x - energy_letter_rect.size.x/2 - lives_left_rect.size.x - 2*lives_left_padding - 1, tank_health_bars_rect.size.y}};
+    constexpr static ScreenRect health_energy_two = {
+        ScreenPosition{health_energy_one.Right() + energy_letter_rect.size.x + lives_left_rect.size.x + 2*lives_left_padding + 3,
+                       health_energy_one.pos.y},
+        Size{health_energy_one.size}};
+    constexpr static ScreenRect energy_letter_rect = {ScreenPosition{tweak::GameSize.x / 2 - 2, tweak::GameSize.y - 2 - status_height},
+                                                      Size{4, 5}};
+    constexpr static ScreenRect health_letter_rect = {ScreenPosition{energy_letter_rect.pos + Offset{0, 6}}, Size{4, 5}};
+
+    /* Lives remaining view */
+    constexpr static ScreenRect lives_left_rect =
+        ScreenRect{tank_health_bars_rect.Right() + 2, tank_health_bars_rect.Top() + 1, 2, status_height};
+
+
+};
+
 void Screens::SinglePlayerScreenSetup(Screen * screen, World * world, Tank * player)
 {
-    int gui_shift = 0;
     /* Tank view and status below it*/
-    auto window = std::make_unique<widgets::TankView>(
-        Rect{Position{2, 2}, Size{GAME_WIDTH - 4, GAME_HEIGHT - 6 - tweak::screen::status_height}}, player);
+    auto window = std::make_unique<widgets::TankView>(SinglePlayerLayout::player_view_rect, player);
     auto crosshair = std::make_unique<widgets::Crosshair>(Position{0, 0}, screen, window.get());
     player->SetCrosshair(crosshair.get());
 
     screen->AddWidget(std::move(window));
     screen->AddWidget(std::move(crosshair));
-    auto status_rect = Rect(9 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH - 16 - gui_shift,
-                            tweak::screen::status_height);
-    screen->AddStatus(status_rect, player, true);
-    screen->AddWidget(std::make_unique<widgets::LivesLeft>(
-        Rect{status_rect.Right() + 2, status_rect.Top() + 1, 2, tweak::screen::status_height}, Orientation::Vertical,
-        player));
+    screen->AddStatus(SinglePlayerLayout::tank_health_bars_rect, player, true);
+    screen->AddWidget(
+        std::make_unique<widgets::LivesLeft>(SinglePlayerLayout::lives_left_rect, Orientation::Vertical, player));
 
-    /* Add the E/S bitmaps: */
-    screen->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5), 
-                      &bitmaps::GuiEnergy, static_cast<Color>(Palette.Get(Colors::StatusEnergy)));
-    screen->AddBitmap(Rect(3 + gui_shift, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5),
-                      &bitmaps::GuiHealth, static_cast<Color>(Palette.Get(Colors::StatusHealth)));
+    /* Add the letters E and H bitmaps: */
+    screen->AddBitmap(SinglePlayerLayout::energy_letter_rect, &bitmaps::GuiEnergy,
+                      static_cast<Color>(Palette.Get(Colors::StatusEnergy)));
+    screen->AddBitmap(SinglePlayerLayout::health_letter_rect, &bitmaps::GuiHealth,
+                      static_cast<Color>(Palette.Get(Colors::StatusHealth)));
 
     gamelib_disable_cursor();
 }
 
 void Screens::TwoPlayerScreenSetup(Screen * screen, World * world, Tank * player_one, Tank * player_two)
 {
-    auto window_rect = Rect(2, 2, GAME_WIDTH / 2 - 3, GAME_HEIGHT - 6 - tweak::screen::status_height);
-    auto window = std::make_unique<widgets::TankView>(window_rect, player_one);
-    auto crosshair = std::make_unique<widgets::Crosshair>(window_rect.Center(), screen, window.get());
+    auto window = std::make_unique<widgets::TankView>(TwoPlayerLayout::player_view_one, player_one);
+    auto crosshair = std::make_unique<widgets::Crosshair>(TwoPlayerLayout::player_view_one.Center(), screen, window.get());
     player_one->SetCrosshair(crosshair.get());
 
     screen->AddWidget(std::move(window));
     screen->AddWidget(std::move(crosshair));
 
-    auto status_rect = Rect(3, GAME_HEIGHT - 2 - tweak::screen::status_height, GAME_WIDTH / 2 - 5 - 2 - 4,
-                            tweak::screen::status_height);
-    screen->AddStatus(status_rect, player_one, false);
-    screen->AddWidget(std::make_unique<widgets::LivesLeft>(
-        Rect{status_rect.Right() + 2, status_rect.Top() + 1, 2, tweak::screen::status_height}, Orientation::Vertical,
-        player_one));
+    screen->AddStatus(TwoPlayerLayout::health_energy_one, player_one, false);
+    screen->AddWidget(std::make_unique<widgets::LivesLeft>(Rect{TwoPlayerLayout::health_energy_one.Right() + 2,
+                                                                TwoPlayerLayout::health_energy_one.Top() + 1, 2,
+                                                                widgets::SharedLayout::status_height},
+                                                           Orientation::Vertical, player_one));
 
-    window_rect = Rect(GAME_WIDTH / 2 + 1, 2, GAME_WIDTH / 2 - 3, GAME_HEIGHT - 6 - tweak::screen::status_height);
-    window = std::make_unique<widgets::TankView>(window_rect, player_two);
-    crosshair = std::make_unique<widgets::Crosshair>(window_rect.Center(), screen, window.get());
+    window = std::make_unique<widgets::TankView>(TwoPlayerLayout::player_view_two, player_two);
+    crosshair = std::make_unique<widgets::Crosshair>(TwoPlayerLayout::player_view_two.Center(), screen, window.get());
     player_two->SetCrosshair(crosshair.get());
 
     screen->AddWidget(std::move(window));
     screen->AddWidget(std::move(crosshair));
 
-    status_rect = Rect(GAME_WIDTH / 2 + 2 + 2, GAME_HEIGHT - 2 - tweak::screen::status_height,
-                       GAME_WIDTH / 2 - 5 - 3 - 4, tweak::screen::status_height);
-    screen->AddStatus(status_rect, player_two, true);
-    screen->AddWidget(std::make_unique<widgets::LivesLeft>(
-        Rect{status_rect.Right() + 2, status_rect.Top() + 1, 2, tweak::screen::status_height}, Orientation::Vertical,
-        player_two));
+    screen->AddStatus(TwoPlayerLayout::health_energy_two, player_two, true);
+    screen->AddWidget(std::make_unique<widgets::LivesLeft>(Rect{TwoPlayerLayout::health_energy_two.Right() + 2,
+                                                                TwoPlayerLayout::health_energy_two.Top() + 1, 2,
+                                                                widgets::SharedLayout::status_height},
+                                                           Orientation::Vertical, player_two));
 
-    /* Add the GUI bitmaps: */
-    screen->AddBitmap(Rect(GAME_WIDTH / 2 - 2, GAME_HEIGHT - 2 - tweak::screen::status_height, 4, 5),
-                      &bitmaps::GuiEnergy, static_cast<Color>(Palette.Get(Colors::StatusEnergy)));
-    screen->AddBitmap(Rect(GAME_WIDTH / 2 - 2, GAME_HEIGHT - 2 - tweak::screen::status_height + 6, 4, 5),
-                      &bitmaps::GuiHealth, static_cast<Color>(Palette.Get(Colors::StatusHealth)));
-
+    /* Add the letters E and H bitmaps: */
+    screen->AddBitmap(TwoPlayerLayout::energy_letter_rect, &bitmaps::GuiEnergy,
+                      static_cast<Color>(Palette.Get(Colors::StatusEnergy)));
+    screen->AddBitmap(TwoPlayerLayout::health_letter_rect, &bitmaps::GuiHealth,
+                      static_cast<Color>(Palette.Get(Colors::StatusHealth)));
     gamelib_disable_cursor();
 }
 
@@ -105,9 +144,10 @@ void Screen::DrawPixel(ScreenPosition pos, Color32 color)
         return;
 
     Offset adjusted_size = {/* Make some pixels uniformly larger to fill in given space relatively evenly  */
-                            (pos.x * this->pixels_skip.x) / GAME_WIDTH, (pos.y * this->pixels_skip.y) / GAME_HEIGHT};
-    Offset adjusted_next = {((pos.x + 1) * this->pixels_skip.x) / GAME_WIDTH,
-                            ((pos.y + 1) * this->pixels_skip.y) / GAME_HEIGHT};
+                            (pos.x * this->pixels_skip.x) / tweak::GameSize.x,
+                            (pos.y * this->pixels_skip.y) / tweak::GameSize.y};
+    Offset adjusted_next = {((pos.x + 1) * this->pixels_skip.x) / tweak::GameSize.x,
+                            ((pos.y + 1) * this->pixels_skip.y) / tweak::GameSize.y};
 
     /* Final pixel position, adjusted by required scaling and offset */
     auto native_pos = NativeScreenPosition{(pos.x * this->pixel_size.x) + this->screen_offset.x + adjusted_size.x,
@@ -124,11 +164,11 @@ ScreenPosition Screen::FromNativeScreen(NativeScreenPosition native_pos)
 {
     auto pos = ScreenPosition{native_pos.x, native_pos.y};
     pos.x -= this->screen_offset.x;
-    pos.x -= pos.x / (int)this->pixel_size.x * (int)this->pixels_skip.x / GAME_WIDTH;
+    pos.x -= pos.x / (int)this->pixel_size.x * (int)this->pixels_skip.x / tweak::GameSize.x;
     pos.x /= (int)this->pixel_size.x;
 
     pos.y -= this->screen_offset.y;
-    pos.y -= pos.y / (int)this->pixel_size.y * (int)this->pixels_skip.y / GAME_HEIGHT;
+    pos.y -= pos.y / (int)this->pixel_size.y * (int)this->pixels_skip.y / tweak::GameSize.y;
     pos.y /= (int)this->pixel_size.y;
 
     return pos;
@@ -139,7 +179,7 @@ ScreenPosition Screen::FromNativeScreen(NativeScreenPosition native_pos)
 //
 //}
 
-    void Screen::DrawLevel()
+void Screen::DrawLevel()
 {
     /* Erase everything */
     gamelib_draw_box(NativeRect{{0, 0}, gamelib_get_resolution()}, Palette.Get(Colors::Blank));
@@ -182,8 +222,8 @@ void Screen::Resize(Size size)
     this->pixel_size = {};
 
     /* Make sure that we aren't scaling to something too small: */
-    size.x = std::max(GAME_WIDTH, size.x);
-    size.y = std::max(GAME_HEIGHT, size.y);
+    size.x = std::max(tweak::GameSize.x, size.x);
+    size.y = std::max(tweak::GameSize.y, size.y);
 
     /* A little extra logic for fullscreen: */
     if (this->is_fullscreen)
@@ -196,12 +236,12 @@ void Screen::Resize(Size size)
     this->is_fullscreen = gamelib_get_fullscreen();
 
     /* What is the limiting factor in our scaling to maintain aspect ratio? */
-    int yw = size.y * GAME_WIDTH;
-    int xh = size.x * GAME_HEIGHT;
+    int yw = size.y * tweak::GameSize.x;
+    int xh = size.x * tweak::GameSize.y;
     if (yw < xh)
     {
         /* size.y is. Correct aspect ratio using offset */
-        render_size.x = (GAME_WIDTH * size.y) / (GAME_HEIGHT);
+        render_size.x = (tweak::GameSize.x * size.y) / (tweak::GameSize.y);
         render_size.y = size.y;
         this->screen_offset.x = (size.x - render_size.x) / 2;
         this->screen_offset.y = 0;
@@ -210,16 +250,16 @@ void Screen::Resize(Size size)
     {
         /* size.x is. Correct aspect ratio using offset */
         render_size.x = size.x;
-        render_size.y = (GAME_HEIGHT * size.x) / (GAME_WIDTH);
+        render_size.y = (tweak::GameSize.y * size.x) / (tweak::GameSize.x);
         this->screen_offset.x = 0;
         this->screen_offset.y = (size.y - render_size.y) / 2;
     }
 
     /* Calculate the pixel sizing variables: */
-    this->pixel_size.x = render_size.x / GAME_WIDTH;
-    this->pixel_size.y = render_size.y / GAME_HEIGHT;
-    this->pixels_skip.x = render_size.x % GAME_WIDTH;
-    this->pixels_skip.y = render_size.y % GAME_HEIGHT;
+    this->pixel_size.x = render_size.x / tweak::GameSize.x;
+    this->pixel_size.y = render_size.y / tweak::GameSize.y;
+    this->pixels_skip.x = render_size.x % tweak::GameSize.x;
+    this->pixels_skip.y = render_size.y % tweak::GameSize.y;
 
     /* Draw a nice bg: */
     Screen::FillBackground();

@@ -5,7 +5,9 @@
 #include <cmath>
 #include <memory>
 
-/* Generic types that are used all over the place. 
+/* Generic types that are used all over the place.
+ * Most of them are identical and exist solely to enforce sensible naming and conversions
+ * so things don't get inadvertently mixed together.
    Conversions possible only when it is conceptually sensible - enforce clear semantics
 */
 
@@ -20,28 +22,28 @@ struct Vector
 /* Position relative to our logical Screen*/
 struct ScreenPosition : public Vector
 {
-    ScreenPosition() = default;
-    ScreenPosition(int x, int y) : Vector(x, y) {}
-    explicit ScreenPosition(Vector vec) : Vector(vec) {}
+    constexpr ScreenPosition() = default;
+    constexpr ScreenPosition(int x, int y) : Vector(x, y) {}
+    constexpr explicit ScreenPosition(Vector vec) : Vector(vec) {}
 };
 
 /* Position relative to native OS window. */
 struct NativeScreenPosition : public Vector
 {
-    NativeScreenPosition() = default;
-    NativeScreenPosition(int x, int y) : Vector(x, y) {}
+    constexpr NativeScreenPosition() = default;
+    constexpr NativeScreenPosition(int x, int y) : Vector(x, y) {}
 };
 
 struct Position : public Vector
 {
-    Position() = default;
-    Position(int x, int y) : Vector(x, y) {}
+    constexpr Position() = default;
+    constexpr Position(int x, int y) : Vector(x, y) {}
     explicit Position(ScreenPosition pos) : Vector(pos.x, pos.y) {}
 };
 
 struct Size : public Vector
 {
-    Size() = default;
+    constexpr Size() = default;
     constexpr Size(int sx, int sy) : Vector(sx, sy) {}
 };
 
@@ -67,20 +69,22 @@ struct Offset : public Vector
  *   Size * scalar -> Size
  */
 
-inline Vector operator+(Vector v, Vector o) noexcept { return {v.x + o.x, v.y + o.y}; }
-inline Vector operator-(Vector v, Vector o) noexcept { return {v.x - o.x, v.y - o.y}; }
-inline Offset operator*(Speed s, int t) noexcept { return {s.x * t, s.y * t}; }
-inline Offset operator*(int t, Speed s) noexcept { return {s.x * t, s.y * t}; }
-inline Size operator*(Size s, int t) noexcept { return {s.x * t, s.y * t}; }
-inline Size operator*(int t, Size s) noexcept { return {s.x * t, s.y * t}; }
-inline Size operator/(Size s, int t) noexcept { return {s.x / t, s.y / t}; }
-inline Offset operator+(Offset o, Size s) noexcept { return {o.x + s.x, o.y + s.y}; }
-inline Offset operator-(Offset o, Size s) noexcept { return {o.x - s.x, o.y - s.y}; }
-inline Offset operator-(Position p, Position o) noexcept { return {p.x - o.x, p.y - o.y}; }
-inline Position operator+(Position v, Offset o) noexcept { return {v.x + o.x, v.y + o.y}; }
-inline Position operator+(Position v, Size o) noexcept { return {v.x + o.x, v.y + o.y}; }
-inline bool operator==(Position l, Position r) noexcept { return l.x == r.x && l.y == r.y; }
-inline ScreenPosition & operator+=(ScreenPosition & p, Offset o) noexcept
+constexpr Vector operator+(Vector v, Vector o) noexcept { return {v.x + o.x, v.y + o.y}; }
+constexpr Vector operator-(Vector v, Vector o) noexcept { return {v.x - o.x, v.y - o.y}; }
+constexpr Offset operator*(Speed s, int t) noexcept { return {s.x * t, s.y * t}; }
+constexpr Offset operator*(int t, Speed s) noexcept { return {s.x * t, s.y * t}; }
+constexpr Size operator+(Size l, Size r) noexcept { return {l.x + r.x, l.y + r.y}; }
+constexpr Size operator-(Size l, Size r) noexcept { return {l.x - r.x, l.y - r.y}; }
+constexpr Size operator*(Size s, int t) noexcept { return {s.x * t, s.y * t}; }
+constexpr Size operator*(int t, Size s) noexcept { return {s.x * t, s.y * t}; }
+constexpr Size operator/(Size s, int t) noexcept { return {s.x / t, s.y / t}; }
+constexpr Offset operator+(Offset o, Size s) noexcept { return {o.x + s.x, o.y + s.y}; }
+constexpr Offset operator-(Offset o, Size s) noexcept { return {o.x - s.x, o.y - s.y}; }
+constexpr Offset operator-(Position p, Position o) noexcept { return {p.x - o.x, p.y - o.y}; }
+constexpr Position operator+(Position v, Offset o) noexcept { return {v.x + o.x, v.y + o.y}; }
+constexpr Position operator+(Position v, Size o) noexcept { return {v.x + o.x, v.y + o.y}; }
+constexpr bool operator==(Position l, Position r) noexcept { return l.x == r.x && l.y == r.y; }
+constexpr ScreenPosition & operator+=(ScreenPosition & p, Offset o) noexcept
 {
     p.x += o.x;
     p.y += o.y;
@@ -151,7 +155,7 @@ struct OffsetF : public VectorF
     OffsetF(VectorF vector) : VectorF(vector) {}
     constexpr OffsetF(float sx, float sy) : VectorF(sx, sy) {}
     explicit OffsetF(Offset int_offset) : VectorF(float(int_offset.x), float(int_offset.y)) {}
-    explicit operator Offset() const { return Offset{int(this->x), int(this->y) }; }
+    explicit operator Offset() const { return Offset{int(this->x), int(this->y)}; }
 };
 /* TODO: we need actually just radians. But so often will we use the components it won't hurt to store them instead */
 struct DirectionF : VectorF
@@ -171,38 +175,43 @@ struct DirectionF : VectorF
     [[nodiscard]] Speed ToSpeed() const { return Speed{int(x), int(y)}; }
 };
 
-inline VectorF operator+(VectorF v, VectorF o) noexcept { return {v.x + o.x, v.y + o.y}; }
-inline VectorF operator-(VectorF v, VectorF o) noexcept { return {v.x - o.x, v.y - o.y}; }
-inline OffsetF operator*(SpeedF s, float t) noexcept { return {s.x * t, s.y * t}; }
-inline OffsetF operator*(float t, SpeedF s) noexcept { return {s.x * t, s.y * t}; }
-inline OffsetF operator*(OffsetF o, float m) noexcept { return {o.x * m, o.y * m}; }
-inline OffsetF operator*(float m, OffsetF o) noexcept { return {o.x * m, o.y * m}; }
-inline OffsetF operator/(OffsetF o, float d) noexcept { return {o.x / d, o.y / d}; }
-inline OffsetF operator-(PositionF p, PositionF o) noexcept { return {p.x - o.x, p.y - o.y}; }
-inline bool operator==(OffsetF l, OffsetF r) { return l.x == r.x && l.y == r.y; }
-inline bool operator!=(OffsetF l, OffsetF r) { return l.x != r.x || l.y != r.y; }
-inline PositionF operator+(PositionF v, OffsetF o) noexcept { return {v.x + o.x, v.y + o.y}; }
-inline PositionF & operator+=(PositionF v, OffsetF o) noexcept { v.x += o.x; v.y += o.y; return v; }
-inline bool operator==(PositionF l, PositionF r) { return l.x == r.x && l.y == r.y; }
-inline bool operator!=(PositionF l, PositionF r) { return l.x != r.x || l.y != r.y; }
-inline OffsetF operator*(DirectionF d, float m) noexcept { return {d.x * m, d.y * m}; }
-inline OffsetF operator*(float m, DirectionF d) noexcept { return {m * d.x, m * d.y}; }
+constexpr VectorF operator+(VectorF v, VectorF o) noexcept { return {v.x + o.x, v.y + o.y}; }
+constexpr VectorF operator-(VectorF v, VectorF o) noexcept { return {v.x - o.x, v.y - o.y}; }
+constexpr OffsetF operator*(SpeedF s, float t) noexcept { return {s.x * t, s.y * t}; }
+constexpr OffsetF operator*(float t, SpeedF s) noexcept { return {s.x * t, s.y * t}; }
+constexpr OffsetF operator*(OffsetF o, float m) noexcept { return {o.x * m, o.y * m}; }
+constexpr OffsetF operator*(float m, OffsetF o) noexcept { return {o.x * m, o.y * m}; }
+constexpr OffsetF operator/(OffsetF o, float d) noexcept { return {o.x / d, o.y / d}; }
+constexpr OffsetF operator-(PositionF p, PositionF o) noexcept { return {p.x - o.x, p.y - o.y}; }
+constexpr bool operator==(OffsetF l, OffsetF r) { return l.x == r.x && l.y == r.y; }
+constexpr bool operator!=(OffsetF l, OffsetF r) { return l.x != r.x || l.y != r.y; }
+constexpr PositionF operator+(PositionF v, OffsetF o) noexcept { return {v.x + o.x, v.y + o.y}; }
+constexpr PositionF & operator+=(PositionF v, OffsetF o) noexcept
+{
+    v.x += o.x;
+    v.y += o.y;
+    return v;
+}
+constexpr bool operator==(PositionF l, PositionF r) { return l.x == r.x && l.y == r.y; }
+constexpr bool operator!=(PositionF l, PositionF r) { return l.x != r.x || l.y != r.y; }
+constexpr OffsetF operator*(DirectionF d, float m) noexcept { return {d.x * m, d.y * m}; }
+constexpr OffsetF operator*(float m, DirectionF d) noexcept { return {m * d.x, m * d.y}; }
 
 /* Rectangle inside game world */
 struct Rect
 {
     Position pos;
     Size size;
-    Rect() = default;
-    Rect(Position pos, Size size) : pos(pos), size(size) {}
+    constexpr Rect() = default;
+    constexpr Rect(Position pos, Size size) : pos(pos), size(size) {}
     //Rect(ScreenPosition pos, Size size) : pos(pos), size(size) { }
-    Rect(int pos_x, int pos_y, int size_x, int size_y) : pos{pos_x, pos_y}, size{size_x, size_y} {}
+    constexpr Rect(int pos_x, int pos_y, int size_x, int size_y) : pos{pos_x, pos_y}, size{size_x, size_y} {}
 
-    int Left() const { return pos.x; }
-    int Top() const { return pos.y; }
-    int Right() const { return pos.x + size.x; }
-    int Bottom() const { return pos.y + size.y; }
-    bool IsInside(Vector vec) const
+    constexpr int Left() const { return pos.x; }
+    constexpr int Top() const { return pos.y; }
+    constexpr int Right() const { return pos.x + size.x; }
+    constexpr int Bottom() const { return pos.y + size.y; }
+    constexpr bool IsInside(Vector vec) const
     {
         return vec.x >= this->Left() && vec.x <= this->Right() && vec.y >= this->Top() && vec.y <= this->Bottom();
     }
@@ -210,10 +219,14 @@ struct Rect
     {
         return {std::clamp(vec.x, this->Left(), this->Right()), std::clamp(vec.y, this->Top(), this->Bottom())};
     }
-    [[nodiscard]] Position Center() const
-    {
-        return { pos.x + size.x / 2, pos.y + size.y / 2 };
-    }
+    [[nodiscard]] Position Center() const { return {pos.x + size.x / 2, pos.y + size.y / 2}; }
+};
+
+struct ScreenRect : Rect
+{
+    constexpr ScreenRect() = default;
+    constexpr ScreenRect(ScreenPosition pos, Size size) : Rect{pos.x, pos.y, size.x, size.y} {}
+    constexpr ScreenRect(int pos_x, int pos_y, int size_x, int size_y) : Rect{pos_x, pos_y, size_x, size_y} {}
 };
 
 /* Rectangle in native units of hosting window/surface */

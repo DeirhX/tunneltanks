@@ -26,13 +26,6 @@ namespace tweak {
 	{
 		/* The default size of the window: */
 		constexpr Size size = { 640, 400 };
-		constexpr int max_windows = 4;
-		constexpr int max_status = 4;
-		constexpr int max_bitmaps = 4;
-
-		/* Various attributes of the status bar: */
-		constexpr int status_height = 11;
-		constexpr int status_border = 1;
 	}
 
 
@@ -41,9 +34,7 @@ namespace tweak {
 #define VERSION                        "0.5 alpha"
 
 /* The virtual resolution of the game. (IE: How many blocks tall/wide) */
-#define GAME_WIDTH                     160
-#define GAME_HEIGHT                    100
-constexpr Size GameSize = { GAME_WIDTH, GAME_HEIGHT };
+constexpr Size GameSize = { 160, 100};
 
 
 /* The minimum distance between two tanks in the world. If this is set too high,

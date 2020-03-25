@@ -20,6 +20,7 @@ struct GUIController
     Rect r;
 };
 
+
 class Screen
 {
     bool is_fullscreen;
