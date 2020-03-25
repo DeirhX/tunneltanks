@@ -88,9 +88,9 @@ class Bullet : public MotionBlurProjectile
 class ConcreteSpray : public Projectile
 {
     using Base = Projectile;
+    class Tank * tank;
   public:
-    ConcreteSpray(Position position, SpeedF speed, Level * level)
-        : Base(position, speed, 2, level)
+    ConcreteSpray(Position position, SpeedF speed, Level * level, Tank * tank) : Base(position, speed, 2, level), tank(tank)
     { }
     ProjectileType GetType() override { return ProjectileType::Concrete; }
     void Advance(TankList * tankList) override;

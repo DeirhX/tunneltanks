@@ -176,7 +176,7 @@ void Tank::HandleShoot()
         }
         if (this->is_shooting_secondary)
         {
-            this->projectile_list->Add(ConcreteSpray{this->GetPosition(), this->turret.GetDirection(), this->GetLevel()});
+            this->projectile_list->Add(ConcreteSpray{this->GetPosition(), this->turret.GetDirection(), this->GetLevel(), this});
 
             this->bullet_timer = tweak::tank::BulletDelay;
         }

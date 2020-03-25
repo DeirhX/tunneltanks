@@ -83,7 +83,7 @@ void ConcreteSpray::Advance(TankList * tankList)
 {
     auto IteratePositions = [this, tankList](PositionF tested_pos, PositionF prev_pos) {
         this->pos = tested_pos;
-        Tank * hitTank = tankList->GetTankAtPoint(this->pos.ToIntPosition(), -1);
+        Tank * hitTank = tankList->GetTankAtPoint(this->pos.ToIntPosition(), this->tank->GetColor());
         if (hitTank)
         {
             this->Invalidate();
