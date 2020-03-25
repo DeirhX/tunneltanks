@@ -47,7 +47,8 @@ class TankTurret
 class Tank final
 {
     bool is_valid = false;
-    bool is_shooting = false;
+    bool is_shooting_primary = false;
+    bool is_shooting_secondary = false;
 
     Position pos; /* Current tank position */
     Speed speed;  /* Velocity... ie: is it moving now? */
@@ -71,8 +72,8 @@ class Tank final
 
     Level * level;
     ProjectileList * projectile_list;
-
-  public:
+    
+public:
     void Invalidate() { this->is_valid = false; }
 
     Tank(TankColor color, Level * lvl, ProjectileList * pl, TankBase * tank_base);

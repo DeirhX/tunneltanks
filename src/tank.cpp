@@ -143,7 +143,7 @@ void Tank::HandleMove(TankList * tl)
 
             this->level->DigHole(this->pos + (1 * this->speed));
             /* If so, then we can move: */
-            if (collision != CollisionType::Dirt || this->is_shooting)
+            if (collision != CollisionType::Dirt || this->is_shooting_primary)
             {
                 /* We will only move/rotate if we were able to get here without
 				 * digging, so we can avoid certain bizarre bugs: */
@@ -163,10 +163,8 @@ void Tank::HandleShoot()
     /* Handle all shooting logic: */
     if (this->bullet_timer == 0)
     {
-        if (this->is_shooting && this->bullets_left > 0)
+        if (this->is_shooting_primary && this->bullets_left > 0)
         {
-            /* TODO: Rotate actual turret, this is a lame hax */
-
             this->projectile_list->Add(Bullet{this->GetPosition(), this->turret.GetDirection(),
                                               tweak::tank::BulletSpeed, this->GetLevel(), this});
 
@@ -174,6 +172,12 @@ void Tank::HandleShoot()
             this->AlterEnergy(tweak::tank::ShootCost);
 
             this->bullets_left--;
+            this->bullet_timer = tweak::tank::BulletDelay;
+        }
+        if (this->is_shooting_secondary)
+        {
+            this->projectile_list->Add(ConcreteSpray{this->GetPosition(), this->turret.GetDirection(), this->GetLevel()});
+
             this->bullet_timer = tweak::tank::BulletDelay;
         }
     }
@@ -265,7 +269,6 @@ void Tank::Advance(World * world)
 
 void Tank::AlterEnergy(int diff)
 {
-
     /* You can't alter energy if the tank is dead: */
     if (this->IsDead())
         return;
@@ -284,17 +287,18 @@ void Tank::AlterEnergy(int diff)
 
 void Tank::AlterHealth(int diff)
 {
-
     /* Make sure we don't come back from the dead: */
     if (this->IsDead())
         return;
 
+    /* Die if it's our time (health would be less than 1) */
     if (diff < 0 && -diff >= this->health)
     {
         Die();
         return;
     }
 
+    /* Apply new health */
     this->health = std::min(this->health + diff, tweak::tank::StartingShield);
 }
 
@@ -310,6 +314,7 @@ void Tank::Spawn()
 
 void Tank::Die()
 {
+    /* Begin respawn timer and trigger a nice explosion */
     this->health = 0;
     this->energy = 0;
     this->respawn_timer = tweak::tank::RespawnDelay;
@@ -321,7 +326,8 @@ void Tank::Die()
 void Tank::ApplyControllerOutput(ControllerOutput controls)
 {
     this->speed = controls.speed;
-    this->is_shooting = controls.is_shooting;
+    this->is_shooting_primary = controls.is_shooting_primary;
+    this->is_shooting_secondary = controls.is_shooting_secondary;
     if (this->crosshair)
     {
         if (controls.is_crosshair_absolute)

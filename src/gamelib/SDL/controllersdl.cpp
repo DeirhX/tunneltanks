@@ -25,7 +25,7 @@ ControllerOutput KeyboardController::ApplyControls(PublicTankInfo * tankPublic)
     Uint8 * keys = SDL_GetKeyState(NULL);
 
     return ControllerOutput{.speed{keys[this->right] - keys[this->left], keys[this->down] - keys[this->up]},
-                            .is_shooting = keys[this->shoot] != 0};
+                            .is_shooting_primary = keys[this->shoot] != 0};
 }
 
 ControllerOutput KeyboardWithMouseController::ApplyControls(PublicTankInfo * tankPublic)
@@ -35,7 +35,7 @@ ControllerOutput KeyboardWithMouseController::ApplyControls(PublicTankInfo * tan
     auto buttons = SDL_GetMouseState(&x, &y);
     output.is_crosshair_absolute = true;
     output.crosshair_screen_pos = {x, y};
-    output.is_shooting = buttons & SDL_BUTTON(1);
+    output.is_shooting_primary = buttons & SDL_BUTTON(1);
     return output;
 }
 
@@ -137,8 +137,8 @@ ControllerOutput GamePadController::ApplyControls(PublicTankInfo * tankPublic)
     output.is_crosshair_absolute = false;
 
     /* Can't use lower buttons in SDL1. FU. */
-    output.is_shooting = SDL_JoystickGetButton(this->joystick, this->mapping.ShootPrimary) ||
-                         SDL_JoystickGetButton(this->joystick, this->mapping.ShootSecondary);
+    output.is_shooting_primary = SDL_JoystickGetButton(this->joystick, this->mapping.ShootPrimary);
+    output.is_shooting_secondary= SDL_JoystickGetButton(this->joystick, this->mapping.ShootSecondary);
   
     return output;
 }

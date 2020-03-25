@@ -10,6 +10,7 @@ enum class ProjectileType
     Bullet,
     Explosion,
     Shrapnel,
+    Concrete,
 };
 
 /* Projectile base class */
@@ -24,8 +25,10 @@ struct Projectile
   private:
     Projectile() = default; // Never use manually. Will be used inside intrusive containers
   protected:
-    Projectile(Position position, SpeedF speed, int life, Level * level)
-        : pos(position), speed(speed.x, speed.y), simulation_steps(life), is_alive(true), level(level) {  }
+    Projectile(Position position, SpeedF speed, int simulation_steps, Level * level)
+        : pos(position), speed(speed.x, speed.y), simulation_steps(simulation_steps), is_alive(true), level(level)
+    {
+    }
 
   public:
     virtual ~Projectile() = default;
@@ -38,6 +41,21 @@ struct Projectile
     bool IsValid() const { return is_alive; }
     void Invalidate() { is_alive = false; }
 };
+
+/* Non-damaging, non-collidable projectile spawned by the environment */
+class Shrapnel : public Projectile
+{
+  public:
+    //Shrapnel() = default;
+    Shrapnel(Position position, SpeedF speed, int life, Level * level) : Projectile(position, speed, life, level) {}
+    ProjectileType GetType() override { return ProjectileType::Shrapnel; }
+
+    void Advance(class TankList * tankList) override;
+    void Draw(class LevelDrawBuffer * drawBuffer) override;
+    void Erase(LevelDrawBuffer * drawBuffer, Level * level) override;
+};
+
+
 
 /* Projectile that leaves a trail */
 class MotionBlurProjectile : public Projectile
@@ -58,7 +76,6 @@ class Bullet : public MotionBlurProjectile
     class Tank * tank;
 
   public:
-    //Bullet() = default;
     Bullet(Position position, SpeedF speed, int life, Level * level, Tank * tank)
         : Base(position, speed, life, level), tank(tank) { }
     ProjectileType GetType() override { return ProjectileType::Bullet; }
@@ -68,16 +85,16 @@ class Bullet : public MotionBlurProjectile
     void Erase(LevelDrawBuffer * drawBuffer, Level * level) override;
 };
 
-/* Non-damaging, non-collidable projectile spawned by the environment */
-class Shrapnel : public Projectile
+class ConcreteSpray : public Projectile
 {
+    using Base = Projectile;
   public:
-    //Shrapnel() = default;
-    Shrapnel(Position position, SpeedF speed, int life, Level * level) : Projectile(position, speed, life, level) {}
-    ProjectileType GetType() override { return ProjectileType::Shrapnel; }
-
-    void Advance(class TankList * tankList) override;
-    void Draw(class LevelDrawBuffer * drawBuffer) override;
+    ConcreteSpray(Position position, SpeedF speed, Level * level)
+        : Base(position, speed, 2, level)
+    { }
+    ProjectileType GetType() override { return ProjectileType::Concrete; }
+    void Advance(TankList * tankList) override;
+    void Draw(LevelDrawBuffer * drawBuffer) override;
     void Erase(LevelDrawBuffer * drawBuffer, Level * level) override;
 };
 

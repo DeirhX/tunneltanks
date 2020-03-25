@@ -21,6 +21,7 @@ enum class Colors
     DecalHigh,
     DecalLow,
     TankTurret,
+    ConcreteShot,
     Size,
 };
 

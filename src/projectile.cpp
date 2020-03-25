@@ -76,6 +76,48 @@ void Bullet::Erase(LevelDrawBuffer * drawBuffer, Level *)
     level->CommitPixel(this->pos_blur_from.ToIntPosition());
 }
 
+
+/* Le Spray de la Concrete */
+
+void ConcreteSpray::Advance(TankList * tankList)
+{
+    auto IteratePositions = [this, tankList](PositionF tested_pos, PositionF prev_pos) {
+        this->pos = tested_pos;
+        Tank * hitTank = tankList->GetTankAtPoint(this->pos.ToIntPosition(), -1);
+        if (hitTank)
+        {
+            this->Invalidate();
+            return false;
+        }
+        LevelVoxel c = level->GetVoxel(this->pos.ToIntPosition());
+        if (Voxels::IsAnyCollision(c))
+        {
+            for (Shrapnel & shrapnel :
+                 Explosion::Explode(this->pos.ToIntPosition(), level, tweak::explosion::dirt::ShrapnelCount,
+                                    tweak::explosion::dirt::Speed, tweak::explosion::dirt::Frames))
+            {
+                tankList->projectile_list->Add(shrapnel);
+            }
+            this->Invalidate();
+            return false;
+        }
+        return true;
+    };
+    Raycaster::Cast(this->pos, this->pos + (this->speed * float(this->simulation_steps)), IteratePositions);
+}
+
+void ConcreteSpray::Draw(LevelDrawBuffer * drawBuffer)
+{
+    drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::ConcreteShot));
+}
+
+void ConcreteSpray::Erase(LevelDrawBuffer * drawBuffer, Level * )
+{
+    level->CommitPixel(this->pos.ToIntPosition());
+}
+
+/* Le Shrapnel */
+
 void Shrapnel::Advance(TankList * tankList)
 {
     /* Did this expire? */
@@ -87,8 +129,7 @@ void Shrapnel::Advance(TankList * tankList)
 
     /* Move the effect: */
     this->simulation_steps--;
-    this->pos.x += this->speed.x;
-    this->pos.y += this->speed.y;
+    this->pos += this->speed;
 
     /* Make sure we didn't hit a level detail: */
     LevelVoxel c = level->GetVoxel(this->pos.ToIntPosition());
