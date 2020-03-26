@@ -159,27 +159,27 @@ void maze_generator(Level *lvl) {
 			if(c.up)
 				draw_line(lvl,
 					Vector(x*CELL_SIZE,     y*CELL_SIZE), 
-					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), LevelVoxel::LevelGenDirt, 1);
+					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), LevelPixel::LevelGenDirt, 1);
 			
 			if(c.right)
 				draw_line(lvl,
 					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), 
-					Vector((x+1)*CELL_SIZE, (y+1)*CELL_SIZE), LevelVoxel::LevelGenDirt, 1);
+					Vector((x+1)*CELL_SIZE, (y+1)*CELL_SIZE), LevelPixel::LevelGenDirt, 1);
 		}
 	}
 	
 	/* Draw a line up the left, so you can see the texture there too: */
-	draw_line(lvl, Vector(0,0), Vector(0,m->h*CELL_SIZE), LevelVoxel::LevelGenDirt, 1);
+	draw_line(lvl, Vector(0,0), Vector(0,m->h*CELL_SIZE), LevelPixel::LevelGenDirt, 1);
 	
 	/* Fill in the unused space left behind on the right/bottom: */
 	/* TODO: Have a fill_box() in levelgenutil.c? */
 	for(y=0; y<lvl->GetSize().y; y++)
 		for(x=m->w*CELL_SIZE; x<lvl->GetSize().x; x++)
-			lvl->SetVoxel({ x, y }, LevelVoxel::LevelGenDirt);
+			lvl->SetVoxel({ x, y }, LevelPixel::LevelGenDirt);
 	
 	for(y=m->h*CELL_SIZE; y<lvl->GetSize().y; y++)
 		for(x=0; x<m->w*CELL_SIZE; x++)
-			lvl->SetVoxel({ x, y }, LevelVoxel::LevelGenDirt);
+			lvl->SetVoxel({ x, y }, LevelPixel::LevelGenDirt);
 	
 	/* Rough it up a little, and invert: */
 	rough_up(lvl);

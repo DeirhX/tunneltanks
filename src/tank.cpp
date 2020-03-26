@@ -96,12 +96,12 @@ CollisionType Tank::GetCollision(int dir, Position position, TankList * tl)
             if (!c)
                 continue;
 
-            LevelVoxel v = this->level->GetVoxel(position + off);
+            LevelPixel v = this->level->GetVoxel(position + off);
 
-            if (Voxels::IsDirt(v))
+            if (Pixel::IsDirt(v))
                 out = CollisionType::Dirt;
 
-            if (Voxels::IsBlockingCollision(v))
+            if (Pixel::IsBlockingCollision(v))
                 return CollisionType::Blocked;
         }
 

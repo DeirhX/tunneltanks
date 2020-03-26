@@ -103,7 +103,8 @@ class ConcreteSpray : public Projectile
 class Explosion : public Projectile
 {
   public:
-    static std::vector<Shrapnel> Explode(Position pos, Level * level, int count, int radius, int ttl);
+    static std::vector<Shrapnel> Explode(Position pos, Level * level, int count, int speed, int ttl);
+    static std::vector<Shrapnel> FanOut(Position pos, DirectionF direction, Level * level, int count, int speed, int ttl);
 };
 
 class VoxelRaycast

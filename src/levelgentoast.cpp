@@ -111,7 +111,7 @@ static void generate_tree(Level *lvl) {
 		for(k=0; k< ToastParams::TreeSize; k++)
 			if(dsets[k] == bset) 
 				dsets[k] = aset;
-		draw_line(lvl, points[pairs[i].a], points[pairs[i].b], LevelVoxel::LevelGenDirt, 0);
+		draw_line(lvl, points[pairs[i].a], points[pairs[i].b], LevelPixel::LevelGenDirt, 0);
 	}
 	
 	/* We don't need this data anymore: */
@@ -141,19 +141,19 @@ static void generate_tree(Level *lvl) {
 //
 // Much less instructions. Optimizer cannot see it through and fold it :(
 static int has_neighbor(Level* lvl, int x, int y) {
-	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y - 1) }) == LevelVoxel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x     + lvl->GetSize().x * (y - 1) }) == LevelVoxel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y - 1) }) == LevelVoxel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y    ) }) == LevelVoxel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y    ) }) == LevelVoxel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y + 1) }) == LevelVoxel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x     + lvl->GetSize().x * (y + 1) }) == LevelVoxel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y + 1) }) == LevelVoxel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y - 1) }) == LevelPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x     + lvl->GetSize().x * (y - 1) }) == LevelPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y - 1) }) == LevelPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y    ) }) == LevelPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y    ) }) == LevelPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y + 1) }) == LevelPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x     + lvl->GetSize().x * (y + 1) }) == LevelPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y + 1) }) == LevelPixel::LevelGenDirt) return 1;
 	return 0;
 }
 
 
-static void set_outside(Level *lvl, LevelVoxel val) {
+static void set_outside(Level *lvl, LevelPixel val) {
 	int i;
 	Size size = lvl->GetSize();
 	
@@ -168,8 +168,8 @@ static void expand_init(Level *lvl, PositionQueue& q) {
 	for(int y = 1; y<lvl->GetSize().y-1; y++)
 		for (int x = 1; x < lvl->GetSize().x - 1; x++) {
 			int offset = x + y * lvl->GetSize().x;
-			if (lvl->GetVoxelRaw(offset) != LevelVoxel::LevelGenDirt  && has_neighbor(lvl, x, y)) {
-				lvl->SetVoxelRaw(offset, LevelVoxel::LevelGenMark);
+			if (lvl->GetVoxelRaw(offset) != LevelPixel::LevelGenDirt  && has_neighbor(lvl, x, y)) {
+				lvl->SetVoxelRaw(offset, LevelPixel::LevelGenMark);
 				q.push({ x, y });
 			}
 		}
@@ -204,7 +204,7 @@ ExpandResult expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, Rando
 		odds  = std::min(std::min(xodds, yodds), ToastParams::MaxDirtSpawnOdds);
 		
 		if(random.Bool(odds)) {
-			lvl->SetVoxelRaw(temp, LevelVoxel::LevelGenDirt);
+			lvl->SetVoxelRaw(temp, LevelPixel::LevelGenDirt);
 			++result.dirt_generated;
 			
 			/* Now, queue up any neighbors that qualify: */
@@ -213,9 +213,9 @@ ExpandResult expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, Rando
 				
 				int tx = temp.x + (j % 3) - 1;
 				int ty = temp.y + (j / 3) - 1;
-				LevelVoxel* v = &lvl->VoxelRaw({ tx, ty });
-				if(*v == LevelVoxel::LevelGenRock) {
-				   *v  = LevelVoxel::LevelGenMark;
+				LevelPixel* v = &lvl->VoxelRaw({ tx, ty });
+				if(*v == LevelPixel::LevelGenRock) {
+				   *v  = LevelPixel::LevelGenMark;
 				   ++result.rocks_marked;
 					q.push({ tx, ty });
 				}
@@ -432,11 +432,11 @@ static int smooth_once(Level *lvl) {
 		for (int y = from_y; y <= until_y; y++)
 			for (int x = 1; x < size.x - 1; x++) {
 				int n;
-				LevelVoxel oldbit = lvl->GetVoxelRaw({ x, y });
+				LevelPixel oldbit = lvl->GetVoxelRaw({ x, y });
 
 				n = count_neighbors(lvl, x, y);
-				bool paintRock = (oldbit != LevelVoxel::LevelGenDirt) ? (n >= 3) : (n > 4);
-				lvl->SetVoxelRaw({ x, y }, paintRock ? LevelVoxel::LevelGenRock : LevelVoxel::LevelGenDirt);
+				bool paintRock = (oldbit != LevelPixel::LevelGenDirt) ? (n >= 3) : (n > 4);
+				lvl->SetVoxelRaw({ x, y }, paintRock ? LevelPixel::LevelGenRock : LevelPixel::LevelGenDirt);
 
 				count += lvl->GetVoxelRaw({ x, y }) != oldbit;
 			}
@@ -460,10 +460,10 @@ static int smooth_once(Level *lvl) {
 static void smooth_cavern(Level *lvl) {
 	auto perf = MeasureFunction<2>{ __FUNCTION__ };
 
-	set_outside(lvl, LevelVoxel::LevelGenDirt);
+	set_outside(lvl, LevelPixel::LevelGenDirt);
 	auto steps_remain = ToastParams::SmoothingSteps;
 	while(smooth_once(lvl) && --steps_remain != 0);
-	set_outside(lvl, LevelVoxel::LevelGenRock);
+	set_outside(lvl, LevelPixel::LevelGenRock);
 }
 
 

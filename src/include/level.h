@@ -17,7 +17,11 @@ enum class BaseCollision
 	Enemy,
 };
 
-enum class LevelVoxel : char
+/*
+ * LevelPixel
+ * Core pixel state of the level. Terrain, bases, rock and every other pixel kind there is.
+ */
+enum class LevelPixel : char
 {
 	Blank = ' ',
 	DirtHigh = 'D',
@@ -33,18 +37,24 @@ enum class LevelVoxel : char
 	LevelGenRock = 1,
 	LevelGenMark = 2,
 };
-class Voxels
+/*
+ * Queries that can be made against the pixel to classify it into various groups 
+ */
+class Pixel
 {
 public:
-	static bool IsDirt(LevelVoxel voxel) { return voxel == LevelVoxel::DirtHigh || voxel == LevelVoxel::DirtLow; }
-	static bool IsDiggable(LevelVoxel voxel) { return voxel == LevelVoxel::DirtHigh || voxel == LevelVoxel::DirtLow || voxel == LevelVoxel::DirtGrow; }
-	static bool IsSoftCollision(LevelVoxel voxel) { return IsDirt(voxel); }
-	static bool IsBlockingCollision(LevelVoxel voxel) { return voxel == LevelVoxel::Rock || (voxel >= LevelVoxel::BaseMin && voxel <= LevelVoxel::BaseMax); }
-	static bool IsAnyCollision(LevelVoxel voxel) { return IsSoftCollision(voxel) || IsBlockingCollision(voxel); }
-	static bool IsBase(LevelVoxel voxel) { return (voxel >= LevelVoxel::BaseMin && voxel <= LevelVoxel::BaseMax); }
-	static bool IsScorched(LevelVoxel voxel) { return voxel == LevelVoxel::DecalHigh || voxel == LevelVoxel::DecalLow; }
+	static bool IsDirt(LevelPixel voxel) { return voxel == LevelPixel::DirtHigh || voxel == LevelPixel::DirtLow; }
+	static bool IsDiggable(LevelPixel voxel) { return voxel == LevelPixel::DirtHigh || voxel == LevelPixel::DirtLow || voxel == LevelPixel::DirtGrow; }
+	static bool IsSoftCollision(LevelPixel voxel) { return IsDirt(voxel); }
+	static bool IsBlockingCollision(LevelPixel voxel) { return voxel == LevelPixel::Rock || (voxel >= LevelPixel::BaseMin && voxel <= LevelPixel::BaseMax); }
+	static bool IsAnyCollision(LevelPixel voxel) { return IsSoftCollision(voxel) || IsBlockingCollision(voxel); }
+	static bool IsBase(LevelPixel voxel) { return (voxel >= LevelPixel::BaseMin && voxel <= LevelPixel::BaseMax); }
+	static bool IsScorched(LevelPixel voxel) { return voxel == LevelPixel::DecalHigh || voxel == LevelPixel::DecalLow; }
 };
 
+/*
+ * Tank Base, part of the level
+ */
 class TankBase
 {
 	Position position;
@@ -55,16 +65,19 @@ public:
 
 
 
+/*
+ * Container for raw level data
+ */
 class LevelData
 {
-	using Container = ValueArray<LevelVoxel>;
+	using Container = ValueArray<LevelPixel>;
 public:
 	Container array;
 
 	LevelData(Size size);
 	
-	LevelVoxel& operator[](int i) { return array[i]; }
-	const LevelVoxel& operator[](int i) const { return array[i]; }
+	LevelPixel& operator[](int i) { return array[i]; }
+	const LevelPixel& operator[](int i) const { return array[i]; }
 
 	Container::iterator begin() { return array.begin(); }
 	Container::iterator end() { return array.end(); }
@@ -74,8 +87,6 @@ public:
 
 class Level
 {
-public:
-	
 private:
 	LevelData data;
 	Size size;
@@ -88,15 +99,15 @@ public:
 	Size GetSize() const { return size; };
 
 	/* Voxel get-set-reference operations */
-	void SetVoxel(Position pos, LevelVoxel voxel);
-	LevelVoxel GetVoxel(Position pos) const;
-	LevelVoxel& Voxel(Position pos);
+	void SetVoxel(Position pos, LevelPixel voxel);
+	LevelPixel GetVoxel(Position pos) const;
+	LevelPixel& Voxel(Position pos);
 
-	void SetVoxelRaw(Position pos, LevelVoxel voxel);
-	void SetVoxelRaw(int offset, LevelVoxel voxel);
-	LevelVoxel GetVoxelRaw(Position pos) const;
-	LevelVoxel GetVoxelRaw(int offset) const;
-	LevelVoxel& VoxelRaw(Position pos);
+	void SetVoxelRaw(Position pos, LevelPixel voxel);
+	void SetVoxelRaw(int offset, LevelPixel voxel);
+	LevelPixel GetVoxelRaw(Position pos) const;
+	LevelPixel GetVoxelRaw(int offset) const;
+	LevelPixel& VoxelRaw(Position pos);
 
 	/* Draw buffer interaction */
 	void CommitPixel(Position pos) const;
@@ -104,11 +115,11 @@ public:
 	void DumpBitmap(const char* filename) const;
 
 	/* Color lookup. Can be somewhere else. */
-	static Color32 GetVoxelColor(LevelVoxel voxel);
+	static Color32 GetVoxelColor(LevelPixel voxel);
 	
 	/* Count neighbors is used when level building and for ad-hoc queries (e.g. dirt regeneration) */
 	int CountNeighborValues(Position pos);
-	int CountNeighbors(Position pos, LevelVoxel neighbor_value);
+	int CountNeighbors(Position pos, LevelPixel neighbor_value);
      template <typename CountFunc>
 	int CountNeighbors(Position pos, CountFunc count_func);
 

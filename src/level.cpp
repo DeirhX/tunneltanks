@@ -24,10 +24,10 @@ LevelData::LevelData(Size size) : array(size)
 Level::Level(Size size, LevelDrawBuffer* draw_buffer)
 	: size(size), drawBuffer (draw_buffer), data(size)
 {
-	std::fill(this->data.array.begin(), this->data.array.end(), LevelVoxel::LevelGenRock);
+	std::fill(this->data.array.begin(), this->data.array.end(), LevelPixel::LevelGenRock);
 }
 
-void Level::SetVoxel(Position pos, LevelVoxel voxel)
+void Level::SetVoxel(Position pos, LevelPixel voxel)
 {
 	if (!IsInBounds(pos))
 		throw GameException("Invalid position");
@@ -36,24 +36,24 @@ void Level::SetVoxel(Position pos, LevelVoxel voxel)
 	CommitPixel(pos);
 }
 
-void Level::SetVoxelRaw(Position pos, LevelVoxel voxel)
+void Level::SetVoxelRaw(Position pos, LevelPixel voxel)
 {
 	this->data[pos.y * this->size.x + pos.x] = voxel;
 }
 
-void Level::SetVoxelRaw(int offset, LevelVoxel voxel)
+void Level::SetVoxelRaw(int offset, LevelPixel voxel)
 {
 	this->data[offset] = voxel;
 }
 
-LevelVoxel& Level::Voxel(Position pos)
+LevelPixel& Level::Voxel(Position pos)
 {
 	if (!IsInBounds(pos))
 		throw GameException("Invalid position");
 	return this->data[pos.y * this->size.x + pos.x];
 }
 
-LevelVoxel& Level::VoxelRaw(Position pos)
+LevelPixel& Level::VoxelRaw(Position pos)
 {
 	return this->data[pos.y * this->size.x + pos.x];
 }
@@ -70,7 +70,7 @@ int Level::CountNeighborValues(Position pos)
 		   (char)GetVoxelRaw({ pos.x + 1 + GetSize().x * (pos.y + 1) });
 }
 
-int Level::CountNeighbors(Position pos, LevelVoxel value)
+int Level::CountNeighbors(Position pos, LevelPixel value)
 {
 	return !!(value == GetVoxelRaw({ pos.x - 1 + GetSize().x * (pos.y - 1) })) +
 		   !!(value == GetVoxelRaw({ pos.x + GetSize().x * (pos.y - 1) })) +
@@ -84,19 +84,19 @@ int Level::CountNeighbors(Position pos, LevelVoxel value)
 
 
 
-LevelVoxel Level::GetVoxel(Position pos) const
+LevelPixel Level::GetVoxel(Position pos) const
 {
 	if (!IsInBounds(pos))
-		return LevelVoxel::Rock;
+		return LevelPixel::Rock;
 	return this->data[ pos.y * this->size.x + pos.x ];
 }
 
-LevelVoxel Level::GetVoxelRaw(Position pos) const
+LevelPixel Level::GetVoxelRaw(Position pos) const
 {
 	return this->data[pos.y * this->size.x + pos.x];
 }
 
-LevelVoxel Level::GetVoxelRaw(int address) const
+LevelPixel Level::GetVoxelRaw(int address) const
 {
 	return this->data[address];
 }
@@ -106,10 +106,10 @@ void Level::GenerateDirtAndRocks()
 	for(int y = 0; y<this->size.y; y++)
 		for(int x = 0; x<this->size.x; x++) {
 			auto& spot = this->Voxel({ x, y });
-			if(spot != LevelVoxel::LevelGenDirt)
-				spot = LevelVoxel::Rock;
+			if(spot != LevelPixel::LevelGenDirt)
+				spot = LevelPixel::Rock;
 			else      
-				spot = Random.Bool(500) ? LevelVoxel::DirtLow : LevelVoxel::DirtHigh;
+				spot = Random.Bool(500) ? LevelPixel::DirtLow : LevelPixel::DirtHigh;
 		}
 }
 
@@ -127,10 +127,10 @@ void Level::CreateBase(Position pos, TankColor color)
 				if(x >= -BASE_DOOR_SIZE/2 && x <= BASE_DOOR_SIZE/2) 
 					continue;
 
-				SetVoxel(pix, static_cast<LevelVoxel>(static_cast<char>(LevelVoxel::BaseMin) + color));
+				SetVoxel(pix, static_cast<LevelPixel>(static_cast<char>(LevelPixel::BaseMin) + color));
 			}
 			else
-				SetVoxel(pix, LevelVoxel::Blank);
+				SetVoxel(pix, LevelPixel::Blank);
 		}
 	}
 }
@@ -170,14 +170,14 @@ bool Level::DigHole(Position pos)
 	for(int ty = pos.y - 3; ty<= pos.y+3; ty++)
 		for(int tx = pos.x - 3; tx<= pos.x+3; tx++) {
 			/* Don't go out-of-bounds: */
-			if (!Voxels::IsDiggable(GetVoxel({ tx, ty })))
+			if (!Pixel::IsDiggable(GetVoxel({ tx, ty })))
 				continue;
 			
 			/* Don't take out the corners: */
 			if((tx==pos.x-3 || tx== pos.x+3) && (ty== pos.y-3 || ty== pos.y+3)) 
 				continue;
 			
-			SetVoxel({ tx, ty }, LevelVoxel::Blank);
+			SetVoxel({ tx, ty }, LevelPixel::Blank);
 			digged = true;
 		}
 	
@@ -221,17 +221,17 @@ BaseCollision Level::CheckBaseCollision(Position pos, TankColor color)
 	return BaseCollision::None;
 }
 
-Color32 Level::GetVoxelColor(LevelVoxel voxel)
+Color32 Level::GetVoxelColor(LevelPixel voxel)
 {
-	if (voxel == LevelVoxel::DirtHigh)	     return Palette.Get(Colors::DirtHigh);
-	else if (voxel == LevelVoxel::DirtLow)   return Palette.Get(Colors::DirtLow);
-	else if (voxel == LevelVoxel::DirtGrow)  return Palette.Get(Colors::DirtGrow);
-	else if (voxel == LevelVoxel::Rock)      return Palette.Get(Colors::Rock);
-	else if (voxel == LevelVoxel::DecalLow)  return Palette.Get(Colors::DecalLow);
-	else if (voxel == LevelVoxel::DecalHigh) return Palette.Get(Colors::DecalHigh);
-	else if (voxel == LevelVoxel::Blank)     return Palette.Get(Colors::Blank);
-	else if (Voxels::IsBase(voxel))
-		return Palette.GetTank(static_cast<char>(voxel) - static_cast<char>(LevelVoxel::BaseMin))[0];
+	if (voxel == LevelPixel::DirtHigh)	     return Palette.Get(Colors::DirtHigh);
+	else if (voxel == LevelPixel::DirtLow)   return Palette.Get(Colors::DirtLow);
+	else if (voxel == LevelPixel::DirtGrow)  return Palette.Get(Colors::DirtGrow);
+	else if (voxel == LevelPixel::Rock)      return Palette.Get(Colors::Rock);
+	else if (voxel == LevelPixel::DecalLow)  return Palette.Get(Colors::DecalLow);
+	else if (voxel == LevelPixel::DecalHigh) return Palette.Get(Colors::DecalHigh);
+	else if (voxel == LevelPixel::Blank)     return Palette.Get(Colors::Blank);
+	else if (Pixel::IsBase(voxel))
+		return Palette.GetTank(static_cast<char>(voxel) - static_cast<char>(LevelPixel::BaseMin))[0];
 	else {
 		assert(!"Unknown voxel.");
 		return {};

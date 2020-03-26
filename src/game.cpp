@@ -112,7 +112,7 @@ Game::Game(GameConfig config)
     this->draw_buffer = std::make_unique<LevelDrawBuffer>(this->config.size);
 
     /* Generate our random level: */
-    int TestIterations = 10;
+    int TestIterations = 20;
 #ifdef _DEBUG
     TestIterations = 1;
 #endif

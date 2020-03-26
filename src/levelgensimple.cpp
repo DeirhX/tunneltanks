@@ -91,9 +91,9 @@ static void add_rock_lines(Level *lvl, Side s)
 
         /* Draw this in whatever way is needed: */
         if (needs_flip)
-            draw_line(lvl, Vector(cur.y, cur.x), Vector(prev.y, prev.x), static_cast<LevelVoxel>(s), 0);
+            draw_line(lvl, Vector(cur.y, cur.x), Vector(prev.y, prev.x), static_cast<LevelPixel>(s), 0);
         else
-            draw_line(lvl, cur, prev, static_cast<LevelVoxel>(s), 0);
+            draw_line(lvl, cur, prev, static_cast<LevelPixel>(s), 0);
 
         prev = cur;
 
@@ -103,23 +103,23 @@ static void add_rock_lines(Level *lvl, Side s)
 
     if (s == SIDE_TOP)
         for (x = 0; x < lvl->GetSize().x; x++)
-            for (y = 0; lvl->Voxel({x, y}) != static_cast<LevelVoxel>(s); y++)
-                lvl->Voxel({x, y}) = LevelVoxel::LevelGenRock;
+            for (y = 0; lvl->Voxel({x, y}) != static_cast<LevelPixel>(s); y++)
+                lvl->Voxel({x, y}) = LevelPixel::LevelGenRock;
 
     else if (s == SIDE_RIGHT)
         for (y = 0; y < lvl->GetSize().y; y++)
-            for (x = lvl->GetSize().x - 1; lvl->Voxel({x, y}) != static_cast<LevelVoxel>(s); x--)
-                lvl->Voxel({x, y}) = LevelVoxel::LevelGenRock;
+            for (x = lvl->GetSize().x - 1; lvl->Voxel({x, y}) != static_cast<LevelPixel>(s); x--)
+                lvl->Voxel({x, y}) = LevelPixel::LevelGenRock;
 
     else if (s == SIDE_BOTTOM)
         for (x = 0; x < lvl->GetSize().x; x++)
-            for (y = lvl->GetSize().y - 1; lvl->Voxel({x, y}) != static_cast<LevelVoxel>(s); y--)
-                lvl->Voxel({x, y}) = LevelVoxel::LevelGenRock;
+            for (y = lvl->GetSize().y - 1; lvl->Voxel({x, y}) != static_cast<LevelPixel>(s); y--)
+                lvl->Voxel({x, y}) = LevelPixel::LevelGenRock;
 
     else if (s == SIDE_LEFT)
         for (y = 0; y < lvl->GetSize().y; y++)
-            for (x = 0; lvl->Voxel({x, y}) != static_cast<LevelVoxel>(s); x++)
-                lvl->Voxel({x, y}) = LevelVoxel::LevelGenRock;
+            for (x = 0; lvl->Voxel({x, y}) != static_cast<LevelPixel>(s); x++)
+                lvl->Voxel({x, y}) = LevelPixel::LevelGenRock;
 }
 
 static void add_spawns(Level *lvl)
@@ -153,7 +153,7 @@ static void add_spawns(Level *lvl)
 void simple_generator(Level *lvl)
 {
     /* Levels default to all rock. Set this to all dirt: */
-    fill_all(lvl, LevelVoxel::LevelGenDirt);
+    fill_all(lvl, LevelPixel::LevelGenDirt);
 
     /* Add rock walls on all sides: */
     add_rock_lines(lvl, SIDE_TOP);
