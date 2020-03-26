@@ -15,12 +15,11 @@ public:
      *                PixelsMustTouchSides  - include more pixels so that visited pixels must always side (exception: direct diagonal direction)
      */
     template <typename TVisit>
-    static void Cast(PositionF from, PositionF to, TVisit visitor, VisitFlags flags = VisitFlags::PixelsMustTouchSides) /* Visitor(PositionF tested_pos, PositionF previous_pos) -> bool should continue? */
+    static bool Cast(PositionF from, PositionF to, TVisit visitor, VisitFlags flags = VisitFlags::PixelsMustTouchSides) /* Visitor(PositionF tested_pos, PositionF previous_pos) -> bool should continue? */
     {
         if (from == to)
         {
-            visitor(to, to);
-            return;
+            return visitor(to, to);
         }
         OffsetF offset = to - from;
         /* Compute lowest simulation step that will advance a maximum of one pixel per step */
@@ -66,12 +65,13 @@ public:
                  * Correct position can be computed via (1-(coord%1.0f)) * (one_step/one_step.coord)
                  */
                 if (!visitor(PositionF{touched_pos}, curr_pos))
-                    break;
+                    return false;
             }
             /* Coords changed, visit this pixel*/
             if (!visitor(new_pos, curr_pos))
-                break;
+                return false;
             curr_pos = new_pos;
         }
+        return true;
     }
 };

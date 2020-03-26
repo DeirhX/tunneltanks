@@ -61,7 +61,7 @@ void Bullet::Advance(TankList * tankList)
 
         return true;
     };
-    Raycaster::Cast(this->pos, this->pos + (this->speed * float(this->simulation_steps)), IteratePositions);
+    Raycaster::Cast(this->pos, this->pos + (this->direction * float(this->simulation_steps)), IteratePositions);
 }
 
 void Bullet::Draw(LevelDrawBuffer * drawBuffer)
@@ -81,29 +81,49 @@ void Bullet::Erase(LevelDrawBuffer * drawBuffer, Level *)
 
 void ConcreteSpray::Advance(TankList * tankList)
 {
-    auto IteratePositions = [this, tankList](PositionF tested_pos, PositionF prev_pos) {
-        this->pos = tested_pos;
-        Tank * hitTank = tankList->GetTankAtPoint(this->pos.ToIntPosition(), this->tank->GetColor());
+    /* Projectile exploding {explode_dist} pixels before contact.
+     *
+     * Maintain cache of [explode_dist] positions before the current one
+     *  We will test always [explode_dist] amount of positions in front of the projectile trajectory.
+     *  If there is a hypothetical collision, we attempt to explode {explode_dist} pixels away.
+     */
+    constexpr int explode_dist = 3;
+    std::array<PositionF, explode_dist> positions = {};
+    int search_step = 0;
+    const int search_step_count = explode_dist + int(flight_speed);
+
+    auto IteratePositions = [this, &search_step, &positions, explode_dist, tankList](PositionF tested_pos, PositionF prev_pos) {
+        if (search_step < explode_dist) {
+            positions[search_step] = tested_pos;
+        }
+        ++search_step;
+        Tank * hitTank = tankList->GetTankAtPoint(tested_pos.ToIntPosition(), this->tank->GetColor());
         if (hitTank)
         {
             this->Invalidate();
             return false;
         }
-        LevelVoxel c = level->GetVoxel(this->pos.ToIntPosition());
+        LevelVoxel c = level->GetVoxel(tested_pos.ToIntPosition());
         if (Voxels::IsAnyCollision(c))
         {
-            for (Shrapnel & shrapnel :
-                 Explosion::Explode(this->pos.ToIntPosition(), level, tweak::explosion::dirt::ShrapnelCount,
-                                    tweak::explosion::dirt::Speed, tweak::explosion::dirt::Frames))
-            {
-                tankList->projectile_list->Add(shrapnel);
-            }
             this->Invalidate();
             return false;
         }
         return true;
     };
-    Raycaster::Cast(this->pos, this->pos + (this->speed * float(this->simulation_steps)), IteratePositions);
+    bool collided = !Raycaster::Cast(this->pos, this->pos + (this->direction * float(search_step_count)), IteratePositions, Raycaster::VisitFlags::PixelsMustTouchCorners);
+
+    /* Now divine a position {explode_dist} steps past in the simulation and explode there if needed */
+    this->pos = positions[std::clamp(search_step - explode_dist, 0, explode_dist)];
+    if (collided)
+    {
+        for (Shrapnel & shrapnel :
+             Explosion::Explode(this->pos.ToIntPosition(), level, tweak::explosion::dirt::ShrapnelCount,
+                                tweak::explosion::dirt::Speed, tweak::explosion::dirt::Frames))
+        {
+            tankList->projectile_list->Add(shrapnel);
+        }
+    }
 }
 
 void ConcreteSpray::Draw(LevelDrawBuffer * drawBuffer)
@@ -121,15 +141,15 @@ void ConcreteSpray::Erase(LevelDrawBuffer * drawBuffer, Level * )
 void Shrapnel::Advance(TankList * tankList)
 {
     /* Did this expire? */
-    if (!this->simulation_steps)
+    if (!this->life)
     {
         this->Invalidate();
         return;
     }
 
     /* Move the effect: */
-    this->simulation_steps--;
-    this->pos += this->speed;
+    this->life--;
+    this->pos += this->direction;
 
     /* Make sure we didn't hit a level detail: */
     LevelVoxel c = level->GetVoxel(this->pos.ToIntPosition());

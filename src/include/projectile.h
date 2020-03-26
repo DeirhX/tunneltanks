@@ -17,16 +17,15 @@ enum class ProjectileType
 struct Projectile
 {
     PositionF pos; 
-    SpeedF speed;
-    int simulation_steps;
+    SpeedF direction;
     bool is_alive = false;
     class Level * level;
 
   private:
     Projectile() = default; // Never use manually. Will be used inside intrusive containers
   protected:
-    Projectile(Position position, SpeedF speed, int simulation_steps, Level * level)
-        : pos(position), speed(speed.x, speed.y), simulation_steps(simulation_steps), is_alive(true), level(level)
+    Projectile(Position position, SpeedF speed, Level * level)
+        : pos(position), direction(speed.x, speed.y), is_alive(true), level(level)
     {
     }
 
@@ -45,9 +44,10 @@ struct Projectile
 /* Non-damaging, non-collidable projectile spawned by the environment */
 class Shrapnel : public Projectile
 {
+    int life = 0;
   public:
     //Shrapnel() = default;
-    Shrapnel(Position position, SpeedF speed, int life, Level * level) : Projectile(position, speed, life, level) {}
+    Shrapnel(Position position, SpeedF speed, int life, Level * level) : Projectile(position, speed, level), life(life) {}
     ProjectileType GetType() override { return ProjectileType::Shrapnel; }
 
     void Advance(class TankList * tankList) override;
@@ -63,21 +63,21 @@ class MotionBlurProjectile : public Projectile
   public:
     PositionF pos_blur_from; /* The x,y of the 'cold' portion. (#ba0000) */
   protected:
-    MotionBlurProjectile(Position position, SpeedF speed, int life, Level * level)
-        : Projectile(position, speed, life, level) { }
+    MotionBlurProjectile(Position position, SpeedF speed, Level * level)
+        : Projectile(position, speed, level) { }
 };
 
 /* Projectile shot by a tank */
 class Bullet : public MotionBlurProjectile
 {
     using Base = MotionBlurProjectile;
-
+    int simulation_steps = 0;
   public:
     class Tank * tank;
 
   public:
-    Bullet(Position position, SpeedF speed, int life, Level * level, Tank * tank)
-        : Base(position, speed, life, level), tank(tank) { }
+    Bullet(Position position, SpeedF speed, int simulation_steps, Level * level, Tank * tank)
+        : Base(position, speed, level), simulation_steps(simulation_steps), tank(tank) { }
     ProjectileType GetType() override { return ProjectileType::Bullet; }
 
     void Advance(class TankList * tankList) override;
@@ -89,8 +89,9 @@ class ConcreteSpray : public Projectile
 {
     using Base = Projectile;
     class Tank * tank;
+    constexpr static float flight_speed = 2.f;
   public:
-    ConcreteSpray(Position position, SpeedF speed, Level * level, Tank * tank) : Base(position, speed, 2, level), tank(tank)
+    ConcreteSpray(Position position, SpeedF speed, Level * level, Tank * tank) : Base(position, speed, level), tank(tank)
     { }
     ProjectileType GetType() override { return ProjectileType::Concrete; }
     void Advance(TankList * tankList) override;
