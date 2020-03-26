@@ -2,11 +2,13 @@
 #include <cstdio>
 #include <boost/circular_buffer.hpp>
 #include <level.h>
-#include <projectile.h>
+#include "projectile.h"
 #include <random.h>
 #include <tank.h>
 #include <tweak.h>
 
+
+#include "mymath.h"
 #include "tanklist.h"
 #include "raycaster.h"
 
@@ -30,9 +32,10 @@ void Bullet::Advance(TankList * tankList)
 
             /* Add all of the effect particles: */
 
-            for (Shrapnel & shrapnel :
-                 Explosion::Explode(this->pos_blur_from.ToIntPosition(), level, tweak::explosion::normal::ShrapnelCount,
-                                    tweak::explosion::normal::Speed, tweak::explosion::normal::Frames))
+            for (Shrapnel & shrapnel : ExplosionDesc::AllDirections(
+                                           this->pos_blur_from.ToIntPosition(), tweak::explosion::normal::ShrapnelCount,
+                                           tweak::explosion::normal::Speed, tweak::explosion::normal::Frames)
+                                           .Explode(level))
             {
                 tankList->projectile_list->Add(shrapnel);
             }
@@ -48,9 +51,10 @@ void Bullet::Advance(TankList * tankList)
             /* If we have an associated tank, return the shot: */
             this->tank->ReturnBullet();
 
-            for (Shrapnel & shrapnel :
-                 Explosion::Explode(this->pos_blur_from.ToIntPosition(), level, tweak::explosion::dirt::ShrapnelCount,
-                                    tweak::explosion::dirt::Speed, tweak::explosion::dirt::Frames))
+            for (Shrapnel & shrapnel : ExplosionDesc::AllDirections(
+                                           this->pos_blur_from.ToIntPosition(), tweak::explosion::dirt::ShrapnelCount,
+                                           tweak::explosion::dirt::Speed, tweak::explosion::dirt::Frames)
+                                           .Explode(level))
             {
                 tankList->projectile_list->Add(shrapnel);
             }
@@ -93,8 +97,7 @@ void ConcreteSpray::Advance(TankList * tankList)
     const int search_step_count = explode_dist + int(flight_speed);
     PositionF advanced_pos = {};
 
-    auto IteratePositions = [this, &search_step, &prev_positions, tankList](PositionF tested_pos,
-                                                                                          PositionF prev_pos) {
+    auto IteratePositions = [this, &search_step, &prev_positions, tankList](PositionF tested_pos, PositionF prev_pos) {
         prev_positions.push_back(tested_pos);
         ++search_step;
 
@@ -112,7 +115,8 @@ void ConcreteSpray::Advance(TankList * tankList)
         }
         return true;
     };
-    bool collided = !Raycaster::Cast(this->pos, this->pos + (this->direction * float(search_step_count)), IteratePositions, Raycaster::VisitFlags::PixelsMustTouchCorners);
+    bool collided = !Raycaster::Cast(this->pos, this->pos + (this->direction * float(search_step_count)),
+                                     IteratePositions, Raycaster::VisitFlags::PixelsMustTouchCorners);
 
     /* Now divine a position {explode_dist} steps past in the simulation and explode there if needed
      * It will always be in the first slot of the circular buffer
@@ -122,8 +126,9 @@ void ConcreteSpray::Advance(TankList * tankList)
     if (collided)
     {
         for (Shrapnel & shrapnel :
-             Explosion::Explode(this->pos.ToIntPosition(), level, tweak::explosion::dirt::ShrapnelCount,
-                                tweak::explosion::dirt::Speed, tweak::explosion::dirt::Frames))
+             ExplosionDesc::AllDirections(this->pos.ToIntPosition(), tweak::explosion::dirt::ShrapnelCount,
+                                          tweak::explosion::dirt::Speed, tweak::explosion::dirt::Frames)
+                 .Explode(level))
         {
             tankList->projectile_list->Add(shrapnel);
         }
@@ -140,31 +145,36 @@ void ConcreteSpray::Erase(LevelDrawBuffer * drawBuffer, Level * )
     level->CommitPixel(this->pos.ToIntPosition());
 }
 
+
 /* Le Shrapnel */
 
 void Shrapnel::Advance(TankList * tankList)
 {
     /* Did this expire? */
-    if (!this->life)
+    if (!this->life--)
     {
         this->Invalidate();
         return;
     }
 
-    /* Move the effect: */
-    this->life--;
-    this->pos += this->direction;
+    auto IteratePositions = [this](PositionF tested_pos, PositionF prev_pos) {
+        /* Move the effect: */
+        this->pos = tested_pos;
 
-    /* Make sure we didn't hit a level detail: */
-    LevelPixel c = level->GetVoxel(this->pos.ToIntPosition());
-    if (Pixel::IsBlockingCollision(c))
-    {
-        this->Invalidate();
-        return;
-    }
+        /* Make sure we didn't hit a level detail: */
+        LevelPixel c = level->GetVoxel(this->pos.ToIntPosition());
+        if (Pixel::IsBlockingCollision(c))
+        {
+            this->Invalidate();
+            return false;
+        }
+        /* Effects blank everything out in their paths: */
+        level->SetVoxel(this->pos.ToIntPosition(), Random.Bool(500) ? LevelPixel::DecalHigh : LevelPixel::DecalLow);
+        return true;
+    };
 
-    /* Effects blank everything out in their paths: */
-    level->SetVoxel(this->pos.ToIntPosition(), Random.Bool(500) ? LevelPixel::DecalHigh : LevelPixel::DecalLow);
+    Raycaster::Cast(this->pos, this->pos + this->direction, IteratePositions,
+                    Raycaster::VisitFlags::PixelsMustTouchCorners);
 }
 
 void Shrapnel::Draw(LevelDrawBuffer * drawBuffer)
@@ -177,32 +187,20 @@ void Shrapnel::Erase(LevelDrawBuffer * drawBuffer, Level *)
     level->CommitPixel(this->pos.ToIntPosition());
 }
 
-std::vector<Shrapnel> Explosion::Explode(Position pos, Level *level, int count, int speed, int ttl)
+std::vector<Shrapnel> ExplosionDesc::Explode(Level * level) const
 {
     auto items = std::vector<Shrapnel>{};
-    items.reserve(count);
+    items.reserve(this->shrapnel_count);
     /* Add all of the effect particles: */
-    for (int i = 0; i < count; i++)
+    for (int i = 0; i < this->shrapnel_count; i++)
     {
-        items.emplace_back(
-            Shrapnel{Position{pos.x, pos.y},
-                     SpeedF{Random.Float(-speed / 32.f, speed / 32.f), Random.Float(-speed / 32.f, speed / 32.f)},
-                       Random.Int(0, ttl), level});
-    }
-    return items;
-}
+        auto base_rads = math::Radians{this->base_direction};
+        auto chosen_rads = math::Radians{
+            Random.Float(base_rads.val - this->direction_spread.val / 2, base_rads.val + this->direction_spread.val / 2)};
+        auto chosen_speed = Random.Float(this->speed_min, this->speed_max) * tweak::explosion::MadnessLevel;
 
-std::vector<Shrapnel> Explosion::FanOut(Position pos, DirectionF direction, Level * level, int count, int radius, int ttl)
-{
-    auto items = std::vector<Shrapnel>{};
-    items.reserve(count);
-    /* Add all of the effect particles: */
-    for (int i = 0; i < count; i++)
-    {
         items.emplace_back(
-            Shrapnel{Position{pos.x, pos.y},
-                     SpeedF{Random.Float(-radius / 32.f, radius / 32.f), Random.Float(-radius / 32.f, radius / 32.f)},
-                     Random.Int(0, ttl), level});
+            Shrapnel{this->center, chosen_rads.ToDirection() * chosen_speed, Random.Int(this->frames_length_min, this->frames_length_max), level});
     }
     return items;
 }

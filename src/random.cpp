@@ -21,6 +21,8 @@ void RandomGenerator::Seed(int seed)
 
 float RandomGenerator::Float(float min, float max)
 {
-	std::uniform_real_distribution<float> float_roll(min, max);
+    if (min == max)
+        return min;
+    std::uniform_real_distribution<float> float_roll(min, max);
 	return float_roll(gen);
 }

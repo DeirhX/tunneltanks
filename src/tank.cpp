@@ -319,8 +319,10 @@ void Tank::Die()
     this->energy = 0;
     this->respawn_timer = tweak::tank::RespawnDelay;
 
-    this->projectile_list->Add(Explosion::Explode(this->pos, this->level, tweak::explosion::death::ShrapnelCount,
-                                                  tweak::explosion::death::Speed, tweak::explosion::death::Frames));
+    this->projectile_list->Add(ExplosionDesc::AllDirections(this->pos, tweak::explosion::death::ShrapnelCount,
+                                                            tweak::explosion::death::Speed,
+                                                            tweak::explosion::death::Frames)
+                                   .Explode(this->level));
 }
 
 void Tank::ApplyControllerOutput(ControllerOutput controls)

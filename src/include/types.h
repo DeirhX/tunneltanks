@@ -185,6 +185,7 @@ constexpr OffsetF operator/(OffsetF o, float d) noexcept { return {o.x / d, o.y 
 constexpr OffsetF operator-(PositionF p, PositionF o) noexcept { return {p.x - o.x, p.y - o.y}; }
 constexpr bool operator==(OffsetF l, OffsetF r) { return l.x == r.x && l.y == r.y; }
 constexpr bool operator!=(OffsetF l, OffsetF r) { return l.x != r.x || l.y != r.y; }
+constexpr PositionF operator+(PositionF v, SpeedF s) noexcept { return {v.x + s.x, v.y + s.y}; }
 constexpr PositionF operator+(PositionF v, OffsetF o) noexcept { return {v.x + o.x, v.y + o.y}; }
 constexpr PositionF & operator+=(PositionF& v, OffsetF o) noexcept
 {

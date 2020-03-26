@@ -27,6 +27,9 @@ public:
         PositionF curr_pos = from;
         int steps = static_cast<int>(std::max(std::abs(offset.x), std::abs(offset.y)) / std::max(std::abs(one_step.x), std::abs(one_step.y)));
 
+        if (steps == 0)
+            return visitor(to, from);
+
         /* Perform the simulation */
         for (int i = 1; i <= steps; ++i)
         {

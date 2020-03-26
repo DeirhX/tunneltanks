@@ -3,6 +3,12 @@
 #include "types.h"
 #include <containers.h>
 #include <vector>
+#include "mymath.h"
+
+namespace math
+{
+struct Radians;
+}
 
 enum class ProjectileType
 {
@@ -16,7 +22,7 @@ enum class ProjectileType
 /* Projectile base class */
 struct Projectile
 {
-    PositionF pos; 
+    PositionF pos;
     SpeedF direction;
     bool is_alive = false;
     class Level * level;
@@ -45,9 +51,12 @@ struct Projectile
 class Shrapnel : public Projectile
 {
     int life = 0;
+
   public:
     //Shrapnel() = default;
-    Shrapnel(Position position, SpeedF speed, int life, Level * level) : Projectile(position, speed, level), life(life) {}
+    Shrapnel(Position position, SpeedF speed, int life, Level * level) : Projectile(position, speed, level), life(life)
+    {
+    }
     ProjectileType GetType() override { return ProjectileType::Shrapnel; }
 
     void Advance(class TankList * tankList) override;
@@ -55,16 +64,13 @@ class Shrapnel : public Projectile
     void Erase(LevelDrawBuffer * drawBuffer, Level * level) override;
 };
 
-
-
 /* Projectile that leaves a trail */
 class MotionBlurProjectile : public Projectile
 {
   public:
     PositionF pos_blur_from; /* The x,y of the 'cold' portion. (#ba0000) */
   protected:
-    MotionBlurProjectile(Position position, SpeedF speed, Level * level)
-        : Projectile(position, speed, level) { }
+    MotionBlurProjectile(Position position, SpeedF speed, Level * level) : Projectile(position, speed, level) {}
 };
 
 /* Projectile shot by a tank */
@@ -72,12 +78,15 @@ class Bullet : public MotionBlurProjectile
 {
     using Base = MotionBlurProjectile;
     int simulation_steps = 0;
+
   public:
     class Tank * tank;
 
   public:
     Bullet(Position position, SpeedF speed, int simulation_steps, Level * level, Tank * tank)
-        : Base(position, speed, level), simulation_steps(simulation_steps), tank(tank) { }
+        : Base(position, speed, level), simulation_steps(simulation_steps), tank(tank)
+    {
+    }
     ProjectileType GetType() override { return ProjectileType::Bullet; }
 
     void Advance(class TankList * tankList) override;
@@ -90,23 +99,53 @@ class ConcreteSpray : public Projectile
     using Base = Projectile;
     class Tank * tank;
     constexpr static float flight_speed = 2.f;
+
   public:
-    ConcreteSpray(Position position, SpeedF speed, Level * level, Tank * tank) : Base(position, speed, level), tank(tank)
-    { }
+    ConcreteSpray(Position position, SpeedF speed, Level * level, Tank * tank)
+        : Base(position, speed, level), tank(tank)
+    {
+    }
     ProjectileType GetType() override { return ProjectileType::Concrete; }
     void Advance(TankList * tankList) override;
     void Draw(LevelDrawBuffer * drawBuffer) override;
     void Erase(LevelDrawBuffer * drawBuffer, Level * level) override;
 };
 
-/* Helper class for MaSs DeStRuCtIoN! */
-class Explosion : public Projectile
+struct ExplosionDesc
 {
-  public:
-    static std::vector<Shrapnel> Explode(Position pos, Level * level, int count, int speed, int ttl);
-    static std::vector<Shrapnel> FanOut(Position pos, DirectionF direction, Level * level, int count, int speed, int ttl);
-};
+    Position center = {};
+    DirectionF base_direction = {};
+    math::Radians direction_spread = {};
+    int shrapnel_count = 0;
+    float speed_min = 0;
+    float speed_max = 0;
+    int frames_length_min = 0;
+    int frames_length_max = 0;
 
-class VoxelRaycast
-{
+    std::vector<Shrapnel> Explode(class Level * level) const;
+
+    static ExplosionDesc AllDirections(Position pos, int shrapnel_count, float speed, int frames_length)
+    {
+        return ExplosionDesc{.center = pos,
+                             .base_direction = {1.f, 0.f},
+                             .direction_spread = math::two_pi,
+                             .shrapnel_count = shrapnel_count,
+                             .speed_min = speed * 0.1f,
+                             .speed_max = speed,
+                             .frames_length_min = 0,
+                             .frames_length_max = frames_length};
+    }
+
+    static ExplosionDesc Fan(Position pos, DirectionF direction, math::Radians angle, int shrapnel_count, float speed,
+                             int frames_length)
+    {
+        return ExplosionDesc{.center = pos,
+                             .base_direction = direction,
+                             .direction_spread = angle,
+                             .shrapnel_count = shrapnel_count,
+                             .speed_min = speed,
+                             .speed_max = speed,
+                             .frames_length_min = frames_length,
+                             .frames_length_max = frames_length};
+    }
 };

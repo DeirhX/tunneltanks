@@ -90,22 +90,27 @@ namespace control
     constexpr float GamePadCrosshairRadius = 25.f;
 }
 
+namespace explosion
+{
+    constexpr float MadnessLevel = 1.f;
+}
+
 namespace explosion::dirt
 {
     constexpr int ShrapnelCount = 10;
-    constexpr int Speed = 12;
+    constexpr float Speed = 0.375f;
     constexpr int Frames = 10;
 } // namespace explosion::dirt
 namespace explosion::normal
 {
     constexpr int ShrapnelCount = 14;
-    constexpr int Speed = 18;
+    constexpr float Speed = 0.56f;
     constexpr int Frames = 13;
 } // namespace explosion::normal
 namespace explosion::death
 {
     constexpr int ShrapnelCount = 100;
-    constexpr int Speed = 8;
+    constexpr float Speed = 0.25f;
     constexpr int Frames = 72;
 } // namespace explosion::death
 /* Characters used in level structures for things: */
