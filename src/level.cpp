@@ -64,10 +64,12 @@ void Level::SetVoxelRaw(Position pos, LevelPixel voxel)
     SetLevelData(pos, voxel);
 }
 
+/*
 void Level::SetVoxelRaw(int offset, LevelPixel voxel)
 {
 	SetLevelData(offset, voxel);
 }
+*/
 
 
 //LevelPixel& Level::Voxel(Position pos)
@@ -119,10 +121,10 @@ LevelPixel Level::GetVoxelRaw(Position pos) const
 	return this->data[pos.y * this->size.x + pos.x];
 }
 
-LevelPixel Level::GetVoxelRaw(int address) const
-{
-	return this->data[address];
-}
+//LevelPixel Level::GetVoxelRaw(int address) const
+//{
+//	return this->data[address];
+//}
 
 void Level::GenerateDirtAndRocks()
 {

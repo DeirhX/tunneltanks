@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "random.h"
+#include "tweak.h"
 
 namespace math
 {

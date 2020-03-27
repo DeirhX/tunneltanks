@@ -145,9 +145,9 @@ class Level
     //LevelPixel & Voxel(Position pos);
 
     void SetVoxelRaw(Position pos, LevelPixel voxel);
-    void SetVoxelRaw(int offset, LevelPixel voxel);
+    void SetVoxelRaw(int offset, LevelPixel voxel) { SetLevelData(offset, voxel); }
     LevelPixel GetVoxelRaw(Position pos) const;
-    LevelPixel GetVoxelRaw(int offset) const;
+    LevelPixel GetVoxelRaw(int offset) const { return this->data[offset]; }
     //LevelPixel & VoxelRaw(Position pos);
 
     /* Draw buffer interaction */
@@ -188,12 +188,12 @@ class SafePixelAccessor
 {
     Level * level;
     Position position;
-
+    int index;
   public:
-    SafePixelAccessor(Level * level, Position pos) : level(level), position(pos) {}
+    SafePixelAccessor(Level * level, Position pos, Size size) : level(level), position(pos), index(pos.x + pos.y*size.x) {}
     Position GetPosition() const { return this->position; }
-    LevelPixel Get() const { return level->GetVoxelRaw(this->position); }
-    void Set(LevelPixel pix) { level->SetVoxelRaw(this->position, pix); }
+    LevelPixel Get() const { return level->GetVoxelRaw(this->index); }
+    void Set(LevelPixel pix) { level->SetVoxelRaw(this->index, pix); }
 };
 
 template <typename VoxelFunc> // requires{ voxelFunc(Position, SafePixelAccessor&) -> void; }
@@ -203,7 +203,7 @@ void Level::ForEachVoxel(VoxelFunc voxelFunc)
     for (pos.x = 0; pos.x < this->GetSize().x; ++pos.x)
         for (pos.y = 0; pos.y < this->GetSize().y; ++pos.y)
         {
-            voxelFunc(SafePixelAccessor(this, pos));
+            voxelFunc(SafePixelAccessor(this, pos, this->GetSize()));
         }
 }
 template <typename VoxelFunc> // requires{ voxelFunc(Position, LevelVoxel&) -> void; }
@@ -214,7 +214,7 @@ void Level::ForEachVoxelParallel(VoxelFunc voxelFunc, WorkerCount worker_count)
         for (pos.x = min; pos.x <= max; ++pos.x)
             for (pos.y = 0; pos.y < this->GetSize().y; ++pos.y)
             {
-                voxelFunc(SafePixelAccessor(this, pos), threadLocal);
+                voxelFunc(SafePixelAccessor(this, pos, this->GetSize()), threadLocal);
             }
         return 0;
     };
