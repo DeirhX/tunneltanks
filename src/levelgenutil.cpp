@@ -8,20 +8,20 @@
 
 void fill_all(Level *lvl, LevelPixel c)
 {
-	lvl->ForEachVoxel([c](Position, LevelPixel& voxel) { voxel = c; });
+	lvl->ForEachVoxel([c](SafePixelAccessor&& pixel) { pixel.Set(c); });
 }
 void invert_all(Level* lvl)
 {
-	lvl->ForEachVoxel([](Position, LevelPixel& voxel)
+    lvl->ForEachVoxel([](SafePixelAccessor&& pixel)
 	{
-		voxel = (voxel == LevelPixel::LevelGenRock) ? LevelPixel::LevelGenDirt : LevelPixel::LevelGenRock;
+        pixel.Set((pixel.Get() == LevelPixel::LevelGenRock) ? LevelPixel::LevelGenDirt : LevelPixel::LevelGenRock);
 	});
 }
 void unmark_all(Level* lvl)
 {
-	lvl->ForEachVoxel([](Position, LevelPixel& voxel)
+    lvl->ForEachVoxel([](SafePixelAccessor&& pixel)
 	{
-		voxel = (voxel == LevelPixel::LevelGenDirt) ? LevelPixel::LevelGenDirt : LevelPixel::LevelGenRock;
+		pixel.Set((pixel.Get() == LevelPixel::LevelGenDirt) ? LevelPixel::LevelGenDirt : LevelPixel::LevelGenRock);
 	});
 }
 
@@ -44,15 +44,15 @@ void rough_up(Level *lvl) {
 			t += (y!=0            )       && lvl->GetVoxel({ x, y - 1 }) == LevelPixel::LevelGenRock;
 			t += (y!=lvl->GetSize().y-1)  && lvl->GetVoxel({ x, y + 1 }) == LevelPixel::LevelGenRock;
 
-			if(t) lvl->Voxel({ x, y }) = LevelPixel::LevelGenMark;
+			if(t) lvl->SetVoxel({ x, y }, LevelPixel::LevelGenMark);
 		}
 	}
 	
 	/* For every marked spot, randomly fill it: */
-	lvl->ForEachVoxel([](Position, LevelPixel& voxel)
+	lvl->ForEachVoxel([](SafePixelAccessor&& pixel)
 	{
-		if (voxel == LevelPixel::LevelGenMark)
-			voxel = Random.Bool(500) ? LevelPixel::LevelGenRock : LevelPixel::LevelGenDirt;
+		if (pixel.Get() == LevelPixel::LevelGenMark)
+			pixel.Set(Random.Bool(500) ? LevelPixel::LevelGenRock : LevelPixel::LevelGenDirt);
 	});
 }
 
@@ -72,7 +72,7 @@ int pt_dist(Vector a, Vector b) {
 /* Used for point drawing: */
 static void set_point(Level *lvl, int x, int y, LevelPixel value) {
 	if(x >= lvl->GetSize().x || y >= lvl->GetSize().y) return;
-	lvl->Voxel({ x, y }) = value;
+	lvl->SetVoxelRaw({ x, y }, value);
 }
 
 void set_circle(Level *lvl, int x, int y, LevelPixel value) {

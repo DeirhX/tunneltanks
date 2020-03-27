@@ -31,7 +31,7 @@ static void add_rock_lines(Level *lvl, Side s)
     int xstep = 0, ystep = 0;
     Vector cur, prev;
     int is_rare, needs_flip = 0;
-    int x, y, minx = 0, maxx = 0, miny = 0, maxy = 0;
+    int minx = 0, maxx = 0, miny = 0, maxy = 0;
 
     /* Configuration based on what side the rock is on: */
     if (s == SIDE_TOP)
@@ -101,25 +101,26 @@ static void add_rock_lines(Level *lvl, Side s)
 
     /* Do the correct fill sequence, based on side: */
 
+    Position p;
     if (s == SIDE_TOP)
-        for (x = 0; x < lvl->GetSize().x; x++)
-            for (y = 0; lvl->Voxel({x, y}) != static_cast<LevelPixel>(s); y++)
-                lvl->Voxel({x, y}) = LevelPixel::LevelGenRock;
+        for (p.x = 0; p.x < lvl->GetSize().x; p.x++)
+            for (p.y = 0; lvl->GetVoxel(p) != static_cast<LevelPixel>(s); p.y++)
+                lvl->SetVoxelRaw(p, LevelPixel::LevelGenRock);
 
     else if (s == SIDE_RIGHT)
-        for (y = 0; y < lvl->GetSize().y; y++)
-            for (x = lvl->GetSize().x - 1; lvl->Voxel({x, y}) != static_cast<LevelPixel>(s); x--)
-                lvl->Voxel({x, y}) = LevelPixel::LevelGenRock;
+        for (p.y = 0; p.y < lvl->GetSize().y; p.y++)
+            for (p.x = lvl->GetSize().x - 1; lvl->GetVoxel(p) != static_cast<LevelPixel>(s); p.x--)
+                lvl->SetVoxelRaw(p, LevelPixel::LevelGenRock);
 
     else if (s == SIDE_BOTTOM)
-        for (x = 0; x < lvl->GetSize().x; x++)
-            for (y = lvl->GetSize().y - 1; lvl->Voxel({x, y}) != static_cast<LevelPixel>(s); y--)
-                lvl->Voxel({x, y}) = LevelPixel::LevelGenRock;
+        for (p.x = 0; p.x < lvl->GetSize().x; p.x++)
+            for (p.y = lvl->GetSize().y - 1; lvl->GetVoxel(p) != static_cast<LevelPixel>(s); p.y--)
+                lvl->SetVoxelRaw(p, LevelPixel::LevelGenRock);
 
     else if (s == SIDE_LEFT)
-        for (y = 0; y < lvl->GetSize().y; y++)
-            for (x = 0; lvl->Voxel({x, y}) != static_cast<LevelPixel>(s); x++)
-                lvl->Voxel({x, y}) = LevelPixel::LevelGenRock;
+        for (p.y = 0; p.y < lvl->GetSize().y; p.y++)
+            for (p.x = 0; lvl->GetVoxel(p) != static_cast<LevelPixel>(s); p.x++)
+                lvl->SetVoxelRaw(p,  LevelPixel::LevelGenRock);
 }
 
 static void add_spawns(Level *lvl)

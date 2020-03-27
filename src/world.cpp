@@ -29,26 +29,27 @@ void World::RegrowPass()
     int holes_decayed = 0;
     int dirt_grown = 0;
     this->level->ForEachVoxelParallel(
-        [this, &holes_decayed, &dirt_grown](Position pos, LevelPixel & vox, ThreadLocal * local) {
-            if (vox == LevelPixel::Blank || Pixel::IsScorched(vox))
+        [this, &holes_decayed, &dirt_grown](SafePixelAccessor&& pixel, ThreadLocal * local) {
+            LevelPixel pix = pixel.Get();
+            if (pix == LevelPixel::Blank || Pixel::IsScorched(pix))
             {
                 int neighbors =
-                    this->level->CountNeighbors(pos, [](auto voxel) { return Pixel::IsDirt(voxel) ? 1 : 0; });
-                int modifier = (vox == LevelPixel::Blank) ? 4 : 1;
+                    this->level->CountNeighborValues(pixel.GetPosition(), [](auto voxel) { return Pixel::IsDirt(voxel) ? 1 : 0; });
+                int modifier = (pix == LevelPixel::Blank) ? 4 : 1;
                 if (neighbors > 2 && local->random.Int(0, 10000) < tweak::DirtRegrowSpeed * neighbors * modifier)
                 {
 
-                    vox = LevelPixel::DirtGrow;
-                    this->level->CommitPixel(pos);
+                    pix = LevelPixel::DirtGrow;
+                    this->level->CommitPixel(pixel.GetPosition());
                     ++holes_decayed;
                 }
             }
-            else if (vox == LevelPixel::DirtGrow)
+            else if (pix == LevelPixel::DirtGrow)
             {
                 if (Random.Int(0, 1000) < tweak::DirtRecoverSpeed)
                 {
-                    vox = local->random.Bool(500) ? LevelPixel::DirtHigh : LevelPixel::DirtLow;
-                    this->level->CommitPixel(pos);
+                    pix = local->random.Bool(500) ? LevelPixel::DirtHigh : LevelPixel::DirtLow;
+                    this->level->CommitPixel(pixel.GetPosition());
                     ++dirt_grown;
                 }
             }

@@ -157,10 +157,10 @@ static void set_outside(Level *lvl, LevelPixel val) {
 	int i;
 	Size size = lvl->GetSize();
 	
-	for (i = 0; i < size.x;   i++) lvl->VoxelRaw({ i, 0 }) = val;
-	for (i = 0; i < size.x;   i++) lvl->VoxelRaw({ i, size.y - 1 }) = val;
-	for (i = 1; i < size.y-1; i++) lvl->VoxelRaw({ 0, i }) = val;
-	for (i = 1; i < size.y-1; i++) lvl->VoxelRaw({ size.x - 1, i }) = val;
+	for (i = 0; i < size.x;   i++) lvl->SetVoxelRaw({ i, 0 }, val);
+	for (i = 0; i < size.x;   i++) lvl->SetVoxelRaw({ i, size.y - 1 }, val);
+	for (i = 1; i < size.y-1; i++) lvl->SetVoxelRaw({ 0, i }, val);
+	for (i = 1; i < size.y-1; i++) lvl->SetVoxelRaw({ size.x - 1, i }, val);
 }
 
 static void expand_init(Level *lvl, PositionQueue& q) {
@@ -213,9 +213,9 @@ ExpandResult expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, Rando
 				
 				int tx = temp.x + (j % 3) - 1;
 				int ty = temp.y + (j / 3) - 1;
-				LevelPixel* v = &lvl->VoxelRaw({ tx, ty });
-				if(*v == LevelPixel::LevelGenRock) {
-				   *v  = LevelPixel::LevelGenMark;
+				LevelPixel v = lvl->GetVoxelRaw({ tx, ty });
+				if(v == LevelPixel::LevelGenRock) {
+				   v  = LevelPixel::LevelGenMark;
 				   ++result.rocks_marked;
 					q.push({ tx, ty });
 				}

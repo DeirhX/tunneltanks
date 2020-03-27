@@ -16,47 +16,70 @@
 #include "trace.h"
 
 
-LevelData::LevelData(Size size) : array(size)
+uint8_t LevelAdjacencyDataCompressed::operator[](int i) const
 {
-	
+    uint8_t val = this->array[i / 2];
+    if (i % 2 == 1)
+        return val >> 4;
+    return val & 0xF;
 }
+
+void LevelAdjacencyDataCompressed::Set(int i, uint8_t value)
+{
+    assert(value <= 0xF);
+    uint8_t& val = this->array[i / 2];
+    if (i % 2 == 1)
+        val = (val & 0xF) | (value << 4);
+    val = val & (0xF0 | (value & 0xF));
+}
+
 
 Level::Level(Size size, LevelDrawBuffer* draw_buffer)
 	: size(size), drawBuffer (draw_buffer), data(size)
 {
-	std::fill(this->data.array.begin(), this->data.array.end(), LevelPixel::LevelGenRock);
+	std::fill(this->data.begin(), this->data.end(), LevelPixel::LevelGenRock);
 }
+
+
+void Level::SetLevelData(int i, LevelPixel value)
+{
+    this->data[i] = value;
+}
+void Level::SetLevelData(Position pos, LevelPixel value)
+{
+    this->data[pos.y * this->size.x + pos.x] = value;
+}
+
 
 void Level::SetVoxel(Position pos, LevelPixel voxel)
 {
-	if (!IsInBounds(pos))
-		throw GameException("Invalid position");
-	this->data[ pos.y*this->size.x + pos.x ] = voxel;
+    assert(IsInBounds(pos));
 
+    SetLevelData(pos.y*this->size.x + pos.x, voxel);
 	CommitPixel(pos);
 }
 
 void Level::SetVoxelRaw(Position pos, LevelPixel voxel)
 {
-	this->data[pos.y * this->size.x + pos.x] = voxel;
+    SetLevelData(pos, voxel);
 }
 
 void Level::SetVoxelRaw(int offset, LevelPixel voxel)
 {
-	this->data[offset] = voxel;
+	SetLevelData(offset, voxel);
 }
 
-LevelPixel& Level::Voxel(Position pos)
-{
-	if (!IsInBounds(pos))
-		throw GameException("Invalid position");
-	return this->data[pos.y * this->size.x + pos.x];
-}
 
-LevelPixel& Level::VoxelRaw(Position pos)
-{
-	return this->data[pos.y * this->size.x + pos.x];
-}
+//LevelPixel& Level::Voxel(Position pos)
+//{
+//    assert(IsInBounds(pos));
+//    return this->data[pos.y * this->size.x + pos.x];
+//}
+//
+//LevelPixel& Level::VoxelRaw(Position pos)
+//{
+//	return this->data[pos.y * this->size.x + pos.x];
+//}
 
 int Level::CountNeighborValues(Position pos)
 {
@@ -103,13 +126,15 @@ LevelPixel Level::GetVoxelRaw(int address) const
 
 void Level::GenerateDirtAndRocks()
 {
-	for(int y = 0; y<this->size.y; y++)
-		for(int x = 0; x<this->size.x; x++) {
-			auto& spot = this->Voxel({ x, y });
+    Position pos;
+    for (pos.y = 0; pos.y < this->size.y; pos.y++)
+        for (pos.x = 0; pos.x < this->size.x; pos.x++)
+        {
+			auto spot = this->GetVoxel(pos);
 			if(spot != LevelPixel::LevelGenDirt)
-				spot = LevelPixel::Rock;
+				this->SetVoxel(pos, LevelPixel::Rock);
 			else      
-				spot = Random.Bool(500) ? LevelPixel::DirtLow : LevelPixel::DirtHigh;
+				this->SetVoxel(pos, Random.Bool(500) ? LevelPixel::DirtLow : LevelPixel::DirtHigh);
 		}
 }
 
