@@ -40,11 +40,12 @@ Level::Level(Size size, LevelDrawBuffer* draw_buffer)
 	std::fill(this->data.begin(), this->data.end(), LevelPixel::LevelGenRock);
 }
 
-
+/*
 void Level::SetLevelData(int i, LevelPixel value)
 {
     this->data[i] = value;
 }
+*/
 void Level::SetLevelData(Position pos, LevelPixel value)
 {
     this->data[pos.y * this->size.x + pos.x] = value;

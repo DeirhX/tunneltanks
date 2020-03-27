@@ -131,7 +131,7 @@ class Level
     std::vector<std::unique_ptr<TankBase>> spawn;
 
   private:
-    void SetLevelData(int i, LevelPixel value);
+    void SetLevelData(int i, LevelPixel value) { this->data[i] = value; }
     void SetLevelData(Position pos, LevelPixel value);
 
   public:
