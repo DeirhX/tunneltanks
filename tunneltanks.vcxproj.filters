@@ -126,6 +126,7 @@
     <ClCompile Include="src\bitmaps.cpp">
       <Filter>src\draw</Filter>
     </ClCompile>
+    <ClCompile Include="src\mymath.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\controllersdl.h">
@@ -250,9 +251,6 @@
       <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\include\mymath.h">
-      <Filter>src\system</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mymath.cpp">
       <Filter>src\system</Filter>
     </ClInclude>
   </ItemGroup>

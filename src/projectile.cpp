@@ -1,21 +1,19 @@
-#include "base.h"
-#include <cstdio>
-#include <boost/circular_buffer.hpp>
-#include <level.h>
 #include "projectile.h"
+#include "base.h"
+#include <boost/circular_buffer.hpp>
+#include <cstdio>
+#include <level.h>
 #include <random.h>
 #include <tank.h>
 #include <tweak.h>
 
-
 #include "mymath.h"
-#include "tanklist.h"
 #include "raycaster.h"
+#include "tanklist.h"
 
 void Bullet::Advance(TankList * tankList)
 {
-    auto IteratePositions = [this, tankList](PositionF tested_pos, PositionF prev_pos)
-    {
+    auto IteratePositions = [this, tankList](PositionF tested_pos, PositionF prev_pos) {
         this->pos = tested_pos;
         this->pos_blur_from = prev_pos;
 
@@ -35,7 +33,7 @@ void Bullet::Advance(TankList * tankList)
             for (Shrapnel & shrapnel : ExplosionDesc::AllDirections(
                                            this->pos_blur_from.ToIntPosition(), tweak::explosion::normal::ShrapnelCount,
                                            tweak::explosion::normal::Speed, tweak::explosion::normal::Frames)
-                                           .Explode(level))
+                                           .Explode<Shrapnel>(level))
             {
                 tankList->projectile_list->Add(shrapnel);
             }
@@ -54,7 +52,7 @@ void Bullet::Advance(TankList * tankList)
             for (Shrapnel & shrapnel : ExplosionDesc::AllDirections(
                                            this->pos_blur_from.ToIntPosition(), tweak::explosion::dirt::ShrapnelCount,
                                            tweak::explosion::dirt::Speed, tweak::explosion::dirt::Frames)
-                                           .Explode(level))
+                                           .Explode<Shrapnel>(level))
             {
                 tankList->projectile_list->Add(shrapnel);
             }
@@ -80,7 +78,6 @@ void Bullet::Erase(LevelDrawBuffer * drawBuffer, Level *)
     level->CommitPixel(this->pos_blur_from.ToIntPosition());
 }
 
-
 /* Le Spray de la Concrete */
 
 void ConcreteSpray::Advance(TankList * tankList)
@@ -92,7 +89,7 @@ void ConcreteSpray::Advance(TankList * tankList)
      *  If there is a hypothetical collision, we attempt to explode {explode_dist} pixels away.
      */
     constexpr int explode_dist = 3;
-    auto prev_positions = boost::circular_buffer<PositionF>{explode_dist};
+    auto prev_positions = boost::circular_buffer<PositionF>{explode_dist + 1};
     int search_step = 0;
     const int search_step_count = explode_dist + int(flight_speed);
     PositionF advanced_pos = {};
@@ -125,10 +122,11 @@ void ConcreteSpray::Advance(TankList * tankList)
 
     if (collided)
     {
-        for (Shrapnel & shrapnel :
-             ExplosionDesc::AllDirections(this->pos.ToIntPosition(), tweak::explosion::dirt::ShrapnelCount,
-                                          tweak::explosion::dirt::Speed, tweak::explosion::dirt::Frames)
-                 .Explode(level))
+        for (auto & shrapnel :
+             ExplosionDesc::Fan(this->pos.ToIntPosition(), this->direction, math::Radians{math::half_pi},
+                                tweak::explosion::dirt::ShrapnelCount, tweak::explosion::dirt::Speed,
+                                tweak::explosion::dirt::Frames)
+                 .Explode<ConcreteFoam>(level))
         {
             tankList->projectile_list->Add(shrapnel);
         }
@@ -140,31 +138,22 @@ void ConcreteSpray::Draw(LevelDrawBuffer * drawBuffer)
     drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::ConcreteShot));
 }
 
-void ConcreteSpray::Erase(LevelDrawBuffer * drawBuffer, Level * )
-{
-    level->CommitPixel(this->pos.ToIntPosition());
-}
-
+void ConcreteSpray::Erase(LevelDrawBuffer * drawBuffer, Level *) { level->CommitPixel(this->pos.ToIntPosition()); }
 
 /* Le Shrapnel */
 
 void Shrapnel::Advance(TankList * tankList)
 {
-    /* Did this expire? */
-    if (!this->life--)
-    {
-        this->Invalidate();
-        return;
-    }
-
-    auto IteratePositions = [this](PositionF tested_pos, PositionF prev_pos) {
-        /* Move the effect: */
-        this->pos = tested_pos;
-
+    auto AdvanceStepFunc = [this](PositionF tested_pos, PositionF prev_pos, TankList * tankList) {
         /* Make sure we didn't hit a level detail: */
         LevelPixel c = level->GetVoxel(this->pos.ToIntPosition());
         if (Pixel::IsBlockingCollision(c))
         {
+            if (Pixel::IsConcrete(c) && Random.Bool(tweak::explosion::ChanceToDestroyConcrete))
+            {
+                level->SetVoxel(this->pos.ToIntPosition(),
+                                Random.Bool(500) ? LevelPixel::DecalHigh : LevelPixel::DecalLow);
+            }
             this->Invalidate();
             return false;
         }
@@ -173,34 +162,57 @@ void Shrapnel::Advance(TankList * tankList)
         return true;
     };
 
+    AdvanceShrapnel(tankList, AdvanceStepFunc);
+}
+
+template <typename OnAdvanceFuncType>
+void Shrapnel::AdvanceShrapnel(TankList * tankList, OnAdvanceFuncType OnAdvanceFunc)
+{
+    /* Did this expire? */
+    if (!this->life--)
+    {
+        this->Invalidate();
+        return;
+    }
+
+    auto IteratePositions = [this, OnAdvanceFunc, tankList](PositionF tested_pos, PositionF prev_pos) {
+        /* Move the effect: */
+        this->pos = tested_pos;
+
+        return OnAdvanceFunc(tested_pos, prev_pos, tankList);
+    };
+
     Raycaster::Cast(this->pos, this->pos + this->direction, IteratePositions,
                     Raycaster::VisitFlags::PixelsMustTouchCorners);
 }
+
 
 void Shrapnel::Draw(LevelDrawBuffer * drawBuffer)
 {
     drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::FireHot));
 }
 
-void Shrapnel::Erase(LevelDrawBuffer * drawBuffer, Level *)
+void Shrapnel::Erase(LevelDrawBuffer * drawBuffer, Level *) { level->CommitPixel(this->pos.ToIntPosition()); }
+
+void ConcreteFoam::Advance(TankList * tankList)
 {
-    level->CommitPixel(this->pos.ToIntPosition());
+    auto AdvanceStepFunc = [this](PositionF tested_pos, PositionF prev_pos, TankList * tankList) {
+
+        /* Make sure we didn't hit a level detail: */
+        LevelPixel c = level->GetVoxel(this->pos.ToIntPosition());
+        if (Pixel::IsAnyCollision(c) && !Pixel::IsConcrete(c))
+        {
+            level->SetVoxel(prev_pos.ToIntPosition(), Random.Bool(500) ? LevelPixel::ConcreteHigh : LevelPixel::ConcreteLow);
+            this->Invalidate();
+            return false;
+        }
+        return true;
+    };
+
+    AdvanceShrapnel(tankList, AdvanceStepFunc);
 }
 
-std::vector<Shrapnel> ExplosionDesc::Explode(Level * level) const
+void ConcreteFoam::Draw(LevelDrawBuffer * drawBuffer)
 {
-    auto items = std::vector<Shrapnel>{};
-    items.reserve(this->shrapnel_count);
-    /* Add all of the effect particles: */
-    for (int i = 0; i < this->shrapnel_count; i++)
-    {
-        auto base_rads = math::Radians{this->base_direction};
-        auto chosen_rads = math::Radians{
-            Random.Float(base_rads.val - this->direction_spread.val / 2, base_rads.val + this->direction_spread.val / 2)};
-        auto chosen_speed = Random.Float(this->speed_min, this->speed_max) * tweak::explosion::MadnessLevel;
-
-        items.emplace_back(
-            Shrapnel{this->center, chosen_rads.ToDirection() * chosen_speed, Random.Int(this->frames_length_min, this->frames_length_max), level});
-    }
-    return items;
+    drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::ConcreteShot));
 }

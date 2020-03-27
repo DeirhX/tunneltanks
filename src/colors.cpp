@@ -18,6 +18,8 @@ ColorPalette::ColorPalette()
     Set(Colors::FireHot, Color(0xff, 0x34, 0x08));
     Set(Colors::FireCold, Color(0xba, 0x00, 0x00));
     Set(Colors::ConcreteShot, Color(0xba, 0xba, 0xcc));
+    Set(Colors::ConcreteLow, Color(0xa0, 0xa0, 0xa5));
+    Set(Colors::ConcreteHigh, Color(0x80, 0x80, 0x85)); 
     Set(Colors::Background, Color(0x00, 0x00, 0x00));
     Set(Colors::BackgroundDot, Color(0x00, 0x00, 0x00));
     Set(Colors::StatusBackground, Color(0x65, 0x65, 0x65));

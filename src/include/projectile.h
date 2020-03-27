@@ -1,9 +1,11 @@
 #pragma once
 
+#include "mymath.h"
 #include "types.h"
 #include <containers.h>
 #include <vector>
-#include "mymath.h"
+
+#include "random.h"
 
 namespace math
 {
@@ -50,10 +52,10 @@ struct Projectile
 /* Non-damaging, non-collidable projectile spawned by the environment */
 class Shrapnel : public Projectile
 {
+protected:
     int life = 0;
 
   public:
-    //Shrapnel() = default;
     Shrapnel(Position position, SpeedF speed, int life, Level * level) : Projectile(position, speed, level), life(life)
     {
     }
@@ -62,6 +64,18 @@ class Shrapnel : public Projectile
     void Advance(class TankList * tankList) override;
     void Draw(class LevelDrawBuffer * drawBuffer) override;
     void Erase(LevelDrawBuffer * drawBuffer, Level * level) override;
+protected:
+    template <typename OnAdvanceFuncType>
+    void AdvanceShrapnel(TankList * tankList, OnAdvanceFuncType OnAdvanceFunc);
+};
+
+/* Will attach to surfaces and add a concrete layer adjacent to it */
+class ConcreteFoam : public Shrapnel
+{
+public:
+    ConcreteFoam(Position position, SpeedF speed, int life, Level * level) : Shrapnel(position, speed, life, level) {}
+    void Advance(class TankList * tankList) override;
+    void Draw(class LevelDrawBuffer * drawBuffer) override;
 };
 
 /* Projectile that leaves a trail */
@@ -122,7 +136,8 @@ struct ExplosionDesc
     int frames_length_min = 0;
     int frames_length_max = 0;
 
-    std::vector<Shrapnel> Explode(class Level * level) const;
+    template <typename ShrapnelType>
+    std::vector<ShrapnelType> Explode(class Level * level) const;
 
     static ExplosionDesc AllDirections(Position pos, int shrapnel_count, float speed, int frames_length)
     {
@@ -149,3 +164,23 @@ struct ExplosionDesc
                              .frames_length_max = frames_length};
     }
 };
+
+
+template <typename ShrapnelType>
+std::vector<ShrapnelType> ExplosionDesc::Explode(Level * level) const
+{
+    auto items = std::vector<ShrapnelType>{};
+    items.reserve(this->shrapnel_count);
+    /* Add all of the effect particles: */
+    for (int i = 0; i < this->shrapnel_count; i++)
+    {
+        auto base_rads = math::Radians{this->base_direction};
+        auto chosen_rads = math::Radians{Random.Float(base_rads.val - this->direction_spread.val / 2,
+                                                      base_rads.val + this->direction_spread.val / 2)};
+        auto chosen_speed = Random.Float(this->speed_min, this->speed_max) * tweak::explosion::MadnessLevel;
+
+        items.emplace_back(ShrapnelType{this->center, chosen_rads.ToDirection() * chosen_speed,
+                                        Random.Int(this->frames_length_min, this->frames_length_max), level});
+    }
+    return items;
+}

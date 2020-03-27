@@ -93,6 +93,7 @@ namespace control
 namespace explosion
 {
     constexpr float MadnessLevel = 1.f;
+    constexpr int ChanceToDestroyConcrete = 50;
 }
 
 namespace explosion::dirt

@@ -229,6 +229,8 @@ Color32 Level::GetVoxelColor(LevelPixel voxel)
 	else if (voxel == LevelPixel::Rock)      return Palette.Get(Colors::Rock);
 	else if (voxel == LevelPixel::DecalLow)  return Palette.Get(Colors::DecalLow);
 	else if (voxel == LevelPixel::DecalHigh) return Palette.Get(Colors::DecalHigh);
+    else if (voxel == LevelPixel::ConcreteLow)  return Palette.Get(Colors::ConcreteLow);
+    else if (voxel == LevelPixel::ConcreteHigh) return Palette.Get(Colors::ConcreteHigh);
 	else if (voxel == LevelPixel::Blank)     return Palette.Get(Colors::Blank);
 	else if (Pixel::IsBase(voxel))
 		return Palette.GetTank(static_cast<char>(voxel) - static_cast<char>(LevelPixel::BaseMin))[0];

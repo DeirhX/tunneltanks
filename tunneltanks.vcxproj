@@ -26,7 +26,10 @@
     <ClCompile Include="src\bitmaps.cpp" />
     <ClCompile Include="src\colors.cpp" />
     <ClCompile Include="src\drawbuffer.cpp" />
-    <ClCompile Include="src\exceptions.cpp" />
+    <ClCompile Include="src\exceptions.cpp">
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdcpp17</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp17</LanguageStandard>
+    </ClCompile>
     <ClCompile Include="src\game.cpp" />
     <ClCompile Include="src\gamelib\SDL\bitmap.cpp" />
     <ClCompile Include="src\gamelib\SDL\control.cpp" />

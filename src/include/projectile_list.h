@@ -5,9 +5,9 @@
 class ProjectileList
 {
     /* Live items. Unmodified except for BEFORE Advance */
-    MultiTypeContainer<Bullet, Shrapnel, ConcreteSpray> items;
+    MultiTypeContainer<Bullet, Shrapnel, ConcreteSpray, ConcreteFoam> items;
     /* Items here will be integrated into main vector on Advance */
-    MultiTypeContainer<Bullet, Shrapnel, ConcreteSpray> newly_created_items;
+    MultiTypeContainer<Bullet, Shrapnel, ConcreteSpray, ConcreteFoam> newly_created_items;
 
   public:
     ProjectileList() = default;
