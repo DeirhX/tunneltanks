@@ -214,7 +214,7 @@ void Level::ForEachVoxelParallel(VoxelFunc voxelFunc, WorkerCount worker_count)
         for (pos.x = min; pos.x <= max; ++pos.x)
             for (pos.y = 0; pos.y < this->GetSize().y; ++pos.y)
             {
-                voxelFunc(SafePixelAccessor(this, pos, this->GetSize()), threadLocal);
+                voxelFunc(this->GetVoxelRaw(pos), SafePixelAccessor(this, pos, this->GetSize()), threadLocal);
             }
         return 0;
     };

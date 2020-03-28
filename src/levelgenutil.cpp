@@ -8,18 +8,18 @@
 
 void fill_all(Level *lvl, LevelPixel c)
 {
-	lvl->ForEachVoxel([c](SafePixelAccessor&& pixel) { pixel.Set(c); });
+	lvl->ForEachVoxel([c](SafePixelAccessor pixel) { pixel.Set(c); });
 }
 void invert_all(Level* lvl)
 {
-    lvl->ForEachVoxel([](SafePixelAccessor&& pixel)
+    lvl->ForEachVoxel([](SafePixelAccessor pixel)
 	{
         pixel.Set((pixel.Get() == LevelPixel::LevelGenRock) ? LevelPixel::LevelGenDirt : LevelPixel::LevelGenRock);
 	});
 }
 void unmark_all(Level* lvl)
 {
-    lvl->ForEachVoxel([](SafePixelAccessor&& pixel)
+    lvl->ForEachVoxel([](SafePixelAccessor pixel)
 	{
 		pixel.Set((pixel.Get() == LevelPixel::LevelGenDirt) ? LevelPixel::LevelGenDirt : LevelPixel::LevelGenRock);
 	});
@@ -49,7 +49,7 @@ void rough_up(Level *lvl) {
 	}
 	
 	/* For every marked spot, randomly fill it: */
-	lvl->ForEachVoxel([](SafePixelAccessor&& pixel)
+	lvl->ForEachVoxel([](SafePixelAccessor pixel)
 	{
 		if (pixel.Get() == LevelPixel::LevelGenMark)
 			pixel.Set(Random.Bool(500) ? LevelPixel::LevelGenRock : LevelPixel::LevelGenDirt);
