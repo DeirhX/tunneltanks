@@ -338,7 +338,8 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 	time_thread_create.Stop();
 	Stopwatch time_workers;
 
-	while (items_generated_global < goal_generated) {
+	int prev_items_generated_global = 0;
+	while (!done && items_generated_global < goal_generated) {
 		{
 			/* Wait for all threads being done and waiting for next pass */
 			std::unique_lock lock(mutex_threads_waiting);
@@ -349,12 +350,13 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 				cv_threads_waiting.wait(lock);
 			}
 			/* Signal exit if we got enough */
-			if (items_generated_global >= goal_generated) {
+			if (items_generated_global >= goal_generated || prev_items_generated_global == items_generated_global) {
 				done = true;
 			}
 			/* Advance pass boundary, resume thread */
 			max_pass = reached_pass + 100; /* TODO: desynchronized passes */
 			cv_continue_thread.notify_all();
+            prev_items_generated_global = items_generated_global;
 		}
 	}
 	time_workers.Stop();
@@ -365,6 +367,10 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 	}
 	time_join.Stop();
 	measure_function.Finish();
+
+	if (prev_items_generated_global < goal_generated)
+        gamelib_print("Did generate only %d items out of %d", prev_items_generated_global,
+                      items_generated_global.load());
 
 	/* Emit diag info */
 	DebugTrace<4>("  expand_process details: %lld.%03lld ms thread create, %lld.%03lld ms thread run, %lld.%03lld ms thread join, %d.%03d ms worker time (%u us per thread) \n",
