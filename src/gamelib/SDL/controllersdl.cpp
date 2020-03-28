@@ -53,8 +53,11 @@ constexpr GamePadMapping XBox360Pad = {
     .AimVerticalAxis    = 3,
     .ShootPrimary       = 5,
     .ShootSecondary     = 4,
-    .CycleWeaponsNext   = 2,
-    .CycleWeaponsPrev   = 0,
+    .CyclePrimaryWeaponNext   = 2,
+    .CyclePrimaryWeaponsPrev   = 0,
+    .CycleSecondaryWeaponNext = 3,
+    .CycleSecondaryWeaponsPrev = 1,
+
 };
 
 constexpr GamePadMapping PS4Pad = {
@@ -64,8 +67,10 @@ constexpr GamePadMapping PS4Pad = {
     .AimVerticalAxis =    3,
     .ShootPrimary =       5,
     .ShootSecondary =     4,
-    .CycleWeaponsNext   = 0,
-    .CycleWeaponsPrev   = 1,
+    .CyclePrimaryWeaponNext   = 0,
+    .CyclePrimaryWeaponsPrev   = 1,
+    .CycleSecondaryWeaponNext = 2,
+    .CycleSecondaryWeaponsPrev = 3,
 };
 
 GamePadController::GamePadController(int joy_index)
@@ -144,13 +149,22 @@ ControllerOutput GamePadController::ApplyControls(PublicTankInfo * tankPublic)
     output.is_shooting_primary = SDL_JoystickGetButton(this->joystick, this->mapping.ShootPrimary);
     output.is_shooting_secondary= SDL_JoystickGetButton(this->joystick, this->mapping.ShootSecondary);
 
-    bool is_cycle_weapons_next = !!SDL_JoystickGetButton(this->joystick, this->mapping.CycleWeaponsNext);
-    output.switch_weapon_next = is_cycle_weapons_next && !this->was_cycle_weapon_next_down;
-    this->was_cycle_weapon_next_down = is_cycle_weapons_next;
+    /* Cycle Primary & Secondary weapons */
+    bool cycle_primary_weapon_next = !!SDL_JoystickGetButton(this->joystick, this->mapping.CyclePrimaryWeaponNext);
+    output.switch_primary_weapon_next = cycle_primary_weapon_next && !this->was_cycle_primary_weapon_next_down;
+    this->was_cycle_primary_weapon_next_down = cycle_primary_weapon_next;
     
-    bool is_cycle_weapons_prev = !!SDL_JoystickGetButton(this->joystick, this->mapping.CycleWeaponsPrev);
-    output.switch_weapon_prev = is_cycle_weapons_prev && !this->was_cycle_weapon_prev_down;
-    this->was_cycle_weapon_prev_down = is_cycle_weapons_prev;
+    bool cycle_primary_weapon_prev = !!SDL_JoystickGetButton(this->joystick, this->mapping.CyclePrimaryWeaponsPrev);
+    output.switch_primary_weapon_prev = cycle_primary_weapon_prev && !this->was_cycle_primary_weapon_prev_down;
+    this->was_cycle_primary_weapon_prev_down = cycle_primary_weapon_prev;
+
+    bool cycle_secondary_weapon_next = !!SDL_JoystickGetButton(this->joystick, this->mapping.CycleSecondaryWeaponNext);
+    output.switch_secondary_weapon_next = cycle_secondary_weapon_next && !this->was_cycle_secondary_weapon_next_down;
+    this->was_cycle_secondary_weapon_next_down = cycle_secondary_weapon_next;
+
+    bool cycle_secondary_weapon_prev = !!SDL_JoystickGetButton(this->joystick, this->mapping.CycleSecondaryWeaponsPrev);
+    output.switch_secondary_weapon_prev = cycle_secondary_weapon_prev && !this->was_cycle_secondary_weapon_prev_down;
+    this->was_cycle_secondary_weapon_prev_down = cycle_secondary_weapon_prev;
 
     return output;
 }

@@ -185,6 +185,7 @@ int GameMain(int argc, char * argv[])
         ::global_game = std::make_unique<Game>(config);
         /* Play the game: */
         gamelib_main_loop([]() -> bool { return global_game->AdvanceStep(); });
+        ::global_game.reset();
     }
     /* Ok, we're done. Tear everything up: */
     gamelib_exit();
