@@ -437,10 +437,9 @@ static int smooth_once(Level *lvl) {
 		Size size = lvl->GetSize();
 		for (int y = from_y; y <= until_y; y++)
 			for (int x = 1; x < size.x - 1; x++) {
-				int n;
-				LevelPixel oldbit = lvl->GetVoxelRaw({ x, y });
+                LevelPixel oldbit = lvl->GetVoxelRaw({ x, y });
 
-				n = count_neighbors(lvl, x, y);
+				int n = lvl->CountNeighborValues({x, y});
 				bool paintRock = (oldbit != LevelPixel::LevelGenDirt) ? (n >= 3) : (n > 4);
 				lvl->SetVoxelRaw({ x, y }, paintRock ? LevelPixel::LevelGenRock : LevelPixel::LevelGenDirt);
 

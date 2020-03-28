@@ -48,11 +48,13 @@
     <ClCompile Include="src\levelgensimple.cpp" />
     <ClCompile Include="src\levelgentoast.cpp" />
     <ClCompile Include="src\levelgenutil.cpp" />
+    <ClCompile Include="src\level_adjacency.cpp" />
     <ClCompile Include="src\level_view.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\memalloc.cpp" />
     <ClCompile Include="src\projectile.cpp" />
     <ClCompile Include="src\random.cpp" />
+    <ClCompile Include="src\raw_level_data.cpp" />
     <ClCompile Include="src\scene.cpp" />
     <ClCompile Include="src\screen.cpp" />
     <ClCompile Include="src\tank.cpp" />
@@ -87,6 +89,7 @@
     <ClInclude Include="src\include\levelgensimple.h" />
     <ClInclude Include="src\include\levelgentoast.h" />
     <ClInclude Include="src\include\levelgenutil.h" />
+    <ClInclude Include="src\include\level_pixel.h" />
     <ClInclude Include="src\include\level_view.h" />
     <ClInclude Include="src\include\mymath.h" />
     <ClInclude Include="src\include\memalloc.h" />
@@ -104,6 +107,10 @@
     <ClInclude Include="src\include\tweak.h" />
     <ClInclude Include="src\include\types.h" />
     <ClInclude Include="src\include\world.h" />
+    <ClInclude Include="src\level_adjacency.h">
+      <FileType>CppHeader</FileType>
+    </ClInclude>
+    <ClInclude Include="src\raw_level_data.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="sdl\VisualC\SDLmain\SDLmain.vcxproj">
@@ -315,7 +322,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=5;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_AMD64_;NDEBUG;CMAKE_INTDIR="Release";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG_TRACE_LEVEL=4;USE_SDL_GAMELIB;_CRT_SECURE_NO_WARNINGS;NOMINMAX;_AMD64_;NDEBUG;CMAKE_INTDIR="Release";%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <DisableSpecificWarnings>5045;4514;4820;4706;4100</DisableSpecificWarnings>

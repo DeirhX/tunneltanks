@@ -8,7 +8,11 @@
 #include <vector>
 
 #include "bitmaps.h"
+#include "level_adjacency.h"
 #include "parallelism.h"
+#include "raw_level_data.h"
+
+enum class LevelPixel : char;
 
 enum class BaseCollision
 {
@@ -17,53 +21,7 @@ enum class BaseCollision
     Enemy,
 };
 
-/*
- * LevelPixel
- * Core pixel state of the level. Terrain, bases, rock and every other pixel kind there is.
- */
-enum class LevelPixel : char
-{
-    Blank = ' ',     /* Nothing. The void of the space. */
-    DirtHigh = 'D',  /* Standard dirt */
-    DirtLow = 'd',   /* Standard dirt */
-    DirtGrow = 'g',  /* Regrowing dirt, not yet collidable */
-    Rock = 'r',      /* Indestructible (almost) */
-    DecalHigh = '.', /* Decal after explosion. Harder to regrow */
-    DecalLow = ',',  /* Decal after explosion. Harder to regrow */
-    BaseMin = '0',   /* Tank Base. Goes up to '7' for various tank colors */
-    BaseMax = '7',
-    ConcreteLow = 'c',  /* Hardened concrete, tough to destroy */
-    ConcreteHigh = 'C', /* Hardened concrete, tough to destroy */
 
-    LevelGenDirt = 0,
-    LevelGenRock = 1,
-    LevelGenMark = 2,
-};
-/*
- * Queries that can be made against the pixel to classify it into various groups 
- */
-class Pixel
-{
-  public:
-    static bool IsDirt(LevelPixel voxel) { return voxel == LevelPixel::DirtHigh || voxel == LevelPixel::DirtLow; }
-    static bool IsDiggable(LevelPixel voxel)
-    {
-        return voxel == LevelPixel::DirtHigh || voxel == LevelPixel::DirtLow || voxel == LevelPixel::DirtGrow;
-    }
-    static bool IsSoftCollision(LevelPixel voxel) { return IsDirt(voxel); }
-    static bool IsBlockingCollision(LevelPixel voxel)
-    {
-        return voxel == LevelPixel::Rock || IsConcrete(voxel) ||
-               (voxel >= LevelPixel::BaseMin && voxel <= LevelPixel::BaseMax);
-    }
-    static bool IsAnyCollision(LevelPixel voxel) { return IsSoftCollision(voxel) || IsBlockingCollision(voxel); }
-    static bool IsBase(LevelPixel voxel) { return (voxel >= LevelPixel::BaseMin && voxel <= LevelPixel::BaseMax); }
-    static bool IsScorched(LevelPixel voxel) { return voxel == LevelPixel::DecalHigh || voxel == LevelPixel::DecalLow; }
-    static bool IsConcrete(LevelPixel voxel)
-    {
-        return voxel == LevelPixel::ConcreteHigh || voxel == LevelPixel::ConcreteLow;
-    }
-};
 
 /*
  * Tank Base, part of the level
@@ -77,61 +35,19 @@ class TankBase
     Position GetPosition() { return this->position; }
 };
 
-/*
- * Container for raw level data
- */
-class LevelData
-{
-    using Container = ValueArray<LevelPixel>;
-    Container array;
-
-  public:
-    LevelData(Size size) : array(size) {}
-
-    LevelPixel & operator[](int i) { return array[i]; }
-    const LevelPixel & operator[](int i) const { return array[i]; }
-
-    //LevelPixel GetLevelData(Position pos);
-    //LevelPixel GetLevelData(int offset) { return operator[](offset); }
-
-    Container::iterator begin() { return array.begin(); }
-    Container::iterator end() { return array.end(); }
-    Container::const_iterator cbegin() const { return array.cbegin(); }
-    Container::const_iterator cend() const { return array.cend(); }
-};
-
-/*
- * Adjacency Data
- */
-
-class LevelAdjacencyDataCompressed
-{
-    /* Max adjacent pixels = 8. We need 3 bits for that. We'll give 4.*/
-    using Container = std::vector<uint8_t>;
-    Container array;
-    constexpr static uint8_t Invalid = 0xF;
-
-  public:
-    LevelAdjacencyDataCompressed(Size size) { array.resize(size.x * size.y / 2); }
-
-    uint8_t operator[](int i) const;
-    void Set(int i, uint8_t value);
-    //uint8_t & operator[](int i)
-    //{
-    //    return const_cast<uint8_t &>(const_cast<const LevelAdjacencyData *>(this)->operator[](i));
-    //}
-};
 
 class Level
 {
   private:
-    LevelData data;
+    RawLevelData data;
+    DirtAdjacencyData dirt_adjacency_data;
     Size size;
     LevelDrawBuffer * drawBuffer;
     std::vector<std::unique_ptr<TankBase>> spawn;
+    bool is_ready = false;
 
   private:
-    void SetLevelData(int i, LevelPixel value) { this->data[i] = value; }
+    void SetLevelData(int i, LevelPixel value);
     void SetLevelData(Position pos, LevelPixel value);
 
   public:
@@ -163,10 +79,10 @@ class Level
     int CountNeighbors(Position pos, LevelPixel neighbor_value);
     template <typename CountFunc>
     int CountNeighborValues(Position pos, CountFunc count_func);
+    uint8_t DirtPixelsAdjacent(Position pos) { return this->dirt_adjacency_data.Get(pos); }
 
-    /* Level generation */
-    void GenerateDirtAndRocks();
-    void CreateBases();
+    void MaterializeLevelTerrainAndBases();
+
     template <typename VoxelFunc>
     void ForEachVoxel(VoxelFunc func);
     template <typename VoxelFunc>
@@ -180,6 +96,10 @@ class Level
     BaseCollision CheckBaseCollision(Position pos, TankColor color);
 
   private:
+    /* Level generation */
+    void GenerateDirtAndRocks();
+    void CreateBases();
+
     bool IsInBounds(Position pos) const;
     void CreateBase(Position pos, TankColor color);
 };
@@ -189,8 +109,12 @@ class SafePixelAccessor
     Level * level;
     Position position;
     int index;
+
   public:
-    SafePixelAccessor(Level * level, Position pos, Size size) : level(level), position(pos), index(pos.x + pos.y*size.x) {}
+    SafePixelAccessor(Level * level, Position pos, Size size)
+        : level(level), position(pos), index(pos.x + pos.y * size.x)
+    {
+    }
     Position GetPosition() const { return this->position; }
     LevelPixel Get() const { return level->GetVoxelRaw(this->index); }
     void Set(LevelPixel pix) { level->SetVoxelRaw(this->index, pix); }

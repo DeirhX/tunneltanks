@@ -161,8 +161,7 @@ int GameMain(int argc, char * argv[])
 
         /* Generate our random level: */
         generate_level(lvl.get(), GeneratorFromName(id));
-        lvl->GenerateDirtAndRocks();
-        lvl->CreateBases();
+        lvl->MaterializeLevelTerrainAndBases();
 
         /* Dump it out, and exit: */
         lvl->DumpBitmap(outfile_name);

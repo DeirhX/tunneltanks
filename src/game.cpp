@@ -130,8 +130,7 @@ Game::Game(GameConfig config)
     /* Create projectile list, tank list and materialize the level voxels */
     auto projectile_list = std::make_unique<ProjectileList>();
     auto tank_list = std::make_unique<TankList>(level.get(), projectile_list.get());
-    level->GenerateDirtAndRocks();
-    level->CreateBases();
+    level->MaterializeLevelTerrainAndBases();
 
     /* Debug the starting data, if we're debugging: */
     if (this->is_debug)
