@@ -6,6 +6,8 @@ struct ControllerOutput
 	Speed speed = { };
 	bool is_shooting_primary = false;
     bool is_shooting_secondary = false;
+    bool switch_weapon_next = false;
+    bool switch_weapon_prev = false;
 	DirectionF turret_dir = { 0, 0 };
 
     bool is_crosshair_absolute = false; /* Use either native screen position (mouse) or relative direction (gamepad) */

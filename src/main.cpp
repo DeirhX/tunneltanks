@@ -182,9 +182,9 @@ int GameMain(int argc, char * argv[])
         .use_ai = is_ai,
     };
     {
-        auto game = std::make_unique<Game>(config);
+        ::global_game = std::make_unique<Game>(config);
         /* Play the game: */
-        gamelib_main_loop([&game]() -> bool { return game->AdvanceStep(); });
+        gamelib_main_loop([]() -> bool { return global_game->AdvanceStep(); });
     }
     /* Ok, we're done. Tear everything up: */
     gamelib_exit();

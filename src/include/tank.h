@@ -29,40 +29,62 @@ enum class CollisionType
     Blocked /* Hit a rock/base/tank/something we can't drive over. */
 };
 
+enum class Weapon
+{
+    Cannon,
+    ConcreteSpray,
+    DirtSpray,
+    Size,
+};
+
 class TankTurret
 {
+    class Tank * tank;
+
     std::array<Position, tweak::tank::TurretLength> TurretVoxels;
     Color color;
     DirectionF direction = {1.0, 0};
     int current_length = tweak::tank::TurretLength;
-  public:
-    TankTurret(Color turret_color) : color(turret_color) {}
-    DirectionF GetDirection() const { return this->direction; }
 
-    void Advance(Position tank_position, widgets::Crosshair * crosshair); 
+    bool is_shooting_primary = false;
+    bool is_shooting_secondary = false;
+    int bullet_timer = tweak::tank::BulletDelay;
+    //int bullets_left = tweak::tank::BulletMax;
+
+    Weapon primary_weapon = Weapon::Cannon;
+    Weapon secondary_weapon = Weapon::ConcreteSpray;
+  public:
+    TankTurret(Tank * owner, Color turret_color) : tank(owner), color(turret_color)
+    {
+        Reset();
+    }
+    DirectionF GetDirection() const { return this->direction; }
+    bool IsShooting() const { return this->is_shooting_primary || this->is_shooting_secondary; }
+
+    void ApplyControllerOutput(ControllerOutput controls);
+
+    void Advance(Position tank_position, widgets::Crosshair * crosshair);
     void Draw(LevelDrawBuffer * drawBuff) const;
     void Erase(Level * level) const;
     void SetDirection(DirectionF new_dir) { this->direction = new_dir; }
+
+    void HandleShoot();
+    void Reset();
 };
 
 class Tank final
 {
     bool is_valid = false;
-    bool is_shooting_primary = false;
-    bool is_shooting_secondary = false;
 
     Position pos; /* Current tank position */
     Speed speed;  /* Velocity... ie: is it moving now? */
     Direction direction = {};
 
-    TankColor color;                /* Unique id and also color of the tank */
-    TankBase * tank_base = nullptr; /* Base owned by the tank  */
-    TankTurret turret;              /* Turret of the tank */
+    TankColor color;                          /* Unique id and also color of the tank */
+    TankBase * tank_base = nullptr;           /* Base owned by the tank  */
+    TankTurret turret;                        /* Turret of the tank */
     widgets::Crosshair * crosshair = nullptr; /* Crosshair used for aiming */
 
-
-    int bullet_timer = tweak::tank::BulletDelay;
-    int bullets_left = tweak::tank::BulletMax;
     int respawn_timer = 0;
 
     int health = tweak::tank::StartingShield;
@@ -73,8 +95,8 @@ class Tank final
 
     Level * level;
     ProjectileList * projectile_list;
-    
-public:
+
+  public:
     void Invalidate() { this->is_valid = false; }
 
     Tank(TankColor color, Level * lvl, ProjectileList * pl, TankBase * tank_base);
@@ -108,10 +130,9 @@ public:
     void Clear(LevelDrawBuffer * drawBuff) const;
     void Draw(LevelDrawBuffer * drawBuff) const;
 
-    void ReturnBullet();
+    //void ReturnBullet();
 
   private:
     void HandleMove(class TankList * tl);
-    void HandleShoot();
     void TryBaseHeal();
 };

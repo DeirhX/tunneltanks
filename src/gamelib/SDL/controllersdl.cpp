@@ -51,17 +51,21 @@ constexpr GamePadMapping XBox360Pad = {
     .MoveVerticalAxis   = 1,
     .AimHorizontalAxis  = 4,
     .AimVerticalAxis    = 3,
-    .ShootPrimary       = 4,
-    .ShootSecondary     = 5,
+    .ShootPrimary       = 5,
+    .ShootSecondary     = 4,
+    .CycleWeaponsNext   = 2,
+    .CycleWeaponsPrev   = 0,
 };
 
 constexpr GamePadMapping PS4Pad = {
     .MoveHorizontalAxis = 0,
-    .MoveVerticalAxis = 1,
-    .AimHorizontalAxis = 2,
-    .AimVerticalAxis = 3,
-    .ShootPrimary = 4,
-    .ShootSecondary = 5,
+    .MoveVerticalAxis =   1,
+    .AimHorizontalAxis =  2,
+    .AimVerticalAxis =    3,
+    .ShootPrimary =       5,
+    .ShootSecondary =     4,
+    .CycleWeaponsNext   = 0,
+    .CycleWeaponsPrev   = 1,
 };
 
 GamePadController::GamePadController(int joy_index)
@@ -139,6 +143,14 @@ ControllerOutput GamePadController::ApplyControls(PublicTankInfo * tankPublic)
     /* Can't use lower buttons in SDL1. FU. */
     output.is_shooting_primary = SDL_JoystickGetButton(this->joystick, this->mapping.ShootPrimary);
     output.is_shooting_secondary= SDL_JoystickGetButton(this->joystick, this->mapping.ShootSecondary);
-  
+
+    bool is_cycle_weapons_next = !!SDL_JoystickGetButton(this->joystick, this->mapping.CycleWeaponsNext);
+    output.switch_weapon_next = is_cycle_weapons_next && !this->was_cycle_weapon_next_down;
+    this->was_cycle_weapon_next_down = is_cycle_weapons_next;
+    
+    bool is_cycle_weapons_prev = !!SDL_JoystickGetButton(this->joystick, this->mapping.CycleWeaponsPrev);
+    output.switch_weapon_prev = is_cycle_weapons_prev && !this->was_cycle_weapon_prev_down;
+    this->was_cycle_weapon_prev_down = is_cycle_weapons_prev;
+
     return output;
 }

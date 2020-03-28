@@ -32,6 +32,8 @@ struct GamePadMapping
     int AimVerticalAxis;
     int ShootPrimary;
     int ShootSecondary;
+    int CycleWeaponsNext;
+    int CycleWeaponsPrev;
 };
 
 class GamePadController : public Controller
@@ -39,6 +41,8 @@ class GamePadController : public Controller
 	SDL_Joystick* joystick;
     GamePadMapping mapping;
 
+	bool was_cycle_weapon_next_down = false;
+    bool was_cycle_weapon_prev_down = false;
   public:
 	GamePadController(int joy_index);
 	~GamePadController();

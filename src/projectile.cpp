@@ -22,9 +22,6 @@ void Bullet::Advance(TankList * tankList)
         Tank * hitTank = tankList->GetTankAtPoint(this->pos.ToIntPosition(), hitTankColor);
         if (hitTank)
         {
-            /* If we have an associated tank, return the shot: */
-            this->tank->ReturnBullet();
-
             /* Hurt the tank we hit: */
             hitTank->AlterHealth(tweak::tank::ShotDamage);
 
@@ -46,9 +43,6 @@ void Bullet::Advance(TankList * tankList)
         LevelPixel c = level->GetVoxel(this->pos.ToIntPosition());
         if (Pixel::IsAnyCollision(c))
         {
-            /* If we have an associated tank, return the shot: */
-            this->tank->ReturnBullet();
-
             for (Shrapnel & shrapnel : ExplosionDesc::AllDirections(
                                            this->pos_blur_from.ToIntPosition(), tweak::explosion::dirt::ShrapnelCount,
                                            tweak::explosion::dirt::Speed, tweak::explosion::dirt::Frames)

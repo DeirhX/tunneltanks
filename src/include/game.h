@@ -37,8 +37,13 @@ class Game
     bool AdvanceStep();
     void GameOver();
 
+    World * GetWorld() { return world.get(); }
   private:
 };
+
+inline std::unique_ptr<Game> global_game;
+inline Game * GetGame() { return global_game.get(); }
+inline World * GetWorld() { return GetGame()->GetWorld(); }
 
 class GameMode
 {

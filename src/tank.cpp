@@ -13,7 +13,15 @@
 #include <tweak.h>
 #include <world.h>
 
+
+#include "game.h"
 #include "raycaster.h"
+
+void TankTurret::ApplyControllerOutput(ControllerOutput controls)
+{
+    this->is_shooting_primary = controls.is_shooting_primary;
+    this->is_shooting_secondary = controls.is_shooting_secondary;
+}
 
 void TankTurret::Advance(Position tank_position, widgets::Crosshair * crosshair)
 {
@@ -61,13 +69,45 @@ void TankTurret::Erase(Level * level) const
     }
 }
 
+void TankTurret::HandleShoot()
+{
+    /* Handle all shooting logic: */
+    if (this->bullet_timer == 0)
+    {
+        if (this->is_shooting_primary )
+        {
+            GetWorld()->GetProjectileList()->Add(Bullet{this->tank->GetPosition(), this->GetDirection(),
+                                                    tweak::weapon::BulletSpeed, GetWorld()->GetLevel(), this->tank});
+
+            /* We just fired. Let's charge ourselves: */
+            this->tank->AlterEnergy(tweak::tank::ShootCost);
+
+            this->bullet_timer = tweak::tank::BulletDelay;
+        }
+        if (this->is_shooting_secondary)
+        {
+            GetWorld()->GetProjectileList()->Add(
+                ConcreteSpray{this->tank->GetPosition(), this->GetDirection(), GetWorld()->GetLevel(), this->tank});
+
+            this->bullet_timer = tweak::tank::BulletDelay;
+        }
+    }
+    else
+        this->bullet_timer--;
+}
+
+void TankTurret::Reset()
+{
+    this->bullet_timer = tweak::tank::BulletDelay;
+}
+
 /*  /\
  * TANK
  */
 
 Tank::Tank(TankColor color, Level * lvl, ProjectileList * pl, TankBase * tank_base)
     : is_valid(true), pos(tank_base->GetPosition()), color(color), tank_base(tank_base),
-      turret(Palette.GetTank(color)[2])
+      turret(this, Palette.GetTank(color)[2])
 {
     // this->cached_slice = std::make_shared<LevelView>(this, lvl);
 
@@ -149,7 +189,7 @@ void Tank::HandleMove(TankList * tl)
 
             this->level->DigHole(this->pos + (1 * this->speed));
             /* If so, then we can move: */
-            if (collision != CollisionType::Dirt || this->is_shooting_primary)
+            if (collision != CollisionType::Dirt || this->turret.IsShooting())
             {
                 /* We will only move/rotate if we were able to get here without
 				 * digging, so we can avoid certain bizarre bugs: */
@@ -162,34 +202,6 @@ void Tank::HandleMove(TankList * tl)
             }
         }
     }
-}
-
-void Tank::HandleShoot()
-{
-    /* Handle all shooting logic: */
-    if (this->bullet_timer == 0)
-    {
-        if (this->is_shooting_primary && this->bullets_left > 0)
-        {
-            this->projectile_list->Add(Bullet{this->GetPosition(), this->turret.GetDirection(),
-                                              tweak::weapon::BulletSpeed, this->GetLevel(), this});
-
-            /* We just fired. Let's charge ourselves: */
-            this->AlterEnergy(tweak::tank::ShootCost);
-
-            this->bullets_left--;
-            this->bullet_timer = tweak::tank::BulletDelay;
-        }
-        if (this->is_shooting_secondary)
-        {
-            this->projectile_list->Add(
-                ConcreteSpray{this->GetPosition(), this->turret.GetDirection(), this->GetLevel(), this});
-
-            this->bullet_timer = tweak::tank::BulletDelay;
-        }
-    }
-    else
-        this->bullet_timer--;
 }
 
 /* Check to see if we're in any bases, and heal based on that: */
@@ -235,8 +247,6 @@ void Tank::Clear(LevelDrawBuffer * drawBuff) const
     this->turret.Erase(level);
 }
 
-void Tank::ReturnBullet() { this->bullets_left++; }
-
 void Tank::Advance(World * world)
 {
     if (!this->IsDead())
@@ -249,7 +259,7 @@ void Tank::Advance(World * world)
 
         /* Turn turret and shoot if desired*/
         this->turret.Advance(this->GetPosition(), this->crosshair);
-        this->HandleShoot();
+        this->turret.HandleShoot();
     }
     else
     {
@@ -311,8 +321,8 @@ void Tank::AlterHealth(int diff)
 
 void Tank::Spawn()
 {
-    this->bullet_timer = tweak::tank::BulletDelay;
-    this->bullets_left = tweak::tank::BulletMax;
+    this->turret.Reset();
+    
     this->health = tweak::tank::StartingShield;
     this->energy = tweak::tank::StartingFuel;
 
@@ -334,9 +344,8 @@ void Tank::Die()
 
 void Tank::ApplyControllerOutput(ControllerOutput controls)
 {
+    this->turret.ApplyControllerOutput(controls);
     this->speed = controls.speed;
-    this->is_shooting_primary = controls.is_shooting_primary;
-    this->is_shooting_secondary = controls.is_shooting_secondary;
     if (this->crosshair)
     {
         if (controls.is_crosshair_absolute)
