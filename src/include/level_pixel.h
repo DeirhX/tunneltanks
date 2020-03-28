@@ -15,6 +15,7 @@ enum class LevelPixel : char
     DecalLow = ',',  /* Decal after explosion. Harder to regrow */
     BaseMin = '0',   /* Tank Base. Goes up to '7' for various tank colors */
     BaseMax = '7',
+    BaseBarrier = '8',  /* Invisible base gates. Only blocks wild growth. */
     ConcreteLow = 'c',  /* Hardened concrete, tough to destroy */
     ConcreteHigh = 'C', /* Hardened concrete, tough to destroy */
 
@@ -46,4 +47,5 @@ class Pixel
     {
         return voxel == LevelPixel::ConcreteHigh || voxel == LevelPixel::ConcreteLow;
     }
+    static bool IsRock(LevelPixel pixel) { return pixel == LevelPixel::Rock;  }
 };

@@ -66,7 +66,7 @@ struct TwoPlayerLayout : public SinglePlayerLayout
         {ScreenPosition{view_offset.x, tank_health_bars_rect.pos.y},
         Size{player_view_one.size.x - energy_letter_rect.size.x/2 - lives_left_rect.size.x - 2*lives_left_padding - 1, tank_health_bars_rect.size.y}};
     constexpr static ScreenRect health_energy_two = {
-        ScreenPosition{health_energy_one.Right() + energy_letter_rect.size.x + lives_left_rect.size.x + 2*lives_left_padding + 3,
+        ScreenPosition{health_energy_one.Right() + energy_letter_rect.size.x + lives_left_rect.size.x*2 + 3 + 2*lives_left_padding + 3,
                        health_energy_one.pos.y},
         Size{health_energy_one.size}};
     constexpr static ScreenRect energy_letter_rect = {ScreenPosition{tweak::GameSize.x / 2 - 2, tweak::GameSize.y - 2 - status_height},
@@ -74,8 +74,11 @@ struct TwoPlayerLayout : public SinglePlayerLayout
     constexpr static ScreenRect health_letter_rect = {ScreenPosition{energy_letter_rect.pos + Offset{0, 6}}, Size{4, 5}};
 
     /* Lives remaining view */
-    constexpr static ScreenRect lives_left_rect =
-        ScreenRect{tank_health_bars_rect.Right() + 2, tank_health_bars_rect.Top() + 1, 2, status_height};
+    constexpr static ScreenRect lives_left_rect_one =
+        ScreenRect{health_energy_one.Right() + 2, health_energy_one.Top() + 1, 2, status_height};
+    constexpr static ScreenRect lives_left_rect_two =
+        ScreenRect{health_energy_two.Left() - health_letter_rect.size.x, health_energy_two.Top() + 1, 2, status_height};
+    
 
 
 };
@@ -112,10 +115,7 @@ void Screens::TwoPlayerScreenSetup(Screen * screen, World * world, Tank * player
     screen->AddWidget(std::move(crosshair));
 
     screen->AddStatus(TwoPlayerLayout::health_energy_one, player_one, false);
-    screen->AddWidget(std::make_unique<widgets::LivesLeft>(Rect{TwoPlayerLayout::health_energy_one.Right() + 2,
-                                                                TwoPlayerLayout::health_energy_one.Top() + 1, 2,
-                                                                widgets::SharedLayout::status_height},
-                                                           Orientation::Vertical, player_one));
+    screen->AddWidget(std::make_unique<widgets::LivesLeft>(TwoPlayerLayout::lives_left_rect_one, Orientation::Vertical, player_one));
 
     window = std::make_unique<widgets::TankView>(TwoPlayerLayout::player_view_two, player_two);
     crosshair = std::make_unique<widgets::Crosshair>(TwoPlayerLayout::player_view_two.Center(), screen, window.get());
@@ -125,10 +125,8 @@ void Screens::TwoPlayerScreenSetup(Screen * screen, World * world, Tank * player
     screen->AddWidget(std::move(crosshair));
 
     screen->AddStatus(TwoPlayerLayout::health_energy_two, player_two, true);
-    screen->AddWidget(std::make_unique<widgets::LivesLeft>(Rect{TwoPlayerLayout::health_energy_two.Right() + 2,
-                                                                TwoPlayerLayout::health_energy_two.Top() + 1, 2,
-                                                                widgets::SharedLayout::status_height},
-                                                           Orientation::Vertical, player_two));
+    screen->AddWidget(
+        std::make_unique<widgets::LivesLeft>(TwoPlayerLayout::lives_left_rect_two, Orientation::Vertical, player_two));
 
     /* Add the letters E and H bitmaps: */
     screen->AddBitmap(TwoPlayerLayout::energy_letter_rect, &bitmaps::GuiEnergy,

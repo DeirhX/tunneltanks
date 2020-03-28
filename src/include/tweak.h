@@ -69,7 +69,7 @@ namespace tank {
 	constexpr int ShotDamage = -160;
 	constexpr int HomeHealSpeed = 3;
 
-    constexpr int TurretLength = 4;
+    constexpr int TurretLength = 8;
 
 }
 /* Constants for drawing static: (The bottom 3 constants are out of 1000) */
@@ -94,7 +94,8 @@ namespace explosion
 {
     constexpr float MadnessLevel = 1.f;
     constexpr int ChanceToDestroyConcrete = 50;
-}
+    constexpr int ChanceToDestroyRock = 50;
+    }
 
 namespace explosion::dirt
 {

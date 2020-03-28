@@ -54,17 +54,6 @@ void Level::SetVoxelRaw(int offset, LevelPixel voxel)
 }
 */
 
-//LevelPixel& Level::Voxel(Position pos)
-//{
-//    assert(IsInBounds(pos));
-//    return this->data[pos.y * this->size.x + pos.x];
-//}
-//
-//LevelPixel& Level::VoxelRaw(Position pos)
-//{
-//	return this->data[pos.y * this->size.x + pos.x];
-//}
-
 int Level::CountNeighborValues(Position pos)
 {
     return (char)GetVoxelRaw({pos.x - 1 + GetSize().x * (pos.y - 1)}) +
@@ -138,9 +127,9 @@ void Level::CreateBase(Position pos, TankColor color)
             if (abs(x) == BASE_SIZE / 2 || abs(y) == BASE_SIZE / 2)
             { // Outline
                 if (x >= -BASE_DOOR_SIZE / 2 && x <= BASE_DOOR_SIZE / 2)
-                    continue;
-
-                SetVoxel(pix, static_cast<LevelPixel>(static_cast<char>(LevelPixel::BaseMin) + color));
+                    SetVoxel(pix, LevelPixel::BaseBarrier);
+                else
+                    SetVoxel(pix, static_cast<LevelPixel>(static_cast<char>(LevelPixel::BaseMin) + color));
             }
             else
                 SetVoxel(pix, LevelPixel::Blank);
@@ -254,6 +243,8 @@ Color32 Level::GetVoxelColor(LevelPixel voxel)
         return Palette.Get(Colors::ConcreteLow);
     else if (voxel == LevelPixel::ConcreteHigh)
         return Palette.Get(Colors::ConcreteHigh);
+    else if (voxel == LevelPixel::BaseBarrier)
+        return Palette.Get(Colors::Blank);
     else if (voxel == LevelPixel::Blank)
         return Palette.Get(Colors::Blank);
     else if (Pixel::IsBase(voxel))

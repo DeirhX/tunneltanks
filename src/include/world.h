@@ -33,5 +33,6 @@ class World
     std::chrono::microseconds regrow_average = {};
     int advance_count = 0;
 
+    /* Attempts to regrow destroyed dirt in empty places where there is some neighboring dirt to extend */
     void RegrowPass();
 };

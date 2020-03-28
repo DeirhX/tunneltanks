@@ -23,6 +23,7 @@ void World::Advance(class LevelDrawBuffer * draw_buffer)
 
 void World::GameIsOver() { this->game->GameOver(); }
 
+
 void World::RegrowPass()
 {
     Stopwatch<> elapsed;

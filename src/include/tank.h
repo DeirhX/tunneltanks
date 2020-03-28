@@ -34,6 +34,7 @@ class TankTurret
     std::array<Position, tweak::tank::TurretLength> TurretVoxels;
     Color color;
     DirectionF direction = {1.0, 0};
+    int current_length = tweak::tank::TurretLength;
   public:
     TankTurret(Color turret_color) : color(turret_color) {}
     DirectionF GetDirection() const { return this->direction; }

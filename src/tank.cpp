@@ -18,12 +18,16 @@
 void TankTurret::Advance(Position tank_position, widgets::Crosshair * crosshair)
 {
     if (crosshair)
-    {
+    {  /* If we got a crosshair at action, let it dictate the direction */
         Position crosshair_pos = crosshair->GetWorldPosition();
         auto turret_dir = OffsetF(crosshair_pos - tank_position);
         if (turret_dir != OffsetF{})
-            this->direction = DirectionF{turret_dir.Normalize()};
+            this->direction = DirectionF{turret_dir};
     }
+    /* If we inherited it from tank it needs to be normalized. So do it just in case, cheaper than querying. */
+    this->direction = DirectionF{this->direction.Normalize()};
+
+    /* Begin the turret at voxel 0 */
     int turret_len = 0;
     this->TurretVoxels[turret_len++] = tank_position;
 
@@ -37,13 +41,15 @@ void TankTurret::Advance(Position tank_position, widgets::Crosshair * crosshair)
     Raycaster::Cast(PositionF(tank_position),
                     PositionF(tank_position) + (this->direction * float(tweak::tank::TurretLength)), visitor,
                     Raycaster::VisitFlags::PixelsMustTouchCorners);
+
+    this->current_length = turret_len;
 }
 
 void TankTurret::Draw(LevelDrawBuffer * drawBuff) const
 {
-    for (const Position & pos : this->TurretVoxels)
+    for (int i=0; i<this->current_length; ++i)
     {
-        drawBuff->SetPixel(pos, this->color);
+        drawBuff->SetPixel(this->TurretVoxels[i], this->color);
     }
 }
 
@@ -176,7 +182,8 @@ void Tank::HandleShoot()
         }
         if (this->is_shooting_secondary)
         {
-            this->projectile_list->Add(ConcreteSpray{this->GetPosition(), this->turret.GetDirection(), this->GetLevel(), this});
+            this->projectile_list->Add(
+                ConcreteSpray{this->GetPosition(), this->turret.GetDirection(), this->GetLevel(), this});
 
             this->bullet_timer = tweak::tank::BulletDelay;
         }

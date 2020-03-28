@@ -149,7 +149,8 @@ void Shrapnel::Advance(TankList * tankList)
         LevelPixel c = level->GetVoxel(this->pos.ToIntPosition());
         if (Pixel::IsBlockingCollision(c))
         {
-            if (Pixel::IsConcrete(c) && Random.Bool(tweak::explosion::ChanceToDestroyConcrete))
+            if ((Pixel::IsConcrete(c) && Random.Bool(tweak::explosion::ChanceToDestroyConcrete))
+                || (Pixel::IsRock(c) && Random.Bool(tweak::explosion::ChanceToDestroyRock)))
             {
                 level->SetVoxel(this->pos.ToIntPosition(),
                                 Random.Bool(500) ? LevelPixel::DecalHigh : LevelPixel::DecalLow);
