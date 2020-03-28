@@ -113,7 +113,7 @@ class ConcreteSpray : public Projectile
 {
     using Base = Projectile;
     class Tank * tank;
-    constexpr static float flight_speed = 2.f;
+    constexpr static float flight_speed = tweak::weapon::ConcreteSpeed;
 
   public:
     ConcreteSpray(Position position, SpeedF speed, Level * level, Tank * tank)

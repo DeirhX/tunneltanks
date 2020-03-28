@@ -24,13 +24,13 @@
  * This bit is used to initialize various GUIs:                               *
  *----------------------------------------------------------------------------*/
 
-void GameMode::AssumeAIControl(TankList * tl, Level * lvl, TankColor starting_id)
+void GameMode::AssumeAIControl(TankList * tank_list, Level * level, TankColor starting_id)
 {
 
     for (TankColor i = starting_id; i < tweak::MaxPlayers; i++)
     {
-        Tank * t = tl->AddTank(i, lvl->GetSpawn(i));
-        t->SetController(std::make_shared<TwitchController>());
+        Tank * tank = tank_list->AddTank(i, level->GetSpawn(i));
+        tank->SetController(std::make_shared<TwitchController>());
     }
 }
 

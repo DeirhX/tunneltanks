@@ -6,42 +6,47 @@
 #include <chrono>
 
 namespace tweak {
+
+/* Window title / version string: */
+#define WINDOW_TITLE "TunnelTanks"
+#define VERSION "0.5 alpha"
 /*
  * Most of the game engine's arbitrary limits are stored in here:
  */
-	namespace perf {
-		constexpr int parallelism_percent = 100;
-		inline unsigned int parallelism_degree = std::max(1u, std::thread::hardware_concurrency() * parallelism_percent / 100);
+namespace screen
+{
+	/* The default size of the window: */
+	constexpr Size size = { 640, 400 };
+}
 
-		/* The desired speed in frames per second: */
-		constexpr int TargetFps = 24;
-		constexpr std::chrono::milliseconds AdvanceStep{ 1000 / TargetFps };
 
-	}
+namespace perf {
+	constexpr int parallelism_percent = 100;
+	inline unsigned int parallelism_degree = std::max(1u, std::thread::hardware_concurrency() * parallelism_percent / 100);
 
+	/* The desired speed in frames per second: */
+	constexpr int TargetFps = 24;
+	constexpr std::chrono::milliseconds AdvanceStep{ 1000 / TargetFps };
+
+}
+
+namespace world
+{
+    /* The virtual resolution of the game. (IE: How many blocks tall/wide) */
+    constexpr Size GameSize = { 160, 100};
     constexpr int DirtRecoverSpeed = 2; /* Average delay before growing finishes and new dirt is formed. More is faster. */
-    constexpr int DirtRegrowSpeed = 5; /* Average delay before it starts growing back. More is faster.*/
+    constexpr int DirtRegrowSpeed = 5;  /* Average delay before it starts growing back. More is faster.*/
 
-	namespace screen
-	{
-		/* The default size of the window: */
-		constexpr Size size = { 640, 400 };
-	}
+    /* The minimum distance between two tanks in the world. If this is set too high,
+     * then the level generator may start throwing exceptions: */
+    constexpr int MinBaseDistance = 150;
+    /* Various base sizes: */
+    #define BASE_SIZE                      35
+    #define BASE_DOOR_SIZE                 7
 
-
-/* Window title / version string: */
-#define WINDOW_TITLE                   "TunnelTanks"
-#define VERSION                        "0.5 alpha"
-
-/* The virtual resolution of the game. (IE: How many blocks tall/wide) */
-constexpr Size GameSize = { 160, 100};
+} // namespace world
 
 
-/* The minimum distance between two tanks in the world. If this is set too high,
- * then the level generator may start throwing exceptions: */
-#define MIN_SPAWN_DIST                 150
-
- /* The maximum number of tanks: */
 constexpr int MaxPlayers = 8;
 
 namespace tank {
@@ -53,8 +58,6 @@ namespace tank {
 	constexpr int BulletDelay = 3;
 	/* The maximum number of bullets allowed from a given tank: */
 	constexpr int BulletMax = 6;
-	/* The speed in pixels/frame of bullets: */
-	constexpr int BulletSpeed = 3;
 
 	/* Various constants for energy calculation: */
 	constexpr int StartingFuel = 24000;
@@ -69,18 +72,15 @@ namespace tank {
 	constexpr int ShotDamage = -160;
 	constexpr int HomeHealSpeed = 3;
 
-    constexpr int TurretLength = 8;
-
+    constexpr int TurretLength = 4;
 }
+
 /* Constants for drawing static: (The bottom 3 constants are out of 1000) */
 #define STATIC_THRESHOLD               (tweak::tank::StartingFuel/5)
 #define STATIC_TRANSPARENCY            200
 #define STATIC_BLACK_BAR_ODDS          500
 #define STATIC_BLACK_BAR_SIZE          500
 
-/* Various base sizes: */
-#define BASE_SIZE                      35
-#define BASE_DOOR_SIZE                 7
 
 namespace control
 {
@@ -88,6 +88,14 @@ namespace control
     constexpr int GamePadAimSensitivity = 30;
     constexpr int GamePadAimThreshold = 3000;
     constexpr float GamePadCrosshairRadius = 25.f;
+}
+
+namespace weapon
+{
+	/* The speed in pixels/frame of bullets: */
+	constexpr int BulletSpeed = 3;
+    constexpr float ConcreteSpeed = 1.5f;
+    constexpr int ConcreteDetonationDistance = 3;
 }
 
 namespace explosion

@@ -25,7 +25,8 @@ public:
         /* Compute lowest simulation step that will advance a maximum of one pixel per step */
         OffsetF one_step = offset / std::max(std::abs(offset.x), std::abs(offset.y));
         PositionF curr_pos = from;
-        int steps = static_cast<int>(std::max(std::abs(offset.x), std::abs(offset.y)) / std::max(std::abs(one_step.x), std::abs(one_step.y)));
+        //int steps = static_cast<int>(std::round(std::max(std::abs(offset.x), std::abs(offset.y)) / std::max(std::abs(one_step.x), std::abs(one_step.y))));
+        int steps = int(std::round(offset.GetSize()));
 
         if (steps == 0)
             return visitor(to, from);

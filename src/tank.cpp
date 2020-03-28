@@ -172,7 +172,7 @@ void Tank::HandleShoot()
         if (this->is_shooting_primary && this->bullets_left > 0)
         {
             this->projectile_list->Add(Bullet{this->GetPosition(), this->turret.GetDirection(),
-                                              tweak::tank::BulletSpeed, this->GetLevel(), this});
+                                              tweak::weapon::BulletSpeed, this->GetLevel(), this});
 
             /* We just fired. Let's charge ourselves: */
             this->AlterEnergy(tweak::tank::ShootCost);

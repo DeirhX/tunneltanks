@@ -88,7 +88,7 @@ void ConcreteSpray::Advance(TankList * tankList)
      *  We will test always [explode_dist] amount of positions in front of the projectile trajectory.
      *  If there is a hypothetical collision, we attempt to explode {explode_dist} pixels away.
      */
-    constexpr int explode_dist = 3;
+    constexpr int explode_dist = tweak::weapon::ConcreteDetonationDistance;
     auto prev_positions = boost::circular_buffer<PositionF>{explode_dist + 1};
     int search_step = 0;
     const int search_step_count = explode_dist + int(flight_speed);

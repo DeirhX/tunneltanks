@@ -141,7 +141,7 @@ static void add_spawns(Level *lvl)
             for (j = 0; j < i; j++)
             {
                 if (pt_dist(lvl->GetSpawn(i)->GetPosition(), lvl->GetSpawn(j)->GetPosition()) <
-                    MIN_SPAWN_DIST * MIN_SPAWN_DIST)
+                    tweak::world::MinBaseDistance * tweak::world::MinBaseDistance)
                     break;
             }
 

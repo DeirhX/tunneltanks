@@ -69,7 +69,7 @@ class Tank final
     int energy = tweak::tank::StartingFuel;
     int lives_left = tweak::tank::MaxLives;
 
-    std::shared_ptr<Controller> controller;
+    std::shared_ptr<Controller> controller = nullptr;
 
     Level * level;
     ProjectileList * projectile_list;

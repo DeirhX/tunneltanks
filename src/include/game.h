@@ -52,7 +52,7 @@ class GameMode
 
     virtual void TearDown() = 0;
 
-    static void AssumeAIControl(TankList * tl, Level * lvl, TankColor starting_id);
+    static void AssumeAIControl(TankList * tank_list, Level * level, TankColor starting_id);
 };
 
 class SinglePlayerMode : public GameMode

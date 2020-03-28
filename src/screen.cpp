@@ -37,13 +37,13 @@ struct SinglePlayerLayout : public widgets::SharedLayout
     constexpr static Offset view_offset = Offset{2, 2};
     constexpr static ScreenRect player_view_rect =
         ScreenRect{ScreenPosition{view_offset + padding},
-                   Size{tweak::GameSize.x - 2 * (view_offset.x + padding.x),
-                        tweak::GameSize.y - 2 * (view_offset.y + padding.y) - status_padding_top - status_height}};
+                   Size{tweak::world::GameSize.x - 2 * (view_offset.x + padding.x),
+                        tweak::world::GameSize.y - 2 * (view_offset.y + padding.y) - status_padding_top - status_height}};
 
     /* Health + Energy bar */
     constexpr static ScreenRect tank_health_bars_rect =
-        ScreenRect{ScreenPosition{9 + padding.x, tweak::GameSize.y - 2 - status_height - padding.y},
-                   Size{tweak::GameSize.x - 16 - 2 * padding.x, status_height}};
+        ScreenRect{ScreenPosition{9 + padding.x, tweak::world::GameSize.y - 2 - status_height - padding.y},
+                   Size{tweak::world::GameSize.x - 16 - 2 * padding.x, status_height}};
     constexpr static ScreenRect energy_letter_rect = {ScreenPosition{3, tank_health_bars_rect.Top()}, Size{4, 5}};
     constexpr static ScreenRect health_letter_rect = {ScreenPosition{3, tank_health_bars_rect.Top() + 6}, Size{4, 5}};
 
@@ -69,7 +69,8 @@ struct TwoPlayerLayout : public SinglePlayerLayout
         ScreenPosition{health_energy_one.Right() + energy_letter_rect.size.x + lives_left_rect.size.x*2 + 3 + 2*lives_left_padding + 3,
                        health_energy_one.pos.y},
         Size{health_energy_one.size}};
-    constexpr static ScreenRect energy_letter_rect = {ScreenPosition{tweak::GameSize.x / 2 - 2, tweak::GameSize.y - 2 - status_height},
+    constexpr static ScreenRect energy_letter_rect = {
+        ScreenPosition{tweak::world::GameSize.x / 2 - 2, tweak::world::GameSize.y - 2 - status_height},
                                                       Size{4, 5}};
     constexpr static ScreenRect health_letter_rect = {ScreenPosition{energy_letter_rect.pos + Offset{0, 6}}, Size{4, 5}};
 
@@ -142,10 +143,10 @@ void Screen::DrawPixel(ScreenPosition pos, Color32 color)
         return;
 
     Offset adjusted_size = {/* Make some pixels uniformly larger to fill in given space relatively evenly  */
-                            (pos.x * this->pixels_skip.x) / tweak::GameSize.x,
-                            (pos.y * this->pixels_skip.y) / tweak::GameSize.y};
-    Offset adjusted_next = {((pos.x + 1) * this->pixels_skip.x) / tweak::GameSize.x,
-                            ((pos.y + 1) * this->pixels_skip.y) / tweak::GameSize.y};
+                            (pos.x * this->pixels_skip.x) / tweak::world::GameSize.x,
+                            (pos.y * this->pixels_skip.y) / tweak::world::GameSize.y};
+    Offset adjusted_next = {((pos.x + 1) * this->pixels_skip.x) / tweak::world::GameSize.x,
+                            ((pos.y + 1) * this->pixels_skip.y) / tweak::world::GameSize.y};
 
     /* Final pixel position, adjusted by required scaling and offset */
     auto native_pos = NativeScreenPosition{(pos.x * this->pixel_size.x) + this->screen_offset.x + adjusted_size.x,
@@ -162,11 +163,11 @@ ScreenPosition Screen::FromNativeScreen(NativeScreenPosition native_pos)
 {
     auto pos = ScreenPosition{native_pos.x, native_pos.y};
     pos.x -= this->screen_offset.x;
-    pos.x -= pos.x / (int)this->pixel_size.x * (int)this->pixels_skip.x / tweak::GameSize.x;
+    pos.x -= pos.x / (int)this->pixel_size.x * (int)this->pixels_skip.x / tweak::world::GameSize.x;
     pos.x /= (int)this->pixel_size.x;
 
     pos.y -= this->screen_offset.y;
-    pos.y -= pos.y / (int)this->pixel_size.y * (int)this->pixels_skip.y / tweak::GameSize.y;
+    pos.y -= pos.y / (int)this->pixel_size.y * (int)this->pixels_skip.y / tweak::world::GameSize.y;
     pos.y /= (int)this->pixel_size.y;
 
     return pos;
@@ -220,8 +221,8 @@ void Screen::Resize(Size size)
     this->pixel_size = {};
 
     /* Make sure that we aren't scaling to something too small: */
-    size.x = std::max(tweak::GameSize.x, size.x);
-    size.y = std::max(tweak::GameSize.y, size.y);
+    size.x = std::max(tweak::world::GameSize.x, size.x);
+    size.y = std::max(tweak::world::GameSize.y, size.y);
 
     /* A little extra logic for fullscreen: */
     if (this->is_fullscreen)
@@ -234,12 +235,12 @@ void Screen::Resize(Size size)
     this->is_fullscreen = gamelib_get_fullscreen();
 
     /* What is the limiting factor in our scaling to maintain aspect ratio? */
-    int yw = size.y * tweak::GameSize.x;
-    int xh = size.x * tweak::GameSize.y;
+    int yw = size.y * tweak::world::GameSize.x;
+    int xh = size.x * tweak::world::GameSize.y;
     if (yw < xh)
     {
         /* size.y is. Correct aspect ratio using offset */
-        render_size.x = (tweak::GameSize.x * size.y) / (tweak::GameSize.y);
+        render_size.x = (tweak::world::GameSize.x * size.y) / (tweak::world::GameSize.y);
         render_size.y = size.y;
         this->screen_offset.x = (size.x - render_size.x) / 2;
         this->screen_offset.y = 0;
@@ -248,16 +249,16 @@ void Screen::Resize(Size size)
     {
         /* size.x is. Correct aspect ratio using offset */
         render_size.x = size.x;
-        render_size.y = (tweak::GameSize.y * size.x) / (tweak::GameSize.x);
+        render_size.y = (tweak::world::GameSize.y * size.x) / (tweak::world::GameSize.x);
         this->screen_offset.x = 0;
         this->screen_offset.y = (size.y - render_size.y) / 2;
     }
 
     /* Calculate the pixel sizing variables: */
-    this->pixel_size.x = render_size.x / tweak::GameSize.x;
-    this->pixel_size.y = render_size.y / tweak::GameSize.y;
-    this->pixels_skip.x = render_size.x % tweak::GameSize.x;
-    this->pixels_skip.y = render_size.y % tweak::GameSize.y;
+    this->pixel_size.x = render_size.x / tweak::world::GameSize.x;
+    this->pixel_size.y = render_size.y / tweak::world::GameSize.y;
+    this->pixels_skip.x = render_size.x % tweak::world::GameSize.x;
+    this->pixels_skip.y = render_size.y % tweak::world::GameSize.y;
 
     /* Draw a nice bg: */
     Screen::FillBackground();

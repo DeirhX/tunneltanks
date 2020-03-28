@@ -36,7 +36,7 @@ void World::RegrowPass()
                 int neighbors = //this->level->DirtPixelsAdjacent(pixel.GetPosition());
                     this->level->CountNeighborValues(pixel.GetPosition(), [](auto voxel) { return Pixel::IsDirt(voxel) ? 1 : 0; });
                 int modifier = (pix == LevelPixel::Blank) ? 4 : 1;
-                if (neighbors > 2 && local->random.Int(0, 10000) < tweak::DirtRegrowSpeed * neighbors * modifier)
+                if (neighbors > 2 && local->random.Int(0, 10000) < tweak::world::DirtRegrowSpeed * neighbors * modifier)
                 {
 
                     pixel.Set(LevelPixel::DirtGrow);
@@ -46,7 +46,7 @@ void World::RegrowPass()
             }
             else if (pix == LevelPixel::DirtGrow)
             {
-                if (Random.Int(0, 1000) < tweak::DirtRecoverSpeed)
+                if (Random.Int(0, 1000) < tweak::world::DirtRecoverSpeed)
                 {
                     pixel.Set(local->random.Bool(500) ? LevelPixel::DirtHigh : LevelPixel::DirtLow);
                     this->level->CommitPixel(pixel.GetPosition());
