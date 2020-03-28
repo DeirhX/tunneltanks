@@ -6,7 +6,7 @@
 void World::Advance(class LevelDrawBuffer * draw_buffer)
 {
     ++this->advance_count;
-    //RegrowPass();
+    RegrowPass();
 
     /* Clear everything: */
     this->tank_list->for_each([=](Tank * t) { t->Clear(draw_buffer); });
@@ -32,8 +32,8 @@ void World::RegrowPass()
         [this, &holes_decayed, &dirt_grown](LevelPixel pix, SafePixelAccessor pixel, ThreadLocal * local) {
             if (pix == LevelPixel::Blank || Pixel::IsScorched(pix))
             {
-                int neighbors = this->level->DirtPixelsAdjacent(pixel.GetPosition());
-                    //this->level->CountNeighborValues(pixel.GetPosition(), [](auto voxel) { return Pixel::IsDirt(voxel) ? 1 : 0; });
+                int neighbors = //this->level->DirtPixelsAdjacent(pixel.GetPosition());
+                    this->level->CountNeighborValues(pixel.GetPosition(), [](auto voxel) { return Pixel::IsDirt(voxel) ? 1 : 0; });
                 int modifier = (pix == LevelPixel::Blank) ? 4 : 1;
                 if (neighbors > 2 && local->random.Int(0, 10000) < tweak::DirtRegrowSpeed * neighbors * modifier)
                 {

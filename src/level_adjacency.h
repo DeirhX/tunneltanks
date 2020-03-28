@@ -8,6 +8,8 @@
 
 /*
  * Adjacency Data
+ * Caches possibly expensive lookups into level_data, invalidated on each write to level_data
+ *   Note: the invalidates can get expensive if we use too many maps
  * -1 is a reserved value for marking invalid / needing refresh
  */
 template <typename ValueType>

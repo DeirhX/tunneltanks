@@ -26,15 +26,15 @@ Level::Level(Size size, LevelDrawBuffer * draw_buffer)
 void Level::SetLevelData(int i, LevelPixel value)
 {
     this->data[i] = value;
-    if (this->is_ready)
-        this->dirt_adjacency_data.Invalidate(i);
+    /*if (this->is_ready)
+        this->dirt_adjacency_data.Invalidate(i);*/
 }
 
 void Level::SetLevelData(Position pos, LevelPixel value)
 {
     this->data[pos.y * this->size.x + pos.x] = value;
-    if (this->is_ready)
-        this->dirt_adjacency_data.Invalidate(pos);
+    /*if (this->is_ready)
+        this->dirt_adjacency_data.Invalidate(pos);*/
 }
 
 void Level::SetVoxel(Position pos, LevelPixel voxel)
