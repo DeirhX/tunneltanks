@@ -133,6 +133,9 @@
     <ClCompile Include="src\raw_level_data.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
+    <ClCompile Include="src\weapon.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\controllersdl.h">
@@ -266,6 +269,9 @@
       <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\include\level_pixel.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\weapon.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
   </ItemGroup>

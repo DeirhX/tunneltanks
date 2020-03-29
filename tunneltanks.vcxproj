@@ -60,6 +60,7 @@
     <ClCompile Include="src\tank.cpp" />
     <ClCompile Include="src\tanklist.cpp" />
     <ClCompile Include="src\tanksprites.cpp" />
+    <ClCompile Include="src\weapon.cpp" />
     <ClCompile Include="src\world.cpp" />
     <ClCompile Include="src\mymath.cpp" />
   </ItemGroup>
@@ -111,6 +112,7 @@
       <FileType>CppHeader</FileType>
     </ClInclude>
     <ClInclude Include="src\raw_level_data.h" />
+    <ClInclude Include="src\weapon.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="sdl\VisualC\SDLmain\SDLmain.vcxproj">

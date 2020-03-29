@@ -57,7 +57,7 @@ void Bullet::Advance(TankList * tankList)
 
         return true;
     };
-    Raycaster::Cast(this->pos, this->pos + (this->direction * float(this->simulation_steps)), IteratePositions);
+    Raycaster::Cast(this->pos, this->pos + (this->speed), IteratePositions);
 }
 
 void Bullet::Draw(LevelDrawBuffer * drawBuffer)
@@ -72,9 +72,8 @@ void Bullet::Erase(LevelDrawBuffer * drawBuffer, Level *)
     level->CommitPixel(this->pos_blur_from.ToIntPosition());
 }
 
-/* Le Spray de la Concrete */
-
-void ConcreteSpray::Advance(TankList * tankList)
+template <typename ExplosionFuncType>
+void FlyingBarrel::Advance(TankList * tankList, ExplosionFuncType explosionFunc)
 {
     /* Projectile exploding {explode_dist} pixels before contact.
      *
@@ -82,10 +81,11 @@ void ConcreteSpray::Advance(TankList * tankList)
      *  We will test always [explode_dist] amount of positions in front of the projectile trajectory.
      *  If there is a hypothetical collision, we attempt to explode {explode_dist} pixels away.
      */
-    constexpr int explode_dist = tweak::weapon::ConcreteDetonationDistance;
-    auto prev_positions = boost::circular_buffer<PositionF>{explode_dist + 1};
+    DirectionF direction = this->speed.Normalize();
+    auto prev_positions = boost::circular_buffer<PositionF>{this->explode_distance + 1ull};
     int search_step = 0;
-    const int search_step_count = explode_dist + int(flight_speed);
+    const int search_step_count = this->explode_distance + int(std::round(this->speed.GetSize()));
+    
     PositionF advanced_pos = {};
 
     auto IteratePositions = [this, &search_step, &prev_positions, tankList](PositionF tested_pos, PositionF prev_pos) {
@@ -106,7 +106,7 @@ void ConcreteSpray::Advance(TankList * tankList)
         }
         return true;
     };
-    bool collided = !Raycaster::Cast(this->pos, this->pos + (this->direction * float(search_step_count)),
+    bool collided = !Raycaster::Cast(this->pos, this->pos + (direction * float(search_step_count)),
                                      IteratePositions, Raycaster::VisitFlags::PixelsMustTouchCorners);
 
     /* Now divine a position {explode_dist} steps past in the simulation and explode there if needed
@@ -116,23 +116,47 @@ void ConcreteSpray::Advance(TankList * tankList)
 
     if (collided)
     {
-        for (auto & shrapnel :
-             ExplosionDesc::Fan(this->pos.ToIntPosition(), this->direction, math::Radians{math::half_pi},
-                                tweak::explosion::dirt::ShrapnelCount, tweak::explosion::dirt::Speed,
-                                tweak::explosion::dirt::Frames)
-                 .Explode<ConcreteFoam>(level))
-        {
-            tankList->projectile_list->Add(shrapnel);
-        }
+        explosionFunc(this->pos, this->speed, this->level, tankList->projectile_list);
     }
 }
 
-void ConcreteSpray::Draw(LevelDrawBuffer * drawBuffer)
+void FlyingBarrel::Draw(LevelDrawBuffer * drawBuffer)
 {
-    drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::ConcreteShot));
+    drawBuffer->SetPixel(this->pos.ToIntPosition(), draw_color);
 }
 
-void ConcreteSpray::Erase(LevelDrawBuffer * drawBuffer, Level *) { level->CommitPixel(this->pos.ToIntPosition()); }
+void FlyingBarrel::Erase(LevelDrawBuffer * drawBuffer, Level *)
+{
+    level->CommitPixel(this->pos.ToIntPosition());
+}
+
+void ConcreteBarrel::Advance(TankList * tankList)
+{
+    auto ExplosionFunc = [](PositionF position, SpeedF speed, Level * level, ProjectileList * projectile_list) {
+        for (auto & shrapnel : ExplosionDesc::Fan(position.ToIntPosition(), speed, math::Radians{math::half_pi},
+                                                  tweak::explosion::dirt::ShrapnelCount, tweak::explosion::dirt::Speed,
+                                                  tweak::explosion::dirt::Frames)
+                                   .Explode<ConcreteFoam>(level))
+        {
+            projectile_list->Add(shrapnel);
+        }
+    };
+    FlyingBarrel::Advance(tankList, ExplosionFunc);
+}
+
+void DirtBarrel::Advance(TankList * tankList)
+{
+    auto ExplosionFunc = [](PositionF position, SpeedF speed, Level * level, ProjectileList * projectile_list) {
+        for (auto & shrapnel : ExplosionDesc::Fan(position.ToIntPosition(), speed, math::Radians{math::half_pi},
+                                                  tweak::explosion::dirt::ShrapnelCount, tweak::explosion::dirt::Speed,
+                                                  tweak::explosion::dirt::Frames)
+                                   .Explode<DirtFoam>(level))
+        {
+            projectile_list->Add(shrapnel);
+        }
+    };
+    FlyingBarrel::Advance(tankList, ExplosionFunc);
+}
 
 /* Le Shrapnel */
 
@@ -177,7 +201,7 @@ void Shrapnel::AdvanceShrapnel(TankList * tankList, OnAdvanceFuncType OnAdvanceF
         return OnAdvanceFunc(tested_pos, prev_pos, tankList);
     };
 
-    Raycaster::Cast(this->pos, this->pos + this->direction, IteratePositions,
+    Raycaster::Cast(this->pos, this->pos + this->speed, IteratePositions,
                     Raycaster::VisitFlags::PixelsMustTouchCorners);
 }
 
@@ -210,4 +234,27 @@ void ConcreteFoam::Advance(TankList * tankList)
 void ConcreteFoam::Draw(LevelDrawBuffer * drawBuffer)
 {
     drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::ConcreteShot));
+}
+
+void DirtFoam::Advance(TankList * tankList)
+{
+    auto AdvanceStepFunc = [this](PositionF tested_pos, PositionF prev_pos, TankList * tankList) {
+        /* Make sure we didn't hit a level detail: */
+        LevelPixel c = level->GetVoxel(this->pos.ToIntPosition());
+        if (Pixel::IsAnyCollision(c))
+        {
+            level->SetVoxel(prev_pos.ToIntPosition(),
+                            Random.Bool(500) ? LevelPixel::DirtHigh : LevelPixel::DirtLow);
+            this->Invalidate();
+            return false;
+        }
+        return true;
+    };
+
+    AdvanceShrapnel(tankList, AdvanceStepFunc);
+}
+
+void DirtFoam::Draw(LevelDrawBuffer * drawBuffer)
+{
+    drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::DirtContainerShot));
 }

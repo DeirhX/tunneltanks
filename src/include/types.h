@@ -187,7 +187,7 @@ constexpr bool operator==(OffsetF l, OffsetF r) { return l.x == r.x && l.y == r.
 constexpr bool operator!=(OffsetF l, OffsetF r) { return l.x != r.x || l.y != r.y; }
 constexpr PositionF operator+(PositionF v, SpeedF s) noexcept { return {v.x + s.x, v.y + s.y}; }
 constexpr PositionF operator+(PositionF v, OffsetF o) noexcept { return {v.x + o.x, v.y + o.y}; }
-constexpr PositionF & operator+=(PositionF& v, OffsetF o) noexcept
+constexpr PositionF & operator+=(PositionF & v, OffsetF o) noexcept
 {
     v.x += o.x;
     v.y += o.y;
@@ -269,6 +269,24 @@ struct Color32
 };
 
 using TankColor = char;
+
+/* Force duration to be always of this class, don't mix various integers */
+struct DurationFrames
+{
+    int32_t value;
+    constexpr operator int32_t() const { return value; }
+    constexpr explicit DurationFrames(int32_t value) : value(value) {}
+    int32_t & operator--()
+    {
+        this->value--;
+        return this->value;
+    }
+    int32_t & operator++()
+    {
+        this->value++;
+        return this->value;
+    }
+};
 
 enum class Orientation
 {

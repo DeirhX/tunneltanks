@@ -55,7 +55,7 @@ namespace tank {
 	constexpr int RespawnDelay = perf::TargetFps * 3;
 	
 	/* The number of frames to wait in between shots: */
-	constexpr int BulletDelay = 3;
+	constexpr int TurretDelay = 3;
 	/* The maximum number of bullets allowed from a given tank: */
 	constexpr int BulletMax = 6;
 
@@ -93,9 +93,13 @@ namespace control
 namespace weapon
 {
 	/* The speed in pixels/frame of bullets: */
-	constexpr int BulletSpeed = 3;
-    constexpr float ConcreteSpeed = 1.5f;
+	constexpr int CannonBulletSpeed = 3;
+    constexpr DurationFrames CannonCooldown = DurationFrames{3};
+    constexpr float ConcreteBarrelSpeed = 2.f;
+    constexpr DurationFrames ConcreteSprayCooldown = DurationFrames{3};
     constexpr int ConcreteDetonationDistance = 3;
+    constexpr float DirtBarrelSpeed = 2.f;
+    constexpr int DirtDetonationDistance = 3;
 }
 
 namespace explosion

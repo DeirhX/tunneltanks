@@ -76,7 +76,7 @@ template
 	typename TimeUnit,
 	typename Clock
 >
-struct MeasureFunction<TraceLevel, TimeUnit, Clock, typename std::enable_if<(TraceLevel <= DEBUG_TRACE_LEVEL)>::type >
+struct MeasureFunction<TraceLevel, TimeUnit, Clock, typename std::enable_if<(TraceLevel <= DEBUG_TRACE_LEVEL)>::current >
 {
 	Stopwatch<TimeUnit, Clock> watch;
 	std::string_view name;

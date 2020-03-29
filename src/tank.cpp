@@ -13,23 +13,8 @@
 #include <tweak.h>
 #include <world.h>
 
-
 #include "game.h"
 #include "raycaster.h"
-
-void Weapon::CycleNext()
-{
-    this->type = WeaponType((int(this->type) + 1 % int(WeaponType::Size)));
-}
-
-void Weapon::CyclePrevious()
-{
-    int value = int(this->type) - 1;
-    if (value < 0)
-        this->type = WeaponType{int(WeaponType::Size) - 1};
-    else
-        this->type = WeaponType{value};
-}
 
 void TankTurret::ApplyControllerOutput(ControllerOutput controls)
 {
@@ -49,7 +34,7 @@ void TankTurret::ApplyControllerOutput(ControllerOutput controls)
 void TankTurret::Advance(Position tank_position, widgets::Crosshair * crosshair)
 {
     if (crosshair)
-    {  /* If we got a crosshair at action, let it dictate the direction */
+    { /* If we got a crosshair at action, let it dictate the direction */
         Position crosshair_pos = crosshair->GetWorldPosition();
         auto turret_dir = OffsetF(crosshair_pos - tank_position);
         if (turret_dir != OffsetF{})
@@ -78,7 +63,7 @@ void TankTurret::Advance(Position tank_position, widgets::Crosshair * crosshair)
 
 void TankTurret::Draw(LevelDrawBuffer * drawBuff) const
 {
-    for (int i=0; i<this->current_length; ++i)
+    for (int i = 0; i < this->current_length; ++i)
     {
         drawBuff->SetPixel(this->TurretVoxels[i], this->color);
     }
@@ -97,32 +82,24 @@ void TankTurret::HandleShoot()
     /* Handle all shooting logic: */
     if (this->bullet_timer == 0)
     {
-        if (this->is_shooting_primary )
+        if (this->is_shooting_primary)
         {
-            GetWorld()->GetProjectileList()->Add(Bullet{this->tank->GetPosition(), this->GetDirection(),
-                                                    tweak::weapon::BulletSpeed, GetWorld()->GetLevel(), this->tank});
-
+            this->bullet_timer = this->primary_weapon.Fire(this->tank->GetPosition(), this->GetDirection(), this->tank);
             /* We just fired. Let's charge ourselves: */
             this->tank->AlterEnergy(tweak::tank::ShootCost);
-
-            this->bullet_timer = tweak::tank::BulletDelay;
         }
         if (this->is_shooting_secondary)
         {
-            GetWorld()->GetProjectileList()->Add(
-                ConcreteSpray{this->tank->GetPosition(), this->GetDirection(), GetWorld()->GetLevel(), this->tank});
-
-            this->bullet_timer = tweak::tank::BulletDelay;
+            this->bullet_timer = this->secondary_weapon.Fire(this->tank->GetPosition(), this->GetDirection(), this->tank);
+            this->tank->AlterEnergy(tweak::tank::ShootCost);
         }
     }
     else
-        this->bullet_timer--;
+        --this->bullet_timer;
 }
 
 void TankTurret::Reset()
-{
-    this->bullet_timer = tweak::tank::BulletDelay;
-}
+{ this->bullet_timer = DurationFrames{0}; }
 
 /*  /\
  * TANK
@@ -345,7 +322,7 @@ void Tank::AlterHealth(int diff)
 void Tank::Spawn()
 {
     this->turret.Reset();
-    
+
     this->health = tweak::tank::StartingShield;
     this->energy = tweak::tank::StartingFuel;
 

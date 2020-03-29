@@ -9,6 +9,7 @@
 #include <projectile_list.h>
 
 #include "gui_widgets.h"
+#include "weapon.h"
 //#include <world.h>
 
 struct LevelView;
@@ -29,24 +30,7 @@ enum class CollisionType
     Blocked /* Hit a rock/base/tank/something we can't drive over. */
 };
 
-enum class WeaponType
-{
-    Cannon,
-    ConcreteSpray,
-    DirtSpray,
-    Size,
-};
 
-class Weapon
-{
-    WeaponType type;
-public:
-    Weapon(WeaponType new_type) : type(new_type) {}
-    WeaponType GetType() const { return type; }
-    void SetType(WeaponType new_type) { type = new_type; }
-    void CycleNext();
-    void CyclePrevious();
-};
 
 class TankTurret
 {
@@ -59,16 +43,14 @@ class TankTurret
 
     bool is_shooting_primary = false;
     bool is_shooting_secondary = false;
-    int bullet_timer = tweak::tank::BulletDelay;
+    DurationFrames bullet_timer = DurationFrames{tweak::tank::TurretDelay};
     //int bullets_left = tweak::tank::BulletMax;
 
     Weapon primary_weapon = Weapon{WeaponType::Cannon};
     Weapon secondary_weapon = Weapon{WeaponType::ConcreteSpray};
+
   public:
-    TankTurret(Tank * owner, Color turret_color) : tank(owner), color(turret_color)
-    {
-        Reset();
-    }
+    TankTurret(Tank * owner, Color turret_color) : tank(owner), color(turret_color) { Reset(); }
     DirectionF GetDirection() const { return this->direction; }
     bool IsShooting() const { return this->is_shooting_primary || this->is_shooting_secondary; }
 
