@@ -17,10 +17,33 @@
 #include "game.h"
 #include "raycaster.h"
 
+void Weapon::CycleNext()
+{
+    this->type = WeaponType((int(this->type) + 1 % int(WeaponType::Size)));
+}
+
+void Weapon::CyclePrevious()
+{
+    int value = int(this->type) - 1;
+    if (value < 0)
+        this->type = WeaponType{int(WeaponType::Size) - 1};
+    else
+        this->type = WeaponType{value};
+}
+
 void TankTurret::ApplyControllerOutput(ControllerOutput controls)
 {
     this->is_shooting_primary = controls.is_shooting_primary;
     this->is_shooting_secondary = controls.is_shooting_secondary;
+
+    if (controls.switch_primary_weapon_next)
+        this->primary_weapon.CycleNext();
+    if (controls.switch_primary_weapon_prev)
+        this->primary_weapon.CyclePrevious();
+    if (controls.switch_secondary_weapon_next)
+        this->secondary_weapon.CycleNext();
+    if (controls.switch_secondary_weapon_prev)
+        this->secondary_weapon.CyclePrevious();
 }
 
 void TankTurret::Advance(Position tank_position, widgets::Crosshair * crosshair)
