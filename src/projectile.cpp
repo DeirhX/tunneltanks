@@ -132,11 +132,11 @@ void FlyingBarrel::Erase(LevelDrawBuffer * drawBuffer, Level *)
 
 void ConcreteBarrel::Advance(TankList * tankList)
 {
-    auto ExplosionFunc = [](PositionF position, SpeedF speed, Level * level, ProjectileList * projectile_list) {
-        for (auto & shrapnel : ExplosionDesc::Fan(position.ToIntPosition(), speed, math::Radians{math::half_pi},
+    auto ExplosionFunc = [](PositionF proj_position, SpeedF proj_speed, Level * proj_level, ProjectileList * projectile_list) {
+        for (auto & shrapnel : ExplosionDesc::Fan(proj_position.ToIntPosition(), proj_speed, math::Radians{math::half_pi},
                                                   tweak::explosion::dirt::ShrapnelCount, tweak::explosion::dirt::Speed,
                                                   tweak::explosion::dirt::Frames)
-                                   .Explode<ConcreteFoam>(level))
+                                   .Explode<ConcreteFoam>(proj_level))
         {
             projectile_list->Add(shrapnel);
         }
@@ -146,11 +146,11 @@ void ConcreteBarrel::Advance(TankList * tankList)
 
 void DirtBarrel::Advance(TankList * tankList)
 {
-    auto ExplosionFunc = [](PositionF position, SpeedF speed, Level * level, ProjectileList * projectile_list) {
-        for (auto & shrapnel : ExplosionDesc::Fan(position.ToIntPosition(), speed, math::Radians{math::half_pi},
+    auto ExplosionFunc = [](PositionF proj_position, SpeedF proj_speed, Level * proj_level, ProjectileList * projectile_list) {
+        for (auto & shrapnel : ExplosionDesc::Fan(proj_position.ToIntPosition(), proj_speed, math::Radians{math::half_pi},
                                                   tweak::explosion::dirt::ShrapnelCount, tweak::explosion::dirt::Speed,
                                                   tweak::explosion::dirt::Frames)
-                                   .Explode<DirtFoam>(level))
+                                   .Explode<DirtFoam>(proj_level))
         {
             projectile_list->Add(shrapnel);
         }
