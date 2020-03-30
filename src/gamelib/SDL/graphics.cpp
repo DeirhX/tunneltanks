@@ -4,89 +4,61 @@
 #include <memory>
 #include <types.h>
 
+#include "exceptions.h"
 #include "require_sdl.h"
 #include "sdldata.h"
-
+#include "tweak.h"
 //SdlScreen
 
-/* Will select the best fullscreen resolution based on pixel count: */
-static SDL_Rect screen_get_best_resolution()
+void initialize_renderer(SDL_Window * window, Size render_size)
 {
-    SDL_Rect ** modes;
-    int i;
-    SDL_Rect out = {0, 0, 0, 0};
-    int out_score = 0;
+    SDL_Renderer * renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    if (!renderer)
+        throw GameInitException("Failed to create game renderer.");
+    SDL_RenderSetLogicalSize(renderer, render_size.x, render_size.y);
 
-    modes = SDL_ListModes(NULL, SDL_OPTIONS_FS);
-    if (!modes)
-        return out;
-
-    /* Are all resolutions available? */
-    if (modes == (SDL_Rect **)-1)
-    {
-        /*out.w = SCREEN_WIDTH; out.h = SCREEN_HEIGHT;*/
-        return out;
-    }
-
-    for (i = 0; modes[i]; i++)
-    {
-        if (modes[i]->w * modes[i]->h > out_score)
-        {
-            out = *modes[i];
-            out_score = out.w * out.h;
-        }
-    }
-
-    return out;
-}
-
-/* Sets the display to fullscreen, calculating the best resolution: */
-int gamelib_set_fullscreen()
-{
-    SDL_Surface * newsurface;
-    SDL_Rect r = screen_get_best_resolution();
-
-    /* Already fullscreen? */
-    if (_DATA.is_fullscreen)
-        return 0;
-
-    /* Actually set the new video mode: */
-    if (!(newsurface = SDL_SetVideoMode(r.w, r.h, 0, SDL_OPTIONS_FS)))
-    {
-        gamelib_error("Failed to set video mode: %s\n", SDL_GetError());
-        return 1;
-    }
-
-    /* Disable the mouse cursor in fullscreen mode: */
-    SDL_ShowCursor(SDL_DISABLE);
-
-    /* Update all of the internal variables: */
-    _DATA.s = newsurface;
-    _DATA.is_fullscreen = !!(_DATA.s->flags & SDL_FULLSCREEN);
-
-    return 0;
-}
-
-/* Sets the display to windowed mode, with given dimensions: */
-int gamelib_set_window(Size size)
-{
-    SDL_Surface * newsurface;
-
-    /* Actually set the new video mode: */
-    if (!(newsurface = SDL_SetVideoMode(size.x, size.y, 0, SDL_OPTIONS)))
-    {
-        gamelib_error("Failed to set video mode: %s\n", SDL_GetError());
-        return 1;
-    }
+    SDL_Texture * texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+                                                 render_size.x, render_size.y);
+    SDL_Surface * surface = SDL_CreateRGBSurface(0, render_size.x, render_size.y, 32, 0, 0, 0, 0);
 
     /* Enable the mouse cursor in windowed mode: */
     SDL_ShowCursor(SDL_ENABLE);
 
     /* Update all of the internal variables: */
-    _DATA.s = newsurface;
-    _DATA.is_fullscreen = !!(_DATA.s->flags & SDL_FULLSCREEN);
+    _DATA.s = surface;
+    _DATA.texture = texture;
+    _DATA.renderer = renderer;
+    _DATA.is_fullscreen = !!(_DATA.s->flags & SDL_WINDOW_FULLSCREEN_DESKTOP);
+}
+/* Sets the display to fullscreen, calculating the best resolution: */
+void gamelib_set_fullscreen(Size size)
+{
+    SDL_DestroyWindow(_DATA.window);
 
-    return 0;
+    SDL_Window * sdlWindow =
+        SDL_CreateWindow(tweak::system::WindowTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 0, 0,
+                         SDL_WINDOW_FULLSCREEN_DESKTOP);
+
+    if (!sdlWindow)
+        throw GameInitException("Failed to create game window.");
+
+    _DATA.window = sdlWindow;
+    initialize_renderer(sdlWindow, tweak::screen::size);
+}
+
+/* Sets the display to windowed mode, with given dimensions: */
+void gamelib_set_window(Size size)
+{
+    SDL_DestroyWindow(_DATA.window);
+
+    SDL_Window * sdlWindow =
+        SDL_CreateWindow(tweak::system::WindowTitle, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, size.x, size.y,
+                         SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+    if (!sdlWindow)
+        throw GameInitException("Failed to create game window.");
+
+    _DATA.window = sdlWindow;
+    initialize_renderer(sdlWindow, size);
 }
 
 /* Returns the screen dimensions in a Rect struct: */

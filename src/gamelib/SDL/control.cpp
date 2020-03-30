@@ -11,28 +11,18 @@
 #include "require_sdl.h"
 
 /* Set up SDL: */
-int gamelib_init()
+void gamelib_init()
 {
-    char text[1024];
-
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
-        gamelib_error("Failed to initialize SDL: %s\n", SDL_GetError());
-        return 1;
+        throw GameInitException("Failed to initialize SDL", SDL_GetError());
     }
-
-    /* Dump out the current graphics driver, just for kicks: */
-    SDL_VideoDriverName(text, sizeof(text));
-    gamelib_print("Using video driver: %s\n", text);
-
-    return 0;
 }
 
 /* Frees stuff up: */
-int gamelib_exit()
+void gamelib_exit()
 {
     SDL_Quit();
-    return 0;
 }
 
 /* Waits long enough to maintain a consistent FPS: */
@@ -88,9 +78,9 @@ static bool try_attach_gamepad(Tank * tank, int gamepad_num)
     return true;
 }
 
-#define ONE_KEYBOARD SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN, SDLK_LCTRL
-#define TWO_KEYBOARD_A SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_LCTRL
-#define TWO_KEYBOARD_B SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN, SDLK_SLASH
+#define ONE_KEYBOARD SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT, SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_LCTRL
+#define TWO_KEYBOARD_A SDL_SCANCODE_A, SDL_SCANCODE_D, SDL_SCANCODE_W, SDL_SCANCODE_S, SDL_SCANCODE_LCTRL
+#define TWO_KEYBOARD_B SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT, SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_SLASH
 
 void gamelib_tank_attach(Tank * tank, int tank_num, int num_players)
 {

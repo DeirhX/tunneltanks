@@ -75,7 +75,7 @@ int GameMain(int argc, char * argv[])
         }
         else if (!strcmp("--help", argv[i]))
         {
-            gamelib_print("%s %s\n\n", WINDOW_TITLE, VERSION);
+            gamelib_print("%s %s\n\n", tweak::system::WindowTitle, tweak::system::Version);
 
             gamelib_print("--version          Display version, and exit.\n");
             gamelib_print("--help             Display this help message and exit.\n\n");
@@ -96,7 +96,7 @@ int GameMain(int argc, char * argv[])
         }
         else if (!strcmp("--version", argv[i]))
         {
-            gamelib_print("%s %s\n", WINDOW_TITLE, VERSION);
+            gamelib_print("%s %s\n", tweak::system::WindowTitle, tweak::system::Version);
             return 0;
         }
         else if (!strcmp("--single", argv[i]))
@@ -154,41 +154,61 @@ int GameMain(int argc, char * argv[])
     else
         Random.Seed();
 
-    /* If we're only writing the generated level to file, then just do that: */
-    if (outfile_name)
+    try
     {
-        auto lvl = std::make_unique<Level>(size, nullptr);
+        /* If we're only writing the generated level to file, then just do that: */
+        if (outfile_name)
+        {
+            auto lvl = std::make_unique<Level>(size, nullptr);
 
-        /* Generate our random level: */
-        generate_level(lvl.get(), GeneratorFromName(id));
-        lvl->MaterializeLevelTerrainAndBases();
+            /* Generate our random level: */
+            generate_level(lvl.get(), GeneratorFromName(id));
+            lvl->MaterializeLevelTerrainAndBases();
 
-        /* Dump it out, and exit: */
-        lvl->DumpBitmap(outfile_name);
+            /* Dump it out, and exit: */
+            lvl->DumpBitmap(outfile_name);
 
+            gamelib_exit();
+            return 0;
+        }
+    }
+    catch (const GameException & game_ex)
+    {
+        gamelib_error("Failed to dump level bitmap: %s", game_ex.what());
+    }
+
+
+    try
+    {
+        /* Let's get this ball rolling: */
+        gamelib_init();
+
+        auto config = GameConfig{
+            .level_generator = GeneratorFromName(id),
+            .size = size,
+            .is_debug = is_debug,
+            .is_fullscreen = is_fullscreen,
+            .player_count = player_count,
+            .use_ai = is_ai,
+        };
+        {
+            ::global_game = std::make_unique<Game>(config);
+            /* Play the game: */
+            gamelib_main_loop([]() -> bool { return global_game->AdvanceStep(); });
+            ::global_game.reset();
+        }
+        /* Ok, we're done. Tear everything up: */
         gamelib_exit();
-        return 0;
     }
-
-    /* Let's get this ball rolling: */
-    gamelib_init();
-
-    auto config = GameConfig{
-        .level_generator = GeneratorFromName(id),
-        .size = size,
-        .is_debug = is_debug,
-        .is_fullscreen = is_fullscreen,
-        .player_count = player_count,
-        .use_ai = is_ai,
-    };
+    catch (const GameInitException & init_ex)
     {
-        ::global_game = std::make_unique<Game>(config);
-        /* Play the game: */
-        gamelib_main_loop([]() -> bool { return global_game->AdvanceStep(); });
-        ::global_game.reset();
+        gamelib_error("Game failed to initialize due to: %s %s", init_ex.what(), init_ex.error_string);
     }
-    /* Ok, we're done. Tear everything up: */
-    gamelib_exit();
+    catch (const GameException & game_ex)
+    {
+        gamelib_error("Game terminated with exception: %s", game_ex.what());
+    }
+
     print_mem_stats();
 
 #ifdef _MSC_VER

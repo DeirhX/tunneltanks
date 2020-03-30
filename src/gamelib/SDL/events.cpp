@@ -25,7 +25,6 @@ static Event cur_event = {
 
 /* Will check the SDL event stack for a new event, if we don't have one... */
 static void check_for_event() {
-	SDL_Event e;
 	
 	/* Don't do jack if the current event hasn't been released: */
 	if(cur_event.type != GameEvent::None) return;
@@ -33,24 +32,26 @@ static void check_for_event() {
 	/* Grab the next event (if it exists) off the stack: */
 	while(cur_event.type == GameEvent::None) {
 		
-		/* Grab the next event, and only continue if we got something: */
-		if(!SDL_PollEvent(&e)) break;
+        /* Grab the next event, and only continue if we got something: */
+        SDL_Event event;
+        if (!SDL_PollEvent(&event))
+            break;
 		
 		/* Resize event: */
-		if(e.type == SDL_VIDEORESIZE) {
+		if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED) {
 			cur_event.type = GameEvent::Resize;
-			cur_event.dim = Rect(0,0, e.resize.w, e.resize.h);
+            cur_event.dim = Rect(0, 0, event.window.data1, event.window.data2);
 		
 		/* Keyboard events: */
-		} else if(e.type == SDL_KEYDOWN) {
-			if(e.key.keysym.sym == FULLSCREEN_KEY)
+		} else if(event.type == SDL_KEYDOWN) {
+			if(event.key.keysym.sym == FULLSCREEN_KEY)
 				cur_event.type = GameEvent::ToggleFullscreen;
 			
-			else if(e.key.keysym.sym == EXIT_KEY)
+			else if(event.key.keysym.sym == EXIT_KEY)
 				cur_event.type = GameEvent::Exit;
 		
 		/* Window close event: */
-		} else if(e.type == SDL_QUIT)
+		} else if(event.type == SDL_QUIT)
 			cur_event.type = GameEvent::Exit;
 	}
 }

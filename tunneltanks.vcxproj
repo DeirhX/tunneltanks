@@ -123,16 +123,6 @@
     <ClInclude Include="src\weapon.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="sdl\VisualC\SDLmain\SDLmain.vcxproj">
-      <Project>{da956fd3-e142-46f2-9dd5-c78bebb56b7a}</Project>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
-    </ProjectReference>
-    <ProjectReference Include="sdl\VisualC\SDL\SDL.vcxproj">
-      <Project>{81ce8daf-ebb2-4761-8e45-b71abcca8c68}</Project>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
     <None Include=".clang-format" />
     <None Include="src\tweak.clang-format" />
@@ -142,6 +132,16 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="to_do.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="sdl2\VisualC\SDLmain\SDLmain.vcxproj">
+      <Project>{da956fd3-e142-46f2-9dd5-c78bebb56b7a}</Project>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
+    <ProjectReference Include="sdl2\VisualC\SDL\SDL.vcxproj">
+      <Project>{81ce8daf-ebb2-4761-8e45-b71abcca8c68}</Project>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9DD4DF14-B88C-370B-8C6A-BF39F7125DBF}</ProjectGuid>
@@ -158,7 +158,6 @@
     <PlatformToolset>v142</PlatformToolset>
     <UseDebugLibraries>true</UseDebugLibraries>
     <SpectreMitigation>false</SpectreMitigation>
-    <EnableUnitySupport>true</EnableUnitySupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -166,34 +165,29 @@
     <PlatformToolset>v142</PlatformToolset>
     <UseDebugLibraries>true</UseDebugLibraries>
     <SpectreMitigation>false</SpectreMitigation>
-    <EnableUnitySupport>true</EnableUnitySupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
-    <EnableUnitySupport>true</EnableUnitySupport>
     <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Static|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
-    <EnableUnitySupport>true</EnableUnitySupport>
     <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
-    <EnableUnitySupport>true</EnableUnitySupport>
     <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Static|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
-    <EnableUnitySupport>true</EnableUnitySupport>
     <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -239,26 +233,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>Build\$(PlatformShortName)\$(Configuration)\</OutDir>
     <IntDir>obj\$(PlatformShortName)\$(Configuration)\</IntDir>
-    <IncludePath>sdl\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>sdl2\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>Build\$(PlatformShortName)\$(Configuration)\</OutDir>
     <IntDir>obj\$(PlatformShortName)\$(Configuration)\</IntDir>
-    <IncludePath>sdl\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>sdl2\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Static|Win32'">
     <OutDir>Build\$(PlatformShortName)\$(Configuration)\</OutDir>
     <IntDir>obj\$(PlatformShortName)\$(Configuration)\</IntDir>
-    <IncludePath>sdl\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>sdl2\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>sdl\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>sdl2\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>sdl\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>sdl2\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Static|x64'">
-    <IncludePath>sdl\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>sdl2\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -295,7 +289,7 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;legacy_stdio_definitions.lib</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;setupapi.lib;winmm.lib;imm32.lib;version.lib;legacy_stdio_definitions.lib</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -391,7 +385,7 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;legacy_stdio_definitions.lib</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;setupapi.lib;winmm.lib;imm32.lib;version.lib;legacy_stdio_definitions.lib</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <SubSystem>Console</SubSystem>
@@ -443,7 +437,7 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;legacy_stdio_definitions.lib</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;setupapi.lib;winmm.lib;imm32.lib;version.lib;legacy_stdio_definitions.lib</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <SubSystem>Console</SubSystem>

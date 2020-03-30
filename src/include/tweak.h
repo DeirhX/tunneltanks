@@ -7,12 +7,12 @@
 
 namespace tweak {
 
-/* Window title / version string: */
-#define WINDOW_TITLE "TunnelTanks"
-#define VERSION "0.5 alpha"
-/*
- * Most of the game engine's arbitrary limits are stored in here:
- */
+namespace system
+{
+    constexpr char WindowTitle[] = "Diggerer";
+    constexpr char Version[] = "0.1 alpha";
+} // namespace system
+
 namespace screen
 {
 	/* The default size of the window: */

@@ -14,7 +14,10 @@ void gamelib_main_loop(AdvanceFunc advance_func) {
 			return;
 
 		smart_wait();
-		SDL_Flip(_DATA.s);
+        SDL_UpdateTexture(_DATA.texture, nullptr, _DATA.s->pixels, _DATA.s->pitch);
+        SDL_RenderClear(_DATA.renderer);
+        SDL_RenderCopy(_DATA.renderer, _DATA.texture, nullptr, nullptr);
+        SDL_RenderPresent(_DATA.renderer);
 	}
 }
 

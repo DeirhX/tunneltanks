@@ -14,7 +14,8 @@
  *   KEYBOARD                                                                 *
  *----------------------------------------------------------------------------*/
 
-KeyboardController::KeyboardController(SDLKey left, SDLKey right, SDLKey up, SDLKey down, SDLKey shoot)
+KeyboardController::KeyboardController(SDL_Scancode left, SDL_Scancode right, SDL_Scancode up, SDL_Scancode down,
+                                       SDL_Scancode shoot)
     : left(left), right(right), up(up), down(down), shoot(shoot)
 {
     gamelib_print("Using Keyboard #0:\n");
@@ -22,7 +23,10 @@ KeyboardController::KeyboardController(SDLKey left, SDLKey right, SDLKey up, SDL
 
 ControllerOutput KeyboardController::ApplyControls(PublicTankInfo * tankPublic)
 {
-    Uint8 * keys = SDL_GetKeyState(NULL);
+    int num_keys;
+    const Uint8 * keys = SDL_GetKeyboardState(&num_keys);
+    assert(num_keys >
+           std::max(this->right, std::max(this->left, std::max(this->down, std::max(this->up, this->shoot)))));
 
     return ControllerOutput{.speed{keys[this->right] - keys[this->left], keys[this->down] - keys[this->up]},
                             .is_shooting_primary = keys[this->shoot] != 0};
@@ -86,12 +90,12 @@ GamePadController::GamePadController(int joy_index)
     if (this->joystick)
     {
         gamelib_print("Using Joystick #:\n", joy_index);
-        gamelib_print("  Name:    %s\n", SDL_JoystickName(joy_index));
+        gamelib_print("  Name:    %s\n", SDL_JoystickName(this->joystick));
         gamelib_print("  Axes:    %d\n", SDL_JoystickNumAxes(this->joystick));
         gamelib_print("  Buttons: %d\n", SDL_JoystickNumButtons(this->joystick));
         gamelib_print("  Balls:   %d\n", SDL_JoystickNumBalls(this->joystick));
 
-        if (!strcmp(SDL_JoystickName(joy_index), "Wireless Controller"))
+        if (!strcmp(SDL_JoystickName(this->joystick), "Wireless Controller"))
             this->mapping = PS4Pad;
         else
             this->mapping = XBox360Pad;

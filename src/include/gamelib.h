@@ -8,10 +8,9 @@
 #include <vector>
 
 /* If the gamelib needs initialization, this'll do it: */
-int gamelib_init();
-
+void gamelib_init();
 /* If the gamelib needs to free resources before exiting, this'll do it: */
-int gamelib_exit();
+void gamelib_exit();
 
 /* Gives a way to poll the gamelib for the capabilities provided by the
  * underlying system: */
@@ -46,8 +45,8 @@ Rect      gamelib_event_resize_get_size() ; /* Returns {0,0,0,0} on fail. */
 void      gamelib_event_done() ;
 
 /* We need to be able to switch resolutions: */
-int  gamelib_set_fullscreen() ;
-int  gamelib_set_window(Size size) ;
+void gamelib_set_fullscreen(Size size);
+void  gamelib_set_window(Size size) ;
 Size gamelib_get_resolution() ;
 bool gamelib_get_fullscreen() ;
 
@@ -60,8 +59,3 @@ int  gamelib_draw_box(NativeRect rect, Color32 c) ;
 void     gamelib_print (const char *str, ...) ;
 void     gamelib_debug (const char *str, ...) ;
 void     gamelib_error (const char *str, ...) ;
-
-/* Gamelib needs to be able to tell the outside that it needs a control GUI: */
-//Rect     gamelib_gui_get_size() ;
-//void     gamelib_gui_draw(class Screen *s, Rect r) ;
-

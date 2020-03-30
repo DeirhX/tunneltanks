@@ -226,7 +226,7 @@ void Screen::Resize(Size size)
 
     /* A little extra logic for fullscreen: */
     if (this->is_fullscreen)
-        gamelib_set_fullscreen();
+        gamelib_set_fullscreen(size);
     else
         gamelib_set_window(size);
 
