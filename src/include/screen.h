@@ -37,7 +37,7 @@ class Screen
     LevelDrawBuffer *drawBuffer = nullptr;
 
   public:
-    Screen(bool is_fullscreen);
+    Screen(bool is_fullscreen, Size render_surface_size);
 
     /* Resizing the screen: */
     bool GetFullscreen() { return is_fullscreen; }

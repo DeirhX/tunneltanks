@@ -21,7 +21,7 @@ ColorPalette::ColorPalette()
     Set(Colors::ConcreteLow, Color(0xa0, 0xa0, 0xa5));
     Set(Colors::ConcreteHigh, Color(0x80, 0x80, 0x85)); 
     Set(Colors::Background, Color(0x00, 0x00, 0x00));
-    Set(Colors::BackgroundDot, Color(0x00, 0x00, 0x00));
+    Set(Colors::BackgroundDot, Color(0x20, 0x20, 0x20));
     Set(Colors::StatusBackground, Color(0x65, 0x65, 0x65));
     Set(Colors::StatusEnergy, Color(0xf5, 0xeb, 0x1a));
     Set(Colors::StatusHealth, Color(0x26, 0xf4, 0xf2));

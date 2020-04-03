@@ -108,7 +108,8 @@ Game::Game(GameConfig config)
     }
 
     /* Initialize most of the structures: */
-    this->screen = std::make_unique<Screen>(this->config.video_config.is_fullscreen);
+    this->screen =
+        std::make_unique<Screen>(this->config.video_config.is_fullscreen, this->config.video_config.render_surface_size);
     this->draw_buffer = std::make_unique<LevelDrawBuffer>(this->config.level_size);
 
     /* Generate our random level: */
@@ -175,17 +176,15 @@ bool Game::AdvanceStep()
         /* Trying to resize the window? */
         if (temp == GameEvent::Resize)
         {
-            Rect r = gamelib_event_resize_get_size();
-            this->screen->Resize(r.size);
-
-            /* Trying to toggle fullscreen? */
+            /* No need to do anything, we keep our surface size anyway */
         }
+        /* Trying to toggle fullscreen? */
         else if (temp == GameEvent::ToggleFullscreen)
         {
             this->screen->SetFullscreen(this->screen->GetFullscreen());
 
-            /* Trying to exit? */
         }
+        /* Trying to exit? */
         else if (temp == GameEvent::Exit)
         {
             return false;
@@ -195,7 +194,9 @@ bool Game::AdvanceStep()
         gamelib_event_done();
     }
 
+    /* Do the world advance - apply controller input, move stuff, commit level bitmap to DrawBuffer */
     world->Advance(this->draw_buffer.get());
+    /* Draw our current state */
     this->screen->DrawCurrentMode();
 
     return true;

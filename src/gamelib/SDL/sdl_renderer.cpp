@@ -71,7 +71,8 @@ void SdlRenderer::Recreate(SdlWindow * new_owning_window)
                              [](SDL_Renderer * renderer) { /* SDL_DestroyRenderer(renderer);*/ /* Destroyed by window */ }};
     if (!this->native_renderer)
         throw GameInitException("Failed to create game renderer.");
-    SDL_RenderSetLogicalSize(this->native_renderer.get(), surface_size.x, surface_size.y);
+    if (SDL_RenderSetLogicalSize(this->native_renderer.get(), surface_size.x, surface_size.y))
+        throw GameInitException("Failed to set logical size.");
 
     this->native_texture = {
         SDL_CreateTexture(this->native_renderer.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,

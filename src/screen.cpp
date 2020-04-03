@@ -9,16 +9,18 @@
 #include <tweak.h>
 #include <types.h>
 
+#include "game_system.h"
+
 /* The constructor sets the video mode: */
-Screen::Screen(bool is_fullscreen) : is_fullscreen(is_fullscreen)
+Screen::Screen(bool is_fullscreen, Size render_surface_size) : is_fullscreen(is_fullscreen)
 {
-    this->Resize({tweak::screen::WindowSize.x, tweak::screen::WindowSize.y});
+    this->Resize(render_surface_size);
 }
 
 /* Fills a surface with a blue/black pattern: */
 void Screen::FillBackground()
 {
-    Size dim = GetSystem()->GetWindow()->GetResolution();
+    Size dim = GetSystem()->GetRenderer()->GetSurfaceResolution();
 
     GetSystem()->GetRenderer()->DrawRectangle({{0, 0}, dim}, Palette.Get(Colors::Background));
     NativeScreenPosition o;
@@ -228,13 +230,11 @@ void Screen::Resize(Size size)
     size.y = std::max(tweak::screen::RenderSurfaceSize.y, size.y);
 
     /* A little extra logic for fullscreen: */
-
-    /* We let the user to resize it */
-    GetSystem()->GetWindow()->Resize(size, this->is_fullscreen);
-
     size = GetSystem()->GetRenderer()->GetSurfaceResolution();
 
-    this->is_fullscreen = GetSystem()->GetWindow()->IsFullscreen();
+    auto current_fullscreen = GetSystem()->GetWindow()->IsFullscreen();
+    if (this->is_fullscreen != current_fullscreen)
+        GetSystem()->GetWindow()->Resize(size, this->is_fullscreen);
 
     /* What is the limiting factor in our scaling to maintain aspect ratio? */
     int yw = size.y * tweak::screen::RenderSurfaceSize.x;

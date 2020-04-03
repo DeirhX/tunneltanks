@@ -286,6 +286,9 @@
     <ClInclude Include="src\include\game_config.h">
       <Filter>src\system</Filter>
     </ClInclude>
+    <ClInclude Include="src\include\game_system.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

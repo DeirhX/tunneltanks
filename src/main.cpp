@@ -21,6 +21,7 @@
 
 #include "exceptions.h"
 #include "game_config.h"
+#include "gamelib/SDL/sdl_system.h"
 
 int GameMain(int argc, char * argv[]);
 

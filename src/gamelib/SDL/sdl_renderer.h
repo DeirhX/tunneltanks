@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "game_system.h"
 #include "SDL.h"
 #include "gamelib.h"
 
