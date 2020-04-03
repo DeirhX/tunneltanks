@@ -57,7 +57,7 @@ class TankTurret
     void ApplyControllerOutput(ControllerOutput controls);
 
     void Advance(Position tank_position, widgets::Crosshair * crosshair);
-    void Draw(LevelDrawBuffer * drawBuff) const;
+    void Draw(LevelPixelSurface * drawBuff) const;
     void Erase(Level * level) const;
     void SetDirection(DirectionF new_dir) { this->direction = new_dir; }
 
@@ -120,8 +120,8 @@ class Tank final
 
     CollisionType GetCollision(int dir, Position pos, TankList * tl);
 
-    void Clear(LevelDrawBuffer * drawBuff) const;
-    void Draw(LevelDrawBuffer * drawBuff) const;
+    void Clear(LevelPixelSurface * drawBuff) const;
+    void Draw(LevelPixelSurface * drawBuff) const;
 
     //void ReturnBullet();
 

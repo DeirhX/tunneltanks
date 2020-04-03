@@ -42,7 +42,7 @@ class Level
     RawLevelData data;
     DirtAdjacencyData dirt_adjacency_data;
     Size size;
-    LevelDrawBuffer * drawBuffer;
+    LevelPixelSurface * drawBuffer;
     std::vector<std::unique_ptr<TankBase>> spawn;
     bool is_ready = false;
 
@@ -51,7 +51,7 @@ class Level
     void SetLevelData(Position pos, LevelPixel value);
 
   public:
-    Level(Size size, LevelDrawBuffer * db);
+    Level(Size size, LevelPixelSurface * db);
 
     Size GetSize() const { return size; };
 

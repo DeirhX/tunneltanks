@@ -61,7 +61,7 @@ void TankTurret::Advance(Position tank_position, widgets::Crosshair * crosshair)
     this->current_length = turret_len;
 }
 
-void TankTurret::Draw(LevelDrawBuffer * drawBuff) const
+void TankTurret::Draw(LevelPixelSurface * drawBuff) const
 {
     for (int i = 0; i < this->current_length; ++i)
     {
@@ -217,7 +217,7 @@ void Tank::TryBaseHeal()
         this->AlterEnergy(tweak::tank::EnemyChargeSpeed);
 }
 
-void Tank::Draw(LevelDrawBuffer * drawBuff) const
+void Tank::Draw(LevelPixelSurface * drawBuff) const
 {
     if (!this->health)
         return;
@@ -234,7 +234,7 @@ void Tank::Draw(LevelDrawBuffer * drawBuff) const
     this->turret.Draw(drawBuff);
 }
 
-void Tank::Clear(LevelDrawBuffer * drawBuff) const
+void Tank::Clear(LevelPixelSurface * drawBuff) const
 {
     if (!this->health)
         return;

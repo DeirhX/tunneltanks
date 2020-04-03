@@ -34,7 +34,7 @@ class Screen
 
     GUIController controller;
     ScreenDrawMode mode = SCREEN_DRAW_INVALID;
-    LevelDrawBuffer *drawBuffer = nullptr;
+    LevelPixelSurface *drawBuffer = nullptr;
 
   public:
     Screen(bool is_fullscreen, Size render_surface_size);
@@ -45,9 +45,9 @@ class Screen
     void Resize(Size size);
 
     /* Set the current drawing mode: */
-    void SetLevelDrawMode(LevelDrawBuffer *b);
+    void SetLevelDrawMode(LevelPixelSurface *b);
     /* Source contents of the screen */
-    LevelDrawBuffer *GetDrawBuffer() { return drawBuffer; }
+    LevelPixelSurface *GetDrawBuffer() { return drawBuffer; }
 
     /* A few useful functions for external drawing: */
     void DrawPixel(ScreenPosition pos, Color32 color);

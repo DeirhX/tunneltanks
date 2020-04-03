@@ -27,6 +27,6 @@ class ProjectileList
     void Shrink();
 
     void Advance(class Level * level, class TankList * tankList);
-    void Erase(class LevelDrawBuffer * drawBuffer, class Level * level);
-    void Draw(class LevelDrawBuffer * drawBuffer);
+    void Erase(class LevelPixelSurface * drawBuffer, class Level * level);
+    void Draw(class LevelPixelSurface * drawBuffer);
 };

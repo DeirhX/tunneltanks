@@ -3,7 +3,7 @@
 #include "game.h"
 #include "random.h"
 
-void World::Advance(class LevelDrawBuffer * draw_buffer)
+void World::Advance(class LevelPixelSurface * draw_buffer)
 {
     ++this->advance_count;
     RegrowPass();

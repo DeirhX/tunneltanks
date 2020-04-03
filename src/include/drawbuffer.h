@@ -3,16 +3,18 @@
 #include <types.h>
 #include <vector>
 
-class LevelDrawBuffer
+#include "sdl_renderer.h"
+
+class LevelPixelSurface
 {
-    std::vector<Color> pixel_data;
+    std::vector<RenderedPixel> pixel_data;
     Size size;
-    Color default_color;
+    RenderedPixel default_color;
 
   public:
-    LevelDrawBuffer(Size size);
-    Color & DefaultColor() { return default_color; }
+    LevelPixelSurface(Size size);
+    Color GetDefaultColor() { return default_color; }
     void SetDefaultColor(Color color) { default_color = color; }
     void SetPixel(Position pos, Color32 color);
-    Color GetPixel(Position pos);
+    RenderedPixel GetPixel(Position pos);
 };

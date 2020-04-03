@@ -15,6 +15,15 @@ struct RenderedPixel
     uint8_t g;
     uint8_t b;
     uint8_t a;
+
+    RenderedPixel() = default;
+    RenderedPixel(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b), a(255) {}
+    RenderedPixel(uint8_t r, uint8_t g, uint8_t b, uint8_t a) : r(r), g(g), b(b), a(a) {}
+    RenderedPixel(Color color) : r(color.r), g(color.g), b(color.b), a(255) {}
+    RenderedPixel(Color32 color) : r(color.r), g(color.g), b(color.b), a(color.a) {}
+
+    operator Color() const { return Color{this->r, this->g, this->b};}
+    operator Color32() const { return Color32{this->r, this->g, this->b, this->a}; }
 };
 
 /*

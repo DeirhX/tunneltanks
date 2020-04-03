@@ -17,7 +17,7 @@
 #include "level_pixel.h"
 
 
-Level::Level(Size size, LevelDrawBuffer * draw_buffer)
+Level::Level(Size size, LevelPixelSurface * draw_buffer)
     : data(size), dirt_adjacency_data(size, &data), size(size), drawBuffer(draw_buffer)
 {
     std::fill(this->data.begin(), this->data.end(), LevelPixel::LevelGenRock);
