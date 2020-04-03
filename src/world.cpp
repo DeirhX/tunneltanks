@@ -55,9 +55,12 @@ void World::RegrowPass()
             }
         },
         WorkerCount{PhysicalCores{}});
+
     this->regrow_elapsed += elapsed.GetElapsed();
-    this->regrow_average = this->regrow_elapsed / this->advance_count;
     if (this->advance_count % 100 == 1)
+    {
+        this->regrow_average = this->regrow_elapsed / this->advance_count;
         DebugTrace<4>("RegrowPass takes on average %lld.%03lld ms\r\n", this->regrow_average.count() / 1000,
                       this->regrow_average.count() % 1000);
+    }
 }

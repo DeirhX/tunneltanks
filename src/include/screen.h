@@ -36,6 +36,7 @@ class Screen
     ScreenDrawMode mode = SCREEN_DRAW_INVALID;
     LevelPixelSurface *drawBuffer = nullptr;
 
+
   public:
     Screen(bool is_fullscreen, Size render_surface_size);
 

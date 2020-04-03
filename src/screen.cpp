@@ -53,7 +53,6 @@ struct SinglePlayerLayout : public widgets::SharedLayout
     /* Lives remaining view */
     constexpr static ScreenRect lives_left_rect =
         ScreenRect{tank_health_bars_rect.Right() + 2, tank_health_bars_rect.Top() + 1, 2, status_height};
-
 };
 
 struct TwoPlayerLayout : public SinglePlayerLayout
@@ -65,27 +64,27 @@ struct TwoPlayerLayout : public SinglePlayerLayout
     constexpr static ScreenRect player_view_two = {ScreenPosition{player_view_one.Right() + 2, player_view_rect.pos.y},
                                                    Size{player_view_one.size}};
     /* Health + Energy bar */
-    constexpr static ScreenRect health_energy_one = 
-        {ScreenPosition{view_offset.x, tank_health_bars_rect.pos.y},
-        Size{player_view_one.size.x - energy_letter_rect.size.x/2 - lives_left_rect.size.x - 2*lives_left_padding - 1, tank_health_bars_rect.size.y}};
+    constexpr static ScreenRect health_energy_one = {ScreenPosition{view_offset.x, tank_health_bars_rect.pos.y},
+                                                     Size{player_view_one.size.x - energy_letter_rect.size.x / 2 -
+                                                              lives_left_rect.size.x - 2 * lives_left_padding - 1,
+                                                          tank_health_bars_rect.size.y}};
     constexpr static ScreenRect health_energy_two = {
-        ScreenPosition{health_energy_one.Right() + energy_letter_rect.size.x + lives_left_rect.size.x*2 + 3 + 2*lives_left_padding + 3,
+        ScreenPosition{health_energy_one.Right() + energy_letter_rect.size.x + lives_left_rect.size.x * 2 + 3 +
+                           2 * lives_left_padding + 3,
                        health_energy_one.pos.y},
         Size{health_energy_one.size}};
     constexpr static ScreenRect energy_letter_rect = {
         ScreenPosition{tweak::screen::RenderSurfaceSize.x / 2 - 2,
                        tweak::screen::RenderSurfaceSize.y - 2 - status_height},
+        Size{4, 5}};
+    constexpr static ScreenRect health_letter_rect = {ScreenPosition{energy_letter_rect.pos + Offset{0, 6}},
                                                       Size{4, 5}};
-    constexpr static ScreenRect health_letter_rect = {ScreenPosition{energy_letter_rect.pos + Offset{0, 6}}, Size{4, 5}};
 
     /* Lives remaining view */
     constexpr static ScreenRect lives_left_rect_one =
         ScreenRect{health_energy_one.Right() + 2, health_energy_one.Top() + 1, 2, status_height};
     constexpr static ScreenRect lives_left_rect_two =
         ScreenRect{health_energy_two.Left() - health_letter_rect.size.x, health_energy_two.Top() + 1, 2, status_height};
-    
-
-
 };
 
 void Screens::SinglePlayerScreenSetup(Screen * screen, World * world, Tank * player)
@@ -113,14 +112,16 @@ void Screens::SinglePlayerScreenSetup(Screen * screen, World * world, Tank * pla
 void Screens::TwoPlayerScreenSetup(Screen * screen, World * world, Tank * player_one, Tank * player_two)
 {
     auto window = std::make_unique<widgets::TankView>(TwoPlayerLayout::player_view_one, player_one);
-    auto crosshair = std::make_unique<widgets::Crosshair>(TwoPlayerLayout::player_view_one.Center(), screen, window.get());
+    auto crosshair =
+        std::make_unique<widgets::Crosshair>(TwoPlayerLayout::player_view_one.Center(), screen, window.get());
     player_one->SetCrosshair(crosshair.get());
 
     screen->AddWidget(std::move(window));
     screen->AddWidget(std::move(crosshair));
 
     screen->AddStatus(TwoPlayerLayout::health_energy_one, player_one, false);
-    screen->AddWidget(std::make_unique<widgets::LivesLeft>(TwoPlayerLayout::lives_left_rect_one, Orientation::Vertical, player_one));
+    screen->AddWidget(
+        std::make_unique<widgets::LivesLeft>(TwoPlayerLayout::lives_left_rect_one, Orientation::Vertical, player_one));
 
     window = std::make_unique<widgets::TankView>(TwoPlayerLayout::player_view_two, player_two);
     crosshair = std::make_unique<widgets::Crosshair>(TwoPlayerLayout::player_view_two.Center(), screen, window.get());
@@ -196,11 +197,25 @@ void Screen::DrawLevel()
 
 void Screen::DrawCurrentMode()
 {
+    static std::chrono::microseconds time_elapsed = {};
+    static int number_called = 0;
+    Stopwatch<> elapsed;
+
     if (this->mode == SCREEN_DRAW_LEVEL)
     {
         this->DrawLevel();
     }
-    // throw GameException("Invalid mode to draw");
+
+    /* Performance info */
+    ++number_called;
+    time_elapsed += elapsed.GetElapsed();
+    if (number_called % 100 == 1)
+    {
+        auto average = time_elapsed / number_called;
+        DebugTrace<4>("Screen::DrawCurrentMode takes on average %lld.%03lld ms\r\n", average.count() / 1000,
+                      average.count() % 1000);
+    }
+    /* End performance info */
 }
 
 /* TODO: Change the screen API to better match gamelib... */
