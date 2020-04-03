@@ -1,7 +1,7 @@
 #include "base.h"
 #include <cstdlib>
 
-#include <drawbuffer.h>
+#include "level_pixel_surface.h"
 #include <gamelib.h>
 #include <level.h>
 #include <random.h>

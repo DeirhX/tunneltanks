@@ -5,27 +5,26 @@
 
 class SdlWindow;
 
+/* Renderer implemented in SDL2 */
 class SdlRenderer final : public Renderer
 {
     /* Native SDL data */
     holder_with_deleter<SDL_Renderer> native_renderer = {};
     holder_with_deleter<SDL_Texture> native_texture = {};
-    holder_with_deleter<SDL_Surface> native_surface = {};
 
-    Size surface_size = {};
+    RenderSurface * render_surface = {};
     SdlWindow * owning_window = nullptr;
 
   public:
-    explicit SdlRenderer(SdlWindow * owning_window, Size surface_size);
-    void DrawPixel(NativeScreenPosition position, Color32 color) override;
-    void DrawRectangle(NativeRect rect, Color32 color) override;
+    explicit SdlRenderer(SdlWindow * owning_window, RenderSurface * render_surface);
     void SetSurfaceResolution(Size size) override;
-    Size GetSurfaceResolution() override { return this->surface_size; }
-    void RenderFrame() override;
+    Size GetSurfaceResolution() override { return this->render_surface->GetSize(); }
+    void RenderFrame(const RenderSurface * surface) override;
   public:
     void Recreate(SdlWindow * new_owning_window);
 };
 
+/* Native window implemented in SDL2 */
 class SdlWindow final : public Window
 {
     /* Native SDL data */
@@ -42,10 +41,10 @@ class SdlWindow final : public Window
 
     bool IsFullscreen() override { return this->is_fullscreen; }
     Size GetResolution() override { return this->window_size; }
-    //SdlRenderer * GetRenderer() override { return this->renderer; }
     void Resize(Size size, bool is_fullscreen) override;
 };
 
+/* Native cursor implemented in SDL2 */
 class SdlCursor final : public Cursor
 {
     holder_with_deleter<SDL_Cursor> native_cursor = {};

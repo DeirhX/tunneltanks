@@ -2,41 +2,9 @@
 #include <cstdint>
 #include <vector>
 #include "game_config.h"
+#include "render_surface.h"
 #include "types.h"
 
-
-/*
- * RenderedPixel: Possibly an exact memory layout of a pixel that's going to be directly copied into video memory.
- *   If matched exactly, no conversion will be needed and we can copy entire array from RAM into VRAM.
- */
-struct RenderedPixel
-{
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-    uint8_t a;
-
-    RenderedPixel() = default;
-    RenderedPixel(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b), a(255) {}
-    RenderedPixel(uint8_t r, uint8_t g, uint8_t b, uint8_t a) : r(r), g(g), b(b), a(a) {}
-    RenderedPixel(Color color) : r(color.r), g(color.g), b(color.b), a(255) {}
-    RenderedPixel(Color32 color) : r(color.r), g(color.g), b(color.b), a(color.a) {}
-
-    operator Color() const { return Color{this->r, this->g, this->b};}
-    operator Color32() const { return Color32{this->r, this->g, this->b, this->a}; }
-};
-
-/*
- * RenderSurface: An array of raw (pixel) color information that can
- *  be effectively rendered into device video memory through a Renderer
- */
-class RenderSurface
-{
-    std::vector<RenderedPixel> surface;
-
-  public:
-    RenderSurface(Size size) : surface(size.x * size.y) {}
-};
 
 /*
  * Renderer: Takes care of rendering our RenderSurface to an actual device.
@@ -45,11 +13,10 @@ class Renderer
 {
   public:
     virtual ~Renderer() = default;
-    virtual void DrawPixel(NativeScreenPosition position, Color32 color) = 0;
-    virtual void DrawRectangle(NativeRect rect, Color32 color) = 0;
+
     virtual void SetSurfaceResolution(Size size) = 0;
     virtual Size GetSurfaceResolution() = 0;
-    virtual void RenderFrame() = 0;
+    virtual void RenderFrame(const RenderSurface * surface) = 0;
 };
 
 /*
@@ -82,7 +49,12 @@ class Cursor
  */
 class GameSystem
 {
+  protected:
+    RenderSurface render_surface;
   public:
+    GameSystem(Size render_surface_size) : render_surface(render_surface_size) {}
+    RenderSurface * GetSurface() { return &render_surface; } /* This should be effective, we'll be copying pixels left and right */
+
     virtual Renderer * GetRenderer() = 0;
     virtual Window * GetWindow() = 0;
     virtual Cursor * GetCursor() = 0;

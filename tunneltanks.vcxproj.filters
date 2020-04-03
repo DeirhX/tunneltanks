@@ -72,9 +72,6 @@
     <ClCompile Include="src\level_view.cpp">
       <Filter>src\ai</Filter>
     </ClCompile>
-    <ClCompile Include="src\drawbuffer.cpp">
-      <Filter>src\draw</Filter>
-    </ClCompile>
     <ClCompile Include="src\screen.cpp">
       <Filter>src\draw</Filter>
     </ClCompile>
@@ -139,6 +136,12 @@
     <ClCompile Include="src\gamelib\SDL\sdl_system.cpp">
       <Filter>sdl_interface</Filter>
     </ClCompile>
+    <ClCompile Include="src\level_pixel_surface.cpp">
+      <Filter>src\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render_surface.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\controllersdl.h">
@@ -172,9 +175,6 @@
       <Filter>src\generators</Filter>
     </ClInclude>
     <ClInclude Include="src\include\colors.h">
-      <Filter>src\draw</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\drawbuffer.h">
       <Filter>src\draw</Filter>
     </ClInclude>
     <ClInclude Include="src\include\screen.h">
@@ -287,6 +287,12 @@
       <Filter>src\system</Filter>
     </ClInclude>
     <ClInclude Include="src\include\game_system.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\level_pixel_surface.h">
+      <Filter>src\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render_surface.h">
       <Filter>src\system</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,6 +1,6 @@
 #include "base.h"
 #include "colors.h"
-#include <drawbuffer.h>
+#include "level_pixel_surface.h"
 #include <gamelib.h>
 #include <level.h>
 #include <random.h>
@@ -22,13 +22,13 @@ void Screen::FillBackground()
 {
     Size dim = GetSystem()->GetRenderer()->GetSurfaceResolution();
 
-    GetSystem()->GetRenderer()->DrawRectangle({{0, 0}, dim}, Palette.Get(Colors::Background));
+    GetSystem()->GetSurface()->DrawRectangle({{0, 0}, dim}, Palette.Get(Colors::Background));
     NativeScreenPosition o;
     for (o.y = 0; o.y < dim.y; o.y++)
     {
         for (o.x = (o.y % 2) * 2; o.x < dim.x; o.x += 4)
         {
-            GetSystem()->GetRenderer()->DrawRectangle(NativeRect{o, Size{1, 1}}, Palette.Get(Colors::BackgroundDot));
+            GetSystem()->GetSurface()->DrawRectangle(NativeRect{o, Size{1, 1}}, Palette.Get(Colors::BackgroundDot));
         }
     }
 }
@@ -146,22 +146,24 @@ void Screen::DrawPixel(ScreenPosition pos, Color32 color)
 {
     if (color.a == 0)
         return;
+    GetSystem()->GetSurface()->DrawPixel(NativeScreenPosition{pos.x, pos.y}, color);
+    return;
 
-    Offset adjusted_size = {/* Make some pixels uniformly larger to fill in given space relatively evenly  */
-                            (pos.x * this->pixels_skip.x) / tweak::screen::RenderSurfaceSize.x,
-                            (pos.y * this->pixels_skip.y) / tweak::screen::RenderSurfaceSize.y};
-    Offset adjusted_next = {((pos.x + 1) * this->pixels_skip.x) / tweak::screen::RenderSurfaceSize.x,
-                            ((pos.y + 1) * this->pixels_skip.y) / tweak::screen::RenderSurfaceSize.y};
+    //Offset adjusted_size = {/* Make some pixels uniformly larger to fill in given space relatively evenly  */
+    //                        (pos.x * this->pixels_skip.x) / tweak::screen::RenderSurfaceSize.x,
+    //                        (pos.y * this->pixels_skip.y) / tweak::screen::RenderSurfaceSize.y};
+    //Offset adjusted_next = {((pos.x + 1) * this->pixels_skip.x) / tweak::screen::RenderSurfaceSize.x,
+    //                        ((pos.y + 1) * this->pixels_skip.y) / tweak::screen::RenderSurfaceSize.y};
 
-    /* Final pixel position, adjusted by required scaling and offset */
-    auto native_pos = NativeScreenPosition{(pos.x * this->pixel_size.x) + this->screen_offset.x + adjusted_size.x,
-                                           (pos.y * this->pixel_size.y) + this->screen_offset.y + adjusted_size.y};
+    ///* Final pixel position, adjusted by required scaling and offset */
+    //auto native_pos = NativeScreenPosition{(pos.x * this->pixel_size.x) + this->screen_offset.x + adjusted_size.x,
+    //                                       (pos.y * this->pixel_size.y) + this->screen_offset.y + adjusted_size.y};
 
-    auto final_size = Size{/* Compute size based on needing uneven scaling or not */
-                           this->pixel_size.x + (adjusted_size.x != adjusted_next.x),
-                           this->pixel_size.y + (adjusted_size.y != adjusted_next.y)};
+    //auto final_size = Size{/* Compute size based on needing uneven scaling or not */
+    //                       this->pixel_size.x + (adjusted_size.x != adjusted_next.x),
+    //                       this->pixel_size.y + (adjusted_size.y != adjusted_next.y)};
 
-    GetSystem()->GetRenderer()->DrawRectangle(NativeRect{native_pos, final_size}, color);
+    //GetSystem()->GetSurface()->DrawRectangle(NativeRect{native_pos, final_size}, color);
 }
 
 ScreenPosition Screen::FromNativeScreen(NativeScreenPosition native_pos)
@@ -186,7 +188,8 @@ ScreenPosition Screen::FromNativeScreen(NativeScreenPosition native_pos)
 void Screen::DrawLevel()
 {
     /* Erase everything */
-    GetSystem()->GetRenderer()->DrawRectangle(NativeRect{{0, 0}, GetSystem()->GetRenderer()->GetSurfaceResolution()}, Palette.Get(Colors::Blank));
+    GetSystem()->GetSurface()->DrawRectangle(NativeRect{{0, 0}, GetSystem()->GetRenderer()->GetSurfaceResolution()},
+                                             Palette.Get(Colors::Blank));
     /* Draw everything */
     std::for_each(this->widgets.begin(), this->widgets.end(), [this](auto & item) { item->Draw(this); });
 }

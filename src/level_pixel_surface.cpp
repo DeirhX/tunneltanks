@@ -1,5 +1,6 @@
+#include "level_pixel_surface.h"
+
 #include "base.h"
-#include <drawbuffer.h>
 #include <memory>
 
 /* TODO: We're using color structures here because we started with Uint32 values

@@ -45,6 +45,7 @@ struct Size : public Vector
 {
     constexpr Size() = default;
     constexpr Size(int sx, int sy) : Vector(sx, sy) {}
+    bool FitsInside(int sx, int sy) { return sx >= 0 && sy >= 0 && sx < this->x && sy < this->y; }
 };
 
 struct NativeSize : public Vector
@@ -269,8 +270,8 @@ struct Color32
         if (a == 255)
             return PixelDataType(r, g, b);
         return PixelDataType((this->r * this->a) / 255 + other.r * (255 - this->a),
-                     (this->g * this->a) / 255 + other.g * (255 - this->a),
-                     (this->b * this->a) / 255 + other.b * (255 - this->a));
+                             (this->g * this->a) / 255 + other.g * (255 - this->a),
+                             (this->b * this->a) / 255 + other.b * (255 - this->a));
     }
     explicit operator Color() const { return Color(r, g, b); }
 };

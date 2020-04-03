@@ -14,38 +14,21 @@
  *  SdlRenderer wrapper over SDL_Renderer, SDL_Texture and SDL_Surface
  */
 
-SdlRenderer::SdlRenderer(SdlWindow * owning_window, Size surface_size) : surface_size(surface_size)
+SdlRenderer::SdlRenderer(SdlWindow * owning_window, RenderSurface * render_surface) : render_surface(render_surface)
 {
     Recreate(owning_window);
 }
 
-void SdlRenderer::DrawRectangle(NativeRect rect, Color32 color)
-{
-    Uint32 native_color = SDL_MapRGBA(this->native_surface->format, color.r, color.g, color.b, color.a);
-    auto sdl_rect = SDL_Rect{Sint16(rect.pos.x), Sint16(rect.pos.y), Uint16(rect.size.x), Uint16(rect.size.y)};
-#ifdef _DEBUG
-    if (SDL_FillRect(this->native_surface.get(), &sdl_rect, native_color))
-        throw RenderException("Failed to fill rect.", SDL_GetError());
-    #else
-    SDL_FillRect(this->native_surface.get(), &sdl_rect, native_color);
-#endif
-}
-
-void SdlRenderer::DrawPixel(NativeScreenPosition position, Color32 color)
-{
-    DrawRectangle(NativeRect{position.x, position.y, 1, 1}, color);
-}
-
 void SdlRenderer::SetSurfaceResolution(Size size)
 {
-    this->surface_size = size;
+    this->render_surface->Resize(size);
     Recreate(this->owning_window);
 }
 
-void SdlRenderer::RenderFrame()
+void SdlRenderer::RenderFrame(const RenderSurface * surface)
 {
-    if (SDL_UpdateTexture(this->native_texture.get(), nullptr, this->native_surface->pixels,
-                          this->native_surface->pitch))
+    if (SDL_UpdateTexture(this->native_texture.get(), nullptr, this->render_surface->GetRawData(),
+                          this->render_surface->GetRowPitch()))
     {
         throw RenderException("Update texture failed", SDL_GetError());
     }
@@ -65,26 +48,20 @@ void SdlRenderer::Recreate(SdlWindow * new_owning_window)
     this->owning_window = new_owning_window;
     this->native_renderer.reset();
     this->native_texture.reset();
-    this->native_surface.reset();
 
     this->native_renderer = {SDL_CreateRenderer(owning_window->GetNativeWindow(), -1, SDL_RENDERER_ACCELERATED),
                              [](SDL_Renderer * renderer) { /* SDL_DestroyRenderer(renderer);*/ /* Destroyed by window */ }};
     if (!this->native_renderer)
         throw GameInitException("Failed to create game renderer.");
-    if (SDL_RenderSetLogicalSize(this->native_renderer.get(), surface_size.x, surface_size.y))
+    if (SDL_RenderSetLogicalSize(this->native_renderer.get(), this->render_surface->GetSize().x, this->render_surface->GetSize().y))
         throw GameInitException("Failed to set logical size.");
 
     this->native_texture = {
         SDL_CreateTexture(this->native_renderer.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
-                          surface_size.x, surface_size.y),
+                          this->render_surface->GetSize().x, this->render_surface->GetSize().y),
         [](SDL_Texture * texture) { /* SDL_DestroyTexture(texture); */ /* Destroyed by the surface */ }};
     if (!this->native_texture)
         throw GameInitException("Failed to create texture to render into.");
-
-    this->native_surface = {SDL_CreateRGBSurface(0, surface_size.x, surface_size.y, 32, 0, 0, 0, 0),
-                            [](SDL_Surface * surface) { SDL_FreeSurface(surface); }};
-    if (!this->native_surface)
-        throw GameInitException("Failed to create surface to render from.");
 
     /* Our cursor is set to nothing, this will hide it */
     SDL_ShowCursor(SDL_ENABLE);

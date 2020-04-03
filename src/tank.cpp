@@ -1,7 +1,7 @@
 #include "base.h"
 #include "colors.h"
 #include <algorithm>
-#include <drawbuffer.h>
+#include "level_pixel_surface.h"
 #include <level.h>
 #include <level_view.h>
 #include <projectile.h>

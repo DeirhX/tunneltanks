@@ -3,8 +3,9 @@
 #include "game_config.h"
 
 SdlSystem::SdlSystem(VideoConfig video_config)
-    : window(video_config.resolution, video_config.is_fullscreen),
-      renderer(&this->window, video_config.render_surface_size), cursor()
+    : GameSystem(video_config.render_surface_size),
+      window(video_config.resolution, video_config.is_fullscreen),
+      renderer(&this->window, &this->render_surface), cursor()
 {
     window.AttachRenderer(&this->renderer);
 }

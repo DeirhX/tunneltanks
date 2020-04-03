@@ -6,7 +6,7 @@
 #include <aitwitch.h>
 #include <bitmaps.h>
 #include <chrono>
-#include <drawbuffer.h>
+#include "level_pixel_surface.h"
 #include <game.h>
 #include <gamelib.h>
 #include <level.h>

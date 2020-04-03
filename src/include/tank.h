@@ -3,7 +3,7 @@
 /* For the controllers/AIs: */
 
 #include <controllersdl.h>
-#include <drawbuffer.h>
+#include "level_pixel_surface.h"
 #include <level.h>
 #include <level_view.h>
 #include <projectile_list.h>

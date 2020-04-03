@@ -33,7 +33,7 @@
     <ClCompile Include="src\aitwitch.cpp" />
     <ClCompile Include="src\bitmaps.cpp" />
     <ClCompile Include="src\colors.cpp" />
-    <ClCompile Include="src\drawbuffer.cpp" />
+    <ClCompile Include="src\level_pixel_surface.cpp" />
     <ClCompile Include="src\exceptions.cpp">
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdcpp17</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp17</LanguageStandard>
@@ -64,6 +64,7 @@
     <ClCompile Include="src\projectile.cpp" />
     <ClCompile Include="src\random.cpp" />
     <ClCompile Include="src\raw_level_data.cpp" />
+    <ClCompile Include="src\render_surface.cpp" />
     <ClCompile Include="src\scene.cpp" />
     <ClCompile Include="src\screen.cpp" />
     <ClCompile Include="src\tank.cpp" />
@@ -88,7 +89,7 @@
     <ClInclude Include="src\include\containers.h" />
     <ClInclude Include="src\include\containers_queue.h" />
     <ClInclude Include="src\include\controller.h" />
-    <ClInclude Include="src\include\drawbuffer.h" />
+    <ClInclude Include="src\include\level_pixel_surface.h" />
     <ClInclude Include="src\include\game.h" />
     <ClInclude Include="src\include\gamelib.h" />
     <ClInclude Include="src\include\bitmaps.h" />
@@ -125,6 +126,7 @@
       <FileType>CppHeader</FileType>
     </ClInclude>
     <ClInclude Include="src\raw_level_data.h" />
+    <ClInclude Include="src\render_surface.h" />
     <ClInclude Include="src\weapon.h" />
   </ItemGroup>
   <ItemGroup>
