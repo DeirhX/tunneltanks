@@ -19,6 +19,17 @@ class GameInitException : public GameException
     }
 };
 
+class RenderException : public GameException
+{
+  public:
+    const char * error_string;
+
+    RenderException(const char * message, const char * error_string = nullptr)
+        : GameException(message), error_string(error_string)
+    {
+    }
+};
+
 class NoControllersException : public GameException
 {
   public:

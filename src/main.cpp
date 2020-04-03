@@ -20,6 +20,7 @@
 #include <iostream>
 
 #include "exceptions.h"
+#include "game_config.h"
 
 int GameMain(int argc, char * argv[]);
 
@@ -184,18 +185,27 @@ int GameMain(int argc, char * argv[])
         gamelib_init();
 
         auto config = GameConfig{
+            .video_config =
+                {
+                    .resolution = tweak::screen::WindowSize,
+                    .is_fullscreen = is_fullscreen,
+                    .render_surface_size = tweak::screen::RenderSurfaceSize,
+                },
+            .level_size = size,
             .level_generator = GeneratorFromName(id),
-            .size = size,
             .is_debug = is_debug,
-            .is_fullscreen = is_fullscreen,
             .player_count = player_count,
             .use_ai = is_ai,
         };
         {
+            /* TODO: Unify this global mess */
+            /* Setup input/output system */
+            ::global_game_system = CreateGameSystem(config.video_config);
             ::global_game = std::make_unique<Game>(config);
             /* Play the game: */
             gamelib_main_loop([]() -> bool { return global_game->AdvanceStep(); });
             ::global_game.reset();
+            ::global_game_system.reset();
         }
         /* Ok, we're done. Tear everything up: */
         gamelib_exit();

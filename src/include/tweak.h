@@ -16,7 +16,10 @@ namespace system
 namespace screen
 {
 	/* The default size of the window: */
-	constexpr Size size = { 640, 400 };
+	constexpr Size WindowSize = { 640, 400 };
+    /* The virtual resolution of the game. (IE: How many blocks tall/wide) */
+    constexpr Size RenderSurfaceSize = {160, 100};
+
 }
 
 
@@ -32,8 +35,6 @@ namespace perf {
 
 namespace world
 {
-    /* The virtual resolution of the game. (IE: How many blocks tall/wide) */
-    constexpr Size GameSize = { 160, 100};
     constexpr int DirtRecoverSpeed = 2; /* Average delay before growing finishes and new dirt is formed. More is faster. */
     constexpr int DirtRegrowSpeed = 5;  /* Average delay before it starts growing back. More is faster.*/
 

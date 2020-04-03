@@ -98,9 +98,9 @@ Game::Game(GameConfig config)
 	out->data.config.h = tweak::GameSize.y;
 	*/
     if (gamelib_get_can_window())
-        this->config.is_fullscreen = false;
+        this->config.video_config.is_fullscreen = false;
     else if (gamelib_get_can_fullscreen())
-        this->config.is_fullscreen = true;
+        this->config.video_config.is_fullscreen = true;
     else
     {
         /* The hell!? */
@@ -108,8 +108,8 @@ Game::Game(GameConfig config)
     }
 
     /* Initialize most of the structures: */
-    this->screen = std::make_unique<Screen>(this->config.is_fullscreen);
-    this->draw_buffer = std::make_unique<LevelDrawBuffer>(this->config.size);
+    this->screen = std::make_unique<Screen>(this->config.video_config.is_fullscreen);
+    this->draw_buffer = std::make_unique<LevelDrawBuffer>(this->config.level_size);
 
     /* Generate our random level: */
     int TestIterations = 20;
@@ -120,7 +120,7 @@ Game::Game(GameConfig config)
     std::unique_ptr<Level> level;
     for (int i = TestIterations; i-- > 0;)
     {
-        level = std::make_unique<Level>(this->config.size, this->draw_buffer.get());
+        level = std::make_unique<Level>(this->config.level_size, this->draw_buffer.get());
         time_taken += generate_level(level.get(), this->config.level_generator);
     }
     auto average_time = time_taken / TestIterations;

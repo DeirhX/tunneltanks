@@ -43,10 +43,11 @@
     <ClCompile Include="src\gamelib\SDL\control.cpp" />
     <ClCompile Include="src\gamelib\SDL\controllersdl.cpp" />
     <ClCompile Include="src\gamelib\SDL\events.cpp" />
-    <ClCompile Include="src\gamelib\SDL\graphics.cpp" />
     <ClCompile Include="src\gamelib\SDL\gui.cpp" />
     <ClCompile Include="src\gamelib\SDL\logging.cpp" />
     <ClCompile Include="src\gamelib\SDL\sdldata.cpp" />
+    <ClCompile Include="src\gamelib\SDL\sdl_system.cpp" />
+    <ClCompile Include="src\gamelib\SDL\sdl_renderer.cpp" />
     <ClCompile Include="src\gui_widgets.cpp" />
     <ClCompile Include="src\include\projectile_list.cpp" />
     <ClCompile Include="src\level.cpp" />
@@ -80,6 +81,8 @@
     <ClInclude Include="src\gamelib\SDL\controllersdl.h" />
     <ClInclude Include="src\gamelib\SDL\require_sdl.h" />
     <ClInclude Include="src\gamelib\SDL\sdldata.h" />
+    <ClInclude Include="src\gamelib\SDL\sdl_system.h" />
+    <ClInclude Include="src\gamelib\SDL\sdl_renderer.h" />
     <ClInclude Include="src\include\aitwitch.h" />
     <ClInclude Include="src\include\colors.h" />
     <ClInclude Include="src\include\containers.h" />
@@ -89,6 +92,7 @@
     <ClInclude Include="src\include\game.h" />
     <ClInclude Include="src\include\gamelib.h" />
     <ClInclude Include="src\include\bitmaps.h" />
+    <ClInclude Include="src\include\game_config.h" />
     <ClInclude Include="src\include\gui_widgets.h" />
     <ClInclude Include="src\include\iterators.h" />
     <ClInclude Include="src\include\level.h" />
@@ -158,6 +162,7 @@
     <PlatformToolset>v142</PlatformToolset>
     <UseDebugLibraries>true</UseDebugLibraries>
     <SpectreMitigation>false</SpectreMitigation>
+    <EnableUnitySupport>true</EnableUnitySupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -171,12 +176,14 @@
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
     <SpectreMitigation>false</SpectreMitigation>
+    <EnableUnitySupport>true</EnableUnitySupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Static|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
     <SpectreMitigation>false</SpectreMitigation>
+    <EnableUnitySupport>true</EnableUnitySupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>

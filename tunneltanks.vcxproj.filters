@@ -57,9 +57,6 @@
     <ClCompile Include="src\gamelib\SDL\events.cpp">
       <Filter>sdl_interface</Filter>
     </ClCompile>
-    <ClCompile Include="src\gamelib\SDL\graphics.cpp">
-      <Filter>sdl_interface</Filter>
-    </ClCompile>
     <ClCompile Include="src\gamelib\SDL\logging.cpp">
       <Filter>sdl_interface</Filter>
     </ClCompile>
@@ -135,6 +132,12 @@
     </ClCompile>
     <ClCompile Include="src\weapon.cpp">
       <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\sdl_renderer.cpp">
+      <Filter>sdl_interface</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\sdl_system.cpp">
+      <Filter>sdl_interface</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -273,6 +276,15 @@
     </ClInclude>
     <ClInclude Include="src\weapon.h">
       <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamelib\SDL\sdl_renderer.h">
+      <Filter>sdl_interface</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamelib\SDL\sdl_system.h">
+      <Filter>sdl_interface</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\game_config.h">
+      <Filter>src\system</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

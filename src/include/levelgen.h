@@ -1,7 +1,8 @@
 #pragma once
 #include <cstdio>
 #include <chrono>
-#include <level.h>
+
+class Level;
 
 enum class LevelGenerator
 {

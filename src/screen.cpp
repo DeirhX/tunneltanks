@@ -12,21 +12,21 @@
 /* The constructor sets the video mode: */
 Screen::Screen(bool is_fullscreen) : is_fullscreen(is_fullscreen)
 {
-    this->Resize({tweak::screen::size.x, tweak::screen::size.y});
+    this->Resize({tweak::screen::WindowSize.x, tweak::screen::WindowSize.y});
 }
 
 /* Fills a surface with a blue/black pattern: */
 void Screen::FillBackground()
 {
-    Size dim = gamelib_get_resolution();
+    Size dim = GetSystem()->GetWindow()->GetResolution();
 
-    gamelib_draw_box({{0, 0}, dim}, Palette.Get(Colors::Background));
+    GetSystem()->GetRenderer()->DrawRectangle({{0, 0}, dim}, Palette.Get(Colors::Background));
     NativeScreenPosition o;
     for (o.y = 0; o.y < dim.y; o.y++)
     {
         for (o.x = (o.y % 2) * 2; o.x < dim.x; o.x += 4)
         {
-            gamelib_draw_box(NativeRect{o, Size{1, 1}}, Palette.Get(Colors::BackgroundDot));
+            GetSystem()->GetRenderer()->DrawRectangle(NativeRect{o, Size{1, 1}}, Palette.Get(Colors::BackgroundDot));
         }
     }
 }
@@ -37,13 +37,14 @@ struct SinglePlayerLayout : public widgets::SharedLayout
     constexpr static Offset view_offset = Offset{2, 2};
     constexpr static ScreenRect player_view_rect =
         ScreenRect{ScreenPosition{view_offset + padding},
-                   Size{tweak::world::GameSize.x - 2 * (view_offset.x + padding.x),
-                        tweak::world::GameSize.y - 2 * (view_offset.y + padding.y) - status_padding_top - status_height}};
+                   Size{tweak::screen::RenderSurfaceSize.x - 2 * (view_offset.x + padding.x),
+                        tweak::screen::RenderSurfaceSize.y - 2 * (view_offset.y + padding.y) - status_padding_top -
+                            status_height}};
 
     /* Health + Energy bar */
     constexpr static ScreenRect tank_health_bars_rect =
-        ScreenRect{ScreenPosition{9 + padding.x, tweak::world::GameSize.y - 2 - status_height - padding.y},
-                   Size{tweak::world::GameSize.x - 16 - 2 * padding.x, status_height}};
+        ScreenRect{ScreenPosition{9 + padding.x, tweak::screen::RenderSurfaceSize.y - 2 - status_height - padding.y},
+                   Size{tweak::screen::RenderSurfaceSize.x - 16 - 2 * padding.x, status_height}};
     constexpr static ScreenRect energy_letter_rect = {ScreenPosition{3, tank_health_bars_rect.Top()}, Size{4, 5}};
     constexpr static ScreenRect health_letter_rect = {ScreenPosition{3, tank_health_bars_rect.Top() + 6}, Size{4, 5}};
 
@@ -70,7 +71,8 @@ struct TwoPlayerLayout : public SinglePlayerLayout
                        health_energy_one.pos.y},
         Size{health_energy_one.size}};
     constexpr static ScreenRect energy_letter_rect = {
-        ScreenPosition{tweak::world::GameSize.x / 2 - 2, tweak::world::GameSize.y - 2 - status_height},
+        ScreenPosition{tweak::screen::RenderSurfaceSize.x / 2 - 2,
+                       tweak::screen::RenderSurfaceSize.y - 2 - status_height},
                                                       Size{4, 5}};
     constexpr static ScreenRect health_letter_rect = {ScreenPosition{energy_letter_rect.pos + Offset{0, 6}}, Size{4, 5}};
 
@@ -103,7 +105,7 @@ void Screens::SinglePlayerScreenSetup(Screen * screen, World * world, Tank * pla
     screen->AddBitmap(SinglePlayerLayout::health_letter_rect, &bitmaps::GuiHealth,
                       static_cast<Color>(Palette.Get(Colors::StatusHealth)));
 
-    gamelib_disable_cursor();
+    GetSystem()->GetCursor()->Show();
 }
 
 void Screens::TwoPlayerScreenSetup(Screen * screen, World * world, Tank * player_one, Tank * player_two)
@@ -134,7 +136,8 @@ void Screens::TwoPlayerScreenSetup(Screen * screen, World * world, Tank * player
                       static_cast<Color>(Palette.Get(Colors::StatusEnergy)));
     screen->AddBitmap(TwoPlayerLayout::health_letter_rect, &bitmaps::GuiHealth,
                       static_cast<Color>(Palette.Get(Colors::StatusHealth)));
-    gamelib_disable_cursor();
+
+    GetSystem()->GetCursor()->Hide();
 }
 
 void Screen::DrawPixel(ScreenPosition pos, Color32 color)
@@ -143,10 +146,10 @@ void Screen::DrawPixel(ScreenPosition pos, Color32 color)
         return;
 
     Offset adjusted_size = {/* Make some pixels uniformly larger to fill in given space relatively evenly  */
-                            (pos.x * this->pixels_skip.x) / tweak::world::GameSize.x,
-                            (pos.y * this->pixels_skip.y) / tweak::world::GameSize.y};
-    Offset adjusted_next = {((pos.x + 1) * this->pixels_skip.x) / tweak::world::GameSize.x,
-                            ((pos.y + 1) * this->pixels_skip.y) / tweak::world::GameSize.y};
+                            (pos.x * this->pixels_skip.x) / tweak::screen::RenderSurfaceSize.x,
+                            (pos.y * this->pixels_skip.y) / tweak::screen::RenderSurfaceSize.y};
+    Offset adjusted_next = {((pos.x + 1) * this->pixels_skip.x) / tweak::screen::RenderSurfaceSize.x,
+                            ((pos.y + 1) * this->pixels_skip.y) / tweak::screen::RenderSurfaceSize.y};
 
     /* Final pixel position, adjusted by required scaling and offset */
     auto native_pos = NativeScreenPosition{(pos.x * this->pixel_size.x) + this->screen_offset.x + adjusted_size.x,
@@ -156,18 +159,18 @@ void Screen::DrawPixel(ScreenPosition pos, Color32 color)
                            this->pixel_size.x + (adjusted_size.x != adjusted_next.x),
                            this->pixel_size.y + (adjusted_size.y != adjusted_next.y)};
 
-    gamelib_draw_box(NativeRect{native_pos, final_size}, color);
+    GetSystem()->GetRenderer()->DrawRectangle(NativeRect{native_pos, final_size}, color);
 }
 
 ScreenPosition Screen::FromNativeScreen(NativeScreenPosition native_pos)
 {
     auto pos = ScreenPosition{native_pos.x, native_pos.y};
     pos.x -= this->screen_offset.x;
-    pos.x -= pos.x / (int)this->pixel_size.x * (int)this->pixels_skip.x / tweak::world::GameSize.x;
+    pos.x -= pos.x / (int)this->pixel_size.x * (int)this->pixels_skip.x / tweak::screen::RenderSurfaceSize.x;
     pos.x /= (int)this->pixel_size.x;
 
     pos.y -= this->screen_offset.y;
-    pos.y -= pos.y / (int)this->pixel_size.y * (int)this->pixels_skip.y / tweak::world::GameSize.y;
+    pos.y -= pos.y / (int)this->pixel_size.y * (int)this->pixels_skip.y / tweak::screen::RenderSurfaceSize.y;
     pos.y /= (int)this->pixel_size.y;
 
     return pos;
@@ -181,7 +184,7 @@ ScreenPosition Screen::FromNativeScreen(NativeScreenPosition native_pos)
 void Screen::DrawLevel()
 {
     /* Erase everything */
-    gamelib_draw_box(NativeRect{{0, 0}, gamelib_get_resolution()}, Palette.Get(Colors::Blank));
+    GetSystem()->GetRenderer()->DrawRectangle(NativeRect{{0, 0}, GetSystem()->GetRenderer()->GetSurfaceResolution()}, Palette.Get(Colors::Blank));
     /* Draw everything */
     std::for_each(this->widgets.begin(), this->widgets.end(), [this](auto & item) { item->Draw(this); });
 }
@@ -207,7 +210,7 @@ void Screen::SetFullscreen(bool new_fullscreen)
 
     /* Resize the screen to include the new fullscreen mode: */
     if (!is_fullscreen)
-        this->Resize(Size{tweak::screen::size.x, tweak::screen::size.y});
+        this->Resize(Size{tweak::screen::WindowSize.x, tweak::screen::WindowSize.y});
     else
         this->Resize(this->screen_size);
 }
@@ -221,26 +224,25 @@ void Screen::Resize(Size size)
     this->pixel_size = {};
 
     /* Make sure that we aren't scaling to something too small: */
-    size.x = std::max(tweak::world::GameSize.x, size.x);
-    size.y = std::max(tweak::world::GameSize.y, size.y);
+    size.x = std::max(tweak::screen::RenderSurfaceSize.x, size.x);
+    size.y = std::max(tweak::screen::RenderSurfaceSize.y, size.y);
 
     /* A little extra logic for fullscreen: */
-    if (this->is_fullscreen)
-        gamelib_set_fullscreen(size);
-    else
-        gamelib_set_window(size);
 
-    size = gamelib_get_resolution();
+    /* We let the user to resize it */
+    GetSystem()->GetWindow()->Resize(size, this->is_fullscreen);
 
-    this->is_fullscreen = gamelib_get_fullscreen();
+    size = GetSystem()->GetRenderer()->GetSurfaceResolution();
+
+    this->is_fullscreen = GetSystem()->GetWindow()->IsFullscreen();
 
     /* What is the limiting factor in our scaling to maintain aspect ratio? */
-    int yw = size.y * tweak::world::GameSize.x;
-    int xh = size.x * tweak::world::GameSize.y;
+    int yw = size.y * tweak::screen::RenderSurfaceSize.x;
+    int xh = size.x * tweak::screen::RenderSurfaceSize.y;
     if (yw < xh)
     {
         /* size.y is. Correct aspect ratio using offset */
-        render_size.x = (tweak::world::GameSize.x * size.y) / (tweak::world::GameSize.y);
+        render_size.x = (tweak::screen::RenderSurfaceSize.x * size.y) / (tweak::screen::RenderSurfaceSize.y);
         render_size.y = size.y;
         this->screen_offset.x = (size.x - render_size.x) / 2;
         this->screen_offset.y = 0;
@@ -249,16 +251,16 @@ void Screen::Resize(Size size)
     {
         /* size.x is. Correct aspect ratio using offset */
         render_size.x = size.x;
-        render_size.y = (tweak::world::GameSize.y * size.x) / (tweak::world::GameSize.x);
+        render_size.y = (tweak::screen::RenderSurfaceSize.y * size.x) / (tweak::screen::RenderSurfaceSize.x);
         this->screen_offset.x = 0;
         this->screen_offset.y = (size.y - render_size.y) / 2;
     }
 
     /* Calculate the pixel sizing variables: */
-    this->pixel_size.x = render_size.x / tweak::world::GameSize.x;
-    this->pixel_size.y = render_size.y / tweak::world::GameSize.y;
-    this->pixels_skip.x = render_size.x % tweak::world::GameSize.x;
-    this->pixels_skip.y = render_size.y % tweak::world::GameSize.y;
+    this->pixel_size.x = render_size.x / tweak::screen::RenderSurfaceSize.x;
+    this->pixel_size.y = render_size.y / tweak::screen::RenderSurfaceSize.y;
+    this->pixels_skip.x = render_size.x % tweak::screen::RenderSurfaceSize.x;
+    this->pixels_skip.y = render_size.y % tweak::screen::RenderSurfaceSize.y;
 
     /* Draw a nice bg: */
     Screen::FillBackground();

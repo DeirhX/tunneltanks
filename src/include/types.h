@@ -47,6 +47,12 @@ struct Size : public Vector
     constexpr Size(int sx, int sy) : Vector(sx, sy) {}
 };
 
+struct NativeSize : public Vector
+{
+    constexpr NativeSize() = default;
+    constexpr NativeSize(int sx, int sy) : Vector(sx, sy) {}
+};
+
 struct Speed : public Vector
 {
     Speed() = default;

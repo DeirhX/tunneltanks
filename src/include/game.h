@@ -4,18 +4,9 @@
 #include <memory>
 #include <types.h>
 
-class TankList;
+#include "game_config.h"
 
-struct GameConfig
-{
-    LevelGenerator level_generator;
-    Size size;
-    bool is_debug;
-    bool is_fullscreen;
-    int player_count;
-    int rand_seed;
-    bool use_ai = true;
-};
+class TankList;
 
 class Game
 {
