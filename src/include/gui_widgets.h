@@ -1,6 +1,6 @@
 #pragma once
 #include "bitmaps.h"
-#include "colors.h"
+#include "color_palette.h"
 
 class Screen;
 class Tank;
@@ -64,10 +64,10 @@ struct BitmapRender : public GuiWidget
 {
     Rect rect;
     MonoBitmap * data;
-    Color32 color;
+    Color color;
 
   public:
-    BitmapRender(Rect rect, MonoBitmap * bitmap_data, Color32 color) : rect(rect), data(bitmap_data), color(color) {}
+    BitmapRender(Rect rect, MonoBitmap * bitmap_data, Color color) : rect(rect), data(bitmap_data), color(color) {}
     void Draw(Screen * screen) override;
 };
 

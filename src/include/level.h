@@ -72,7 +72,7 @@ class Level
     void DumpBitmap(const char * filename) const;
 
     /* Color lookup. Can be somewhere else. */
-    static Color32 GetVoxelColor(LevelPixel voxel);
+    static Color GetVoxelColor(LevelPixel voxel);
 
     /* Count neighbors is used when level building and for ad-hoc queries (e.g. dirt regeneration) */
     int CountNeighborValues(Position pos);

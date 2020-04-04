@@ -1,5 +1,4 @@
 #include "base.h"
-#include "colors.h"
 #include "level_pixel_surface.h"
 #include <gamelib.h>
 #include <level.h>
@@ -143,10 +142,10 @@ void Screens::TwoPlayerScreenSetup(Screen * screen, World * world, Tank * player
     GetSystem()->GetCursor()->Hide();
 }
 
-void Screen::DrawPixel(ScreenPosition pos, Color32 color)
+void Screen::DrawPixel(ScreenPosition pos, Color color)
 {
-    if (color.a == 0)
-        return;
+    //if (color.a == 0)
+    //    return;
     GetSystem()->GetSurface()->DrawPixel(NativeScreenPosition{pos.x, pos.y}, color);
     return;
 

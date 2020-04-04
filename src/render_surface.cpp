@@ -1,12 +1,17 @@
 ﻿#include "render_surface.h"
 
-void RenderSurface::DrawPixel(NativeScreenPosition position, RenderedPixel color)
+void RenderSurface::DrawPixel(NativeScreenPosition position, Color color)
 {
     assert(size.FitsInside(position.x, position.y));
-    surface[position.x + position.y * size.x] = color;
+    if (color.a == 0)
+        return;
+    else if (color.a == 255)
+        surface[position.x + position.y * size.x] = RenderedPixel{color};
+    else
+        surface[position.x + position.y * size.x] = color.BlendWith(surface[position.x + position.y * size.x]);
 }
 
-void RenderSurface::DrawRectangle(NativeRect rect, RenderedPixel color)
+void RenderSurface::DrawRectangle(NativeRect rect, Color color)
 {
     NativeScreenPosition pos;
     for (pos.x = rect.Left(); pos.x < rect.Right(); ++pos.x)

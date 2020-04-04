@@ -1,7 +1,6 @@
 #include "base.h"
 #include <cstdlib>
 
-#include "colors.h"
 #include "exceptions.h"
 #include <aitwitch.h>
 #include <bitmaps.h>

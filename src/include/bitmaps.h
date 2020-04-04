@@ -4,6 +4,8 @@
 #include <initializer_list>
 #include <vector>
 
+
+#include "color.h"
 #include "types.h"
 
 class Screen;
@@ -79,9 +81,9 @@ class MonoBitmap : public Bitmap<char>
     MonoBitmap(Size size, std::initializer_list<char> data) : Bitmap<char>(size, data) {}
     MonoBitmap(Size size) : Bitmap<char>(size) {}
     /* Draw entire bitmap */
-    void Draw(Screen *screen, Position position, Color32 color);
+    void Draw(Screen *screen, Position position, Color color);
     /* Draw portion of bitmap */
-    void Draw(Screen *screen, Position screen_pos, Rect source_rect, Color32 color);
+    void Draw(Screen *screen, Position screen_pos, Rect source_rect, Color color);
 
   private:
     // int ToIndex(Position position) const { return position.x + position.y * size.x; }

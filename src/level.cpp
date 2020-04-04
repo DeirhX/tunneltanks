@@ -12,7 +12,6 @@
 #include <cassert>
 
 #include "bitmap.h"
-#include "colors.h"
 #include "trace.h"
 #include "level_pixel.h"
 
@@ -225,7 +224,7 @@ BaseCollision Level::CheckBaseCollision(Position pos, TankColor color)
     return BaseCollision::None;
 }
 
-Color32 Level::GetVoxelColor(LevelPixel voxel)
+Color Level::GetVoxelColor(LevelPixel voxel)
 {
     if (voxel == LevelPixel::DirtHigh)
         return Palette.Get(Colors::DirtHigh);

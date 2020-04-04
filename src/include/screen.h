@@ -4,6 +4,7 @@
 #include <tank.h>
 #include <types.h>
 
+#include "color.h"
 #include "bitmaps.h"
 #include "gui_widgets.h"
 
@@ -51,7 +52,7 @@ class Screen
     LevelPixelSurface *GetDrawBuffer() { return drawBuffer; }
 
     /* A few useful functions for external drawing: */
-    void DrawPixel(ScreenPosition pos, Color32 color);
+    void DrawPixel(ScreenPosition pos, Color color);
     /* These will say what virtual pixel a physical pixel resides on: */
     ScreenPosition FromNativeScreen(NativeScreenPosition pos);
     //NativeScreenPosition ToNativeScreen(ScreenPosition pos);

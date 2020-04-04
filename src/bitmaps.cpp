@@ -1,5 +1,8 @@
 #include "bitmaps.h"
-#include "colors.h"
+
+
+#include "color.h"
+#include "color_palette.h"
 #include "screen.h"
 
 template <typename DataType>
@@ -35,13 +38,13 @@ void Bitmap<DataType>::Draw(Screen * screen, Position screen_pos, Rect source_re
         }
 }
 
-void MonoBitmap::Draw(Screen *screen, Position screen_pos, Color32 color)
+void MonoBitmap::Draw(Screen *screen, Position screen_pos, Color color)
 {
     Base::Draw(screen, screen_pos,
                [this, color](int index) { return this->At(index) ? color : 
                     Palette.Get(Colors::Transparent); });
 }
-void MonoBitmap::Draw(Screen *screen, Position screen_pos, Rect source_rect, Color32 color)
+void MonoBitmap::Draw(Screen *screen, Position screen_pos, Rect source_rect, Color color)
 {
     Base::Draw(screen, screen_pos, source_rect,
                [this, color](int index) { return this->At(index) ? color : 

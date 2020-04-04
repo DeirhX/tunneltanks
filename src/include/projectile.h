@@ -5,8 +5,9 @@
 #include <containers.h>
 #include <vector>
 
+
+#include "color_palette.h"
 #include "random.h"
-#include "colors.h"
 #include "tweak.h"
 
 namespace math
@@ -147,10 +148,10 @@ class FlyingBarrel : public Projectile
 {
     using Base = Projectile;
     class Tank * tank;
-    Color32 draw_color;
+    Color draw_color;
     int explode_distance;
   public:
-    FlyingBarrel(Position position, SpeedF speed, Level * level, Tank * tank, Color32 draw_color, int explode_distance)
+    FlyingBarrel(Position position, SpeedF speed, Level * level, Tank * tank, Color draw_color, int explode_distance)
         : Base(position, speed, level), tank(tank), draw_color(draw_color), explode_distance(explode_distance)
     {
     }

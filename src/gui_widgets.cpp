@@ -47,7 +47,7 @@ void widgets::TankView::DrawStatic(Screen *screen)
     for (y = 0; y < this->rect.size.y; y++) {
         for (x = 0; x < this->rect.size.x; x++)
         {
-            Color32 color;
+            Color color;
 
             if (!energy)
             {
@@ -152,7 +152,7 @@ void StatusBar::Draw(Screen *screen)
     /* Ok, lets draw this thing: */
     for (int y = 0; y < this->rect.size.y; y++) {
         for (int x = 0; x < this->rect.size.x; x++) {
-            Color32 c;
+            Color c;
 
             /* We round the corners of the status box: */
             if ((x == 0 || x == this->rect.size.x - 1) && (y == 0 || y == this->rect.size.y - 1))
@@ -205,7 +205,7 @@ void LivesLeft::Draw(Screen *screen)
         int y_pos = 0;
         for (int life = 0; y_pos + 2 <= this->rect.size.y; ++life)
         {
-            Color32 such_color = (life < tank->GetLives()) ? this->color : Palette.Get(Colors::Blank);
+            Color such_color = (life < tank->GetLives()) ? this->color : Palette.Get(Colors::Blank);
             this->data->Draw(screen, Position{this->rect.pos} + Offset{0, y_pos}, such_color);
             y_pos += 1 + this->data->size.y;
         }

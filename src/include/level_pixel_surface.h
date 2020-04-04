@@ -15,6 +15,6 @@ class LevelPixelSurface
     LevelPixelSurface(Size size);
     Color GetDefaultColor() { return default_color; }
     void SetDefaultColor(Color color) { default_color = color; }
-    void SetPixel(Position pos, Color32 color);
+    void SetPixel(Position pos, Color color);
     RenderedPixel GetPixel(Position pos);
 };

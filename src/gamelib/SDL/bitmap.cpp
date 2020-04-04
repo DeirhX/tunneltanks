@@ -15,7 +15,7 @@
 void BmpFile::SaveToFile(const ColorBitmap& data, std::string_view file_name)
 {
 	auto native_surface = holder_with_deleter<SDL_Surface>(
-		SDL_CreateRGBSurface(SDL_SWSURFACE, data.size.x, data.size.y, 24, 0, 0, 0, 0),
+		SDL_CreateRGBSurface(SDL_SWSURFACE, data.size.x, data.size.y, 32, 0, 0, 0, 0),
 		[](SDL_Surface* surface) {SDL_FreeSurface(surface); });
 		
 	if (!native_surface)
@@ -30,7 +30,7 @@ void BmpFile::SaveToFile(const ColorBitmap& data, std::string_view file_name)
 
 	for (int i = 0; i < data.GetLength(); ++i)
 	{
-		std::uint32_t mapped_color = SDL_MapRGB(native_surface->format, data[i].r, data[i].g, data[i].b);
+		std::uint32_t mapped_color = SDL_MapRGBA(native_surface->format, data[i].r, data[i].g, data[i].b, data[i].a);
 		std::memcpy(((std::uint8_t*)native_surface->pixels) + sizeof(Color) * i, &mapped_color, sizeof(Color));
 	}
 

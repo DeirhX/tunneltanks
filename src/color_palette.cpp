@@ -1,16 +1,16 @@
-#include "colors.h"
 #include "base.h"
-/* Various colors for use in the game: */
+#include "color_palette.h"
+
 #include <cassert>
 
 #include "types.h"
 
 ColorPalette Palette;
-
+/* Various colors for use in the game: */
 ColorPalette::ColorPalette()
 {
     Set(Colors::Blank, Color(0x00, 0x00, 0x00));
-    Set(Colors::Transparent, Color32(0x00, 0x00, 0x00, 0x00));
+    Set(Colors::Transparent, Color(0x00, 0x00, 0x00, 0x00));
     Set(Colors::DirtHigh, Color(0xc3, 0x79, 0x30));
     Set(Colors::DirtLow, Color(0xba, 0x59, 0x04));
     Set(Colors::DirtGrow, Color(0x6a, 0x29, 0x02));
@@ -57,7 +57,7 @@ ColorPalette::ColorPalette()
     SetTank(7, Color(0x66, 0x66, 0x66), Color(0x33, 0x33, 0x33), Color(0xf3, 0xeb, 0x1c));
 }
 
-Color32 ColorPalette::Get(Colors colorName)
+Color ColorPalette::Get(Colors colorName)
 {
     assert(colorName >= Colors::First && colorName < Colors::Size);
     return Values[static_cast<int>(colorName)];
@@ -75,7 +75,7 @@ Color *ColorPalette::GetTank(TankColor index)
     return Tanks[index];
 }
 
-void ColorPalette::Set(Colors colorName, Color32 color) { Values[static_cast<int>(colorName)] = color; }
+void ColorPalette::Set(Colors colorName, Color color) { Values[static_cast<int>(colorName)] = color; }
 
 void ColorPalette::SetPrimary(TankColor index, Color color)
 {

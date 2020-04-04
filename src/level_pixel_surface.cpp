@@ -12,7 +12,7 @@ LevelPixelSurface::LevelPixelSurface(Size size) : size(size), default_color(0, 0
     pixel_data.resize(size.x * size.y);
 }
 
-void LevelPixelSurface::SetPixel(Position offset, Color32 color)
+void LevelPixelSurface::SetPixel(Position offset, Color color)
 {
     if (offset.x < 0 || offset.y < 0 || offset.x >= size.x || offset.y >= size.y)
         return;
