@@ -32,7 +32,9 @@
   <ItemGroup>
     <ClCompile Include="src\aitwitch.cpp" />
     <ClCompile Include="src\bitmaps.cpp" />
+    <ClCompile Include="src\bitmap_loader.cpp" />
     <ClCompile Include="src\color_palette.cpp" />
+    <ClCompile Include="src\font_renderer.cpp" />
     <ClCompile Include="src\level_pixel_surface.cpp" />
     <ClCompile Include="src\exceptions.cpp">
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdcpp17</LanguageStandard>
@@ -76,7 +78,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\base.h" />
+    <ClInclude Include="src\bitmap_loader.h" />
     <ClInclude Include="src\exceptions.h" />
+    <ClInclude Include="src\font_renderer.h" />
     <ClInclude Include="src\gamelib\SDL\bitmap.h" />
     <ClInclude Include="src\gamelib\SDL\control.h" />
     <ClInclude Include="src\gamelib\SDL\controllersdl.h" />

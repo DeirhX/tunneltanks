@@ -207,15 +207,15 @@ void LivesLeft::Draw(Screen *screen)
         {
             Color such_color = (life < tank->GetLives()) ? this->color : Palette.Get(Colors::Blank);
             this->data->Draw(screen, Position{this->rect.pos} + Offset{0, y_pos}, such_color);
-            y_pos += 1 + this->data->size.y;
+            y_pos += 1 + this->data->GetSize().y;
         }
     }
 }
 
 void Crosshair::UpdateVisual()
 {
-    this->rect = Rect{this->center.x - this->data->size.x / 2, this->center.y - this->data->size.y / 2,
-                      this->data->size.x, this->data->size.y};
+    this->rect = Rect{this->center.x - this->data->GetSize().x / 2, this->center.y - this->data->GetSize().y / 2,
+                      this->data->GetSize().x, this->data->GetSize().y};
 }
 
 void Crosshair::MoveRelative(Offset offset)

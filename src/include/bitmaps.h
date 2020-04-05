@@ -10,7 +10,12 @@
 
 class Screen;
 
-template <typename DataType = char> class ValueArray
+/*
+ *  ValueArray: an iterable, generic container for any type of 2D image data.
+ *   Can be simple bits, 8-bit values or full-fledged RGB or RGBA data.
+ */
+template <typename DataType = char>
+class ImageData
 {
   public:
     using Container = std::vector<DataType>;
@@ -19,44 +24,52 @@ template <typename DataType = char> class ValueArray
     /* Wasteful to copy in dynamically-allocated memory. But expecting we'll be keeping bitmaps in files in near future
      * when it's gonna be needed. Hang on! */
   private:
+    /* 2-D dimensions of the image*/
+    Size size;
+    /* The actual data of templated type*/
     Container data;
 
   public:
-    Size size;
-
-    ValueArray(Size size, std::initializer_list<DataType> data) : data(data), size(size)
+    /* In-place value initialization from hardcoded byte-array */
+    ImageData(Size size, std::initializer_list<DataType> data) : data(data), size(size)
     {
         assert(size.x * size.y == int(data.size()));
     }
-    ValueArray(Size size) : size(size) { data.resize(size.x * size.y); }
+    /* Initialization for dynamic content */
+    ImageData(Size size) : size(size) { data.resize(size.x * size.y); }
 
     size_t GetLength() const { return data.size(); }
+    Size GetSize() const { return this->size; }
 
+    /* Read-write accessors */
     DataType &At(int index)
     {
         assert(index >= 0 && index < size.x * size.y);
         return data[index];
     }
-    DataType &operator[](int index) { return At(index); }
     [[nodiscard]] const DataType &At(int index) const
     {
         assert(index >= 0 && index < size.x * size.y);
         return data[index];
     }
-    [[nodiscard]] const DataType &operator[](int index) const { return At(index); }
+    DataType & operator[](int index) { return At(index); }
+    [[nodiscard]] const DataType & operator[](int index) const { return At(index); }
 
+    /* Iterator support */
     iterator begin() { return data.begin(); }
     iterator end() { return data.end(); }
     const_iterator cbegin() const { return data.cbegin(); }
     const_iterator cend() const { return data.cend(); }
 
+    /* Conversion to raw data */
     operator Container() const { return data; }
 };
 
-template <typename DataType> class Bitmap : public ValueArray<DataType>
+template <typename DataType> class Bitmap : public ImageData<DataType>
 {
-    using Base = ValueArray<DataType>;
-
+    using Base = ImageData<DataType>;
+  public:
+    using PixelType = DataType;
   protected:
     /* Draw entire bitmap */
     template <typename GetColorFunc>
@@ -70,16 +83,17 @@ template <typename DataType> class Bitmap : public ValueArray<DataType>
     Bitmap(Size size) : Base(size) {}
 
   public:
-    [[nodiscard]] int ToIndex(Position position) const { return position.x + position.y * this->size.x; }
+    [[nodiscard]] int ToIndex(Position position) const { return position.x + position.y * this->GetSize().x; }
 };
 
-class MonoBitmap : public Bitmap<char>
+/* MonoBitmap: a true 'bitmap, mapping one for value and zero for transparency */
+class MonoBitmap : public Bitmap<std::uint8_t>
 {
-    using Base = Bitmap<char>;
+    using Base = Bitmap<std::uint8_t>;
 
   public:
-    MonoBitmap(Size size, std::initializer_list<char> data) : Bitmap<char>(size, data) {}
-    MonoBitmap(Size size) : Bitmap<char>(size) {}
+    MonoBitmap(Size size, std::initializer_list<std::uint8_t> data) : Bitmap<std::uint8_t>(size, data) {}
+    MonoBitmap(Size size) : Bitmap<std::uint8_t>(size) {}
     /* Draw entire bitmap */
     void Draw(Screen *screen, Position position, Color color);
     /* Draw portion of bitmap */
@@ -89,6 +103,7 @@ class MonoBitmap : public Bitmap<char>
     // int ToIndex(Position position) const { return position.x + position.y * size.x; }
 };
 
+/* ColorBitmap: full-fledged 32-bit RGBA color data */
 class ColorBitmap : public Bitmap<Color>
 {
     using Base = Bitmap<Color>;
@@ -107,6 +122,7 @@ class ColorBitmap : public Bitmap<Color>
     // int ToIndex(Position position) const { return position.x + position.y * size.x; }
 };
 
+/* Simple hardcoded bitmaps */
 namespace bitmaps
 {
 	inline auto GuiHealth = MonoBitmap(Size{ 4, 5 },

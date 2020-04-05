@@ -22,6 +22,9 @@
     <Filter Include="sdl_interface">
       <UniqueIdentifier>{4e67f530-6514-4333-a5cb-f806424c4517}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\draw\fonts">
+      <UniqueIdentifier>{d4faa46d-c8aa-4fca-ae95-0081bbfa39cd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\levelgenmaze.c">
@@ -140,6 +143,12 @@
       <Filter>src\system</Filter>
     </ClCompile>
     <ClCompile Include="src\color_palette.cpp">
+      <Filter>src\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\font_renderer.cpp">
+      <Filter>src\draw\fonts</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bitmap_loader.cpp">
       <Filter>src\draw</Filter>
     </ClCompile>
   </ItemGroup>
@@ -297,6 +306,12 @@
     </ClInclude>
     <ClInclude Include="src\include\color.h">
       <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\font_renderer.h">
+      <Filter>src\draw\fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bitmap_loader.h">
+      <Filter>src\draw</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

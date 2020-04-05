@@ -1,10 +1,12 @@
 ﻿#pragma once
-#include <cstdint>
-#include <vector>
 #include "game_config.h"
 #include "render_surface.h"
 #include "types.h"
+#include <cstdint>
+#include <string_view>
+#include <vector>
 
+#include "bitmaps.h"
 
 /*
  * Renderer: Takes care of rendering our RenderSurface to an actual device.
@@ -12,8 +14,6 @@
 class Renderer
 {
   public:
-    virtual ~Renderer() = default;
-
     virtual void SetSurfaceResolution(Size size) = 0;
     virtual Size GetSurfaceResolution() = 0;
     virtual void RenderFrame(const RenderSurface * surface) = 0;
@@ -25,7 +25,6 @@ class Renderer
 class Window
 {
   public:
-    virtual ~Window() = default;
     virtual bool IsFullscreen() = 0;
     virtual Size GetResolution() = 0;
     virtual void Resize(Size size, bool is_fullscreen) = 0;
@@ -38,9 +37,19 @@ class Window
 class Cursor
 {
   public:
-    virtual ~Cursor() = default;
     virtual void Hide() = 0;
     virtual void Show() = 0;
+};
+
+/*
+ * BmpDecoder: Loads and parses BMP image from disk into in-memory image data
+ */
+class BmpDecoder
+{
+public:
+    virtual ColorBitmap LoadRGBA(std::string_view relative_image_path) = 0;
+    virtual MonoBitmap LoadGrayscale(std::string_view relative_image_path) = 0;
+    virtual MonoBitmap LoadGrayscaleFromRGBA(std::string_view relative_image_path) = 0;
 };
 
 /*
@@ -50,14 +59,21 @@ class Cursor
 class GameSystem
 {
   protected:
+    
     RenderSurface render_surface;
+
   public:
     GameSystem(Size render_surface_size) : render_surface(render_surface_size) {}
-    RenderSurface * GetSurface() { return &render_surface; } /* This should be effective, we'll be copying pixels left and right */
+    virtual ~GameSystem() = default;
+    RenderSurface * GetSurface()
+    {
+        return &render_surface;
+    } /* This should be effective, we'll be copying pixels left and right */
 
     virtual Renderer * GetRenderer() = 0;
     virtual Window * GetWindow() = 0;
     virtual Cursor * GetCursor() = 0;
+    virtual BmpDecoder * GetBmpDecoder() = 0;
 };
 
 inline std::unique_ptr<GameSystem> global_game_system;

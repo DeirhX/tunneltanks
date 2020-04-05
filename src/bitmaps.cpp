@@ -11,13 +11,12 @@ void Bitmap<DataType>::Draw(Screen *screen, Position position, GetColorFunc GetP
 {
     int x = 0;
     int y = 0;
-    for (int i = x = y = 0; i < (this->size.x * this->size.y); i++)
+    for (int i = x = y = 0; i < (this->GetSize().x * this->GetSize().y); i++)
     {
-
         screen->DrawPixel({x + position.x, y + position.y}, GetPixelColor(i));
 
-        /* Begin a new line if */
-        if (++x >= this->size.x)
+        /* Begin a new line if we're at the...wait for it... end-of-the-line! */
+        if (++x >= this->GetSize().x)
         {
             y++;
             x = 0;

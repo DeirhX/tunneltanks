@@ -62,7 +62,8 @@ struct TwoPlayerLayout : public SinglePlayerLayout
         ScreenPosition{player_view_rect.pos}, Size{player_view_rect.size - Size{player_view_rect.size.x / 2 + 1, 0}}};
     constexpr static ScreenRect player_view_two = {ScreenPosition{player_view_one.Right() + 2, player_view_rect.pos.y},
                                                    Size{player_view_one.size}};
-    /* Health + Energy bar */
+
+    /* Health + Energy bars */
     constexpr static ScreenRect health_energy_one = {ScreenPosition{view_offset.x, tank_health_bars_rect.pos.y},
                                                      Size{player_view_one.size.x - energy_letter_rect.size.x / 2 -
                                                               lives_left_rect.size.x - 2 * lives_left_padding - 1,
@@ -72,6 +73,8 @@ struct TwoPlayerLayout : public SinglePlayerLayout
                            2 * lives_left_padding + 3,
                        health_energy_one.pos.y},
         Size{health_energy_one.size}};
+
+    /* Decorations of the health + energy bar */
     constexpr static ScreenRect energy_letter_rect = {
         ScreenPosition{tweak::screen::RenderSurfaceSize.x / 2 - 2,
                        tweak::screen::RenderSurfaceSize.y - 2 - status_height},

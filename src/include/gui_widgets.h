@@ -80,8 +80,8 @@ struct LivesLeft : public BitmapRender
     LivesLeft(Rect rect, Orientation direction, Tank * tank)
         : BitmapRender(rect, &bitmaps::LifeDot, Palette.Get(Colors::LifeDot)), direction(direction), tank(tank)
     {
-        assert(direction == Orientation::Vertical && rect.size.x == this->data->size.x ||
-               direction == Orientation::Horizontal && rect.size.y == this->data->size.y);
+        assert(direction == Orientation::Vertical && rect.size.x == this->data->GetSize().x ||
+               direction == Orientation::Horizontal && rect.size.y == this->data->GetSize().y);
     }
     void Draw(Screen * screen) override;
 };
