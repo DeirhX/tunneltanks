@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "bitmaps.h"
+#include "font_renderer.h"
 
 /*
  * Renderer: Takes care of rendering our RenderSurface to an actual device.
@@ -74,6 +75,7 @@ class GameSystem
     virtual Window * GetWindow() = 0;
     virtual Cursor * GetCursor() = 0;
     virtual BmpDecoder * GetBmpDecoder() = 0;
+    virtual FontRenderer * GetFontRenderer() = 0;
 };
 
 inline std::unique_ptr<GameSystem> global_game_system;

@@ -19,7 +19,7 @@ struct Vector
     constexpr Vector(int x, int y) noexcept : x(x), y(y) {}
 };
 
-/* Position relative to our logical Screen*/
+/* Position relative to our logical Screen (our logical render surface pixels) */
 struct ScreenPosition : public Vector
 {
     constexpr ScreenPosition() = default;
@@ -27,13 +27,14 @@ struct ScreenPosition : public Vector
     constexpr explicit ScreenPosition(Vector vec) : Vector(vec) {}
 };
 
-/* Position relative to native OS window. */
+/* Position relative to native OS window in its own units (physical device pixels) */
 struct NativeScreenPosition : public Vector
 {
     constexpr NativeScreenPosition() = default;
     constexpr NativeScreenPosition(int x, int y) : Vector(x, y) {}
 };
 
+/* Position in the level */
 struct Position : public Vector
 {
     constexpr Position() = default;
@@ -41,6 +42,7 @@ struct Position : public Vector
     explicit Position(ScreenPosition pos) : Vector(pos.x, pos.y) {}
 };
 
+/* Size of objects in the world */
 struct Size : public Vector
 {
     constexpr Size() = default;
@@ -48,18 +50,21 @@ struct Size : public Vector
     bool FitsInside(int sx, int sy) { return sx >= 0 && sy >= 0 && sx < this->x && sy < this->y; }
 };
 
-struct NativeSize : public Vector
+/* Size in units of our screen render surface */
+struct ScreenSize : public Vector
 {
-    constexpr NativeSize() = default;
-    constexpr NativeSize(int sx, int sy) : Vector(sx, sy) {}
+    constexpr ScreenSize() = default;
+    constexpr ScreenSize(int sx, int sy) : Vector(sx, sy) {}
 };
 
+/* Speed of objects in the world */
 struct Speed : public Vector
 {
     Speed() = default;
     constexpr Speed(int sx, int sy) : Vector(sx, sy) {}
 };
 
+/* Offset of a position. Positions cannot be added together, position and offset can. */
 struct Offset : public Vector
 {
     Offset() = default;
@@ -91,6 +96,10 @@ constexpr Offset operator-(Position p, Position o) noexcept { return {p.x - o.x,
 constexpr Position operator+(Position v, Offset o) noexcept { return {v.x + o.x, v.y + o.y}; }
 constexpr Position operator+(Position v, Size o) noexcept { return {v.x + o.x, v.y + o.y}; }
 constexpr bool operator==(Position l, Position r) noexcept { return l.x == r.x && l.y == r.y; }
+constexpr bool operator==(Size l, Size r) noexcept { return l.x == r.x && l.y == r.y; }
+constexpr ScreenPosition operator+(ScreenPosition v, Offset o) noexcept { return {v.x + o.x, v.y + o.y}; }
+constexpr ScreenPosition operator+(ScreenPosition v, Size o) noexcept { return {v.x + o.x, v.y + o.y}; }
+constexpr Offset operator-(ScreenPosition p, ScreenPosition o) noexcept { return {p.x - o.x, p.y - o.y}; }
 constexpr ScreenPosition & operator+=(ScreenPosition & p, Offset o) noexcept
 {
     p.x += o.x;
@@ -114,7 +123,7 @@ struct Direction
 };
 
 /*
- *  Float math. Needed for shooting.
+ *  Float math. Needed for shooting and raytracing of object trajectories.
  */
 
 struct VectorF
@@ -205,15 +214,16 @@ constexpr bool operator!=(PositionF l, PositionF r) { return l.x != r.x || l.y !
 constexpr OffsetF operator*(DirectionF d, float m) noexcept { return {d.x * m, d.y * m}; }
 constexpr OffsetF operator*(float m, DirectionF d) noexcept { return {m * d.x, m * d.y}; }
 
-/* Rectangle inside game world */
-struct Rect
+/* Base of all specific rectangles  */
+template <typename PositionType>
+struct RectBase
 {
-    Position pos;
+    PositionType pos;
     Size size;
-    constexpr Rect() = default;
-    constexpr Rect(Position pos, Size size) : pos(pos), size(size) {}
-    //Rect(ScreenPosition pos, Size size) : pos(pos), size(size) { }
-    constexpr Rect(int pos_x, int pos_y, int size_x, int size_y) : pos{pos_x, pos_y}, size{size_x, size_y} {}
+
+    constexpr RectBase() = default;
+    constexpr RectBase(PositionType pos, Size size) : pos(pos), size(size) {}
+    constexpr RectBase(int pos_x, int pos_y, int size_x, int size_y) : pos{pos_x, pos_y}, size{size_x, size_y} {}
 
     constexpr int Left() const { return pos.x; }
     constexpr int Top() const { return pos.y; }
@@ -227,23 +237,47 @@ struct Rect
     {
         return {std::clamp(vec.x, this->Left(), this->Right()), std::clamp(vec.y, this->Top(), this->Bottom())};
     }
-    [[nodiscard]] Position Center() const { return {pos.x + size.x / 2, pos.y + size.y / 2}; }
+    [[nodiscard]] PositionType Center() const { return {pos.x + size.x / 2, pos.y + size.y / 2}; }
+    constexpr bool operator==(const RectBase & other)
+    {
+        return this->pos == other.pos && this->size == other.size;
+    }
+    constexpr bool operator!=(const RectBase & other) { return !this->operator==(other); }
 };
 
-struct ScreenRect : Rect
+/* A rectangle in world/level coordinates.*/
+struct Rect : RectBase<Position>
+{
+    constexpr Rect() = default;
+    constexpr Rect(Position pos, Size size) : RectBase{pos.x, pos.y, size.x, size.y} {}
+    constexpr Rect(int pos_x, int pos_y, int size_x, int size_y) : RectBase{pos_x, pos_y, size_x, size_y} {}
+};
+
+/* Rectangle inside an image/bitmap used as a source of bliting to screen */
+struct ImageRect : RectBase<Position>
+{
+    constexpr ImageRect() = default;
+    constexpr ImageRect(Position pos, Size size) : RectBase{pos.x, pos.y, size.x, size.y} {}
+    constexpr ImageRect(int pos_x, int pos_y, int size_x, int size_y) : RectBase{pos_x, pos_y, size_x, size_y} {}
+};
+
+/* Rectangle in units of our pixelated screen (render) surface */
+struct ScreenRect : RectBase<ScreenPosition>
 {
     constexpr ScreenRect() = default;
-    constexpr ScreenRect(ScreenPosition pos, Size size) : Rect{pos.x, pos.y, size.x, size.y} {}
-    constexpr ScreenRect(int pos_x, int pos_y, int size_x, int size_y) : Rect{pos_x, pos_y, size_x, size_y} {}
+    constexpr ScreenRect(ScreenPosition pos, Size size) : RectBase{pos.x, pos.y, size.x, size.y} {}
+    constexpr ScreenRect(int pos_x, int pos_y, int size_x, int size_y) : RectBase{pos_x, pos_y, size_x, size_y} {}
 };
 
-/* Rectangle in native units of hosting window/surface */
-struct NativeRect : Rect
+/* Rectangle in native units of hosting window/surface. This needs to get used only if we want to draw an overlay over our pixelated surface */
+struct NativeScreenRect : RectBase<NativeScreenPosition>
 {
-    NativeRect() = default;
-    NativeRect(NativeScreenPosition pos, Size size) : Rect{pos.x, pos.y, size.x, size.y} {}
-    NativeRect(int pos_x, int pos_y, int size_x, int size_y) : Rect{pos_x, pos_y, size_x, size_y} {}
+    constexpr NativeScreenRect() = default;
+    constexpr NativeScreenRect(NativeScreenPosition pos, Size size) : RectBase{pos.x, pos.y, size.x, size.y} {}
+    constexpr NativeScreenRect(int pos_x, int pos_y, int size_x, int size_y) : RectBase{pos_x, pos_y, size_x, size_y} {}
 };
+
+//constexpr bool operator==(const NativeRect & left, const NativeRect & right) { return static_cast<Rect>(left) == static_cast<Rect>(right); }
 
 using TankColor = char;
 

@@ -57,7 +57,7 @@ void BmpFile::SaveToFile(const ColorBitmap & data, std::string_view file_name)
         throw GameException("Failed save bitmap");
 }
 
-template <typename BitmapType, typename RawDataDecodeFunc>
+template <typename BitmapType, typename RawDataType, typename RawDataDecodeFunc>
 BitmapType BmpFile::LoadFromFile(std::string_view file_name, RawDataDecodeFunc DecodeFunc)
 {
     const auto native_surface = std::unique_ptr<SDL_Surface, void (*)(SDL_Surface *)>(
@@ -65,13 +65,13 @@ BitmapType BmpFile::LoadFromFile(std::string_view file_name, RawDataDecodeFunc D
     if (!native_surface)
         throw GameException("Failed to load bitmap");
 
-    assert(sizeof(BitmapType::PixelType) == native_surface->format->BytesPerPixel);
+    assert(sizeof(RawDataType) == native_surface->format->BytesPerPixel);
     auto loaded_data = BitmapType(Size{native_surface->w, native_surface->h});
 
     /* Go through every source pixel in native SDL format and convert it to our Color/monochrome pixel structure */
     for (int i = 0; i < native_surface->w * native_surface->h; ++i)
     {
-        DecodeFunc(static_cast<typename BitmapType::PixelType *>(native_surface->pixels)[i],
+        DecodeFunc(static_cast<RawDataType *>(native_surface->pixels)[i],
                    native_surface->format, &loaded_data[i]);
     }
 
@@ -81,54 +81,29 @@ BitmapType BmpFile::LoadFromFile(std::string_view file_name, RawDataDecodeFunc D
 
 ColorBitmap BmpFile::LoadRGBAFromFile(std::string_view file_name)
 {
-    const auto native_surface = std::unique_ptr<SDL_Surface, void (*)(SDL_Surface *)>(
-        SDL_LoadBMP(file_name.data()), [](SDL_Surface * surface) { SDL_FreeSurface(surface); });
+    auto decode_func = [](std::uint32_t file_data, SDL_PixelFormat * file_data_format, Color * target_data) {
+        /* I want only alpha which I know will be saved last. The rest can be thrown away.*/
+        SDL_GetRGBA(file_data, file_data_format, &target_data->r, &target_data->g, &target_data->b, &target_data->a);
+    };
 
-    if (!native_surface)
-        throw GameException("Failed to load bitmap");
-
-    assert(sizeof(Color) == native_surface->format->BytesPerPixel);
-    auto loaded_data = ColorBitmap(Size{native_surface->w, native_surface->h});
-
-    for (int i = 0; i < native_surface->w * native_surface->h; ++i)
-    {
-        std::uint32_t mapped_color;
-        std::memcpy(&mapped_color, &((Color *)native_surface->pixels)[i], sizeof(Color));
-        SDL_GetRGB(mapped_color, native_surface->format, &loaded_data[i].r, &loaded_data[i].g,
-                   &loaded_data[i].b); /* It's super effective! ^_^ */
-    }
-
-    /* freed automatically */
-    return loaded_data;
+    return BmpFile::LoadFromFile<ColorBitmap, std::uint32_t>(file_name, decode_func);
 }
 
 MonoBitmap BmpFile::LoadGrayscaleFromFile(std::string_view file_name)
 {
-    const auto native_surface = std::unique_ptr<SDL_Surface, void (*)(SDL_Surface *)>(
-        SDL_LoadBMP(file_name.data()), [](SDL_Surface * surface) { SDL_FreeSurface(surface); });
-
-    if (!native_surface)
-        throw GameException("Failed to load bitmap");
-
-    assert(sizeof(uint8_t) == native_surface->format->BytesPerPixel);
-    auto loaded_data = MonoBitmap(Size{native_surface->w, native_surface->h});
-
-    for (int i = 0; i < native_surface->w * native_surface->h; ++i)
-    {
-        loaded_data[i] = uint8_t(static_cast<uint8_t *>(native_surface->pixels)[i]);
-    }
-
-    /* freed automatically */
-    return loaded_data;
+    auto decode_func = [](std::uint8_t file_data, SDL_PixelFormat * file_data_format, std::uint8_t * target_data) {
+        *target_data = file_data;
+    };
+    return BmpFile::LoadFromFile<MonoBitmap, std::uint8_t>(file_name, decode_func);
 }
 
 MonoBitmap BmpFile::LoadGrayscaleFromRGBA(std::string_view file_name)
 {
-    auto decode_func = [](std::uint32_t file_data, SDL_PixelFormat * file_data_format, uint8_t * target_data) {
+    auto decode_func = [](std::uint32_t file_data, SDL_PixelFormat * file_data_format, std::uint8_t * target_data) {
         std::uint8_t discard;
         /* I want only alpha which I know will be saved last. The rest can be thrown away.*/
         SDL_GetRGBA(file_data, file_data_format, &discard, &discard, &discard, target_data);
     };
 
-    return BmpFile::LoadFromFile<MonoBitmap>(file_name, decode_func);
+    return BmpFile::LoadFromFile<MonoBitmap, std::uint32_t>(file_name, decode_func);
 }

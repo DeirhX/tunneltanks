@@ -120,7 +120,6 @@
     <ClCompile Include="src\bitmaps.cpp">
       <Filter>src\draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\mymath.cpp" />
     <ClCompile Include="src\level_adjacency.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
@@ -150,6 +149,9 @@
     </ClCompile>
     <ClCompile Include="src\bitmap_loader.cpp">
       <Filter>src\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mymath.cpp">
+      <Filter>src\system</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

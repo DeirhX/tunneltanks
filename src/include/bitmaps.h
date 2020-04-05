@@ -73,10 +73,11 @@ template <typename DataType> class Bitmap : public ImageData<DataType>
   protected:
     /* Draw entire bitmap */
     template <typename GetColorFunc>
-    void Draw(Screen *screen, Position position, GetColorFunc GetPixelColor); /* Color GetPixelColor(int index) */
+    void Draw(Screen * screen, ScreenPosition position,
+              GetColorFunc GetPixelColor); /* Color GetPixelColor(int index) */
     /* Draw portion of bitmap */
     template <typename GetColorFunc>
-    void Draw(Screen *screen, Position screen_pos, Rect source_rect,
+    void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect,
               GetColorFunc GetPixelColor); /* Color GetPixelColor(int index) */
 
     Bitmap(Size size, std::initializer_list<DataType> data) : Base(size, data) {}
@@ -95,9 +96,9 @@ class MonoBitmap : public Bitmap<std::uint8_t>
     MonoBitmap(Size size, std::initializer_list<std::uint8_t> data) : Bitmap<std::uint8_t>(size, data) {}
     MonoBitmap(Size size) : Bitmap<std::uint8_t>(size) {}
     /* Draw entire bitmap */
-    void Draw(Screen *screen, Position position, Color color);
+    void Draw(Screen * screen, ScreenPosition position, Color color);
     /* Draw portion of bitmap */
-    void Draw(Screen *screen, Position screen_pos, Rect source_rect, Color color);
+    void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, Color color);
 
   private:
     // int ToIndex(Position position) const { return position.x + position.y * size.x; }
@@ -112,11 +113,11 @@ class ColorBitmap : public Bitmap<Color>
     ColorBitmap(Size size, std::initializer_list<Color> data) : Bitmap<Color>(size, data) {}
     ColorBitmap(Size size) : Bitmap<Color>(size) {}
     /* Draw entire bitmap */
-    void Draw(Screen *screen, Position screen_pos);
-    void Draw(Screen *screen, Position screen_pos, Color color_filter);
+    void Draw(Screen * screen, ScreenPosition screen_pos);
+    void Draw(Screen * screen, ScreenPosition screen_pos, Color color_filter);
     /* Draw portion of bitmap */
-    void Draw(Screen *screen, Position screen_pos, Rect source_rect);
-    void Draw(Screen *screen, Position screen_pos, Rect source_rect, Color color_filter);
+    void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect);
+    void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, Color color_filter);
 
   private:
     // int ToIndex(Position position) const { return position.x + position.y * size.x; }

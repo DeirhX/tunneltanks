@@ -22,12 +22,12 @@ void Screen::FillBackground()
     Size dim = GetSystem()->GetRenderer()->GetSurfaceResolution();
 
     GetSystem()->GetSurface()->DrawRectangle({{0, 0}, dim}, Palette.Get(Colors::Background));
-    NativeScreenPosition o;
+    ScreenPosition o;
     for (o.y = 0; o.y < dim.y; o.y++)
     {
         for (o.x = (o.y % 2) * 2; o.x < dim.x; o.x += 4)
         {
-            GetSystem()->GetSurface()->DrawRectangle(NativeRect{o, Size{1, 1}}, Palette.Get(Colors::BackgroundDot));
+            GetSystem()->GetSurface()->DrawRectangle(ScreenRect{o, Size{1, 1}}, Palette.Get(Colors::BackgroundDot));
         }
     }
 }
@@ -93,7 +93,7 @@ void Screens::SinglePlayerScreenSetup(Screen * screen, World * world, Tank * pla
 {
     /* Tank view and status below it*/
     auto window = std::make_unique<widgets::TankView>(SinglePlayerLayout::player_view_rect, player);
-    auto crosshair = std::make_unique<widgets::Crosshair>(Position{0, 0}, screen, window.get());
+    auto crosshair = std::make_unique<widgets::Crosshair>(ScreenPosition{0, 0}, screen, window.get());
     player->SetCrosshair(crosshair.get());
 
     screen->AddWidget(std::move(window));
@@ -149,7 +149,7 @@ void Screen::DrawPixel(ScreenPosition pos, Color color)
 {
     //if (color.a == 0)
     //    return;
-    GetSystem()->GetSurface()->DrawPixel(NativeScreenPosition{pos.x, pos.y}, color);
+    GetSystem()->GetSurface()->DrawPixel(ScreenPosition{pos.x, pos.y}, color);
     return;
 
     //Offset adjusted_size = {/* Make some pixels uniformly larger to fill in given space relatively evenly  */
@@ -191,7 +191,7 @@ ScreenPosition Screen::FromNativeScreen(NativeScreenPosition native_pos)
 void Screen::DrawLevel()
 {
     /* Erase everything */
-    GetSystem()->GetSurface()->DrawRectangle(NativeRect{{0, 0}, GetSystem()->GetRenderer()->GetSurfaceResolution()},
+    GetSystem()->GetSurface()->DrawRectangle(ScreenRect{{0, 0}, GetSystem()->GetRenderer()->GetSurfaceResolution()},
                                              Palette.Get(Colors::Blank));
     /* Draw everything */
     std::for_each(this->widgets.begin(), this->widgets.end(), [this](auto & item) { item->Draw(this); });
@@ -313,7 +313,7 @@ void Screen::AddWidget(std::unique_ptr<widgets::GuiWidget> && widget)
 }
 
 /* Window creation should only happen in Level-drawing mode: */
-void Screen::AddWindow(Rect rect, Tank * task)
+void Screen::AddWindow(ScreenRect rect, Tank * task)
 {
     if (this->mode != SCREEN_DRAW_LEVEL)
         return;
@@ -321,7 +321,7 @@ void Screen::AddWindow(Rect rect, Tank * task)
 }
 
 /* We can add the health/energy status bars here: */
-void Screen::AddStatus(Rect rect, Tank * tank, bool decreases_to_left)
+void Screen::AddStatus(ScreenRect rect, Tank * tank, bool decreases_to_left)
 {
     /* Verify that we're in the right mode, and that we have room: */
     if (this->mode != SCREEN_DRAW_LEVEL)
@@ -338,7 +338,7 @@ void Screen::AddStatus(Rect rect, Tank * tank, bool decreases_to_left)
  * value, especially if the bit depth is changed...
  * TODO: That really isn't needed anymore, since we haven't cached mapped RGB
  *       values since the switch to gamelib... */
-void Screen::AddBitmap(Rect rect, MonoBitmap * new_bitmap, Color color)
+void Screen::AddBitmap(ScreenRect rect, MonoBitmap * new_bitmap, Color color)
 {
     /* Bitmaps are only for game mode: */
     if (this->mode != SCREEN_DRAW_LEVEL)

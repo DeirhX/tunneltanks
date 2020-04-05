@@ -5,7 +5,10 @@
 SdlSystem::SdlSystem(VideoConfig video_config)
     : GameSystem(video_config.render_surface_size),
       window(video_config.resolution, video_config.is_fullscreen),
-      renderer(&this->window, &this->render_surface), cursor()
+      renderer(&this->window, &this->render_surface),
+      cursor(),
+      bmp_decoder(),
+      font_renderer(&bmp_decoder)
 {
     window.AttachRenderer(&this->renderer);
 }

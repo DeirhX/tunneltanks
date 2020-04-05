@@ -17,7 +17,7 @@ class SdlBmpDecoder : public BmpDecoder
 
 class BmpFile
 {
-    template<typename BitmapType, typename RawDataDecodeFunc>
+    template <typename BitmapType, typename RawDataType, typename RawDataDecodeFunc>
     static BitmapType LoadFromFile(std::string_view file_name, RawDataDecodeFunc DecodeFunc);
   public:
     static void SaveToFile(const ColorBitmap & data, std::string_view file_name);

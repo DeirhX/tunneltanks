@@ -403,30 +403,6 @@ static void randomly_expand(Level *lvl) {
 /*----------------------------------------------------------------------------*
  * STAGE 3: Smooth out the graph with a cellular automaton                    *
  *----------------------------------------------------------------------------*/
-
-
-static int count_neighbors(Level* lvl, int x, int y) {
-	return (char)lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y - 1) }) +
-		   (char)lvl->GetVoxelRaw({ x     + lvl->GetSize().x * (y - 1) }) +
-		   (char)lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y - 1) }) +
-		   (char)lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y    ) }) +
-		   (char)lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y    ) }) +
-		   (char)lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y + 1) }) +
-		   (char)lvl->GetVoxelRaw({ x     + lvl->GetSize().x * (y + 1) }) +
-		   (char)lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y + 1) });
-}
-
-//static int count_neighbors(Level* lvl, int x, int y) {
-//	return lvl->GetVoxelRaw({ x - 1, y - 1 }) +
-//		lvl->GetVoxelRaw({ x,   y - 1 }) +
-//		lvl->GetVoxelRaw({ x + 1, y - 1 }) +
-//		lvl->GetVoxelRaw({ x - 1, y }) +
-//		lvl->GetVoxelRaw({ x + 1, y }) +
-//		lvl->GetVoxelRaw({ x - 1, y + 1 }) +
-//		lvl->GetVoxelRaw({ x,   y + 1 }) +
-//		lvl->GetVoxelRaw({ x + 1, y + 1 });
-//}
-//
 	
 static int smooth_once(Level *lvl) {
 

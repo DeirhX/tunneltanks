@@ -24,8 +24,8 @@ class RenderSurface
             pixel = {0, 0, 0, 0};
     }
     void Resize(Size new_size) { surface.resize(new_size.x * new_size.y); }
-    void DrawPixel(NativeScreenPosition position, Color color);
-    void DrawRectangle(NativeRect rect, Color color);
+    void DrawPixel(ScreenPosition position, Color color);
+    void DrawRectangle(ScreenRect rect, Color color);
     Size GetSize() const { return this->size; }
 
     /* Raw access for GFX libraries with C interface to effectively copy it. Take great care not to overrun. */

@@ -7,7 +7,7 @@
 
 template <typename DataType>
 template <typename GetColorFunc>
-void Bitmap<DataType>::Draw(Screen *screen, Position position, GetColorFunc GetPixelColor)
+void Bitmap<DataType>::Draw(Screen *screen, ScreenPosition position, GetColorFunc GetPixelColor)
 {
     int x = 0;
     int y = 0;
@@ -26,7 +26,7 @@ void Bitmap<DataType>::Draw(Screen *screen, Position position, GetColorFunc GetP
 
 template <typename DataType>
 template <typename GetColorFunc>
-void Bitmap<DataType>::Draw(Screen * screen, Position screen_pos, Rect source_rect,
+void Bitmap<DataType>::Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect,
                             GetColorFunc GetPixelColor) /* return Color */
 {
     for (int x = source_rect.Left(); x <= source_rect.Right(); ++x)
@@ -37,36 +37,36 @@ void Bitmap<DataType>::Draw(Screen * screen, Position screen_pos, Rect source_re
         }
 }
 
-void MonoBitmap::Draw(Screen *screen, Position screen_pos, Color color)
+void MonoBitmap::Draw(Screen * screen, ScreenPosition screen_pos, Color color)
 {
     Base::Draw(screen, screen_pos,
                [this, color](int index) { return this->At(index) ? color : 
                     Palette.Get(Colors::Transparent); });
 }
-void MonoBitmap::Draw(Screen *screen, Position screen_pos, Rect source_rect, Color color)
+void MonoBitmap::Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, Color color)
 {
     Base::Draw(screen, screen_pos, source_rect,
                [this, color](int index) { return this->At(index) ? color : 
                     Palette.Get(Colors::Transparent); });
 }
 
-void ColorBitmap::Draw(Screen *screen, Position screen_pos)
+void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos)
 {
     Base::Draw(screen, screen_pos, 
                [this](int index) { return this->At(index); });
 }
-void ColorBitmap::Draw(Screen *screen, Position screen_pos, Color color_filter)
+void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos, Color color_filter)
 {
     Base::Draw(screen, screen_pos, 
                [this, color_filter](int index) { return color_filter.Mask(this->At(index)); });
 }
 
-void ColorBitmap::Draw(Screen *screen, Position screen_pos, Rect source_rect)
+void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect)
 {
     Base::Draw(screen, screen_pos, source_rect, 
                [this](int index) { return this->At(index); });
 }
-void ColorBitmap::Draw(Screen *screen, Position screen_pos, Rect source_rect, Color color_filter)
+void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, Color color_filter)
 {
     Base::Draw(screen, screen_pos, source_rect,
                [this, color_filter](int index) { return color_filter.Mask(this->At(index)); });

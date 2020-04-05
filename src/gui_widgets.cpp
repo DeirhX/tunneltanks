@@ -36,7 +36,7 @@ void widgets::TankView::DrawStatic(Screen *screen)
         return;
 
     auto black_bar_random_gen = [this]() {
-        return Random.Int(1, this->rect.size.x * this->rect.size.y * STATIC_BLACK_BAR_SIZE / 1000);
+        return Random.Int(1, this->screen_rect.size.x * this->screen_rect.size.y * STATIC_BLACK_BAR_SIZE / 1000);
     };
 
     /* Should we draw a black bar in the image? */
@@ -44,14 +44,14 @@ void widgets::TankView::DrawStatic(Screen *screen)
     int drawing_black = black_counter && Random.Bool(STATIC_BLACK_BAR_ODDS);
 
     /* Develop a static thing image for the window: */
-    for (y = 0; y < this->rect.size.y; y++) {
-        for (x = 0; x < this->rect.size.x; x++)
+    for (y = 0; y < this->screen_rect.size.y; y++) {
+        for (x = 0; x < this->screen_rect.size.x; x++)
         {
             Color color;
 
             if (!energy)
             {
-                screen->DrawPixel({x + this->rect.pos.x, y + this->rect.pos.y},
+                screen->DrawPixel({x + this->screen_rect.pos.x, y + this->screen_rect.pos.y},
                                   Palette.GetPrimary(TankColor(Random.Int(0, 7))));
                 continue;
             }
@@ -73,7 +73,7 @@ void widgets::TankView::DrawStatic(Screen *screen)
 
             /* Finally, select a color (either black or random) and draw: */
             color = drawing_black ? Palette.Get(Colors::Blank) : Palette.GetPrimary(TankColor(Random.Int(0, 7)));
-            screen->DrawPixel({x + this->rect.pos.x, y + this->rect.pos.y}, color);
+            screen->DrawPixel({x + this->screen_rect.pos.x, y + this->screen_rect.pos.y}, color);
         }
     }
 }
@@ -83,13 +83,13 @@ void TankView::Draw(Screen *screen)
 {
     Position tank_pos = this->tank->GetPosition();
 
-    for (int y = 0; y < this->rect.size.y; y++) {
-        for (int x = 0; x < this->rect.size.x; x++)
+    for (int y = 0; y < this->screen_rect.size.y; y++) {
+        for (int x = 0; x < this->screen_rect.size.x; x++)
         {
-            int screen_x = x + this->rect.pos.x, screen_y = y + this->rect.pos.y;
+            int screen_x = x + this->screen_rect.pos.x, screen_y = y + this->screen_rect.pos.y;
 
             Color c = screen->GetDrawBuffer()->GetPixel(
-                Position{x + tank_pos.x - this->rect.size.x / 2, y + tank_pos.y - this->rect.size.y / 2});
+                Position{x + tank_pos.x - this->screen_rect.size.x / 2, y + tank_pos.y - this->screen_rect.size.y / 2});
             screen->DrawPixel({screen_x, screen_y}, c);
         }
     }
@@ -100,15 +100,15 @@ void TankView::Draw(Screen *screen)
 
 Position TankView::TranslatePosition(ScreenPosition screen_pos) const
 {
-    assert(this->rect.IsInside(screen_pos));
-    Offset offset = Position{screen_pos} - this->rect.pos - (this->rect.size / 2);
+    assert(this->screen_rect.IsInside(screen_pos));
+    Offset offset = screen_pos - this->screen_rect.pos - (this->screen_rect.size / 2);
     return this->tank->GetPosition() + offset;
 }
 
 ScreenPosition TankView::TranslatePosition(Position world_pos) const
 {
     Offset tank_offset = world_pos - this->tank->GetPosition();
-    return ScreenPosition{tank_offset + this->rect.pos + this->rect.size / 2};
+    return ScreenPosition{tank_offset + this->screen_rect.pos + this->screen_rect.size / 2};
 }
 
             /* Will draw two bars indicating the charge/health of a tank: */
@@ -118,28 +118,28 @@ ScreenPosition TankView::TranslatePosition(Position world_pos) const
 void StatusBar::Draw(Screen *screen)
 {
     /* At what y value does the median divider start: */
-    int mid_y = (this->rect.size.y - 1) / 2;
+    int mid_y = (this->screen_rect.size.y - 1) / 2;
 
     /* How many pixels high is the median divider: */
-    int mid_h = (this->rect.size.y % 2) ? 1u : 2u;
+    int mid_h = (this->screen_rect.size.y % 2) ? 1u : 2u;
 
     /* How many pixels are filled in? */
     int energy_filled = this->tank->GetEnergy();
     int health_filled = this->tank->GetHealth();
-    int half_energy_pixel = tweak::tank::StartingFuel / ((this->rect.size.x - SharedLayout::status_border * 2) * 2);
+    int half_energy_pixel = tweak::tank::StartingFuel / ((this->screen_rect.size.x - SharedLayout::status_border * 2) * 2);
 
     energy_filled += half_energy_pixel;
 
-    energy_filled *= (this->rect.size.x - SharedLayout::status_border * 2);
+    energy_filled *= (this->screen_rect.size.x - SharedLayout::status_border * 2);
     energy_filled /= tweak::tank::StartingFuel;
-    health_filled *= (this->rect.size.x - SharedLayout::status_border * 2);
+    health_filled *= (this->screen_rect.size.x - SharedLayout::status_border * 2);
     health_filled /= tweak::tank::StartingShield;
 
     /* If we are decreasing to the right, we need to invert those values: */
     if (!this->decreases_to_left)
     {
-        energy_filled = this->rect.size.x - SharedLayout::status_border - energy_filled;
-        health_filled = this->rect.size.x - SharedLayout::status_border - health_filled;
+        energy_filled = this->screen_rect.size.x - SharedLayout::status_border - energy_filled;
+        health_filled = this->screen_rect.size.x - SharedLayout::status_border - health_filled;
 
         /* Else, we still need to shift it to the right by SharedLayout::status_border: */
     }
@@ -150,22 +150,22 @@ void StatusBar::Draw(Screen *screen)
     }
 
     /* Ok, lets draw this thing: */
-    for (int y = 0; y < this->rect.size.y; y++) {
-        for (int x = 0; x < this->rect.size.x; x++) {
+    for (int y = 0; y < this->screen_rect.size.y; y++) {
+        for (int x = 0; x < this->screen_rect.size.x; x++) {
             Color c;
 
             /* We round the corners of the status box: */
-            if ((x == 0 || x == this->rect.size.x - 1) && (y == 0 || y == this->rect.size.y - 1))
+            if ((x == 0 || x == this->screen_rect.size.x - 1) && (y == 0 || y == this->screen_rect.size.y - 1))
                 continue;
 
             /* Outer border draws background: */
-            else if (y < SharedLayout::status_border || y >= this->rect.size.y - SharedLayout::status_border ||
-                     x < SharedLayout::status_border || x >= this->rect.size.x - SharedLayout::status_border)
+            else if (y < SharedLayout::status_border || y >= this->screen_rect.size.y - SharedLayout::status_border ||
+                     x < SharedLayout::status_border || x >= this->screen_rect.size.x - SharedLayout::status_border)
                 c = Palette.Get(Colors::StatusBackground);
 
             /* We round the corners here a little bit too: */
-            else if ((x == SharedLayout::status_border || x == this->rect.size.x - SharedLayout::status_border - 1) &&
-                     (y == SharedLayout::status_border || y == this->rect.size.y - SharedLayout::status_border - 1))
+            else if ((x == SharedLayout::status_border || x == this->screen_rect.size.x - SharedLayout::status_border - 1) &&
+                     (y == SharedLayout::status_border || y == this->screen_rect.size.y - SharedLayout::status_border - 1))
                 c = Palette.Get(Colors::StatusBackground);
 
             /* Middle seperator draws as backround, as well: */
@@ -187,14 +187,15 @@ void StatusBar::Draw(Screen *screen)
             else
                 c = Palette.Get(Colors::Blank);
 
-            screen->DrawPixel({x + this->rect.pos.x, y + this->rect.pos.y}, c);
+            screen->DrawPixel({x + this->screen_rect.pos.x, y + this->screen_rect.pos.y}, c);
         }
     }
 }
 
 void BitmapRender::Draw(Screen *screen)
 {
-    this->data->Draw(screen, this->rect.pos, Rect{{0, 0}, {this->rect.size.x - 1, this->rect.size.y - 1}}, this->color);
+    this->data->Draw(screen, this->screen_rect.pos,
+                     ImageRect{{0, 0}, {this->data->GetSize().x - 1, this->data->GetSize().y - 1}}, this->color);
 }
 
 void LivesLeft::Draw(Screen *screen)
@@ -203,10 +204,10 @@ void LivesLeft::Draw(Screen *screen)
     if (direction == Orientation::Vertical)
     {
         int y_pos = 0;
-        for (int life = 0; y_pos + 2 <= this->rect.size.y; ++life)
+        for (int life = 0; y_pos + 2 <= this->screen_rect.size.y; ++life)
         {
             Color such_color = (life < tank->GetLives()) ? this->color : Palette.Get(Colors::Blank);
-            this->data->Draw(screen, Position{this->rect.pos} + Offset{0, y_pos}, such_color);
+            this->data->Draw(screen, ScreenPosition{this->screen_rect.pos} + Offset{0, y_pos}, such_color);
             y_pos += 1 + this->data->GetSize().y;
         }
     }
@@ -214,7 +215,7 @@ void LivesLeft::Draw(Screen *screen)
 
 void Crosshair::UpdateVisual()
 {
-    this->rect = Rect{this->center.x - this->data->GetSize().x / 2, this->center.y - this->data->GetSize().y / 2,
+    this->screen_rect = ScreenRect{this->center.x - this->data->GetSize().x / 2, this->center.y - this->data->GetSize().y / 2,
                       this->data->GetSize().x, this->data->GetSize().y};
 }
 
@@ -250,5 +251,9 @@ void Crosshair::Draw(Screen *)
 {
     if (!is_hidden)
         Parent::Draw(this->screen);
+}
+
+void ResourcesMinedDisplay::Draw(Screen * screen)
+{
 }
 } // namespace widgets
