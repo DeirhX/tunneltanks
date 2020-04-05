@@ -51,30 +51,32 @@ ControllerOutput KeyboardWithMouseController::ApplyControls(PublicTankInfo * tan
  * interpretted as going in that direction: */
 
 constexpr GamePadMapping XBox360Pad = {
-    .MoveHorizontalAxis = 0,
-    .MoveVerticalAxis   = 1,
-    .AimHorizontalAxis  = 4,
-    .AimVerticalAxis    = 3,
-    .ShootPrimary       = 5,
-    .ShootSecondary     = 4,
-    .CyclePrimaryWeaponNext   = 2,
-    .CyclePrimaryWeaponsPrev   = 0,
-    .CycleSecondaryWeaponNext = 3,
-    .CycleSecondaryWeaponsPrev = 1,
+    .MoveHorizontalAxis = GamePadMapping::Axis{0},
+    .MoveVerticalAxis = GamePadMapping::Axis{1},
+    .AimHorizontalAxis = GamePadMapping::Axis{3},
+    .AimVerticalAxis = GamePadMapping::Axis{4},
+    .ShootPrimary = GamePadMapping::Button{5},
+    .ShootSecondary = GamePadMapping::Button{4},
+    .ShootTertiary = GamePadMapping::Axis{5},
+    .CyclePrimaryWeaponNext = GamePadMapping::Button{2},
+    .CyclePrimaryWeaponsPrev = GamePadMapping::Button{0},
+    .CycleSecondaryWeaponNext = GamePadMapping::Button{3},
+    .CycleSecondaryWeaponsPrev = GamePadMapping::Button{1},
 
 };
 
 constexpr GamePadMapping PS4Pad = {
-    .MoveHorizontalAxis = 0,
-    .MoveVerticalAxis =   1,
-    .AimHorizontalAxis =  2,
-    .AimVerticalAxis =    3,
-    .ShootPrimary =       5,
-    .ShootSecondary =     4,
-    .CyclePrimaryWeaponNext   = 0,
-    .CyclePrimaryWeaponsPrev   = 1,
-    .CycleSecondaryWeaponNext = 2,
-    .CycleSecondaryWeaponsPrev = 3,
+    .MoveHorizontalAxis = GamePadMapping::Axis{0},
+    .MoveVerticalAxis = GamePadMapping::Axis{1},
+    .AimHorizontalAxis = GamePadMapping::Axis{2},
+    .AimVerticalAxis = GamePadMapping::Axis{3},
+    .ShootPrimary = GamePadMapping::Button{10},
+    .ShootSecondary = GamePadMapping::Button{9},
+    .ShootTertiary = GamePadMapping::Axis{5, -20000},
+    .CyclePrimaryWeaponNext = GamePadMapping::Button{0},
+    .CyclePrimaryWeaponsPrev = GamePadMapping::Button{1},
+    .CycleSecondaryWeaponNext = GamePadMapping::Button{2},
+    .CycleSecondaryWeaponsPrev = GamePadMapping::Button{3},
 };
 
 GamePadController::GamePadController(int joy_index)
@@ -95,10 +97,15 @@ GamePadController::GamePadController(int joy_index)
         gamelib_print("  Buttons: %d\n", SDL_JoystickNumButtons(this->joystick));
         gamelib_print("  Balls:   %d\n", SDL_JoystickNumBalls(this->joystick));
 
-        if (!strcmp(SDL_JoystickName(this->joystick), "Wireless Controller"))
+        if (!strcmp(SDL_JoystickName(this->joystick), "PS4 Controller"))
             this->mapping = PS4Pad;
-        else
+        else if (!strcmp(SDL_JoystickName(this->joystick), "Xbox One Elite Controller"))
             this->mapping = XBox360Pad;
+        else
+        {
+            gamelib_print("Unsupported controller detected, trying to default to Xbox One controller...");
+            this->mapping = XBox360Pad;
+        }
     }
     else
     {
@@ -111,8 +118,8 @@ GamePadController::~GamePadController() { SDL_JoystickClose(this->joystick); }
 ControllerOutput GamePadController::ApplyControls(PublicTankInfo * tankPublic)
 {
     /* Where is this joystick pointing? Corresponds to left analog stick. Value range is -32K to +32K */
-    Sint32 lx = SDL_JoystickGetAxis(this->joystick, this->mapping.MoveHorizontalAxis);
-    Sint32 ly = SDL_JoystickGetAxis(this->joystick, this->mapping.MoveVerticalAxis);
+    int lx = this->mapping.MoveHorizontalAxis.CurrentAxisValue(this->joystick);
+    int ly = this->mapping.MoveVerticalAxis.CurrentAxisValue(this->joystick);
 
     auto output = ControllerOutput{};
     Uint32 dist = lx * lx + ly * ly;
@@ -126,8 +133,8 @@ ControllerOutput GamePadController::ApplyControls(PublicTankInfo * tankPublic)
     }
 
     /* Get right analog stick */
-    Sint32 rx = SDL_JoystickGetAxis(this->joystick, this->mapping.AimHorizontalAxis);
-    Sint32 ry = SDL_JoystickGetAxis(this->joystick, this->mapping.AimVerticalAxis);
+    int rx = this->mapping.AimHorizontalAxis.CurrentAxisValue(this->joystick);
+    int ry = this->mapping.AimVerticalAxis.CurrentAxisValue(this->joystick);
 
     /* Apply aim threshold - even in neutral state the analog input is never truly 0 */
     if (rx > 0)
@@ -149,24 +156,27 @@ ControllerOutput GamePadController::ApplyControls(PublicTankInfo * tankPublic)
         output.crosshair_direction = {};
     output.is_crosshair_absolute = false;
 
-    /* Can't use lower buttons in SDL1. FU. */
-    output.is_shooting_primary = SDL_JoystickGetButton(this->joystick, this->mapping.ShootPrimary);
-    output.is_shooting_secondary= SDL_JoystickGetButton(this->joystick, this->mapping.ShootSecondary);
+    output.is_shooting_primary = this->mapping.ShootPrimary.IsPressed(this->joystick);
+    output.is_shooting_secondary = this->mapping.ShootSecondary.IsPressed(this->joystick);
+    output.is_shooting_tertiary = this->mapping.ShootTertiary.IsPressed(this->joystick);
 
     /* Cycle Primary & Secondary weapons */
-    bool cycle_primary_weapon_next = !!SDL_JoystickGetButton(this->joystick, this->mapping.CyclePrimaryWeaponNext);
+    bool cycle_primary_weapon_next = !!SDL_JoystickGetButton(this->joystick, this->mapping.CyclePrimaryWeaponNext.Id());
     output.switch_primary_weapon_next = cycle_primary_weapon_next && !this->was_cycle_primary_weapon_next_down;
     this->was_cycle_primary_weapon_next_down = cycle_primary_weapon_next;
-    
-    bool cycle_primary_weapon_prev = !!SDL_JoystickGetButton(this->joystick, this->mapping.CyclePrimaryWeaponsPrev);
+
+    bool cycle_primary_weapon_prev =
+        !!SDL_JoystickGetButton(this->joystick, this->mapping.CyclePrimaryWeaponsPrev.Id());
     output.switch_primary_weapon_prev = cycle_primary_weapon_prev && !this->was_cycle_primary_weapon_prev_down;
     this->was_cycle_primary_weapon_prev_down = cycle_primary_weapon_prev;
 
-    bool cycle_secondary_weapon_next = !!SDL_JoystickGetButton(this->joystick, this->mapping.CycleSecondaryWeaponNext);
+    bool cycle_secondary_weapon_next =
+        !!SDL_JoystickGetButton(this->joystick, this->mapping.CycleSecondaryWeaponNext.Id());
     output.switch_secondary_weapon_next = cycle_secondary_weapon_next && !this->was_cycle_secondary_weapon_next_down;
     this->was_cycle_secondary_weapon_next_down = cycle_secondary_weapon_next;
 
-    bool cycle_secondary_weapon_prev = !!SDL_JoystickGetButton(this->joystick, this->mapping.CycleSecondaryWeaponsPrev);
+    bool cycle_secondary_weapon_prev =
+        !!SDL_JoystickGetButton(this->joystick, this->mapping.CycleSecondaryWeaponsPrev.Id());
     output.switch_secondary_weapon_prev = cycle_secondary_weapon_prev && !this->was_cycle_secondary_weapon_prev_down;
     this->was_cycle_secondary_weapon_prev_down = cycle_secondary_weapon_prev;
 

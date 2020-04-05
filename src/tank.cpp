@@ -19,6 +19,7 @@ void TankTurret::ApplyControllerOutput(ControllerOutput controls)
 {
     this->is_shooting_primary = controls.is_shooting_primary;
     this->is_shooting_secondary = controls.is_shooting_secondary;
+    this->is_shooting_tertiary = controls.is_shooting_tertiary;
 
     if (controls.switch_primary_weapon_next)
         this->primary_weapon.CycleNext();
@@ -90,6 +91,11 @@ void TankTurret::HandleShoot()
         if (this->is_shooting_secondary)
         {
             this->bullet_timer = this->secondary_weapon.Fire(this->tank->GetPosition(), this->GetDirection(), this->tank);
+            this->tank->AlterEnergy(tweak::tank::ShootCost);
+        }
+        if (this->is_shooting_tertiary)
+        {
+            this->bullet_timer = this->tertiary_weapon.Fire(this->tank->GetPosition(), this->GetDirection(), this->tank);
             this->tank->AlterEnergy(tweak::tank::ShootCost);
         }
     }
