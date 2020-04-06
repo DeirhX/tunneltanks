@@ -79,6 +79,10 @@ template <typename DataType> class Bitmap : public ImageData<DataType>
     template <typename GetColorFunc>
     void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect,
               GetColorFunc GetPixelColor); /* Color GetPixelColor(int index) */
+    /* Draw portion of bitmap into a screen rectangle, clipping it if it exceeds bounds */
+    template <typename GetColorFunc>
+    void Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect,
+              GetColorFunc GetPixelColor); /* Color GetPixelColor(int index) */
 
     Bitmap(Size size, std::initializer_list<DataType> data) : Base(size, data) {}
     Bitmap(Size size) : Base(size) {}
@@ -97,8 +101,10 @@ class MonoBitmap : public Bitmap<std::uint8_t>
     MonoBitmap(Size size) : Bitmap<std::uint8_t>(size) {}
     /* Draw entire bitmap */
     void Draw(Screen * screen, ScreenPosition position, Color color);
-    /* Draw portion of bitmap */
+    /* Draw a portion of bitmap */
     void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, Color color);
+    /* Draw a portion of bitmap, possibly clipping to fit into screen rect */
+    void Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, Color color);
 
   private:
     // int ToIndex(Position position) const { return position.x + position.y * size.x; }
@@ -118,6 +124,8 @@ class ColorBitmap : public Bitmap<Color>
     /* Draw portion of bitmap */
     void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect);
     void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, Color color_filter);
+    void Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect);
+    void Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, Color color_filter);
 
   private:
     // int ToIndex(Position position) const { return position.x + position.y * size.x; }

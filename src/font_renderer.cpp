@@ -26,25 +26,37 @@ fonts::BrodminGlyphInfo::BrodminGlyphInfo() : GlyphInfoTable(FontFace::Brodmin)
     /* Don't care about the rest for now */
 }
 
-void BitmapFont::Render(Screen * surface, ScreenRect screen_rect, std::string_view text, Color color)
+void BitmapFont::Render(Screen * surface, ScreenRect screen_rect, std::string_view text, Color color,
+                        fonts::Alignment alignment)
 {
-    for (char ch : text)
+    if (alignment == fonts::Alignment::Left)
     {
-        auto & glyph_rect = this->glyph_lookup.GetSourceRect(ch);
-        this->font_bitmap.Draw(surface, screen_rect.pos, glyph_rect, color);
-        screen_rect.pos.x += glyph_rect.size.x;
+        for (char ch : text)
+        {
+            auto & glyph_rect = this->glyph_lookup.GetSourceRect(ch);
+            this->font_bitmap.Draw(surface, screen_rect, glyph_rect, color);
+            screen_rect.pos.x += glyph_rect.size.x;
+            screen_rect.size.x -= glyph_rect.size.x;
+        }
+    }
+    else /* Alignment::Right */
+    {
+        for (auto it = text.rbegin(); it != text.rend(); ++it)
+        {
+
+        }
     }
 }
 
 FontRenderer::FontRenderer(BmpDecoder * bmp_decoder)
     : font_brodmin(bmp_decoder->LoadGrayscaleFromRGBA("resources/fonts/broddmin_5x10.bmp"), fonts::BrodminGlyphInfo{})
 {
-
 }
 
-void FontRenderer::Render(FontFace font, Screen * screen, ScreenRect screen_rect, std::string_view text, Color color)
+void FontRenderer::Render(FontFace font, Screen * screen, ScreenRect screen_rect, std::string_view text, Color color,
+                          fonts::Alignment alignment)
 {
     /* There's not other font now*/
     assert(font == FontFace::Brodmin);
-    this->font_brodmin.Render(screen, screen_rect, text, color);
+    this->font_brodmin.Render(screen, screen_rect, text, color, alignment);
 }

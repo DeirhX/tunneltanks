@@ -38,7 +38,6 @@ int main(int argc, char * argv[])
         std::cerr << ex.what();
         return -1;
     }
-        
 }
 
 int GameMain(int argc, char * argv[])
@@ -198,7 +197,7 @@ int GameMain(int argc, char * argv[])
             .player_count = player_count,
             .use_ai = is_ai,
         };
-        
+
         /* TODO: Unify this global mess */
         /* Setup input/output system */
         ::global_game_system = CreateGameSystem(config.video_config);
@@ -206,6 +205,7 @@ int GameMain(int argc, char * argv[])
         /* Play the game: */
         gamelib_main_loop([]() -> bool { return global_game->AdvanceStep(); });
 
+        /* Release global resources earlier than atexit global teardown*/
         ::global_game.reset();
         ::global_game_system.reset();
 

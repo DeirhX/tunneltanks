@@ -54,7 +54,7 @@ struct SinglePlayerLayout : public widgets::SharedLayout
         ScreenRect{tank_health_bars_rect.Right() + 3, tank_health_bars_rect.Top() + 1, 2, status_height};
 
     /* Resource overlays */
-    constexpr static ScreenRect resource_overlay = ScreenRect{player_view_rect.pos, Size{30, 10}};
+    constexpr static ScreenRect resource_overlay = ScreenRect{player_view_rect.pos, Size{10, 10}};
     
 };
 
@@ -93,8 +93,8 @@ struct TwoPlayerLayout : public SinglePlayerLayout
         ScreenRect{health_energy_two.Left() - health_letter_rect.size.x, health_energy_two.Top() + 1, 2, status_height};
 
      /* Resource overlays */
-    constexpr static ScreenRect resource_overlay_one = ScreenRect{player_view_one.pos, Size{30, 10}};
-    constexpr static ScreenRect resource_overlay_two = ScreenRect{player_view_two.pos, Size{30, 10}};
+    constexpr static ScreenRect resource_overlay_one = ScreenRect{player_view_one.pos, Size{13, 10}};
+    constexpr static ScreenRect resource_overlay_two = ScreenRect{player_view_two.pos, Size{13, 10}};
 };
 
 void Screens::SinglePlayerScreenSetup(Screen * screen, World * world, Tank * player)
