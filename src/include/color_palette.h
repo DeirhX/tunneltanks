@@ -26,6 +26,8 @@ enum class Colors
     ConcreteLow,
     ConcreteHigh,
     DirtContainerShot,
+    ResourceInfoBackground,
+    ResourceInfoOutline,
     Size,
 };
 

@@ -1,5 +1,5 @@
-#include "base.h"
 #include "color_palette.h"
+#include "base.h"
 
 #include <cassert>
 
@@ -19,7 +19,7 @@ ColorPalette::ColorPalette()
     Set(Colors::FireCold, Color(0xba, 0x00, 0x00));
     Set(Colors::ConcreteShot, Color(0xba, 0xba, 0xcc));
     Set(Colors::ConcreteLow, Color(0xa0, 0xa0, 0xa5));
-    Set(Colors::ConcreteHigh, Color(0x80, 0x80, 0x85)); 
+    Set(Colors::ConcreteHigh, Color(0x80, 0x80, 0x85));
     Set(Colors::Background, Color(0x00, 0x00, 0x00));
     Set(Colors::BackgroundDot, Color(0x20, 0x20, 0x20));
     Set(Colors::StatusBackground, Color(0x65, 0x65, 0x65));
@@ -29,8 +29,10 @@ ColorPalette::ColorPalette()
     Set(Colors::DecalHigh, Color(0x48, 0x38, 0x2f));
     Set(Colors::TankTurret, Color(0xf3, 0xeb, 0x1c));
     Set(Colors::DirtContainerShot, Color(0xaa, 0x50, 0x03));
+    Set(Colors::ResourceInfoBackground, Color(0x00, 0x00, 0x00, 0x80));
+    Set(Colors::ResourceInfoOutline, Color(0xff, 0xff, 0xff, 0xa0));
 
-    SetPrimary(0, Color(0x00, 0x00, 0x00));
+        SetPrimary(0, Color(0x00, 0x00, 0x00));
     SetPrimary(1, Color(0xff, 0x00, 0x00));
     SetPrimary(2, Color(0x00, 0xff, 0x00));
     SetPrimary(3, Color(0xff, 0xff, 0x00));
@@ -69,7 +71,7 @@ Color ColorPalette::GetPrimary(TankColor index)
     return Primaries[index];
 }
 
-Color *ColorPalette::GetTank(TankColor index)
+Color * ColorPalette::GetTank(TankColor index)
 {
     assert(index >= 0 && index < PrimaryColors);
     return Tanks[index];

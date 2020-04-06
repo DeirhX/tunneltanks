@@ -26,9 +26,9 @@ struct Color : public ColorLayout
     {
         if (a == 255)
             return PixelDataType(r, g, b);
-        return PixelDataType((this->r * this->a) / 255 + other.r * (255 - this->a),
-                             (this->g * this->a) / 255 + other.g * (255 - this->a),
-                             (this->b * this->a) / 255 + other.b * (255 - this->a));
+        return PixelDataType((this->r * a) / 255 + other.r * (255 - a) / 255,
+                             (this->g * a) / 255 + other.g * (255 - a) / 255,
+                             (this->b * a) / 255 + other.b * (255 - a) / 255);
     }
     explicit operator Color() const { return Color(r, g, b); }
 };

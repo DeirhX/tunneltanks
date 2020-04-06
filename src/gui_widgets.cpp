@@ -3,6 +3,7 @@
 #include "screen.h"
 
 #include "random.h"
+#include "shape_renderer.h"
 #include "tank.h"
 #include "tweak.h"
 
@@ -255,7 +256,11 @@ void Crosshair::Draw(Screen *)
 
 void ResourcesMinedDisplay::Draw(Screen * screen)
 {
-    GetSystem()->GetFontRenderer()->Render(FontFace::Brodmin, screen, this->screen_rect, "642",
+    ShapeRenderer::DrawRectangle(screen, this->screen_rect, true, Palette.Get(Colors::ResourceInfoBackground),
+                                 Palette.Get(Colors::ResourceInfoOutline)); 
+    ScreenRect text_rect = {this->screen_rect.Left() + 2, this->screen_rect.Top() + 2, this->screen_rect.size.x - 4,
+                            this->screen_rect.size.y - 4};
+    GetSystem()->GetFontRenderer()->Render(FontFace::Brodmin, screen, text_rect, "642",
                                            Palette.Get(Colors::StatusEnergy), fonts::Alignment::Right);
 }
 

@@ -30,7 +30,7 @@ void BitmapFont::Render(Screen * surface, ScreenRect screen_rect, std::string_vi
                         fonts::Alignment alignment)
 {
     if (alignment == fonts::Alignment::Left)
-    {
+    {   /* Easy, just let the bitmap renderer do the clipping into screen_rect */
         for (char ch : text)
         {
             auto & glyph_rect = this->glyph_lookup.GetSourceRect(ch);
@@ -40,7 +40,7 @@ void BitmapFont::Render(Screen * surface, ScreenRect screen_rect, std::string_vi
         }
     }
     else /* Alignment::Right */
-    {    /* We'll need to do some clever clipping ourselves since normally it's clipped from the bottom right, not left */
+    {    /* We'll need to do some clever clipping ourselves since normally it's clipped from the bottom right, we need to clip left */
         int horizontal_offset = 0;
         for (auto it = text.rbegin(); it != text.rend(); ++it)
         {
@@ -50,12 +50,13 @@ void BitmapFont::Render(Screen * surface, ScreenRect screen_rect, std::string_vi
             /* Decide if we have enough space to fit this letter*/
             if (horizontal_offset <= screen_rect.size.x)
             {   /* Enough space, render normally */
-                target_rect = {{screen_rect.Right() - horizontal_offset + 1, screen_rect.Top()}, glyph_rect.size};
+                target_rect = {{screen_rect.Right() - horizontal_offset + 1, screen_rect.Top()},
+                               {glyph_rect.size.x, screen_rect.size.y}};
             }
             else
             {   /* Needs clipping, clip the source rect */
                 const int remaining = std::max(0, screen_rect.size.x - horizontal_offset + glyph_rect.size.x);
-                target_rect = {{screen_rect.Left(), screen_rect.Top()}, Size{remaining, glyph_rect.size.y}};
+                target_rect = {{screen_rect.Left(), screen_rect.Top()}, Size{remaining, screen_rect.size.y}};
                 glyph_rect.pos.x += glyph_rect.size.x - remaining;
                 glyph_rect.size.x = remaining;
             }
