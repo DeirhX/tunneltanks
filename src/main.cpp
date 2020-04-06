@@ -29,6 +29,8 @@ int main(int argc, char * argv[])
 {
     try
     {
+        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+
         return GameMain(argc, argv);
     }
     catch (GameException & ex)
@@ -36,12 +38,11 @@ int main(int argc, char * argv[])
         std::cerr << ex.what();
         return -1;
     }
+        
 }
 
 int GameMain(int argc, char * argv[])
 {
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-
     bool is_reading_level = false;
     bool is_reading_seed = false;
     bool is_reading_file = false;
@@ -179,7 +180,6 @@ int GameMain(int argc, char * argv[])
         gamelib_error("Failed to dump level bitmap: %s", game_ex.what());
     }
 
-
     try
     {
         /* Let's get this ball rolling: */
@@ -198,16 +198,17 @@ int GameMain(int argc, char * argv[])
             .player_count = player_count,
             .use_ai = is_ai,
         };
-        {
-            /* TODO: Unify this global mess */
-            /* Setup input/output system */
-            ::global_game_system = CreateGameSystem(config.video_config);
-            ::global_game = std::make_unique<Game>(config);
-            /* Play the game: */
-            gamelib_main_loop([]() -> bool { return global_game->AdvanceStep(); });
-            ::global_game.reset();
-            ::global_game_system.reset();
-        }
+        
+        /* TODO: Unify this global mess */
+        /* Setup input/output system */
+        ::global_game_system = CreateGameSystem(config.video_config);
+        ::global_game = std::make_unique<Game>(config);
+        /* Play the game: */
+        gamelib_main_loop([]() -> bool { return global_game->AdvanceStep(); });
+
+        ::global_game.reset();
+        ::global_game_system.reset();
+
         /* Ok, we're done. Tear everything up: */
         gamelib_exit();
     }
@@ -222,8 +223,5 @@ int GameMain(int argc, char * argv[])
 
     print_mem_stats();
 
-#ifdef _MSC_VER
-    _CrtDumpMemoryLeaks();
-#endif
     return 0;
 }
