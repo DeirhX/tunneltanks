@@ -256,7 +256,7 @@ void Crosshair::Draw(Screen *)
 void ResourcesMinedDisplay::Draw(Screen * screen)
 {
     GetSystem()->GetFontRenderer()->Render(FontFace::Brodmin, screen, this->screen_rect, "642",
-                                           Palette.Get(Colors::StatusEnergy));
+                                           Palette.Get(Colors::StatusEnergy), fonts::Alignment::Right);
 }
 
 } // namespace widgets

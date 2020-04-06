@@ -21,7 +21,7 @@ struct GlyphInfoTable
 
     GlyphInfoTable(FontFace font_face) : font_face(font_face) {}
 
-    ImageRect & GetSourceRect(char glyph)
+    const ImageRect & GetSourceRect(char glyph) const
     {
         assert(glyph >= 0 && glyph < glyphs.size());
         assert(glyphs[glyph] != ImageRect{});

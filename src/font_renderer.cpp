@@ -40,10 +40,26 @@ void BitmapFont::Render(Screen * surface, ScreenRect screen_rect, std::string_vi
         }
     }
     else /* Alignment::Right */
-    {
+    {    /* We'll need to do some clever clipping ourselves since normally it's clipped from the bottom right, not left */
+        int horizontal_offset = 0;
         for (auto it = text.rbegin(); it != text.rend(); ++it)
         {
-
+            ImageRect glyph_rect = this->glyph_lookup.GetSourceRect(*it);
+            horizontal_offset += glyph_rect.size.x;
+            ScreenRect target_rect;
+            /* Decide if we have enough space to fit this letter*/
+            if (horizontal_offset <= screen_rect.size.x)
+            {   /* Enough space, render normally */
+                target_rect = {{screen_rect.Right() - horizontal_offset + 1, screen_rect.Top()}, glyph_rect.size};
+            }
+            else
+            {   /* Needs clipping, clip the source rect */
+                const int remaining = std::max(0, screen_rect.size.x - horizontal_offset + glyph_rect.size.x);
+                target_rect = {{screen_rect.Left(), screen_rect.Top()}, Size{remaining, glyph_rect.size.y}};
+                glyph_rect.pos.x += glyph_rect.size.x - remaining;
+                glyph_rect.size.x = remaining;
+            }
+            this->font_bitmap.Draw(surface, target_rect, glyph_rect, color);
         }
     }
 }
