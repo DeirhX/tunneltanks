@@ -33,7 +33,8 @@ void Bitmap<DataType>::Draw(Screen * screen, ScreenPosition screen_pos, ImageRec
         for (int y = source_rect.Top(); y <= source_rect.Bottom(); ++y)
         {
             /* Draw its color or transparent nothing if it's a black/white bitmap */
-            screen->DrawPixel({x + screen_pos.x, y + screen_pos.y}, GetPixelColor(this->ToIndex({x, y})));
+            screen->DrawPixel({x - source_rect.Left() + screen_pos.x, y - source_rect.Top() + screen_pos.y},
+                              GetPixelColor(this->ToIndex({x, y})));
         }
 }
 

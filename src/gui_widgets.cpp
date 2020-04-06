@@ -195,7 +195,7 @@ void StatusBar::Draw(Screen *screen)
 void BitmapRender::Draw(Screen *screen)
 {
     this->data->Draw(screen, this->screen_rect.pos,
-                     ImageRect{{0, 0}, {this->data->GetSize().x - 1, this->data->GetSize().y - 1}}, this->color);
+                     ImageRect{{0, 0}, {this->data->GetSize().x, this->data->GetSize().y}}, this->color);
 }
 
 void LivesLeft::Draw(Screen *screen)
@@ -255,5 +255,8 @@ void Crosshair::Draw(Screen *)
 
 void ResourcesMinedDisplay::Draw(Screen * screen)
 {
+    GetSystem()->GetFontRenderer()->Render(FontFace::Brodmin, screen, this->screen_rect, "642",
+                                           Palette.Get(Colors::StatusEnergy));
 }
+
 } // namespace widgets

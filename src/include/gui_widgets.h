@@ -115,6 +115,8 @@ class Crosshair : public BitmapRender
 
 class ResourcesMinedDisplay : public GuiWidget
 {
+public:
+    ResourcesMinedDisplay(ScreenRect screen_rect) : GuiWidget(screen_rect) {}
     void Draw(Screen * screen) override;
 };
 

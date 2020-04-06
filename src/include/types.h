@@ -227,8 +227,8 @@ struct RectBase
 
     constexpr int Left() const { return pos.x; }
     constexpr int Top() const { return pos.y; }
-    constexpr int Right() const { return pos.x + size.x; }
-    constexpr int Bottom() const { return pos.y + size.y; }
+    constexpr int Right() const { return pos.x + size.x - 1; }
+    constexpr int Bottom() const { return pos.y + size.y - 1; }
     constexpr bool IsInside(Vector vec) const
     {
         return vec.x >= this->Left() && vec.x <= this->Right() && vec.y >= this->Top() && vec.y <= this->Bottom();

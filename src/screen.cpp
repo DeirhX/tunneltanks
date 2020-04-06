@@ -51,7 +51,11 @@ struct SinglePlayerLayout : public widgets::SharedLayout
 
     /* Lives remaining view */
     constexpr static ScreenRect lives_left_rect =
-        ScreenRect{tank_health_bars_rect.Right() + 2, tank_health_bars_rect.Top() + 1, 2, status_height};
+        ScreenRect{tank_health_bars_rect.Right() + 3, tank_health_bars_rect.Top() + 1, 2, status_height};
+
+    /* Resource overlays */
+    constexpr static ScreenRect resource_overlay = ScreenRect{player_view_rect.pos, Size{30, 10}};
+    
 };
 
 struct TwoPlayerLayout : public SinglePlayerLayout
@@ -60,7 +64,7 @@ struct TwoPlayerLayout : public SinglePlayerLayout
     constexpr static Offset view_offset = Offset{2, 2};
     constexpr static ScreenRect player_view_one = {
         ScreenPosition{player_view_rect.pos}, Size{player_view_rect.size - Size{player_view_rect.size.x / 2 + 1, 0}}};
-    constexpr static ScreenRect player_view_two = {ScreenPosition{player_view_one.Right() + 2, player_view_rect.pos.y},
+    constexpr static ScreenRect player_view_two = {ScreenPosition{player_view_one.Right() + 3, player_view_rect.pos.y},
                                                    Size{player_view_one.size}};
 
     /* Health + Energy bars */
@@ -69,7 +73,7 @@ struct TwoPlayerLayout : public SinglePlayerLayout
                                                               lives_left_rect.size.x - 2 * lives_left_padding - 1,
                                                           tank_health_bars_rect.size.y}};
     constexpr static ScreenRect health_energy_two = {
-        ScreenPosition{health_energy_one.Right() + energy_letter_rect.size.x + lives_left_rect.size.x * 2 + 3 +
+        ScreenPosition{health_energy_one.Right() + 1 + energy_letter_rect.size.x + lives_left_rect.size.x * 2 + 3 +
                            2 * lives_left_padding + 3,
                        health_energy_one.pos.y},
         Size{health_energy_one.size}};
@@ -84,9 +88,13 @@ struct TwoPlayerLayout : public SinglePlayerLayout
 
     /* Lives remaining view */
     constexpr static ScreenRect lives_left_rect_one =
-        ScreenRect{health_energy_one.Right() + 2, health_energy_one.Top() + 1, 2, status_height};
+        ScreenRect{health_energy_one.Right() + 3, health_energy_one.Top() + 1, 2, status_height};
     constexpr static ScreenRect lives_left_rect_two =
         ScreenRect{health_energy_two.Left() - health_letter_rect.size.x, health_energy_two.Top() + 1, 2, status_height};
+
+     /* Resource overlays */
+    constexpr static ScreenRect resource_overlay_one = ScreenRect{player_view_one.pos, Size{30, 10}};
+    constexpr static ScreenRect resource_overlay_two = ScreenRect{player_view_two.pos, Size{30, 10}};
 };
 
 void Screens::SinglePlayerScreenSetup(Screen * screen, World * world, Tank * player)
@@ -107,6 +115,9 @@ void Screens::SinglePlayerScreenSetup(Screen * screen, World * world, Tank * pla
                       static_cast<Color>(Palette.Get(Colors::StatusEnergy)));
     screen->AddBitmap(SinglePlayerLayout::health_letter_rect, &bitmaps::GuiHealth,
                       static_cast<Color>(Palette.Get(Colors::StatusHealth)));
+
+    /* Add resources owned overlay */
+    screen->AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(SinglePlayerLayout::resource_overlay));
 
     GetSystem()->GetCursor()->Show();
 }
@@ -141,6 +152,10 @@ void Screens::TwoPlayerScreenSetup(Screen * screen, World * world, Tank * player
                       static_cast<Color>(Palette.Get(Colors::StatusEnergy)));
     screen->AddBitmap(TwoPlayerLayout::health_letter_rect, &bitmaps::GuiHealth,
                       static_cast<Color>(Palette.Get(Colors::StatusHealth)));
+
+    /* Add resources owned overlays */
+    screen->AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(TwoPlayerLayout::resource_overlay_one));
+    screen->AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(TwoPlayerLayout::resource_overlay_two));
 
     GetSystem()->GetCursor()->Hide();
 }
