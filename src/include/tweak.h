@@ -37,7 +37,7 @@ namespace world
 {
     constexpr int DirtRecoverSpeed = 2; /* Average delay before growing finishes and new dirt is formed. More is faster. */
     constexpr int DirtRegrowSpeed = 5;  /* Average delay before it starts growing back. More is faster.*/
-
+    constexpr int DigThroughRockChance = 250; /* Chance to dig through rock with torch of out 1000 */
     /* The minimum distance between two tanks in the world. If this is set too high,
      * then the level generator may start throwing exceptions: */
     constexpr int MinBaseDistance = 150;

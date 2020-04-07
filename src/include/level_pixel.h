@@ -29,23 +29,25 @@ enum class LevelPixel : char
 class Pixel
 {
   public:
-    static bool IsDirt(LevelPixel voxel) { return voxel == LevelPixel::DirtHigh || voxel == LevelPixel::DirtLow; }
-    static bool IsDiggable(LevelPixel voxel)
+    static bool IsDirt(LevelPixel pixel) { return pixel == LevelPixel::DirtHigh || pixel == LevelPixel::DirtLow; }
+    static bool IsDiggable(LevelPixel pixel)
     {
-        return voxel == LevelPixel::DirtHigh || voxel == LevelPixel::DirtLow || voxel == LevelPixel::DirtGrow;
+        return pixel == LevelPixel::DirtHigh || pixel == LevelPixel::DirtLow || pixel == LevelPixel::DirtGrow;
     }
-    static bool IsSoftCollision(LevelPixel voxel) { return IsDirt(voxel); }
-    static bool IsBlockingCollision(LevelPixel voxel)
+    static bool IsTorchable(LevelPixel pixel) { return IsDiggable(pixel) || IsMineral(pixel); }
+    static bool IsSoftCollision(LevelPixel pixel) { return IsDirt(pixel); }
+    static bool IsBlockingCollision(LevelPixel pixel)
     {
-        return voxel == LevelPixel::Rock || IsConcrete(voxel) ||
-               (voxel >= LevelPixel::BaseMin && voxel <= LevelPixel::BaseMax);
+        return pixel == LevelPixel::Rock || IsConcrete(pixel) ||
+               (pixel >= LevelPixel::BaseMin && pixel <= LevelPixel::BaseMax);
     }
-    static bool IsAnyCollision(LevelPixel voxel) { return IsSoftCollision(voxel) || IsBlockingCollision(voxel); }
-    static bool IsBase(LevelPixel voxel) { return (voxel >= LevelPixel::BaseMin && voxel <= LevelPixel::BaseMax); }
-    static bool IsScorched(LevelPixel voxel) { return voxel == LevelPixel::DecalHigh || voxel == LevelPixel::DecalLow; }
-    static bool IsConcrete(LevelPixel voxel)
+    static bool IsAnyCollision(LevelPixel pixel) { return IsSoftCollision(pixel) || IsBlockingCollision(pixel); }
+    static bool IsBase(LevelPixel pixel) { return (pixel >= LevelPixel::BaseMin && pixel <= LevelPixel::BaseMax); }
+    static bool IsScorched(LevelPixel pixel) { return pixel == LevelPixel::DecalHigh || pixel == LevelPixel::DecalLow; }
+    static bool IsConcrete(LevelPixel pixel)
     {
-        return voxel == LevelPixel::ConcreteHigh || voxel == LevelPixel::ConcreteLow;
+        return pixel == LevelPixel::ConcreteHigh || pixel == LevelPixel::ConcreteLow;
     }
     static bool IsRock(LevelPixel pixel) { return pixel == LevelPixel::Rock;  }
+    static bool IsMineral(LevelPixel pixel) { return IsConcrete(pixel) || IsRock(pixel); }
 };

@@ -15,6 +15,7 @@
 class Renderer
 {
   public:
+    virtual ~Renderer() = default;
     virtual void SetSurfaceResolution(Size size) = 0;
     virtual Size GetSurfaceResolution() = 0;
     virtual void RenderFrame(const RenderSurface * surface) = 0;
@@ -26,6 +27,7 @@ class Renderer
 class Window
 {
   public:
+    virtual ~Window() = default;
     virtual bool IsFullscreen() = 0;
     virtual Size GetResolution() = 0;
     virtual void Resize(Size size, bool is_fullscreen) = 0;
@@ -38,6 +40,7 @@ class Window
 class Cursor
 {
   public:
+    virtual ~Cursor() = default;
     virtual void Hide() = 0;
     virtual void Show() = 0;
 };
@@ -48,6 +51,7 @@ class Cursor
 class BmpDecoder
 {
 public:
+    virtual ~BmpDecoder() = default;
     virtual ColorBitmap LoadRGBA(std::string_view relative_image_path) = 0;
     virtual MonoBitmap LoadGrayscale(std::string_view relative_image_path) = 0;
     virtual MonoBitmap LoadGrayscaleFromRGBA(std::string_view relative_image_path) = 0;

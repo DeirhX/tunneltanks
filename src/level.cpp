@@ -166,28 +166,34 @@ void Level::SetSpawn(TankColor color, Position position)
     this->SetSpawn(color, std::make_unique<TankBase>(position));
 }
 
-int Level::DigHole(Position pos)
+DigResult Level::DigTankTunnel(Position pos, bool dig_with_torch)
 {
-    int pixels_dug = 0;
+    auto result = DigResult{};
 
     for (int ty = pos.y - 3; ty <= pos.y + 3; ty++)
         for (int tx = pos.x - 3; tx <= pos.x + 3; tx++)
         {
             LevelPixel pixel = GetPixel({tx, ty});
-            /* Don't go out-of-bounds: */
-            if (!Pixel::IsDiggable(pixel))
-                continue;
 
             /* Don't take out the corners: */
             if ((tx == pos.x - 3 || tx == pos.x + 3) && (ty == pos.y - 3 || ty == pos.y + 3))
                 continue;
 
-            if (Pixel::IsDirt(pixel))
-                ++pixels_dug;
-            SetPixel({tx, ty}, LevelPixel::Blank);
+            if (Pixel::IsDiggable(pixel))
+            {
+                SetPixel({tx, ty}, LevelPixel::Blank);
+                if (Pixel::IsDirt(pixel))
+                    ++result.dirt;
+            }
+            else if (Pixel::IsTorchable(pixel) && dig_with_torch && Random.Bool(tweak::world::DigThroughRockChance))
+            {
+                SetPixel({tx, ty}, LevelPixel::Blank);
+                if (Pixel::IsMineral(pixel))
+                    ++result.minerals;
+            }
         }
 
-    return pixels_dug;
+    return result;
 }
 
 void Level::CommitAll() const

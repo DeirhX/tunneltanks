@@ -21,7 +21,11 @@ enum class BaseCollision
     Enemy,
 };
 
-
+struct DigResult
+{
+    int dirt = 0;
+    int minerals = 0;
+};
 
 /*
  * Tank Base, part of the level
@@ -92,7 +96,7 @@ class Level
     TankBase * GetSpawn(TankColor color) const;
     void SetSpawn(TankColor color, std::unique_ptr<TankBase> && tank_base);
     void SetSpawn(TankColor color, Position position);
-    int DigHole(Position pos);
+    DigResult DigTankTunnel(Position pos, bool dig_with_torch);
     BaseCollision CheckBaseCollision(Position pos, TankColor color);
 
   private:

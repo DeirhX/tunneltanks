@@ -189,23 +189,30 @@ void Tank::HandleMove(TankList * tl)
 
         CollisionType collision = this->GetCollision(newdir, this->pos + 1 * this->speed, tl);
         /* Now, is there room to move forward in that direction? */
-        if (collision != CollisionType::Blocked)
+        if (collision != CollisionType::None)
         {
-            int pixels_dug = this->level->DigHole(this->pos + (1 * this->speed));
-            this->dirt_mined += pixels_dug;
-            /* If so, then we can move: */
-            if (collision != CollisionType::Dirt || this->turret.IsShooting())
-            {
-                /* We will only move/rotate if we were able to get here without
-				 * digging, so we can avoid certain bizarre bugs: */
-                this->direction = Direction{newdir};
-                this->pos.x += this->speed.x;
-                this->pos.y += this->speed.y;
+            /* Attempt to dig and see the results */
+            DigResult dug = this->level->DigTankTunnel(this->pos + (1 * this->speed), this->turret.IsShooting());
+            this->dirt_mined += dug.dirt;
+            this->minerals_mined += dug.minerals;
 
-                /* Well, we moved, so let's charge ourselves: */
-                this->AlterEnergy(tweak::tank::MoveCost);
-            }
+            /* If we didn't use a torch, we don't move in the frame of digging*/
+            if (!this->turret.IsShooting())
+                return;
+
+            /* Now if we used a torch, test the collision again - we might have failed to dig some of the minerals */
+            collision = this->GetCollision(newdir, this->pos + 1 * this->speed, tl);
+            if (collision != CollisionType::None)
+                return;
         }
+
+        /* We're free to move, do it*/
+        this->direction = Direction{newdir};
+        this->pos.x += this->speed.x;
+        this->pos.y += this->speed.y;
+
+        /* Well, we moved, so let's charge ourselves: */
+        this->AlterEnergy(tweak::tank::MoveCost);
     }
 }
 

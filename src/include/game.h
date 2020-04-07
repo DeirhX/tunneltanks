@@ -44,7 +44,7 @@ class GameMode
 
   public:
     GameMode(Screen * screen, World * world) : screen(screen), world(world) {}
-    ~GameMode() { assert(!screen && !world || !"Didn't tear it down"); }
+    virtual ~GameMode() { assert(!screen && !world || !"Didn't tear it down"); }
 
     virtual void TearDown() = 0;
 
