@@ -15,6 +15,7 @@
 #include "game.h"
 #include "raycaster.h"
 
+/* Handle shooting buttons and weapon changes */
 void TankTurret::ApplyControllerOutput(ControllerOutput controls)
 {
     this->is_shooting_primary = controls.is_shooting_primary;
@@ -132,6 +133,61 @@ void Tank::SetCrosshair(widgets::Crosshair * cross)
     this->crosshair->SetWorldPosition(this->GetPosition() + Offset{0, -10});
 }
 
+/* The advance step, once per frame. Do everything. */
+void Tank::Advance(World * world)
+{
+    if (!this->IsDead())
+    {
+        /* Recharge and discharge */
+        this->AlterEnergy(tweak::tank::IdleCost);
+        this->TryBaseHeal();
+
+        /* Get input from controller and figure what we *want* to do and do it: rotate turret, set desired direction and speed  */
+        if (this->controller)
+        {
+            Vector base = this->level->GetSpawn(this->color)->GetPosition();
+            PublicTankInfo controls = {.health = this->health,
+                                       .energy = this->energy,
+                                       .x = static_cast<int>(this->pos.x - base.x),
+                                       .y = static_cast<int>(this->pos.y - base.y),
+                                       .level_view = LevelView(this, this->level)};
+            this->ApplyControllerOutput(this->controller->ApplyControls(&controls));
+        }
+        /* Rotate the turret temporarily back directly to match our heading direction */
+        if (this->speed.x || this->speed.y)
+        {
+            this->turret.SetDirection(DirectionF{Direction::FromSpeed(this->speed)});
+        }
+        /* Now override this by rotating according to crosshair if it is being used */
+        this->turret.Advance(this->GetPosition(), this->crosshair);
+
+        /* Move, dig and solve collisions with other tanks */
+        this->HandleMove(world->GetTankList());
+        
+        /* Shoot the turret if desired*/
+        this->turret.HandleShoot();
+    }
+    else
+    {
+        /* DEaD. Handle respawning. */
+        if (! --this->respawn_timer)
+        {
+            if (! --this->lives_left)
+            {
+                Spawn();
+            }
+            else
+            {
+                bool players_remaining =
+                    std::any_of(world->GetTankList()->begin(), world->GetTankList()->end(),
+                                [](Tank & tank) { return tank.controller->IsPlayer() && !tank.IsDead(); });
+                if (!players_remaining)
+                    world->GameIsOver();
+            }
+        }
+    }
+}
+
 /* We don't use the Tank structure in this function, since we are checking the
  * tank's hypothetical position... ie: IF we were here, would we collide? */
 CollisionType Tank::GetCollision(int dir, Position position, TankList * tl)
@@ -164,30 +220,11 @@ CollisionType Tank::GetCollision(int dir, Position position, TankList * tl)
 
 void Tank::HandleMove(TankList * tl)
 {
-    /* Don't let this tank do anything if it is dead: */
-    if (!this->health)
-        return;
-
-    /* Calculate all of our motion: */
-    if (this->controller)
-    {
-        Vector base = this->level->GetSpawn(this->color)->GetPosition();
-        PublicTankInfo controls = {.health = this->health,
-                                   .energy = this->energy,
-                                   .x = static_cast<int>(this->pos.x - base.x),
-                                   .y = static_cast<int>(this->pos.y - base.y),
-                                   .level_view = LevelView(this, this->level)};
-
-        this->ApplyControllerOutput(this->controller->ApplyControls(&controls));
-    }
-
     /* Calculate the direction: */
     if (this->speed.x != 0 || this->speed.y != 0)
     {
-        int newdir = static_cast<int>((this->speed.x + 1) + (this->speed.y + 1) * 3);
-        this->turret.SetDirection(DirectionF{Direction{newdir}});
-
-        CollisionType collision = this->GetCollision(newdir, this->pos + 1 * this->speed, tl);
+        Direction dir = Direction::FromSpeed(this->speed);
+        CollisionType collision = this->GetCollision(dir, this->pos + 1 * this->speed, tl);
         /* Now, is there room to move forward in that direction? */
         if (collision != CollisionType::None)
         {
@@ -196,18 +233,22 @@ void Tank::HandleMove(TankList * tl)
             this->dirt_mined += dug.dirt;
             this->minerals_mined += dug.minerals;
 
-            /* If we didn't use a torch, we don't move in the frame of digging*/
-            if (!this->turret.IsShooting())
+            /* If we didn't use a torch pointing roughly in the right way, we don't move in the frame of digging*/
+            if (!(this->turret.IsShooting() &&
+                  Direction::FromSpeed(Speed{int(std::round(this->turret.GetDirection().x)),
+                                             int(std::round(this->turret.GetDirection().y))}) == dir))
+            {
                 return;
+            }
 
             /* Now if we used a torch, test the collision again - we might have failed to dig some of the minerals */
-            collision = this->GetCollision(newdir, this->pos + 1 * this->speed, tl);
+            collision = this->GetCollision(dir, this->pos + 1 * this->speed, tl);
             if (collision != CollisionType::None)
                 return;
         }
 
         /* We're free to move, do it*/
-        this->direction = Direction{newdir};
+        this->direction = Direction{dir};
         this->pos.x += this->speed.x;
         this->pos.y += this->speed.y;
 
@@ -257,43 +298,6 @@ void Tank::Clear(LevelPixelSurface * drawBuff) const
                 level->CommitPixel(Position{this->pos.x + x - 3, this->pos.y + y - 3});
 
     this->turret.Erase(level);
-}
-
-void Tank::Advance(World * world)
-{
-    if (!this->IsDead())
-    {
-        this->AlterEnergy(tweak::tank::IdleCost);
-        this->TryBaseHeal();
-
-        /* Solve collisions with other tanks */
-        this->HandleMove(world->GetTankList());
-
-        /* Turn turret and shoot if desired*/
-        this->turret.Advance(this->GetPosition(), this->crosshair);
-        this->turret.HandleShoot();
-    }
-    else
-    {
-        /* DEaD. Handle respawning. */
-        --this->respawn_timer;
-        if (!this->respawn_timer)
-        {
-            --this->lives_left;
-            if (this->lives_left)
-            {
-                Spawn();
-            }
-            else
-            {
-                bool players_remaining =
-                    std::any_of(world->GetTankList()->begin(), world->GetTankList()->end(),
-                                [](Tank & tank) { return tank.controller->IsPlayer() && !tank.IsDead(); });
-                if (!players_remaining)
-                    world->GameIsOver();
-            }
-        }
-    }
 }
 
 void Tank::AlterEnergy(int diff)

@@ -121,6 +121,7 @@ struct Direction
     static Direction FromSpeed(Speed speed) { return Direction{speed.x + 1 + 3 * (speed.y + 1)}; }
     operator int() const { return dir; }
 };
+constexpr bool operator==(Direction l, Direction r) noexcept { return l.dir == r.dir; }
 
 /*
  *  Float math. Needed for shooting and raytracing of object trajectories.
