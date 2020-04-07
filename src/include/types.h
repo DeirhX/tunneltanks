@@ -305,6 +305,12 @@ enum class Orientation
     Vertical,
 };
 
+enum class HorizontalAlign
+{
+    Left,
+    Right,
+};
+
 template <typename Type>
 class holder_with_deleter : public std::unique_ptr<Type, void (*)(Type *)>
 {

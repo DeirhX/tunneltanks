@@ -56,8 +56,8 @@ class Level
     Size GetSize() const { return size; };
 
     /* Voxel get-set-reference operations */
-    void SetVoxel(Position pos, LevelPixel voxel);
-    LevelPixel GetVoxel(Position pos) const;
+    void SetPixel(Position pos, LevelPixel voxel);
+    LevelPixel GetPixel(Position pos) const;
     //LevelPixel & Voxel(Position pos);
 
     void SetVoxelRaw(Position pos, LevelPixel voxel);
@@ -92,7 +92,7 @@ class Level
     TankBase * GetSpawn(TankColor color) const;
     void SetSpawn(TankColor color, std::unique_ptr<TankBase> && tank_base);
     void SetSpawn(TankColor color, Position position);
-    bool DigHole(Position pos);
+    int DigHole(Position pos);
     BaseCollision CheckBaseCollision(Position pos, TankColor color);
 
   private:

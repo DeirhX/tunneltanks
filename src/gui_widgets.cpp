@@ -1,4 +1,7 @@
 #include "gui_widgets.h"
+
+#include <string>
+
 #include "base.h"
 #include "screen.h"
 
@@ -256,12 +259,20 @@ void Crosshair::Draw(Screen *)
 
 void ResourcesMinedDisplay::Draw(Screen * screen)
 {
+    /* Draw outline and background */
     ShapeRenderer::DrawRectangle(screen, this->screen_rect, true, Palette.Get(Colors::ResourceInfoBackground),
                                  Palette.Get(Colors::ResourceInfoOutline)); 
+
     ScreenRect text_rect = {this->screen_rect.Left() + 2, this->screen_rect.Top() + 2, this->screen_rect.size.x - 4,
                             this->screen_rect.size.y - 4};
-    GetSystem()->GetFontRenderer()->Render(FontFace::Brodmin, screen, text_rect, "642",
-                                           Palette.Get(Colors::StatusEnergy), fonts::Alignment::Right);
+    GetSystem()->GetFontRenderer()->Render(FontFace::Brodmin, screen, text_rect, 
+                                           std::to_string(this->tank->GetDirtMined() / 10),
+                                           Palette.Get(Colors::StatusEnergy), HorizontalAlign::Right);
+    text_rect.pos.y += 9;
+    text_rect.size.y -= 9;
+    GetSystem()->GetFontRenderer()->Render(FontFace::Brodmin, screen, text_rect,
+                                           std::to_string(this->tank->GetRockMined() / 10),
+                                           Palette.Get(Colors::StatusHealth), HorizontalAlign::Right);
 }
 
 } // namespace widgets

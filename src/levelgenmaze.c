@@ -175,11 +175,11 @@ void maze_generator(Level *lvl) {
 	/* TODO: Have a fill_box() in levelgenutil.c? */
 	for(y=0; y<lvl->GetSize().y; y++)
 		for(x=m->w*CELL_SIZE; x<lvl->GetSize().x; x++)
-			lvl->SetVoxel({ x, y }, LevelPixel::LevelGenDirt);
+			lvl->SetPixel({ x, y }, LevelPixel::LevelGenDirt);
 	
 	for(y=m->h*CELL_SIZE; y<lvl->GetSize().y; y++)
 		for(x=0; x<m->w*CELL_SIZE; x++)
-			lvl->SetVoxel({ x, y }, LevelPixel::LevelGenDirt);
+			lvl->SetPixel({ x, y }, LevelPixel::LevelGenDirt);
 	
 	/* Rough it up a little, and invert: */
 	rough_up(lvl);

@@ -45,12 +45,7 @@ namespace fonts
         BrodminGlyphInfo();
     };
 
-    enum class Alignment
-    {
-        Left,
-        Right,
-    };
-    } // namespace fonts
+} // namespace fonts
 
 
 /* BitmapFont:  Font with simple bits designating value/transparency
@@ -62,8 +57,7 @@ class BitmapFont
 
   public:
     BitmapFont(MonoBitmap && bitmap, GlyphInfoTable && glyph_info) : font_bitmap(bitmap), glyph_lookup(glyph_info) { };
-    void Render(Screen * screen, ScreenRect screen_rect, std::string_view text, Color color,
-                fonts::Alignment alignment);
+    void Render(Screen * screen, ScreenRect screen_rect, std::string_view text, Color color, HorizontalAlign alignment);
 };
 
 class FontRenderer
@@ -74,5 +68,5 @@ class FontRenderer
     FontRenderer(BmpDecoder * game_system);
 
     void Render(FontFace font, Screen * screen, ScreenRect screen_rect, std::string_view text, Color color, 
-                fonts::Alignment alignment = fonts::Alignment::Left);
+                HorizontalAlign alignment = HorizontalAlign::Left);
 };

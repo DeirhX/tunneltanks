@@ -30,7 +30,6 @@ struct Color : public ColorLayout
                              (this->g * a) / 255 + other.g * (255 - a) / 255,
                              (this->b * a) / 255 + other.b * (255 - a) / 255);
     }
-    explicit operator Color() const { return Color(r, g, b); }
 };
 
 /*

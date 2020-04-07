@@ -37,14 +37,14 @@ void rough_up(Level *lvl) {
 		for(y=0; y<lvl->GetSize().y; y++) {
 			int t = 0;
 			
-			if (lvl->GetVoxel({ x, y }) != LevelPixel::LevelGenDirt) continue;
+			if (lvl->GetPixel({ x, y }) != LevelPixel::LevelGenDirt) continue;
 			
-			t += (x!=0            )       && lvl->GetVoxel({ x - 1, y }) == LevelPixel::LevelGenRock;
-			t += (x!=lvl->GetSize().x-1 ) && lvl->GetVoxel({ x + 1, y }) == LevelPixel::LevelGenRock;
-			t += (y!=0            )       && lvl->GetVoxel({ x, y - 1 }) == LevelPixel::LevelGenRock;
-			t += (y!=lvl->GetSize().y-1)  && lvl->GetVoxel({ x, y + 1 }) == LevelPixel::LevelGenRock;
+			t += (x!=0            )       && lvl->GetPixel({ x - 1, y }) == LevelPixel::LevelGenRock;
+			t += (x!=lvl->GetSize().x-1 ) && lvl->GetPixel({ x + 1, y }) == LevelPixel::LevelGenRock;
+			t += (y!=0            )       && lvl->GetPixel({ x, y - 1 }) == LevelPixel::LevelGenRock;
+			t += (y!=lvl->GetSize().y-1)  && lvl->GetPixel({ x, y + 1 }) == LevelPixel::LevelGenRock;
 
-			if(t) lvl->SetVoxel({ x, y }, LevelPixel::LevelGenMark);
+			if(t) lvl->SetPixel({ x, y }, LevelPixel::LevelGenMark);
 		}
 	}
 	

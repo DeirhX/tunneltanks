@@ -93,8 +93,9 @@ struct TwoPlayerLayout : public SinglePlayerLayout
         ScreenRect{health_energy_two.Left() - health_letter_rect.size.x, health_energy_two.Top() + 1, 2, status_height};
 
      /* Resource overlays */
-    constexpr static ScreenRect resource_overlay_one = ScreenRect{player_view_one.pos, Size{13, 10}};
-    constexpr static ScreenRect resource_overlay_two = ScreenRect{player_view_two.pos, Size{13, 10}};
+    constexpr static ScreenRect resource_overlay_one = ScreenRect{player_view_one.pos, Size{20, 20}};
+    constexpr static ScreenRect resource_overlay_two =
+        ScreenRect{{player_view_two.Right() - 19, player_view_two.Top()}, Size{20, 20}};
 };
 
 void Screens::SinglePlayerScreenSetup(Screen * screen, World * world, Tank * player)
@@ -117,7 +118,8 @@ void Screens::SinglePlayerScreenSetup(Screen * screen, World * world, Tank * pla
                       static_cast<Color>(Palette.Get(Colors::StatusHealth)));
 
     /* Add resources owned overlay */
-    screen->AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(SinglePlayerLayout::resource_overlay));
+    screen->AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(SinglePlayerLayout::resource_overlay,
+                                                                       HorizontalAlign::Left, player));
 
     GetSystem()->GetCursor()->Show();
 }
@@ -154,8 +156,10 @@ void Screens::TwoPlayerScreenSetup(Screen * screen, World * world, Tank * player
                       static_cast<Color>(Palette.Get(Colors::StatusHealth)));
 
     /* Add resources owned overlays */
-    screen->AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(TwoPlayerLayout::resource_overlay_one));
-    screen->AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(TwoPlayerLayout::resource_overlay_two));
+    screen->AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(TwoPlayerLayout::resource_overlay_one,
+                                                                       HorizontalAlign::Left, player_one));
+    screen->AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(TwoPlayerLayout::resource_overlay_two,
+                                                                       HorizontalAlign::Right, player_two));
 
     GetSystem()->GetCursor()->Hide();
 }

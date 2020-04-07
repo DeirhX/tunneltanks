@@ -23,13 +23,15 @@ fonts::BrodminGlyphInfo::BrodminGlyphInfo() : GlyphInfoTable(FontFace::Brodmin)
             pos.y += char_height;
         }
     }
+    pos.x += 1 * char_width;
+    glyphs[' '] = ImageRect{{pos}, {char_width, char_height}};
     /* Don't care about the rest for now */
 }
 
 void BitmapFont::Render(Screen * surface, ScreenRect screen_rect, std::string_view text, Color color,
-                        fonts::Alignment alignment)
+                        HorizontalAlign alignment)
 {
-    if (alignment == fonts::Alignment::Left)
+    if (alignment == HorizontalAlign::Left)
     {   /* Easy, just let the bitmap renderer do the clipping into screen_rect */
         for (char ch : text)
         {
@@ -71,7 +73,7 @@ FontRenderer::FontRenderer(BmpDecoder * bmp_decoder)
 }
 
 void FontRenderer::Render(FontFace font, Screen * screen, ScreenRect screen_rect, std::string_view text, Color color,
-                          fonts::Alignment alignment)
+                          HorizontalAlign alignment)
 {
     /* There's not other font now*/
     assert(font == FontFace::Brodmin);

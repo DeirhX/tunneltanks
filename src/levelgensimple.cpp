@@ -104,22 +104,22 @@ static void add_rock_lines(Level *lvl, Side s)
     Position p;
     if (s == SIDE_TOP)
         for (p.x = 0; p.x < lvl->GetSize().x; p.x++)
-            for (p.y = 0; lvl->GetVoxel(p) != static_cast<LevelPixel>(s); p.y++)
+            for (p.y = 0; lvl->GetPixel(p) != static_cast<LevelPixel>(s); p.y++)
                 lvl->SetVoxelRaw(p, LevelPixel::LevelGenRock);
 
     else if (s == SIDE_RIGHT)
         for (p.y = 0; p.y < lvl->GetSize().y; p.y++)
-            for (p.x = lvl->GetSize().x - 1; lvl->GetVoxel(p) != static_cast<LevelPixel>(s); p.x--)
+            for (p.x = lvl->GetSize().x - 1; lvl->GetPixel(p) != static_cast<LevelPixel>(s); p.x--)
                 lvl->SetVoxelRaw(p, LevelPixel::LevelGenRock);
 
     else if (s == SIDE_BOTTOM)
         for (p.x = 0; p.x < lvl->GetSize().x; p.x++)
-            for (p.y = lvl->GetSize().y - 1; lvl->GetVoxel(p) != static_cast<LevelPixel>(s); p.y--)
+            for (p.y = lvl->GetSize().y - 1; lvl->GetPixel(p) != static_cast<LevelPixel>(s); p.y--)
                 lvl->SetVoxelRaw(p, LevelPixel::LevelGenRock);
 
     else if (s == SIDE_LEFT)
         for (p.y = 0; p.y < lvl->GetSize().y; p.y++)
-            for (p.x = 0; lvl->GetVoxel(p) != static_cast<LevelPixel>(s); p.x++)
+            for (p.x = 0; lvl->GetPixel(p) != static_cast<LevelPixel>(s); p.x++)
                 lvl->SetVoxelRaw(p,  LevelPixel::LevelGenRock);
 }
 

@@ -75,7 +75,7 @@ class Tank final
 
     Position pos; /* Current tank position */
     Speed speed;  /* Velocity... ie: is it moving now? */
-    Direction direction = {};
+    Direction direction = {}; /* Heading of the tank */
 
     TankColor color;                          /* Unique id and also color of the tank */
     TankBase * tank_base = nullptr;           /* Base owned by the tank  */
@@ -87,6 +87,8 @@ class Tank final
     int health = tweak::tank::StartingShield;
     int energy = tweak::tank::StartingFuel;
     int lives_left = tweak::tank::MaxLives;
+    int dirt_mined = 0;
+    int rock_mined = 0;
 
     std::shared_ptr<Controller> controller = nullptr;
 
@@ -110,6 +112,8 @@ class Tank final
     [[nodiscard]] int GetEnergy() const { return this->energy; }
     [[nodiscard]] int GetHealth() const { return this->health; }
     [[nodiscard]] int GetLives() const { return this->lives_left; }
+    [[nodiscard]] int GetDirtMined() const { return this->dirt_mined; }
+    [[nodiscard]] int GetRockMined() const { return this->rock_mined; }
     [[nodiscard]] Level * GetLevel() { return this->level; };
 
     void Advance(World * world); /* Advance world-step */

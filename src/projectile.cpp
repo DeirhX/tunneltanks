@@ -40,7 +40,7 @@ void Bullet::Advance(TankList * tankList)
         }
 
         /* Else, did we hit something in the level? */
-        LevelPixel c = level->GetVoxel(this->pos.ToIntPosition());
+        LevelPixel c = level->GetPixel(this->pos.ToIntPosition());
         if (Pixel::IsAnyCollision(c))
         {
             for (Shrapnel & shrapnel : ExplosionDesc::AllDirections(
@@ -98,7 +98,7 @@ void FlyingBarrel::Advance(TankList * tankList, ExplosionFuncType explosionFunc)
             this->Invalidate();
             return false;
         }
-        LevelPixel c = level->GetVoxel(tested_pos.ToIntPosition());
+        LevelPixel c = level->GetPixel(tested_pos.ToIntPosition());
         if (Pixel::IsAnyCollision(c))
         {
             this->Invalidate();
@@ -164,20 +164,20 @@ void Shrapnel::Advance(TankList * tankList)
 {
     auto AdvanceStepFunc = [this](PositionF tested_pos, PositionF prev_pos, TankList * tankList) {
         /* Make sure we didn't hit a level detail: */
-        LevelPixel c = level->GetVoxel(this->pos.ToIntPosition());
+        LevelPixel c = level->GetPixel(this->pos.ToIntPosition());
         if (Pixel::IsBlockingCollision(c))
         {
             if ((Pixel::IsConcrete(c) && Random.Bool(tweak::explosion::ChanceToDestroyConcrete))
                 || (Pixel::IsRock(c) && Random.Bool(tweak::explosion::ChanceToDestroyRock)))
             {
-                level->SetVoxel(this->pos.ToIntPosition(),
+                level->SetPixel(this->pos.ToIntPosition(),
                                 Random.Bool(500) ? LevelPixel::DecalHigh : LevelPixel::DecalLow);
             }
             this->Invalidate();
             return false;
         }
         /* Effects blank everything out in their paths: */
-        level->SetVoxel(this->pos.ToIntPosition(), Random.Bool(500) ? LevelPixel::DecalHigh : LevelPixel::DecalLow);
+        level->SetPixel(this->pos.ToIntPosition(), Random.Bool(500) ? LevelPixel::DecalHigh : LevelPixel::DecalLow);
         return true;
     };
 
@@ -218,10 +218,10 @@ void ConcreteFoam::Advance(TankList * tankList)
     auto AdvanceStepFunc = [this](PositionF tested_pos, PositionF prev_pos, TankList * tankList) {
 
         /* Make sure we didn't hit a level detail: */
-        LevelPixel c = level->GetVoxel(this->pos.ToIntPosition());
+        LevelPixel c = level->GetPixel(this->pos.ToIntPosition());
         if (Pixel::IsAnyCollision(c) && !Pixel::IsConcrete(c))
         {
-            level->SetVoxel(prev_pos.ToIntPosition(), Random.Bool(500) ? LevelPixel::ConcreteHigh : LevelPixel::ConcreteLow);
+            level->SetPixel(prev_pos.ToIntPosition(), Random.Bool(500) ? LevelPixel::ConcreteHigh : LevelPixel::ConcreteLow);
             this->Invalidate();
             return false;
         }
@@ -240,10 +240,10 @@ void DirtFoam::Advance(TankList * tankList)
 {
     auto AdvanceStepFunc = [this](PositionF tested_pos, PositionF prev_pos, TankList * tankList) {
         /* Make sure we didn't hit a level detail: */
-        LevelPixel c = level->GetVoxel(this->pos.ToIntPosition());
+        LevelPixel c = level->GetPixel(this->pos.ToIntPosition());
         if (Pixel::IsAnyCollision(c))
         {
-            level->SetVoxel(prev_pos.ToIntPosition(),
+            level->SetPixel(prev_pos.ToIntPosition(),
                             Random.Bool(500) ? LevelPixel::DirtHigh : LevelPixel::DirtLow);
             this->Invalidate();
             return false;

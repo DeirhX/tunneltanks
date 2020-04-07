@@ -147,7 +147,7 @@ CollisionType Tank::GetCollision(int dir, Position position, TankList * tl)
             if (!c)
                 continue;
 
-            LevelPixel v = this->level->GetVoxel(position + off);
+            LevelPixel v = this->level->GetPixel(position + off);
 
             if (Pixel::IsDirt(v))
                 out = CollisionType::Dirt;
@@ -191,8 +191,8 @@ void Tank::HandleMove(TankList * tl)
         /* Now, is there room to move forward in that direction? */
         if (collision != CollisionType::Blocked)
         {
-
-            this->level->DigHole(this->pos + (1 * this->speed));
+            int pixels_dug = this->level->DigHole(this->pos + (1 * this->speed));
+            this->dirt_mined += pixels_dug;
             /* If so, then we can move: */
             if (collision != CollisionType::Dirt || this->turret.IsShooting())
             {

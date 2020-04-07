@@ -115,8 +115,10 @@ class Crosshair : public BitmapRender
 
 class ResourcesMinedDisplay : public GuiWidget
 {
-public:
-    ResourcesMinedDisplay(ScreenRect screen_rect) : GuiWidget(screen_rect) {}
+    Tank * tank;
+    HorizontalAlign alignment;
+  public:
+    ResourcesMinedDisplay(ScreenRect screen_rect, HorizontalAlign alignment, Tank * tank) : GuiWidget(screen_rect), tank(tank), alignment(alignment) {}
     void Draw(Screen * screen) override;
 };
 

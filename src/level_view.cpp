@@ -11,7 +11,7 @@ LevelView::QueryResult LevelView::QueryPoint(Offset offset)
 
 	if (abs(offset.x) >= Width / 2 || abs(offset.y) >= Height / 2) return QueryResult::OutOfBounds;
 
-	LevelPixel c = this->lvl->GetVoxel(pos + offset);
+	LevelPixel c = this->lvl->GetPixel(pos + offset);
 	if (Pixel::IsBlockingCollision(c)) return QueryResult::Collide;
 	return QueryResult::Open;
 }

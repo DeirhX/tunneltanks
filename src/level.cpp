@@ -37,7 +37,7 @@ void Level::SetLevelData(Position pos, LevelPixel value)
         this->dirt_adjacency_data.Invalidate(pos);*/
 }
 
-void Level::SetVoxel(Position pos, LevelPixel voxel)
+void Level::SetPixel(Position pos, LevelPixel voxel)
 {
     assert(IsInBounds(pos));
 
@@ -86,7 +86,7 @@ void Level::MaterializeLevelTerrainAndBases()
     this->is_ready = true;
 }
 
-LevelPixel Level::GetVoxel(Position pos) const
+LevelPixel Level::GetPixel(Position pos) const
 {
     if (!IsInBounds(pos))
         return LevelPixel::Rock;
@@ -106,11 +106,11 @@ void Level::GenerateDirtAndRocks()
     for (pos.y = 0; pos.y < this->size.y; pos.y++)
         for (pos.x = 0; pos.x < this->size.x; pos.x++)
         {
-            auto spot = this->GetVoxel(pos);
+            auto spot = this->GetPixel(pos);
             if (spot != LevelPixel::LevelGenDirt)
-                this->SetVoxel(pos, LevelPixel::Rock);
+                this->SetPixel(pos, LevelPixel::Rock);
             else
-                this->SetVoxel(pos, Random.Bool(500) ? LevelPixel::DirtLow : LevelPixel::DirtHigh);
+                this->SetPixel(pos, Random.Bool(500) ? LevelPixel::DirtLow : LevelPixel::DirtHigh);
         }
 }
 
@@ -127,12 +127,12 @@ void Level::CreateBase(Position pos, TankColor color)
             if (abs(x) == BASE_SIZE / 2 || abs(y) == BASE_SIZE / 2)
             { // Outline
                 if (x >= -BASE_DOOR_SIZE / 2 && x <= BASE_DOOR_SIZE / 2)
-                    SetVoxel(pix, LevelPixel::BaseBarrier);
+                    SetPixel(pix, LevelPixel::BaseBarrier);
                 else
-                    SetVoxel(pix, static_cast<LevelPixel>(static_cast<char>(LevelPixel::BaseMin) + color));
+                    SetPixel(pix, static_cast<LevelPixel>(static_cast<char>(LevelPixel::BaseMin) + color));
             }
             else
-                SetVoxel(pix, LevelPixel::Blank);
+                SetPixel(pix, LevelPixel::Blank);
         }
     }
 }
@@ -166,26 +166,28 @@ void Level::SetSpawn(TankColor color, Position position)
     this->SetSpawn(color, std::make_unique<TankBase>(position));
 }
 
-bool Level::DigHole(Position pos)
+int Level::DigHole(Position pos)
 {
-    bool digged = false;
+    int pixels_dug = 0;
 
     for (int ty = pos.y - 3; ty <= pos.y + 3; ty++)
         for (int tx = pos.x - 3; tx <= pos.x + 3; tx++)
         {
+            LevelPixel pixel = GetPixel({tx, ty});
             /* Don't go out-of-bounds: */
-            if (!Pixel::IsDiggable(GetVoxel({tx, ty})))
+            if (!Pixel::IsDiggable(pixel))
                 continue;
 
             /* Don't take out the corners: */
             if ((tx == pos.x - 3 || tx == pos.x + 3) && (ty == pos.y - 3 || ty == pos.y + 3))
                 continue;
 
-            SetVoxel({tx, ty}, LevelPixel::Blank);
-            digged = true;
+            if (Pixel::IsDirt(pixel))
+                ++pixels_dug;
+            SetPixel({tx, ty}, LevelPixel::Blank);
         }
 
-    return digged;
+    return pixels_dug;
 }
 
 void Level::CommitAll() const
@@ -204,7 +206,7 @@ bool Level::IsInBounds(Position pos) const
     return !(pos.x < 0 || pos.y < 0 || pos.x >= this->size.x || pos.y >= this->size.y);
 }
 
-void Level::CommitPixel(Position pos) const { drawBuffer->SetPixel(pos, GetVoxelColor(this->GetVoxel(pos))); }
+void Level::CommitPixel(Position pos) const { drawBuffer->SetPixel(pos, GetVoxelColor(this->GetPixel(pos))); }
 
 /* TODO: This needs to be done in a different way, as this approach will take 
  * MAX_TANKS^2 time to do all collision checks for all tanks. It should only
