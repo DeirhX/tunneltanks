@@ -195,8 +195,10 @@ void Screen::DrawLevel()
 {
     /* Erase everything */
     GetSystem()->GetSurface()->Clear();
+    GetLevelSurfaces()->terrain_surface.OverlaySurface(&GetLevelSurfaces()->objects_surface);
     /* Draw everything */
     std::for_each(this->widgets.begin(), this->widgets.end(), [this](auto & item) { item->Draw(this); });
+    GetLevelSurfaces()->objects_surface.Clear();
 }
 
 void Screen::DrawCurrentMode()
@@ -213,11 +215,13 @@ void Screen::DrawCurrentMode()
     /* Performance info */
     ++number_called;
     time_elapsed += elapsed.GetElapsed();
-    if (number_called % 100 == 1)
+    if (number_called % 100 == 0)
     {
         auto average = time_elapsed / number_called;
         DebugTrace<4>("Screen::DrawCurrentMode takes on average %lld.%03lld ms\r\n", average.count() / 1000,
                       average.count() % 1000);
+        time_elapsed = {};
+        number_called = 0;
     }
     /* End performance info */
 }
@@ -290,7 +294,7 @@ void Screen::Resize(Size size)
     this->screen_size = size;
 
     /* Redraw the game: */
-    this->DrawCurrentMode();
+    // this->DrawCurrentMode();
 }
 
 void Screen::SetDrawLevelSurfaces(LevelSurfaces * surfaces)

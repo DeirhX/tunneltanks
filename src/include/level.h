@@ -43,7 +43,7 @@ class TankBase
 
 struct LevelSurfaces
 {
-    LevelSurfaces(Size size) : terrain_surface(size), objects_surface(size) {}
+    LevelSurfaces(Size size) : terrain_surface(size, false), objects_surface(size, true) {}
     /* Holds rendered texture of the terrain, materializing each LevelPixel into color */
     WorldRenderSurface terrain_surface; 
     /* Holds a layer of frequently changed objects that will be drawn on top of terrain*/

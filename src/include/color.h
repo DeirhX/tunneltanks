@@ -24,6 +24,8 @@ struct Color : public ColorLayout
     template <typename PixelDataType = Color>
     PixelDataType BlendWith(PixelDataType other) const
     {
+        if (a == 0)
+            return other;
         if (a == 255)
             return PixelDataType(r, g, b);
         return PixelDataType((this->r * a) / 255 + other.r * (255 - a) / 255,

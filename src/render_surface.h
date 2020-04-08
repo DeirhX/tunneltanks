@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <queue>
 #include <vector>
 
 #include "color.h"
@@ -10,21 +11,27 @@
  */
 class Surface
 {
+ protected:
     std::vector<RenderedPixel> surface;
     Size size;
 
     bool use_default_color = false;
     RenderedPixel default_color;
 
+    bool use_change_list = false;
+    std::vector<Position> change_list;
   protected:
     Surface(Size size) : surface(size.x * size.y), size(size) {}
   public:
     void Clear();
     void Resize(Size new_size) { surface.resize(new_size.x * new_size.y); }
-    RenderedPixel GetPixel(const Position & position);
+    Size GetSize() const { return this->size; }
+
+    /* Most basic draw functions only, for everything else, there is ShapeRenderer*/
+    RenderedPixel GetPixel(const Position & position) const;
     void SetPixel(Position position, Color color);
     void FillRectangle(Rect rect, Color color);
-    Size GetSize() const { return this->size; }
+    void OverlaySurface(const Surface * other); /* Combines surfaces using *only* source alpha channel */
 
     /* Default color will be used if out-of-bounds pixels are requested */
     Color GetDefaultColor() const { return default_color; }
@@ -56,8 +63,9 @@ class ScreenRenderSurface : public Surface
  */
 class WorldRenderSurface : public Surface
 {
+    std::queue<Position> change_list;
   public:
-    WorldRenderSurface(Size size) : Surface(size) {}
+    WorldRenderSurface(Size size, bool use_change_list) : Surface(size) { this->use_change_list = use_change_list; }
     void SetPixel(Position position, Color color) { Surface::SetPixel(position, color); }
     void FillRectangle(Rect rect, Color color) { Surface::FillRectangle(rect, color); }
 };
