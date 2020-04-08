@@ -3,22 +3,22 @@
 #include "game.h"
 #include "random.h"
 
-void World::Advance(class LevelPixelSurface * draw_buffer)
+void World::Advance(WorldRenderSurface * objects_surface)
 {
     ++this->advance_count;
     RegrowPass();
 
     /* Clear everything: */
-    this->tank_list->for_each([=](Tank * t) { t->Clear(draw_buffer); });
-    this->projectile_list->Erase(draw_buffer, this->level.get());
+    this->tank_list->for_each([=](Tank * t) { t->Clear(objects_surface); });
+    this->projectile_list->Erase(objects_surface, this->level.get());
 
     /* Move everything: */
     this->projectile_list->Advance(this->level.get(), this->GetTankList());
     this->tank_list->for_each([=](Tank * t) { t->Advance(this); });
 
     /* Draw everything: */
-    this->projectile_list->Draw(draw_buffer);
-    this->tank_list->for_each([=](Tank * t) { t->Draw(draw_buffer); });
+    this->projectile_list->Draw(objects_surface);
+    this->tank_list->for_each([=](Tank * t) { t->Draw(objects_surface); });
 }
 
 void World::GameIsOver() { this->game->GameOver(); }

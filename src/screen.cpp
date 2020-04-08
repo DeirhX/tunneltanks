@@ -1,5 +1,5 @@
 #include "base.h"
-#include "level_pixel_surface.h"
+
 #include <gamelib.h>
 #include <level.h>
 #include <random.h>
@@ -11,9 +11,9 @@
 #include "game_system.h"
 
 /* The constructor sets the video mode: */
-Screen::Screen(bool is_fullscreen, Size render_surface_size) : is_fullscreen(is_fullscreen)
+Screen::Screen(bool is_fullscreen, ScreenRenderSurface * render_surface) : is_fullscreen(is_fullscreen), screen_surface(render_surface)
 {
-    this->Resize(render_surface_size);
+    this->Resize(screen_surface->GetSize());
 }
 
 /* Fills a surface with a blue/black pattern: */
@@ -21,13 +21,13 @@ void Screen::FillBackground()
 {
     Size dim = GetSystem()->GetRenderer()->GetSurfaceResolution();
 
-    GetSystem()->GetSurface()->DrawRectangle({{0, 0}, dim}, Palette.Get(Colors::Background));
+    GetSystem()->GetSurface()->FillRectangle({{0, 0}, dim}, Palette.Get(Colors::Background));
     ScreenPosition o;
     for (o.y = 0; o.y < dim.y; o.y++)
     {
         for (o.x = (o.y % 2) * 2; o.x < dim.x; o.x += 4)
         {
-            GetSystem()->GetSurface()->DrawRectangle(ScreenRect{o, Size{1, 1}}, Palette.Get(Colors::BackgroundDot));
+            GetSystem()->GetSurface()->FillRectangle(ScreenRect{o, Size{1, 1}}, Palette.Get(Colors::BackgroundDot));
         }
     }
 }
@@ -168,24 +168,8 @@ void Screen::DrawPixel(ScreenPosition pos, Color color)
 {
     //if (color.a == 0)
     //    return;
-    GetSystem()->GetSurface()->DrawPixel(ScreenPosition{pos.x, pos.y}, color);
+    GetSystem()->GetSurface()->SetPixel(ScreenPosition{pos.x, pos.y}, color);
     return;
-
-    //Offset adjusted_size = {/* Make some pixels uniformly larger to fill in given space relatively evenly  */
-    //                        (pos.x * this->pixels_skip.x) / tweak::screen::RenderSurfaceSize.x,
-    //                        (pos.y * this->pixels_skip.y) / tweak::screen::RenderSurfaceSize.y};
-    //Offset adjusted_next = {((pos.x + 1) * this->pixels_skip.x) / tweak::screen::RenderSurfaceSize.x,
-    //                        ((pos.y + 1) * this->pixels_skip.y) / tweak::screen::RenderSurfaceSize.y};
-
-    ///* Final pixel position, adjusted by required scaling and offset */
-    //auto native_pos = NativeScreenPosition{(pos.x * this->pixel_size.x) + this->screen_offset.x + adjusted_size.x,
-    //                                       (pos.y * this->pixel_size.y) + this->screen_offset.y + adjusted_size.y};
-
-    //auto final_size = Size{/* Compute size based on needing uneven scaling or not */
-    //                       this->pixel_size.x + (adjusted_size.x != adjusted_next.x),
-    //                       this->pixel_size.y + (adjusted_size.y != adjusted_next.y)};
-
-    //GetSystem()->GetSurface()->DrawRectangle(NativeRect{native_pos, final_size}, color);
 }
 
 ScreenPosition Screen::FromNativeScreen(NativeScreenPosition native_pos)
@@ -210,8 +194,7 @@ ScreenPosition Screen::FromNativeScreen(NativeScreenPosition native_pos)
 void Screen::DrawLevel()
 {
     /* Erase everything */
-    GetSystem()->GetSurface()->DrawRectangle(ScreenRect{{0, 0}, GetSystem()->GetRenderer()->GetSurfaceResolution()},
-                                             Palette.Get(Colors::Blank));
+    GetSystem()->GetSurface()->Clear();
     /* Draw everything */
     std::for_each(this->widgets.begin(), this->widgets.end(), [this](auto & item) { item->Draw(this); });
 }
@@ -222,7 +205,7 @@ void Screen::DrawCurrentMode()
     static int number_called = 0;
     Stopwatch<> elapsed;
 
-    if (this->mode == SCREEN_DRAW_LEVEL)
+    if (this->mode == ScreenDrawMode::DrawLevel)
     {
         this->DrawLevel();
     }
@@ -310,22 +293,14 @@ void Screen::Resize(Size size)
     this->DrawCurrentMode();
 }
 
-/* Set the current drawing mode: */
-void Screen::SetLevelDrawMode(LevelPixelSurface * b)
+void Screen::SetDrawLevelSurfaces(LevelSurfaces * surfaces)
 {
-    this->mode = SCREEN_DRAW_LEVEL;
-    this->drawBuffer = b;
+    this->mode = ScreenDrawMode::DrawLevel;
+    this->level_surfaces = surfaces;
 }
-
-/*
-void Screen::set_mode_menu( Menu *m) ;
-void Screen::set_mode_map( Map *m) ;
-*/
 
 void Screen::AddWidget(std::unique_ptr<widgets::GuiWidget> && widget)
 {
-    if (this->mode != SCREEN_DRAW_LEVEL)
-        return;
     // widgets::GuiWidget* raw_ptr = widget.get();
     this->widgets.emplace_back(std::move(widget));
     // return raw_ptr;
@@ -334,34 +309,20 @@ void Screen::AddWidget(std::unique_ptr<widgets::GuiWidget> && widget)
 /* Window creation should only happen in Level-drawing mode: */
 void Screen::AddWindow(ScreenRect rect, Tank * task)
 {
-    if (this->mode != SCREEN_DRAW_LEVEL)
-        return;
     this->widgets.emplace_back(std::make_unique<widgets::TankView>(rect, task));
 }
 
 /* We can add the health/energy status bars here: */
 void Screen::AddStatus(ScreenRect rect, Tank * tank, bool decreases_to_left)
 {
-    /* Verify that we're in the right mode, and that we have room: */
-    if (this->mode != SCREEN_DRAW_LEVEL)
-        return;
-
     /* Make sure that this status bar isn't too small: */
     if (rect.size.x <= 2 || rect.size.y <= 4)
         return;
     this->widgets.emplace_back(std::make_unique<widgets::StatusBar>(rect, tank, decreases_to_left));
 }
 
-/* We tell the graphics system about GUI graphics here:
- * 'color' has to be an ADDRESS of a color, so it can monitor changes to the
- * value, especially if the bit depth is changed...
- * TODO: That really isn't needed anymore, since we haven't cached mapped RGB
- *       values since the switch to gamelib... */
 void Screen::AddBitmap(ScreenRect rect, MonoBitmap * new_bitmap, Color color)
 {
-    /* Bitmaps are only for game mode: */
-    if (this->mode != SCREEN_DRAW_LEVEL)
-        return;
     if (!new_bitmap)
         return;
     this->widgets.emplace_back(std::make_unique<widgets::BitmapRender>(rect, new_bitmap, color));
@@ -373,7 +334,5 @@ void Screen::ClearGuiElements() { this->widgets.clear(); }
  * That is handled in game.c: */
 void Screen::AddController(Rect r)
 {
-    if (this->mode != SCREEN_DRAW_LEVEL)
-        return;
     this->controller.r = r;
 }

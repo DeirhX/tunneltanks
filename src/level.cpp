@@ -1,7 +1,7 @@
 #include "base.h"
 #include <cstdlib>
 
-#include "level_pixel_surface.h"
+
 #include <gamelib.h>
 #include <level.h>
 #include <random.h>
@@ -17,9 +17,11 @@
 #include "level_pixel.h"
 
 
-Level::Level(Size size, LevelPixelSurface * draw_buffer)
-    : data(size), dirt_adjacency_data(size, &data), size(size), drawBuffer(draw_buffer)
+Level::Level(Size size)
+    : size(size), data(size), surfaces(size)
 {
+    surfaces.terrain_surface.SetDefaultColor(static_cast<Color>(Palette.Get(Colors::Rock)));
+    surfaces.objects_surface.SetDefaultColor({});
     std::fill(this->data.begin(), this->data.end(), LevelPixel::LevelGenRock);
 }
 
@@ -196,7 +198,7 @@ DigResult Level::DigTankTunnel(Position pos, bool dig_with_torch)
     return result;
 }
 
-void Level::CommitAll() const
+void Level::CommitAll()
 {
     for (int y = 0; y < this->size.y; y++)
     {
@@ -212,7 +214,7 @@ bool Level::IsInBounds(Position pos) const
     return !(pos.x < 0 || pos.y < 0 || pos.x >= this->size.x || pos.y >= this->size.y);
 }
 
-void Level::CommitPixel(Position pos) const { drawBuffer->SetPixel(pos, GetVoxelColor(this->GetPixel(pos))); }
+void Level::CommitPixel(Position pos) { surfaces.terrain_surface.SetPixel(pos, GetVoxelColor(this->GetPixel(pos))); }
 
 /* TODO: This needs to be done in a different way, as this approach will take 
  * MAX_TANKS^2 time to do all collision checks for all tanks. It should only

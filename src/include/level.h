@@ -2,7 +2,7 @@
 
 #include "tweak.h"
 #include <array>
-#include "level_pixel_surface.h"
+
 #include <memory>
 #include <types.h>
 #include <vector>
@@ -11,6 +11,7 @@
 #include "level_adjacency.h"
 #include "parallelism.h"
 #include "raw_level_data.h"
+#include "render_surface.h"
 
 enum class LevelPixel : char;
 
@@ -40,13 +41,23 @@ class TankBase
 };
 
 
+struct LevelSurfaces
+{
+    LevelSurfaces(Size size) : terrain_surface(size), objects_surface(size) {}
+    /* Holds rendered texture of the terrain, materializing each LevelPixel into color */
+    WorldRenderSurface terrain_surface; 
+    /* Holds a layer of frequently changed objects that will be drawn on top of terrain*/
+    WorldRenderSurface objects_surface; 
+};
+
 class Level
 {
   private:
-    RawLevelData data;
-    DirtAdjacencyData dirt_adjacency_data;
     Size size;
-    LevelPixelSurface * drawBuffer;
+    RawLevelData data; /* Holds logical terrain pixels - enum LevelPixel : char */
+    LevelSurfaces surfaces; /* Holds terrain and object surfaces for drawing */
+
+    //DirtAdjacencyData dirt_adjacency_data;
     std::vector<std::unique_ptr<TankBase>> spawn;
     bool is_ready = false;
 
@@ -55,9 +66,10 @@ class Level
     void SetLevelData(Position pos, LevelPixel value);
 
   public:
-    Level(Size size, LevelPixelSurface * db);
+    Level(Size size);
 
-    Size GetSize() const { return size; };
+    Size GetSize() const { return this->size; };
+    LevelSurfaces * GetSurfaces() { return &this->surfaces; }
 
     /* Voxel get-set-reference operations */
     void SetPixel(Position pos, LevelPixel voxel);
@@ -70,9 +82,9 @@ class Level
     LevelPixel GetVoxelRaw(int offset) const { return this->data[offset]; }
     //LevelPixel & VoxelRaw(Position pos);
 
-    /* Draw buffer interaction */
-    void CommitPixel(Position pos) const;
-    void CommitAll() const;
+    /* Terrain surface interaction */
+    void CommitPixel(Position pos);
+    void CommitAll();
     void DumpBitmap(const char * filename) const;
 
     /* Color lookup. Can be somewhere else. */
@@ -83,7 +95,7 @@ class Level
     int CountNeighbors(Position pos, LevelPixel neighbor_value);
     template <typename CountFunc>
     int CountNeighborValues(Position pos, CountFunc count_func);
-    uint8_t DirtPixelsAdjacent(Position pos) { return this->dirt_adjacency_data.Get(pos); }
+    //uint8_t DirtPixelsAdjacent(Position pos) { return this->dirt_adjacency_data.Get(pos); }
 
     void MaterializeLevelTerrainAndBases();
 

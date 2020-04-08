@@ -141,9 +141,6 @@
     <ClCompile Include="src\level_pixel_surface.cpp">
       <Filter>src\draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\render_surface.cpp">
-      <Filter>src\system</Filter>
-    </ClCompile>
     <ClCompile Include="src\color_palette.cpp">
       <Filter>src\draw</Filter>
     </ClCompile>
@@ -158,6 +155,12 @@
     </ClCompile>
     <ClCompile Include="src\shape_renderer.cpp">
       <Filter>src\draw\shapes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\harvester.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render_surface.cpp">
+      <Filter>src\draw</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -306,9 +309,6 @@
     <ClInclude Include="src\include\level_pixel_surface.h">
       <Filter>src\draw</Filter>
     </ClInclude>
-    <ClInclude Include="src\render_surface.h">
-      <Filter>src\system</Filter>
-    </ClInclude>
     <ClInclude Include="src\include\color_palette.h">
       <Filter>src\draw</Filter>
     </ClInclude>
@@ -323,6 +323,12 @@
     </ClInclude>
     <ClInclude Include="src\shape_renderer.h">
       <Filter>src\draw\shapes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\harvester.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render_surface.h">
+      <Filter>src\draw</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

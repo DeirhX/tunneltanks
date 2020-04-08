@@ -3,6 +3,7 @@
 #include <string>
 
 #include "base.h"
+#include "game_system.h"
 #include "screen.h"
 
 #include "random.h"
@@ -92,13 +93,14 @@ void TankView::Draw(Screen *screen)
         {
             int screen_x = x + this->screen_rect.pos.x, screen_y = y + this->screen_rect.pos.y;
 
-            Color c = screen->GetDrawBuffer()->GetPixel(
+            RenderedPixel color = screen->GetLevelSurfaces()->terrain_surface.GetPixel(
                 Position{x + tank_pos.x - this->screen_rect.size.x / 2, y + tank_pos.y - this->screen_rect.size.y / 2});
-            screen->DrawPixel({screen_x, screen_y}, c);
+            screen->DrawPixel({screen_x, screen_y}, color);
         }
     }
 
-    ShapeRenderer::DrawCircle(screen, this->screen_rect.Center(), 30, Palette.Get(Colors::ResourceInfoBackground),
+    ShapeRenderer::DrawCircle(screen->GetScreenSurface(), Position{this->screen_rect.Center()}, 30,
+                              Palette.Get(Colors::ResourceInfoBackground),
                                  Palette.Get(Colors::ResourceInfoOutline)); 
 
     /* Possibly overlay with static */
@@ -263,7 +265,8 @@ void Crosshair::Draw(Screen *)
 void ResourcesMinedDisplay::Draw(Screen * screen)
 {
     /* Draw outline and background */
-    ShapeRenderer::DrawRectangle(screen, this->screen_rect, true, Palette.Get(Colors::ResourceInfoBackground),
+    ShapeRenderer::DrawRectangle(screen->GetScreenSurface(), Rect{this->screen_rect}, true,
+                                 Palette.Get(Colors::ResourceInfoBackground),
                                  Palette.Get(Colors::ResourceInfoOutline)); 
 
     ScreenRect text_rect = {this->screen_rect.Left() + 2, this->screen_rect.Top() + 2, this->screen_rect.size.x - 4,

@@ -12,14 +12,14 @@ class SdlRenderer final : public Renderer
     holder_with_deleter<SDL_Renderer> native_renderer = {};
     holder_with_deleter<SDL_Texture> native_texture = {};
 
-    RenderSurface * render_surface = {};
+    ScreenRenderSurface * render_surface = {};
     SdlWindow * owning_window = nullptr;
 
   public:
-    explicit SdlRenderer(SdlWindow * owning_window, RenderSurface * render_surface);
+    explicit SdlRenderer(SdlWindow * owning_window, ScreenRenderSurface * render_surface);
     void SetSurfaceResolution(Size size) override;
     Size GetSurfaceResolution() override { return this->render_surface->GetSize(); }
-    void RenderFrame(const RenderSurface * surface) override;
+    void RenderFrame(const ScreenRenderSurface * surface) override;
   public:
     void Recreate(SdlWindow * new_owning_window);
 };

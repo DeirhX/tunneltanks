@@ -161,7 +161,7 @@ int GameMain(int argc, char * argv[])
         /* If we're only writing the generated level to file, then just do that: */
         if (outfile_name)
         {
-            auto lvl = std::make_unique<Level>(size, nullptr);
+            auto lvl = std::make_unique<Level>(size);
 
             /* Generate our random level: */
             generate_level(lvl.get(), GeneratorFromName(id));
@@ -203,7 +203,8 @@ int GameMain(int argc, char * argv[])
         ::global_game_system = CreateGameSystem(config.video_config);
         ::global_game = std::make_unique<Game>(config);
         /* Play the game: */
-        gamelib_main_loop([]() -> bool { return global_game->AdvanceStep(); });
+        int frames_to_do = 1500;
+        gamelib_main_loop([&frames_to_do]() -> bool { return global_game->AdvanceStep() && frames_to_do--; });
 
         /* Release global resources earlier than atexit global teardown*/
         ::global_game.reset();

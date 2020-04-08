@@ -46,8 +46,8 @@ struct Projectile
     virtual ~Projectile() = default;
     //virtual ProjectileType GetType() = 0;
     virtual void Advance(class TankList * tankList) = 0;
-    virtual void Draw(class LevelPixelSurface * drawBuffer) = 0;
-    virtual void Erase(LevelPixelSurface * drawBuffer, Level * level) = 0;
+    virtual void Draw(class Surface * drawBuffer) = 0;
+    virtual void Erase(Surface * drawBuffer, Level * level) = 0;
 
     bool IsInvalid() const { return !is_alive; }
     bool IsValid() const { return is_alive; }
@@ -71,8 +71,8 @@ class Shrapnel : public Projectile
     //ProjectileType GetType() override { return ProjectileType::Shrapnel; }
 
     void Advance(class TankList * tankList) override;
-    void Draw(class LevelPixelSurface * drawBuffer) override;
-    void Erase(LevelPixelSurface * drawBuffer, Level * level) override;
+    void Draw(class Surface * drawBuffer) override;
+    void Erase(Surface * drawBuffer, Level * level) override;
 
   protected:
     template <typename OnAdvanceFuncType>
@@ -89,7 +89,7 @@ class ConcreteFoam : public Shrapnel
   public:
     ConcreteFoam(Position position, SpeedF speed, int life, Level * level) : Shrapnel(position, speed, life, level) {}
     void Advance(class TankList * tankList) override;
-    void Draw(class LevelPixelSurface * drawBuffer) override;
+    void Draw(class Surface * drawBuffer) override;
 };
 
 /*
@@ -102,7 +102,7 @@ class DirtFoam : public Shrapnel
   public:
     DirtFoam(Position position, SpeedF speed, int life, Level * level) : Shrapnel(position, speed, life, level) {}
     void Advance(class TankList * tankList) override;
-    void Draw(class LevelPixelSurface * drawBuffer) override;
+    void Draw(class Surface * drawBuffer) override;
 };
 
 /*
@@ -135,8 +135,8 @@ class Bullet : public MotionBlurProjectile
     //ProjectileType GetType() override { return ProjectileType::Bullet; }
 
     void Advance(class TankList * tankList) override;
-    void Draw(class LevelPixelSurface * drawBuffer) override;
-    void Erase(LevelPixelSurface * drawBuffer, Level * level) override;
+    void Draw(class Surface * drawBuffer) override;
+    void Erase(Surface * drawBuffer, Level * level) override;
 };
 
 /*
@@ -158,8 +158,8 @@ class FlyingBarrel : public Projectile
     template <typename ExplosionFuncType>
     void Advance(TankList * tankList, ExplosionFuncType explosionFunc);
 
-    void Draw(LevelPixelSurface * drawBuffer) override;
-    void Erase(LevelPixelSurface * drawBuffer, Level * level) override;
+    void Draw(Surface * drawBuffer) override;
+    void Erase(Surface * drawBuffer, Level * level) override;
 };
 
 /*

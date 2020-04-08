@@ -4,7 +4,7 @@
 #include "bitmaps.h"
 
 class GameSystem;
-class RenderSurface;
+class ScreenRenderSurface;
 class BmpDecoder;
 
 

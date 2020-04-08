@@ -3,7 +3,7 @@
 /* For the controllers/AIs: */
 
 #include <controllersdl.h>
-#include "level_pixel_surface.h"
+
 #include <level.h>
 #include <level_view.h>
 #include <projectile_list.h>
@@ -61,7 +61,7 @@ class TankTurret
     void ApplyControllerOutput(ControllerOutput controls);
 
     void Advance(Position tank_position, widgets::Crosshair * crosshair);
-    void Draw(LevelPixelSurface * drawBuff) const;
+    void Draw(Surface * drawBuff) const;
     void Erase(Level * level) const;
     void SetDirection(DirectionF new_dir) { this->direction = new_dir; }
 
@@ -128,8 +128,8 @@ class Tank final
 
     CollisionType GetCollision(int dir, Position pos, TankList * tl);
 
-    void Clear(LevelPixelSurface * drawBuff) const;
-    void Draw(LevelPixelSurface * drawBuff) const;
+    void Clear(Surface * surface) const;
+    void Draw(Surface * surface) const;
 
     //void ReturnBullet();
 

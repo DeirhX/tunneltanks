@@ -246,12 +246,23 @@ struct RectBase
     constexpr bool operator!=(const RectBase & other) { return !this->operator==(other); }
 };
 
+/* Rectangle in units of our pixelated screen (render) surface */
+struct ScreenRect : RectBase<ScreenPosition>
+{
+    constexpr ScreenRect() = default;
+    constexpr ScreenRect(ScreenPosition pos, Size size) : RectBase{pos.x, pos.y, size.x, size.y} {}
+    constexpr ScreenRect(int pos_x, int pos_y, int size_x, int size_y) : RectBase{pos_x, pos_y, size_x, size_y} {}
+};
+
 /* A rectangle in world/level coordinates.*/
 struct Rect : RectBase<Position>
 {
     constexpr Rect() = default;
     constexpr Rect(Position pos, Size size) : RectBase{pos.x, pos.y, size.x, size.y} {}
     constexpr Rect(int pos_x, int pos_y, int size_x, int size_y) : RectBase{pos_x, pos_y, size_x, size_y} {}
+    explicit constexpr Rect(ScreenRect screen) : Rect{screen.pos.x, screen.pos.y, screen.size.x, screen.size.y} {}
+    explicit operator ScreenRect() const {return ScreenRect{this->pos.x, this->pos.y, this->size.x, this->size.y};
+}
 };
 
 /* Rectangle inside an image/bitmap used as a source of bliting to screen */
@@ -260,14 +271,6 @@ struct ImageRect : RectBase<Position>
     constexpr ImageRect() = default;
     constexpr ImageRect(Position pos, Size size) : RectBase{pos.x, pos.y, size.x, size.y} {}
     constexpr ImageRect(int pos_x, int pos_y, int size_x, int size_y) : RectBase{pos_x, pos_y, size_x, size_y} {}
-};
-
-/* Rectangle in units of our pixelated screen (render) surface */
-struct ScreenRect : RectBase<ScreenPosition>
-{
-    constexpr ScreenRect() = default;
-    constexpr ScreenRect(ScreenPosition pos, Size size) : RectBase{pos.x, pos.y, size.x, size.y} {}
-    constexpr ScreenRect(int pos_x, int pos_y, int size_x, int size_y) : RectBase{pos_x, pos_y, size_x, size_y} {}
 };
 
 /* Rectangle in native units of hosting window/surface. This needs to get used only if we want to draw an overlay over our pixelated surface */

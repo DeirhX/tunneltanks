@@ -14,7 +14,7 @@
  *  SdlRenderer wrapper over SDL_Renderer, SDL_Texture and SDL_Surface
  */
 
-SdlRenderer::SdlRenderer(SdlWindow * owning_window, RenderSurface * render_surface) : render_surface(render_surface)
+SdlRenderer::SdlRenderer(SdlWindow * owning_window, ScreenRenderSurface * render_surface) : render_surface(render_surface)
 {
     Recreate(owning_window);
 }
@@ -25,7 +25,7 @@ void SdlRenderer::SetSurfaceResolution(Size size)
     Recreate(this->owning_window);
 }
 
-void SdlRenderer::RenderFrame(const RenderSurface * surface)
+void SdlRenderer::RenderFrame(const ScreenRenderSurface * surface)
 {
     if (SDL_UpdateTexture(this->native_texture.get(), nullptr, this->render_surface->GetRawData(),
                           this->render_surface->GetRowPitch()))

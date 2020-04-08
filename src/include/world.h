@@ -21,7 +21,7 @@ class World
           level(std::move(level))
     {
     }
-    void Advance(class LevelPixelSurface * drawBuffer);
+    void Advance(class WorldRenderSurface * objects_surface);
 
     TankList * GetTankList() { return this->tank_list.get(); }
     ProjectileList * GetProjectileList() { return this->projectile_list.get(); }

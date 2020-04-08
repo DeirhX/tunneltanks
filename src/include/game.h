@@ -15,7 +15,6 @@ class Game
 
     GameConfig config = {};
 
-    std::unique_ptr<class LevelPixelSurface> draw_buffer;
     std::unique_ptr<class Screen> screen;
     std::unique_ptr<class World> world;
 

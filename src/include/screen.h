@@ -1,5 +1,5 @@
 #pragma once
-#include "level_pixel_surface.h"
+
 #include <level.h>
 #include <tank.h>
 #include <types.h>
@@ -10,11 +10,11 @@
 
 class World;
 
-typedef enum ScreenDrawMode
+enum class ScreenDrawMode
 {
-    SCREEN_DRAW_INVALID,
-    SCREEN_DRAW_LEVEL
-} ScreenDrawMode;
+    Invalid,
+    DrawLevel
+};
 
 struct GUIController
 {
@@ -34,12 +34,12 @@ class Screen
     std::vector<std::unique_ptr<widgets::GuiWidget>> widgets;
 
     GUIController controller;
-    ScreenDrawMode mode = SCREEN_DRAW_INVALID;
-    LevelPixelSurface *drawBuffer = nullptr;
+    ScreenDrawMode mode = ScreenDrawMode::DrawLevel;
 
-
+    LevelSurfaces * level_surfaces;
+    ScreenRenderSurface * screen_surface;
   public:
-    Screen(bool is_fullscreen, Size render_surface_size);
+    Screen(bool is_fullscreen, ScreenRenderSurface * render_surface);
 
     /* Resizing the screen: */
     bool GetFullscreen() { return is_fullscreen; }
@@ -47,12 +47,15 @@ class Screen
     void Resize(Size size);
 
     /* Set the current drawing mode: */
-    void SetLevelDrawMode(LevelPixelSurface *b);
-    /* Source contents of the screen */
-    LevelPixelSurface *GetDrawBuffer() { return drawBuffer; }
+    void SetDrawLevelSurfaces(LevelSurfaces * surfaces);
+
+    LevelSurfaces * GetLevelSurfaces() { return this->level_surfaces; }
+    ScreenRenderSurface * GetScreenSurface() { return this->screen_surface; }
+
 
     /* A few useful functions for external drawing: */
     void DrawPixel(ScreenPosition pos, Color color);
+
     /* These will say what virtual pixel a physical pixel resides on: */
     ScreenPosition FromNativeScreen(NativeScreenPosition pos);
     //NativeScreenPosition ToNativeScreen(ScreenPosition pos);

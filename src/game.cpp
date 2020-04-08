@@ -5,7 +5,7 @@
 #include <aitwitch.h>
 #include <bitmaps.h>
 #include <chrono>
-#include "level_pixel_surface.h"
+
 #include <game.h>
 #include <gamelib.h>
 #include <level.h>
@@ -16,6 +16,8 @@
 #include <tanklist.h>
 #include <tweak.h>
 #include <world.h>
+
+#include "game_system.h"
 
 #define ERR_OUT(msg) gamelib_error("PROGRAMMING ERROR: " msg)
 
@@ -108,8 +110,7 @@ Game::Game(GameConfig config)
 
     /* Initialize most of the structures: */
     this->screen =
-        std::make_unique<Screen>(this->config.video_config.is_fullscreen, this->config.video_config.render_surface_size);
-    this->draw_buffer = std::make_unique<LevelPixelSurface>(this->config.level_size);
+        std::make_unique<Screen>(this->config.video_config.is_fullscreen, GetSystem()->GetSurface());
 
     /* Generate our random level: */
     int TestIterations = 20;
@@ -120,7 +121,7 @@ Game::Game(GameConfig config)
     std::unique_ptr<Level> level;
     for (int i = TestIterations; i-- > 0;)
     {
-        level = std::make_unique<Level>(this->config.level_size, this->draw_buffer.get());
+        level = std::make_unique<Level>(this->config.level_size);
         time_taken += generate_level(level.get(), this->config.level_generator);
     }
     auto average_time = time_taken / TestIterations;
@@ -137,9 +138,8 @@ Game::Game(GameConfig config)
         level->DumpBitmap("debug_start.bmp");
 
     /* Push the level to the draw buffer */
-    this->draw_buffer->SetDefaultColor(static_cast<Color>(Palette.Get(Colors::Rock)));
     level->CommitAll();
-    this->screen->SetLevelDrawMode(this->draw_buffer.get());
+    this->screen->SetDrawLevelSurfaces(level->GetSurfaces());
 
     /* Create the world */
     world = std::make_unique<World>(this, std::move(tank_list), std::move(projectile_list), std::move(level));
@@ -194,7 +194,8 @@ bool Game::AdvanceStep()
     }
 
     /* Do the world advance - apply controller input, move stuff, commit level bitmap to DrawBuffer */
-    world->Advance(this->draw_buffer.get());
+    /* TODO: Don't get the surface this stupid way */
+    world->Advance(&this->world->GetLevel()->GetSurfaces()->terrain_surface);
     /* Draw our current state */
     this->screen->DrawCurrentMode();
 

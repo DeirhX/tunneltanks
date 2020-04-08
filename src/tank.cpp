@@ -1,6 +1,6 @@
 #include "base.h"
 #include <algorithm>
-#include "level_pixel_surface.h"
+
 #include <level.h>
 #include <level_view.h>
 #include <projectile.h>
@@ -62,7 +62,7 @@ void TankTurret::Advance(Position tank_position, widgets::Crosshair * crosshair)
     this->current_length = turret_len;
 }
 
-void TankTurret::Draw(LevelPixelSurface * drawBuff) const
+void TankTurret::Draw(Surface * drawBuff) const
 {
     for (int i = 0; i < this->current_length; ++i)
     {
@@ -270,7 +270,7 @@ void Tank::TryBaseHeal()
         this->AlterEnergy(tweak::tank::EnemyChargeSpeed);
 }
 
-void Tank::Draw(LevelPixelSurface * drawBuff) const
+void Tank::Draw(Surface * surface) const
 {
     if (!this->health)
         return;
@@ -280,14 +280,14 @@ void Tank::Draw(LevelPixelSurface * drawBuff) const
         {
             char val = TANK_SPRITE[this->direction][y][x];
             if (val)
-                drawBuff->SetPixel(Position{this->pos.x + x - 3, this->pos.y + y - 3},
+                surface->SetPixel(Position{this->pos.x + x - 3, this->pos.y + y - 3},
                                    Palette.GetTank(this->color)[val - 1]);
         }
 
-    this->turret.Draw(drawBuff);
+    this->turret.Draw(surface);
 }
 
-void Tank::Clear(LevelPixelSurface * drawBuff) const
+void Tank::Clear(Surface * drawBuff) const
 {
     if (!this->health)
         return;

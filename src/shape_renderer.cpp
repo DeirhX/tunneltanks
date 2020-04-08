@@ -2,7 +2,16 @@
 #include "color.h"
 #include "screen.h"
 
-void ShapeRenderer::DrawRectangle(Screen * screen, ScreenRect screen_rect, bool round_corner_pixels, Color fill_color,
+void ShapeRenderer::FillRectangle(Surface * surface, Rect rect, Color color)
+{
+    Position pos;
+    for (pos.x = rect.Left(); pos.x < rect.Right(); ++pos.x)
+        for (pos.y = rect.Top(); pos.y < rect.Bottom(); ++pos.y)
+            surface->SetPixel(pos, color);
+}
+
+
+void ShapeRenderer::DrawRectangle(Surface * surface, Rect screen_rect, bool round_corner_pixels, Color fill_color,
                                   Color outline_color)
 {
     for (int x = screen_rect.Left(); x <= screen_rect.Right(); ++x)
@@ -23,16 +32,16 @@ void ShapeRenderer::DrawRectangle(Screen * screen, ScreenRect screen_rect, bool 
             {
                 if (fill_color.a == 0)
                     continue;
-                screen->DrawPixel(ScreenPosition{x, y}, fill_color);
+                surface->SetPixel(Position{x, y}, fill_color);
             }
             else
             {
-                screen->DrawPixel(ScreenPosition{x, y}, outline_color);
+                surface->SetPixel(Position{x, y}, outline_color);
             }
         }
 }
 
-void ShapeRenderer::DrawCircle(Screen * screen, ScreenPosition center, int radius, Color fill_color,
+void ShapeRenderer::DrawCircle(Surface * surface, Position center, int radius, Color fill_color,
     Color outline_color)
 {
     /* Start on right side of circle and mirror every drawn pixel into 8 octants */
@@ -49,15 +58,15 @@ void ShapeRenderer::DrawCircle(Screen * screen, ScreenPosition center, int radiu
     {
         if (offset_y)
         {   /* First pass should draw only 4 beginning pixels on x, -x, y and -y axes. Rest diverge into 8 directions. */
-            screen->DrawPixel(center + Offset{offset_x, offset_y}, outline_color);
-            screen->DrawPixel(center + Offset{offset_y, offset_x}, outline_color);
-            screen->DrawPixel(center + Offset{-offset_x, -offset_y}, outline_color);
-            screen->DrawPixel(center + Offset{-offset_y, -offset_x}, outline_color);
+            surface->SetPixel(center + Offset{offset_x, offset_y}, outline_color);
+            surface->SetPixel(center + Offset{offset_y, offset_x}, outline_color);
+            surface->SetPixel(center + Offset{-offset_x, -offset_y}, outline_color);
+            surface->SetPixel(center + Offset{-offset_y, -offset_x}, outline_color);
         }
-        screen->DrawPixel(center + Offset{-offset_x, offset_y}, outline_color);
-        screen->DrawPixel(center + Offset{-offset_y, offset_x}, outline_color);
-        screen->DrawPixel(center + Offset{offset_x, -offset_y}, outline_color);
-        screen->DrawPixel(center + Offset{offset_y, -offset_x}, outline_color);
+        surface->SetPixel(center + Offset{-offset_x, offset_y}, outline_color);
+        surface->SetPixel(center + Offset{-offset_y, offset_x}, outline_color);
+        surface->SetPixel(center + Offset{offset_x, -offset_y}, outline_color);
+        surface->SetPixel(center + Offset{offset_y, -offset_x}, outline_color);
 
         /* Decide if we end up with distance error from center by going directly up 
          *  or by going up and left (this is then mirrored into every octant)

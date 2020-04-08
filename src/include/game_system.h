@@ -18,7 +18,7 @@ class Renderer
     virtual ~Renderer() = default;
     virtual void SetSurfaceResolution(Size size) = 0;
     virtual Size GetSurfaceResolution() = 0;
-    virtual void RenderFrame(const RenderSurface * surface) = 0;
+    virtual void RenderFrame(const ScreenRenderSurface * surface) = 0;
 };
 
 /*
@@ -65,12 +65,11 @@ class GameSystem
 {
   protected:
     
-    RenderSurface render_surface;
-
+    ScreenRenderSurface render_surface; /* Final rendered picture, ready to be copied into VRAM */
   public:
-    GameSystem(Size render_surface_size) : render_surface(render_surface_size) {}
+    GameSystem(Size render_surface_size) : render_surface(render_surface_size) { }
     virtual ~GameSystem() = default;
-    RenderSurface * GetSurface()
+    ScreenRenderSurface * GetSurface()
     {
         return &render_surface;
     } /* This should be effective, we'll be copying pixels left and right */

@@ -60,13 +60,13 @@ void Bullet::Advance(TankList * tankList)
     Raycaster::Cast(this->pos, this->pos + (this->speed), IteratePositions);
 }
 
-void Bullet::Draw(LevelPixelSurface * drawBuffer)
+void Bullet::Draw(Surface * drawBuffer)
 {
     drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::FireHot));
     drawBuffer->SetPixel(this->pos_blur_from.ToIntPosition(), Palette.Get(Colors::FireCold));
 }
 
-void Bullet::Erase(LevelPixelSurface * drawBuffer, Level *)
+void Bullet::Erase(Surface * drawBuffer, Level *)
 {
     level->CommitPixel(this->pos.ToIntPosition());
     level->CommitPixel(this->pos_blur_from.ToIntPosition());
@@ -120,12 +120,12 @@ void FlyingBarrel::Advance(TankList * tankList, ExplosionFuncType explosionFunc)
     }
 }
 
-void FlyingBarrel::Draw(LevelPixelSurface * drawBuffer)
+void FlyingBarrel::Draw(Surface * drawBuffer)
 {
     drawBuffer->SetPixel(this->pos.ToIntPosition(), draw_color);
 }
 
-void FlyingBarrel::Erase(LevelPixelSurface * drawBuffer, Level *)
+void FlyingBarrel::Erase(Surface * drawBuffer, Level *)
 {
     level->CommitPixel(this->pos.ToIntPosition());
 }
@@ -206,12 +206,12 @@ void Shrapnel::AdvanceShrapnel(TankList * tankList, OnAdvanceFuncType OnAdvanceF
 }
 
 
-void Shrapnel::Draw(LevelPixelSurface * drawBuffer)
+void Shrapnel::Draw(Surface * drawBuffer)
 {
     drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::FireHot));
 }
 
-void Shrapnel::Erase(LevelPixelSurface * drawBuffer, Level *) { level->CommitPixel(this->pos.ToIntPosition()); }
+void Shrapnel::Erase(Surface * drawBuffer, Level *) { level->CommitPixel(this->pos.ToIntPosition()); }
 
 void ConcreteFoam::Advance(TankList * tankList)
 {
@@ -231,7 +231,7 @@ void ConcreteFoam::Advance(TankList * tankList)
     AdvanceShrapnel(tankList, AdvanceStepFunc);
 }
 
-void ConcreteFoam::Draw(LevelPixelSurface * drawBuffer)
+void ConcreteFoam::Draw(Surface * drawBuffer)
 {
     drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::ConcreteShot));
 }
@@ -254,7 +254,7 @@ void DirtFoam::Advance(TankList * tankList)
     AdvanceShrapnel(tankList, AdvanceStepFunc);
 }
 
-void DirtFoam::Draw(LevelPixelSurface * drawBuffer)
+void DirtFoam::Draw(Surface * drawBuffer)
 {
     drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::DirtContainerShot));
 }
