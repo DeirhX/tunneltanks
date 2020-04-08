@@ -287,19 +287,6 @@ void Tank::Draw(Surface * surface) const
     this->turret.Draw(surface);
 }
 
-void Tank::Clear(Surface * drawBuff) const
-{
-    if (!this->health)
-        return;
-
-    for (int y = 0; y < 7; y++)
-        for (int x = 0; x < 7; x++)
-            if (TANK_SPRITE[this->direction][y][x])
-                level->CommitPixel(Position{this->pos.x + x - 3, this->pos.y + y - 3});
-
-    this->turret.Erase(level);
-}
-
 void Tank::AlterEnergy(int diff)
 {
     /* You can't alter energy if the tank is dead: */

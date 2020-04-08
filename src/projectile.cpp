@@ -66,12 +66,6 @@ void Bullet::Draw(Surface * drawBuffer)
     drawBuffer->SetPixel(this->pos_blur_from.ToIntPosition(), Palette.Get(Colors::FireCold));
 }
 
-void Bullet::Erase(Surface * drawBuffer, Level *)
-{
-    level->CommitPixel(this->pos.ToIntPosition());
-    level->CommitPixel(this->pos_blur_from.ToIntPosition());
-}
-
 template <typename ExplosionFuncType>
 void FlyingBarrel::Advance(TankList * tankList, ExplosionFuncType explosionFunc)
 {
@@ -123,11 +117,6 @@ void FlyingBarrel::Advance(TankList * tankList, ExplosionFuncType explosionFunc)
 void FlyingBarrel::Draw(Surface * drawBuffer)
 {
     drawBuffer->SetPixel(this->pos.ToIntPosition(), draw_color);
-}
-
-void FlyingBarrel::Erase(Surface * drawBuffer, Level *)
-{
-    level->CommitPixel(this->pos.ToIntPosition());
 }
 
 void ConcreteBarrel::Advance(TankList * tankList)
@@ -210,8 +199,6 @@ void Shrapnel::Draw(Surface * drawBuffer)
 {
     drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::FireHot));
 }
-
-void Shrapnel::Erase(Surface * drawBuffer, Level *) { level->CommitPixel(this->pos.ToIntPosition()); }
 
 void ConcreteFoam::Advance(TankList * tankList)
 {

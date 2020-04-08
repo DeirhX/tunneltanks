@@ -216,6 +216,12 @@ bool Level::IsInBounds(Position pos) const
 
 void Level::CommitPixel(Position pos) { surfaces.terrain_surface.SetPixel(pos, GetVoxelColor(this->GetPixel(pos))); }
 
+void Level::CommitPixels(const std::vector<Position> & positions)
+{
+    for (auto & position : positions)
+        surfaces.terrain_surface.SetPixel(position, GetVoxelColor(this->GetPixel(position)));
+}
+
 /* TODO: This needs to be done in a different way, as this approach will take 
  * MAX_TANKS^2 time to do all collision checks for all tanks. It should only
  * take MAX_TANKS time. */

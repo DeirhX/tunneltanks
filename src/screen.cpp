@@ -7,7 +7,10 @@
 #include <tank.h>
 #include <tweak.h>
 #include <types.h>
+#include <world.h>
 
+
+#include "game.h"
 #include "game_system.h"
 
 /* The constructor sets the video mode: */
@@ -198,6 +201,8 @@ void Screen::DrawLevel()
     GetLevelSurfaces()->terrain_surface.OverlaySurface(&GetLevelSurfaces()->objects_surface);
     /* Draw everything */
     std::for_each(this->widgets.begin(), this->widgets.end(), [this](auto & item) { item->Draw(this); });
+
+    GetWorld()->GetLevel()->CommitPixels(GetLevelSurfaces()->objects_surface.GetChangeList());
     GetLevelSurfaces()->objects_surface.Clear();
 }
 

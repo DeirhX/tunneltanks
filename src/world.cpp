@@ -8,10 +8,6 @@ void World::Advance(WorldRenderSurface * objects_surface)
     ++this->advance_count;
     RegrowPass();
 
-    /* Clear everything: */
-    this->tank_list->for_each([=](Tank * t) { t->Clear(objects_surface); });
-    this->projectile_list->Erase(objects_surface, this->level.get());
-
     /* Move everything: */
     this->projectile_list->Advance(this->level.get(), this->GetTankList());
     this->tank_list->for_each([=](Tank * t) { t->Advance(this); });

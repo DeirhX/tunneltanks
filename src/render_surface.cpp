@@ -4,12 +4,14 @@
 
 void Surface::Clear()
 {
-    //for (auto & pixel : surface)
-    //    pixel = {};
-    std::memset(&this->surface.front(), 0, sizeof(RenderedPixel) * this->surface.size());
-
     if (this->use_change_list)
+    {
+        for (Position & pos : this->change_list)
+            this->At(pos) = {};
         this->change_list.clear();
+    }
+    else /* Slow in MSVC! Can't you just zero it for me fast? */
+        std::memset(&this->surface.front(), 0, sizeof(RenderedPixel) * this->surface.size());
 }
 
 RenderedPixel Surface::GetPixel(const Position & position) const

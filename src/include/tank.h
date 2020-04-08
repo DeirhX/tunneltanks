@@ -128,10 +128,7 @@ class Tank final
 
     CollisionType GetCollision(int dir, Position pos, TankList * tl);
 
-    void Clear(Surface * surface) const;
     void Draw(Surface * surface) const;
-
-    //void ReturnBullet();
 
   private:
     void HandleMove(class TankList * tl);

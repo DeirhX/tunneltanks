@@ -22,6 +22,7 @@ class Surface
     std::vector<Position> change_list;
   protected:
     Surface(Size size) : surface(size.x * size.y), size(size) {}
+    RenderedPixel & At(Position position) { return surface[position.x + position.y * size.x]; }
   public:
     void Clear();
     void Resize(Size new_size) { surface.resize(new_size.x * new_size.y); }
@@ -32,6 +33,8 @@ class Surface
     void SetPixel(Position position, Color color);
     void FillRectangle(Rect rect, Color color);
     void OverlaySurface(const Surface * other); /* Combines surfaces using *only* source alpha channel */
+
+    const std::vector<Position>& GetChangeList() { return this->change_list; }
 
     /* Default color will be used if out-of-bounds pixels are requested */
     Color GetDefaultColor() const { return default_color; }

@@ -84,6 +84,7 @@ class Level
 
     /* Terrain surface interaction */
     void CommitPixel(Position pos);
+    void CommitPixels(const std::vector<Position>& positions);
     void CommitAll();
     void DumpBitmap(const char * filename) const;
 

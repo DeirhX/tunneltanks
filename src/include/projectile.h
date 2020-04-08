@@ -47,7 +47,6 @@ struct Projectile
     //virtual ProjectileType GetType() = 0;
     virtual void Advance(class TankList * tankList) = 0;
     virtual void Draw(class Surface * drawBuffer) = 0;
-    virtual void Erase(Surface * drawBuffer, Level * level) = 0;
 
     bool IsInvalid() const { return !is_alive; }
     bool IsValid() const { return is_alive; }
@@ -72,7 +71,6 @@ class Shrapnel : public Projectile
 
     void Advance(class TankList * tankList) override;
     void Draw(class Surface * drawBuffer) override;
-    void Erase(Surface * drawBuffer, Level * level) override;
 
   protected:
     template <typename OnAdvanceFuncType>
@@ -136,7 +134,6 @@ class Bullet : public MotionBlurProjectile
 
     void Advance(class TankList * tankList) override;
     void Draw(class Surface * drawBuffer) override;
-    void Erase(Surface * drawBuffer, Level * level) override;
 };
 
 /*
@@ -159,7 +156,6 @@ class FlyingBarrel : public Projectile
     void Advance(TankList * tankList, ExplosionFuncType explosionFunc);
 
     void Draw(Surface * drawBuffer) override;
-    void Erase(Surface * drawBuffer, Level * level) override;
 };
 
 /*
