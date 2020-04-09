@@ -12,6 +12,8 @@
 #include <tweak.h>
 #include <world.h>
 
+
+#include "controller.h"
 #include "game.h"
 #include "raycaster.h"
 

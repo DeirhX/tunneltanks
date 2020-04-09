@@ -28,6 +28,7 @@ enum class Colors
     DirtContainerShot,
     ResourceInfoBackground,
     ResourceInfoOutline,
+    RadarOutline,
     Size,
 };
 

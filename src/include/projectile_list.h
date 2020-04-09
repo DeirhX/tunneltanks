@@ -4,13 +4,15 @@
 
 class ProjectileList
 {
+    using ProjectileContainer =  MultiTypeContainer<Bullet, Shrapnel, ConcreteBarrel, ConcreteFoam, DirtBarrel, DirtFoam>;
     /* Live items. Unmodified except for BEFORE Advance */
-    MultiTypeContainer<Bullet, Shrapnel, ConcreteBarrel, ConcreteFoam, DirtBarrel, DirtFoam> items;
+    ProjectileContainer items;
     /* Items here will be integrated into main vector on Advance */
-    MultiTypeContainer<Bullet, Shrapnel, ConcreteBarrel, ConcreteFoam, DirtBarrel, DirtFoam> newly_created_items;
+    ProjectileContainer newly_created_items;
 
   public:
     ProjectileList() = default;
+
     template <typename TProjectile>
     TProjectile & Add(TProjectile && projectile)
     {
@@ -24,7 +26,7 @@ class ProjectileList
     }
 
     void Remove(Projectile & projectile) { projectile.Invalidate(); }
-    void Shrink();
+    void Shrink() { this->items.Shrink(); }
 
     void Advance(class Level * level, class TankList * tankList);
     void Draw(class Surface * drawBuffer);

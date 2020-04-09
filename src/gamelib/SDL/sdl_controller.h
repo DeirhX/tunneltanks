@@ -32,7 +32,8 @@ struct GamePadMapping
     {
         Invalid,
         Button,
-        Axis
+        Axis,
+        Pad,
     };
     struct ButtonOrAxis
     {
@@ -57,6 +58,8 @@ struct GamePadMapping
             else if (this->type == MappingType::Axis)
                 return axis_threshold > 0 ? this->CurrentAxisValue(joystick) > axis_threshold
                                           : this->CurrentAxisValue(joystick) > axis_threshold;
+            else if (this->type == MappingType::Pad)
+                return SDL_JoystickGetHat(joystick, 0) == this->ordinal;
             else
             {
                 assert(!"Uninitialized control");
@@ -74,6 +77,11 @@ struct GamePadMapping
         constexpr Axis() : ButtonOrAxis(-1, MappingType::Axis) {}
         constexpr Axis(int8_t ordinal, int16_t threshold = 1000) : ButtonOrAxis(ordinal, MappingType::Axis, threshold) {}
     };
+    struct Pad : public ButtonOrAxis
+    {
+        constexpr Pad() : ButtonOrAxis(-1, MappingType::Pad) {}
+        constexpr Pad(int8_t ordinal) : ButtonOrAxis(ordinal, MappingType::Pad) {}
+    };
 
     Axis MoveHorizontalAxis;
     Axis MoveVerticalAxis;
@@ -82,10 +90,10 @@ struct GamePadMapping
     ButtonOrAxis ShootPrimary;
     ButtonOrAxis ShootSecondary;
     ButtonOrAxis ShootTertiary;
-    Button CyclePrimaryWeaponNext;
-    Button CyclePrimaryWeaponsPrev;
-    Button CycleSecondaryWeaponNext;
-    Button CycleSecondaryWeaponsPrev;
+    ButtonOrAxis CyclePrimaryWeaponNext;
+    ButtonOrAxis CyclePrimaryWeaponsPrev;
+    ButtonOrAxis CycleSecondaryWeaponNext;
+    ButtonOrAxis CycleSecondaryWeaponsPrev;
 };
 
 class GamePadController : public Controller

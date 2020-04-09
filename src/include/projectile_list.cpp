@@ -6,8 +6,6 @@
 #include "tank.h"
 #include "tanklist.h"
 
-void ProjectileList::Shrink() { this->items.Shrink(); }
-
 void ProjectileList::Advance(Level * level, TankList * tankList)
 {
     /* Append everything that was created last tick */

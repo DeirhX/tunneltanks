@@ -6,9 +6,9 @@
 #include <tweak.h>
 
 #include "control.h"
-#include "controllersdl.h"
 #include "exceptions.h"
 #include "require_sdl.h"
+#include "sdl_controller.h"
 
 /* Set up SDL: */
 void gamelib_init()

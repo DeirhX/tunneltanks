@@ -2,12 +2,12 @@
 #include <memory>
 /* For the controllers/AIs: */
 
-#include <controllersdl.h>
-
 #include <level.h>
 #include <level_view.h>
 #include <projectile_list.h>
 
+
+#include "controller.h"
 #include "gui_widgets.h"
 #include "weapon.h"
 //#include <world.h>

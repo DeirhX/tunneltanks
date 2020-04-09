@@ -54,9 +54,6 @@
     <ClCompile Include="src\gamelib\SDL\control.cpp">
       <Filter>sdl_interface</Filter>
     </ClCompile>
-    <ClCompile Include="src\gamelib\SDL\controllersdl.cpp">
-      <Filter>sdl_interface</Filter>
-    </ClCompile>
     <ClCompile Include="src\gamelib\SDL\events.cpp">
       <Filter>sdl_interface</Filter>
     </ClCompile>
@@ -162,11 +159,14 @@
     <ClCompile Include="src\render_surface.cpp">
       <Filter>src\draw</Filter>
     </ClCompile>
+    <ClCompile Include="src\harvester_list.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\sdl_controller.cpp">
+      <Filter>sdl_interface</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\gamelib\SDL\controllersdl.h">
-      <Filter>sdl_interface</Filter>
-    </ClInclude>
     <ClInclude Include="src\gamelib\SDL\require_sdl.h">
       <Filter>sdl_interface</Filter>
     </ClInclude>
@@ -329,6 +329,12 @@
     </ClInclude>
     <ClInclude Include="src\render_surface.h">
       <Filter>src\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\harvester_list.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamelib\SDL\sdl_controller.h">
+      <Filter>sdl_interface</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

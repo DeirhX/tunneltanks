@@ -204,7 +204,7 @@ int GameMain(int argc, char * argv[])
         ::global_game = std::make_unique<Game>(config);
         /* Play the game: */
         int frames_to_do = 1500;
-        gamelib_main_loop([&frames_to_do]() -> bool { return global_game->AdvanceStep() && frames_to_do--; });
+        gamelib_main_loop([&frames_to_do]() -> bool { return global_game->AdvanceStep(); });
 
         /* Release global resources earlier than atexit global teardown*/
         ::global_game.reset();

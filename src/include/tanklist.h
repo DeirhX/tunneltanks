@@ -23,11 +23,6 @@ public:
 	// iterable
 	decltype(list)::iterator begin() { return list.begin(); }
     decltype(list)::iterator end() { return list.end(); }
-	/*DereferenceIterator<decltype(list)::iterator> begin() { return dereference_iterator(list.begin()); }
-	DereferenceIterator<decltype(list)::iterator> end() { return dereference_iterator(list.end()); }
-	DereferenceIterator<decltype(list)::const_iterator> cbegin() const { return dereference_iterator(list.cbegin()); }
-	DereferenceIterator<decltype(list)::const_iterator> cend() const { return dereference_iterator(list.cend()); }*/
-
 
 	template <typename TFunc>
 	inline void for_each(TFunc&& tank_func)
