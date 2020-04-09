@@ -128,7 +128,15 @@ namespace explosion::death
     constexpr float Speed = 0.25f;
     constexpr int Frames = 72;
 } // namespace explosion::death
-/* Characters used in level structures for things: */
+
+namespace rules
+{
+    constexpr int HarvesterDirtCost = 50;
+    constexpr int MinerDirtCost = 100;
+    constexpr int HarvesterHP = 100;
+    constexpr int MinerHP = 200;
+}
+
 
 /* Default to keeping memory stats: */
 #ifndef _MEM_STATS

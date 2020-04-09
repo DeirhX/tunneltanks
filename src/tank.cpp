@@ -17,7 +17,31 @@
 #include "game.h"
 #include "raycaster.h"
 
-/* Handle shooting buttons and weapon changes */
+bool Resources::PayDirt(int amount)
+{
+    if (dirt - amount < 0)
+        return false;
+    dirt -= amount;
+    return true;
+} /* Handle shooting buttons and weapon changes */
+
+bool Resources::PayMinerals(int amount)
+{
+    if (this->minerals - amount < 0)
+        return false;
+    this->minerals -= amount;
+    return true;
+}
+
+bool Resources::Pay(int pay_dirt, int pay_minerals)
+{
+    if (this->dirt - pay_dirt < 0 || this->minerals - pay_minerals < 0)
+        return false;
+    this->dirt -= pay_dirt;
+    this->minerals -= pay_minerals;
+    return true;
+}
+
 void TankTurret::ApplyControllerOutput(ControllerOutput controls)
 {
     this->is_shooting_primary = controls.is_shooting_primary;
@@ -232,8 +256,8 @@ void Tank::HandleMove(TankList * tl)
         {
             /* Attempt to dig and see the results */
             DigResult dug = this->level->DigTankTunnel(this->pos + (1 * this->speed), this->turret.IsShooting());
-            this->dirt_mined += dug.dirt;
-            this->minerals_mined += dug.minerals;
+            this->resources.AddDirt(dug.dirt);
+            this->resources.AddMinerals(dug.minerals);
 
             /* If we didn't use a torch pointing roughly in the right way, we don't move in the frame of digging*/
             if (!(this->turret.IsShooting() &&

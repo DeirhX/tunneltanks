@@ -3,6 +3,14 @@
 #include "game.h"
 #include "random.h"
 
+World::World(Game * game, std::unique_ptr<Level> && level)
+    : game(game), level(std::move(level))
+{
+    this->projectile_list = std::make_unique<ProjectileList>();
+    this->tank_list = std::make_unique<TankList>(level.get(), this->projectile_list.get());
+    this->harvester_list = std::make_unique<HarvesterList>();
+}
+
 void World::Advance(WorldRenderSurface * objects_surface)
 {
     ++this->advance_count;
@@ -11,9 +19,11 @@ void World::Advance(WorldRenderSurface * objects_surface)
     /* Move everything: */
     this->projectile_list->Advance(this->level.get(), this->GetTankList());
     this->tank_list->for_each([=](Tank * t) { t->Advance(this); });
+    this->harvester_list->Advance(this->level.get(), this->GetTankList());
 
     /* Draw everything: */
     this->projectile_list->Draw(objects_surface);
+    this->harvester_list->Draw(objects_surface);
     this->tank_list->for_each([=](Tank * t) { t->Draw(objects_surface); });
 }
 

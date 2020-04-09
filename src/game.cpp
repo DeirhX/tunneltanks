@@ -129,8 +129,6 @@ Game::Game(GameConfig config)
                   average_time.count() % 1000);
 
     /* Create projectile list, tank list and materialize the level voxels */
-    auto projectile_list = std::make_unique<ProjectileList>();
-    auto tank_list = std::make_unique<TankList>(level.get(), projectile_list.get());
     level->MaterializeLevelTerrainAndBases();
 
     /* Debug the starting data, if we're debugging: */
@@ -142,7 +140,7 @@ Game::Game(GameConfig config)
     this->screen->SetDrawLevelSurfaces(level->GetSurfaces());
 
     /* Create the world */
-    world = std::make_unique<World>(this, std::move(tank_list), std::move(projectile_list), std::move(level));
+    world = std::make_unique<World>(this, std::move(level));
 
     /* Set up the players/GUI inside the world */
     if (this->config.player_count > gamelib_get_max_players())

@@ -94,6 +94,9 @@ struct GamePadMapping
     ButtonOrAxis CyclePrimaryWeaponsPrev;
     ButtonOrAxis CycleSecondaryWeaponNext;
     ButtonOrAxis CycleSecondaryWeaponsPrev;
+    Button BuildPrimary;
+    Button BuildSecondary;
+    Button BuildTertiary;
 };
 
 class GamePadController : public Controller
@@ -105,6 +108,10 @@ class GamePadController : public Controller
     bool was_cycle_primary_weapon_prev_down = false;
     bool was_cycle_secondary_weapon_next_down = false;
     bool was_cycle_secondary_weapon_prev_down = false;
+
+    bool was_build_primary_down = false;
+    bool was_build_secondary_down = false;
+    bool was_build_tertiary_down = false;
 
   public:
     GamePadController(int joy_index);

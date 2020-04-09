@@ -1,5 +1,6 @@
 #pragma once
 
+#include "harvester_list.h"
 #include "level.h"
 #include "projectile_list.h"
 #include "tanklist.h"
@@ -10,17 +11,11 @@ class World
 
     std::unique_ptr<TankList> tank_list;
     std::unique_ptr<ProjectileList> projectile_list;
+    std::unique_ptr<HarvesterList> harvester_list;
     std::unique_ptr<Level> level;
 
   public:
-    World(Game * game, 
-          std::unique_ptr<TankList> && tank_list, 
-          std::unique_ptr<ProjectileList> && projectile_list,
-          std::unique_ptr<Level> && level)
-        : game(game), tank_list(std::move(tank_list)), projectile_list(std::move(projectile_list)),
-          level(std::move(level))
-    {
-    }
+    World(Game * game, std::unique_ptr<Level> && level);
     void Advance(class WorldRenderSurface * objects_surface);
 
     TankList * GetTankList() { return this->tank_list.get(); }

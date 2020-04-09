@@ -62,7 +62,9 @@ constexpr GamePadMapping XBox360Pad = {
     .CyclePrimaryWeaponsPrev = GamePadMapping::Pad{8},
     .CycleSecondaryWeaponNext = GamePadMapping::Pad{4},
     .CycleSecondaryWeaponsPrev = GamePadMapping::Pad{1},
-
+    .BuildPrimary = GamePadMapping::Button{2},
+    .BuildSecondary = GamePadMapping::Button{3},
+    .BuildTertiary = GamePadMapping::Button{0},
 };
 
 constexpr GamePadMapping PS4Pad = {
@@ -77,6 +79,9 @@ constexpr GamePadMapping PS4Pad = {
     .CyclePrimaryWeaponsPrev = GamePadMapping::Button{13},
     .CycleSecondaryWeaponNext = GamePadMapping::Button{12},
     .CycleSecondaryWeaponsPrev = GamePadMapping::Button{11},
+    .BuildPrimary = GamePadMapping::Button{0},
+    .BuildSecondary = GamePadMapping::Button{2},
+    .BuildTertiary = GamePadMapping::Button{1},
 };
 
 GamePadController::GamePadController(int joy_index)
@@ -176,6 +181,18 @@ ControllerOutput GamePadController::ApplyControls(PublicTankInfo * tankPublic)
     bool cycle_secondary_weapon_prev = this->mapping.CycleSecondaryWeaponsPrev.IsPressed(this->joystick);
     output.switch_secondary_weapon_prev = cycle_secondary_weapon_prev && !this->was_cycle_secondary_weapon_prev_down;
     this->was_cycle_secondary_weapon_prev_down = cycle_secondary_weapon_prev;
+
+    bool build_primary = this->mapping.BuildPrimary.IsPressed(this->joystick);
+    output.build_primary = build_primary && !this->was_build_primary_down;
+    this->was_build_primary_down = build_primary;
+
+    bool build_secondary = this->mapping.BuildSecondary.IsPressed(this->joystick);
+    output.build_secondary = build_secondary && !this->was_build_secondary_down;
+    this->was_build_secondary_down = build_secondary;
+
+    bool build_tertiary = this->mapping.BuildTertiary.IsPressed(this->joystick);
+    output.build_tertiary = build_tertiary && !this->was_build_tertiary_down;
+    this->was_build_tertiary_down = build_tertiary;
 
     return output;
 }

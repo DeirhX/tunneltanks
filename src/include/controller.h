@@ -11,6 +11,9 @@ struct ControllerOutput
     bool switch_primary_weapon_prev = false;
     bool switch_secondary_weapon_next = false;
     bool switch_secondary_weapon_prev = false;
+    bool build_primary = false;
+    bool build_secondary = false;
+    bool build_tertiary = false;
 	DirectionF turret_dir = { 0, 0 };
 
     bool is_crosshair_absolute = false; /* Use either native screen position (mouse) or relative direction (gamepad) */

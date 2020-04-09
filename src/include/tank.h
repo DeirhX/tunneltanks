@@ -30,7 +30,19 @@ enum class CollisionType
     Blocked /* Hit a rock/base/tank/something we can't drive over. */
 };
 
-
+class Resources
+{
+    int dirt = {};
+    int minerals = {};
+public:
+    bool PayDirt(int amount);
+    bool PayMinerals(int amount);
+    bool Pay(int pay_dirt, int pay_minerals);
+    void AddMinerals(int amount) { this->minerals += amount; }
+    void AddDirt(int amount) { this->dirt += amount; }
+    int GetDirt() const { return this->dirt; }
+    int GetMinerals() const { return this->minerals; }
+};
 
 class TankTurret
 {
@@ -87,8 +99,8 @@ class Tank final
     int health = tweak::tank::StartingShield;
     int energy = tweak::tank::StartingFuel;
     int lives_left = tweak::tank::MaxLives;
-    int dirt_mined = 0;
-    int minerals_mined = 0;
+
+    Resources resources = {};
 
     std::shared_ptr<Controller> controller = nullptr;
 
@@ -112,8 +124,7 @@ class Tank final
     [[nodiscard]] int GetEnergy() const { return this->energy; }
     [[nodiscard]] int GetHealth() const { return this->health; }
     [[nodiscard]] int GetLives() const { return this->lives_left; }
-    [[nodiscard]] int GetDirtMined() const { return this->dirt_mined; }
-    [[nodiscard]] int GetRockMined() const { return this->minerals_mined; }
+    [[nodiscard]] const Resources& GetResources() const { return this->resources; }
     [[nodiscard]] Level * GetLevel() { return this->level; };
 
     void Advance(World * world); /* Advance world-step */

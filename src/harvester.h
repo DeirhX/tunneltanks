@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "render_surface.h"
+#include "tweak.h"
 #include "types.h"
 
 class Level;
@@ -15,7 +16,7 @@ class Harvester
 {
     Position position;
     HarvesterType type;
-
+    int health = tweak::rules::HarvesterHP;
     bool is_alive = false;
 
   public:
@@ -25,4 +26,6 @@ class Harvester
     bool IsInvalid() const { return !is_alive; }
     bool IsValid() const { return is_alive; }
     void Invalidate() { is_alive = false; }
+  private:
+    void Die(Level * level);
 };
