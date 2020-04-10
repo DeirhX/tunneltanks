@@ -100,8 +100,8 @@ void TankView::Draw(Screen *screen)
     }
 
     ShapeRenderer::DrawCircle(screen->GetScreenSurface(), Position{this->screen_rect.Center()}, 35,
-                              Palette.Get(Colors::ResourceInfoBackground),
-                                 Palette.Get(Colors::ResourceInfoOutline));
+                              Palette.Get(Colors::Blank),
+                                 Palette.Get(Colors::RadarOutline));
 
     /* Possibly overlay with static */
     this->DrawStatic(screen);

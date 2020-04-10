@@ -16,12 +16,14 @@ class Harvester
 {
     Position position;
     HarvesterType type;
+    class Tank * owner;
+
     int health = tweak::rules::HarvesterHP;
     bool is_alive = true;
 
     RepetitiveTimer harvest_timer{tweak::rules::HarvestTimer};
   public:
-    Harvester(Position position, HarvesterType type);
+    Harvester(Position position, HarvesterType type, Tank * tank);
 
     void Advance(Level * level);
     void Draw(Surface * surface) const;

@@ -27,4 +27,7 @@
   <Type Name="VectorF">
     <DisplayString>{{ x={x}, y={y} }}</DisplayString>
   </Type>
+  <Type Name="Color">
+    <DisplayString>{{ r={r}, g={g}, b={b}, a={a} }}</DisplayString>
+  </Type>
 </AutoVisualizer>

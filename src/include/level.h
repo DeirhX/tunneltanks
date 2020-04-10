@@ -70,6 +70,7 @@ class Level
 
     Size GetSize() const { return this->size; };
     LevelSurfaces * GetSurfaces() { return &this->surfaces; }
+    const Container2D<LevelPixel> & GetLevelData() const { return this->data; }
 
     /* Voxel get-set-reference operations */
     void SetPixel(Position pos, LevelPixel voxel);

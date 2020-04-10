@@ -50,4 +50,5 @@ class Pixel
     }
     static bool IsRock(LevelPixel pixel) { return pixel == LevelPixel::Rock;  }
     static bool IsMineral(LevelPixel pixel) { return IsConcrete(pixel) || IsRock(pixel); }
+    static bool IsEmpty(LevelPixel pixel) { return pixel == LevelPixel::Blank; }
 };

@@ -143,6 +143,7 @@ namespace rules
     constexpr int HarvesterHP = 100;
     constexpr int MinerHP = 200;
     constexpr std::chrono::milliseconds HarvestTimer = 500ms;
+    constexpr int HarvestMaxRange = 15;
 }
 
  

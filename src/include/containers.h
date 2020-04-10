@@ -254,8 +254,8 @@ class Container2D
 
     ValueType & operator[](int i) { return array[i]; }
     const ValueType & operator[](int i) const { return array[i]; }
-    ValueType & operator[](Offset o) { return array[o.x + o.y * this->size.x ]; }
-    const ValueType & operator[](Offset o) const { return array[o.x + o.y * this->size.x]; }
+    ValueType & operator[](Position pos) { return array[pos.x + pos.y * this->size.x]; }
+    const ValueType & operator[](Position pos) const { return array[pos.x + pos.y * this->size.x]; }
 
     typename Container::iterator begin() { return array.begin(); }
     typename Container::iterator end() { return array.end(); }

@@ -91,7 +91,7 @@ class Tank
     [[nodiscard]] int GetEnergy() const { return this->energy; }
     [[nodiscard]] int GetHealth() const { return this->health; }
     [[nodiscard]] int GetLives() const { return this->lives_left; }
-    [[nodiscard]] const Resources& GetResources() const { return this->resources; }
+    [[nodiscard]] Resources& GetResources() { return this->resources; }
     [[nodiscard]] Level * GetLevel() { return this->level; };
 
     void Advance(World * world); /* Advance world-step */

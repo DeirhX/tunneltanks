@@ -29,6 +29,8 @@ enum class Colors
     ResourceInfoBackground,
     ResourceInfoOutline,
     RadarOutline,
+    HarvesterInside,
+    HarvesterOutline,
     Size,
 };
 

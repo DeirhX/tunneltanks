@@ -7,7 +7,7 @@
 #include "level.h"
 #include "world.h"
 
-Harvester::Harvester(Position position, HarvesterType type) : position(position), type(type)
+Harvester::Harvester(Position position, HarvesterType type, Tank * owner) : position(position), type(type), owner(owner)
 {
 }
 
@@ -19,16 +19,31 @@ void Harvester::Advance(Level * level)
         Die(level);
         return;
     }
+
     if (!this->harvest_timer.AdvanceAndCheckElapsed())
     {
-        
+        auto check_pixel = [this](Position pos, const LevelPixel & pixel) {
+            if (Pixel::IsDirt(pixel))
+            {
+                GetWorld()->GetLevel()->SetPixel(pos, LevelPixel::Blank);
+                this->owner->GetResources().AddDirt(1);
+                return false;
+            }
+            return true;
+        };
+
+        for (int i = 1; i < tweak::rules::HarvestMaxRange; ++i)
+        {
+            ShapeRenderer::InspectRectangle(GetWorld()->GetLevel()->GetLevelData(),
+                                            Rect{this->position.x - i, this->position.y - i, i*2 + 1, i*2 + 1}, check_pixel);
+        }
     }
 }
 
 void Harvester::Draw(Surface * surface) const
 {
     ShapeRenderer::DrawCircle(surface, this->position, 4,
-                              Palette.Get(Colors::ResourceInfoBackground), Palette.Get(Colors::ResourceInfoOutline));
+                              Palette.Get(Colors::HarvesterInside), Palette.Get(Colors::HarvesterOutline));
 }
 
 void Harvester::AlterHealth(int shot_damage)

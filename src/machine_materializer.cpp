@@ -31,14 +31,14 @@ bool MachineMaterializer::TryBuildMachine(MachineType type)
     case MachineType::Harvester:
         if (this->resource_bank->PayDirt(tweak::rules::HarvesterDirtCost))
         {
-            GetWorld()->GetHarvesterList()->Add(Harvester(this->owner_tank->GetPosition(), HarvesterType::Dirt));
+            GetWorld()->GetHarvesterList()->Add(Harvester(this->owner_tank->GetPosition(), HarvesterType::Dirt, this->owner_tank));
             return true;
         }
         break;
     case MachineType::Miner:
         if (this->resource_bank->PayMinerals(tweak::rules::MinerDirtCost))
         {
-            GetWorld()->GetHarvesterList()->Add(Harvester(this->owner_tank->GetPosition(), HarvesterType::Mineral));
+            GetWorld()->GetHarvesterList()->Add(Harvester(this->owner_tank->GetPosition(), HarvesterType::Mineral, this->owner_tank));
             return true;
         }
         break;
