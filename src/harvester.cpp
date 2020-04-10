@@ -7,6 +7,10 @@
 #include "level.h"
 #include "world.h"
 
+Harvester::Harvester(Position position, HarvesterType type) : position(position), type(type)
+{
+}
+
 void Harvester::Advance(Level * level)
 {
     if (this->health <= 0)

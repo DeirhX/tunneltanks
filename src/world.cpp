@@ -4,11 +4,12 @@
 #include "random.h"
 
 World::World(Game * game, std::unique_ptr<Level> && level)
-    : game(game), level(std::move(level))
+    : game(game), level(std::move(level)),
+      projectile_list(std::make_unique<ProjectileList>()),
+      harvester_list(std::make_unique<HarvesterList>()),
+      tank_list(std::make_unique<TankList>(this->level.get(), this->projectile_list.get())),
+      collision_solver(this->level.get(), this->tank_list.get(), this->harvester_list.get())
 {
-    this->projectile_list = std::make_unique<ProjectileList>();
-    this->tank_list = std::make_unique<TankList>(level.get(), this->projectile_list.get());
-    this->harvester_list = std::make_unique<HarvesterList>();
 }
 
 void World::Advance(WorldRenderSurface * objects_surface)

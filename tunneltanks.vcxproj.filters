@@ -165,6 +165,15 @@
     <ClCompile Include="src\gamelib\SDL\sdl_controller.cpp">
       <Filter>sdl_interface</Filter>
     </ClCompile>
+    <ClCompile Include="src\collision_solver.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tank_turret.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\machine_materializer.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\require_sdl.h">
@@ -335,6 +344,15 @@
     </ClInclude>
     <ClInclude Include="src\gamelib\SDL\sdl_controller.h">
       <Filter>sdl_interface</Filter>
+    </ClInclude>
+    <ClInclude Include="src\collision_solver.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tank_turret.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\machine_materializer.h">
+      <Filter>src\game_entity</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

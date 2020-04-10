@@ -7,17 +7,17 @@ class ProjectileList;
 class TankBase;
 
 class TankList {
-public:
+private:
 	ValueContainer<Tank> list;
 	Level* level;
 	ProjectileList* projectile_list;
-
+public:
 	TankList(Level* level, ProjectileList* projectile_list);
 	//~TankList();
 
 	Tank* AddTank(TankColor id, TankBase* tank_base);
 	void RemoveTank(TankColor id);
-    Tank * GetTankAtPoint(Position query_pos, TankColor ignored);
+    Tank * GetTankAtPoint(Position query_pos, TankColor ignored = -1);
 	bool CheckForCollision(Tank& tank, Position testPos, int testDirection);
 
 	// iterable

@@ -15,3 +15,8 @@ void HarvesterList::Draw(Surface * surface)
 { 
     this->items.ForEach([surface](Harvester & item) { item.Draw(surface); });
 }
+
+Harvester * HarvesterList::GetHarvesterAtPoint(Position position)
+{
+    return nullptr;
+}

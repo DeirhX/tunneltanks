@@ -7,6 +7,8 @@
 #include <tank.h>
 #include <tweak.h>
 
+#include "game.h"
+#include "world.h"
 #include "mymath.h"
 #include "raycaster.h"
 #include "tanklist.h"
@@ -17,43 +19,31 @@ void Bullet::Advance(TankList * tankList)
         this->pos = tested_pos;
         this->pos_blur_from = prev_pos;
 
-        /* Did we hit another tank? */
-        TankColor hitTankColor = this->tank->GetColor();
-        Tank * hitTank = tankList->GetTankAtPoint(this->pos.ToIntPosition(), hitTankColor);
-        if (hitTank)
+        if (GetWorld()->GetCollisionSolver()->TestCollide(this->pos.ToIntPosition(), 
+              [this](Tank & tank)
         {
-            /* Hurt the tank we hit: */
-            hitTank->AlterHealth(tweak::tank::ShotDamage);
-
-            /* Add all of the effect particles: */
-
+                if (tank.GetColor() == this->tank->GetColor())
+                    return false;
+                tank.AlterHealth(tweak::tank::ShotDamage);
+                return true;
+        },
+        [this](Harvester & harvester)
+        {
+            return true;
+        },
+        [this](LevelPixel level_pixel) { return Pixel::IsAnyCollision(level_pixel); }))
+        {
             for (Shrapnel & shrapnel : ExplosionDesc::AllDirections(
                                            this->pos_blur_from.ToIntPosition(), tweak::explosion::normal::ShrapnelCount,
                                            tweak::explosion::normal::Speed, tweak::explosion::normal::Frames)
                                            .Explode<Shrapnel>(level))
             {
-                tankList->projectile_list->Add(shrapnel);
+                GetWorld()->GetProjectileList()->Add(shrapnel);
             }
             /* Finally, remove it: */
             this->Invalidate();
             return false;
-        }
-
-        /* Else, did we hit something in the level? */
-        LevelPixel c = level->GetPixel(this->pos.ToIntPosition());
-        if (Pixel::IsAnyCollision(c))
-        {
-            for (Shrapnel & shrapnel : ExplosionDesc::AllDirections(
-                                           this->pos_blur_from.ToIntPosition(), tweak::explosion::dirt::ShrapnelCount,
-                                           tweak::explosion::dirt::Speed, tweak::explosion::dirt::Frames)
-                                           .Explode<Shrapnel>(level))
-            {
-                tankList->projectile_list->Add(shrapnel);
-            }
-            /* Finally, remove it: */
-            this->Invalidate();
-            return false;
-        }
+        };
 
         return true;
     };
@@ -110,7 +100,7 @@ void FlyingBarrel::Advance(TankList * tankList, ExplosionFuncType explosionFunc)
 
     if (collided)
     {
-        explosionFunc(this->pos, this->speed, this->level, tankList->projectile_list);
+        explosionFunc(this->pos, this->speed, this->level, GetWorld()->GetProjectileList());
     }
 }
 

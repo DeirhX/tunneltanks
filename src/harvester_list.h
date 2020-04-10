@@ -13,8 +13,8 @@ class HarvesterList
   public:
     HarvesterList() = default;
 
-    template <typename TProjectile>
-    TProjectile & Add(TProjectile && projectile)
+    template <typename THarverster>
+    THarverster & Add(THarverster && projectile)
     {
         return this->newly_created_items.Add(projectile);
     }
@@ -23,4 +23,5 @@ class HarvesterList
 
     void Advance(class Level * level, class TankList * tank_list);
     void Draw(class Surface * surface);
+    Harvester * GetHarvesterAtPoint(Position position);
 };

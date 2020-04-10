@@ -9,6 +9,8 @@
 
 #include "controller.h"
 #include "gui_widgets.h"
+#include "machine_materializer.h"
+#include "tank_turret.h"
 #include "weapon.h"
 //#include <world.h>
 
@@ -44,44 +46,8 @@ public:
     int GetMinerals() const { return this->minerals; }
 };
 
-class TankTurret
-{
-    class Tank * tank;
 
-    std::array<Position, tweak::tank::TurretLength> TurretVoxels;
-    Color color;
-    DirectionF direction = {1.0, 0};
-    int current_length = tweak::tank::TurretLength;
-
-    bool is_shooting_primary = false;
-    bool is_shooting_secondary = false;
-    bool is_shooting_tertiary = false;
-    DurationFrames bullet_timer = DurationFrames{tweak::tank::TurretDelay};
-    //int bullets_left = tweak::tank::BulletMax;
-
-    Weapon primary_weapon = Weapon{WeaponType::Cannon};
-    Weapon secondary_weapon = Weapon{WeaponType::ConcreteSpray};
-    Weapon tertiary_weapon = Weapon{WeaponType::DirtSpray};
-
-  public:
-    TankTurret(Tank * owner, Color turret_color) : tank(owner), color(turret_color) { Reset(); }
-    DirectionF GetDirection() const { return this->direction; }
-    bool IsShooting() const
-    {
-        return this->is_shooting_primary || this->is_shooting_secondary || this->is_shooting_tertiary;
-    }
-    void ApplyControllerOutput(ControllerOutput controls);
-
-    void Advance(Position tank_position, widgets::Crosshair * crosshair);
-    void Draw(Surface * drawBuff) const;
-    void Erase(Level * level) const;
-    void SetDirection(DirectionF new_dir) { this->direction = new_dir; }
-
-    void HandleShoot();
-    void Reset();
-};
-
-class Tank final
+class Tank 
 {
     bool is_valid = false;
 
@@ -92,6 +58,7 @@ class Tank final
     TankColor color;                          /* Unique id and also color of the tank */
     TankBase * tank_base = nullptr;           /* Base owned by the tank  */
     TankTurret turret;                        /* Turret of the tank */
+    MachineMaterializer materializer;
     widgets::Crosshair * crosshair = nullptr; /* Crosshair used for aiming */
 
     int respawn_timer = 0;
@@ -110,7 +77,7 @@ class Tank final
   public:
     void Invalidate() { this->is_valid = false; }
 
-    Tank(TankColor color, Level * lvl, ProjectileList * pl, TankBase * tank_base);
+    Tank(TankColor color, Level * level, ProjectileList * projectile_list, TankBase * tank_base);
     void SetController(std::shared_ptr<Controller> newController) { this->controller = newController; }
     void SetCrosshair(widgets::Crosshair * cross);
 

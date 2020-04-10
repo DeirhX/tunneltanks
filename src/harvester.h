@@ -20,6 +20,8 @@ class Harvester
     bool is_alive = false;
 
   public:
+    Harvester(Position position, HarvesterType type);
+
     void Advance(Level * level);
     void Draw(Surface * surface);
 
