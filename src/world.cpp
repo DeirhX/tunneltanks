@@ -33,6 +33,12 @@ void World::GameIsOver() { this->game->GameOver(); }
 
 void World::RegrowPass()
 {
+    this->regrow_timer -= tweak::world::AdvanceStep;
+    if (this->regrow_timer.count() > 0)
+        return;
+
+    this->regrow_timer = tweak::world::DirtRecoverInterval;
+    
     Stopwatch<> elapsed;
     int holes_decayed = 0;
     int dirt_grown = 0;
@@ -43,7 +49,7 @@ void World::RegrowPass()
                 int neighbors = //this->level->DirtPixelsAdjacent(pixel.GetPosition());
                     this->level->CountNeighborValues(pixel.GetPosition(), [](auto voxel) { return Pixel::IsDirt(voxel) ? 1 : 0; });
                 int modifier = (pix == LevelPixel::Blank) ? 4 : 1;
-                if (neighbors > 2 && local->random.Int(0, 10000) < tweak::world::DirtRegrowSpeed * neighbors * modifier)
+                if (neighbors > 2 && local->random.Int(0, 1000) < tweak::world::DirtRegrowSpeed * neighbors * modifier)
                 {
 
                     pixel.Set(LevelPixel::DirtGrow);

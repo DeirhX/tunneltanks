@@ -16,6 +16,7 @@ class World
     std::unique_ptr<TankList> tank_list;
 
     CollisionSolver collision_solver;
+    std::chrono::microseconds regrow_timer = tweak::world::DirtRecoverInterval;
   public:
     World(Game * game, std::unique_ptr<Level> && level);
     void Advance(class WorldRenderSurface * objects_surface);

@@ -28,16 +28,14 @@ void gamelib_exit()
 /* Waits long enough to maintain a consistent FPS: */
 void smart_wait()
 {
-    int cur, next;
-
     /* Get the current time, and the next time: */
-    cur = SDL_GetTicks();
-    next = int((cur / tweak::perf::AdvanceStep.count() + 1) * tweak::perf::AdvanceStep.count());
+    int64_t cur = SDL_GetTicks();
+    int64_t next = (cur * 1000 / tweak::world::AdvanceStep.count() + 1) * tweak::world::AdvanceStep.count() / 1000;
 
     /* Wait if we need to: */
     if (cur >= next)
         return;
-    SDL_Delay(next - cur);
+    SDL_Delay(int(next - cur));
 }
 
 /*

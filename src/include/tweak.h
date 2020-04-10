@@ -7,7 +7,9 @@
 
 #define _MEM_STATS
 
-namespace tweak {
+namespace tweak
+{
+    
 
 namespace system
 {
@@ -15,22 +17,25 @@ namespace system
     constexpr char Version[] = "0.1 alpha";
 } // namespace system
 
-namespace perf {
+namespace perf
+{
 	constexpr int parallelism_percent = 100;
 	inline unsigned int parallelism_degree = std::max(1u, std::thread::hardware_concurrency() * parallelism_percent / 100);
 
 	/* The desired speed in frames per second: */
 	constexpr int TargetFps = 24;
-	constexpr std::chrono::milliseconds AdvanceStep{ 1000 / TargetFps };
-
 }
 
 namespace world
 {
+    using namespace std::literals::chrono_literals;
+
+	constexpr std::chrono::microseconds AdvanceStep{1'000'000 / perf::TargetFps};
     constexpr int MaxPlayers = 8;
 
-    constexpr int DirtRecoverSpeed = 2; /* Average delay before growing finishes and new dirt is formed. More is faster. */
-    constexpr int DirtRegrowSpeed = 5;  /* Average delay before it starts growing back. More is faster.*/
+    constexpr auto DirtRecoverInterval = 250ms; /* Perform the recovery queries only once per this interval */
+    constexpr int DirtRecoverSpeed = 10; /* Average delay before growing finishes and new dirt is formed. More is faster. */
+    constexpr int DirtRegrowSpeed = 4;  /* Average delay before it starts growing back. More is faster.*/
     constexpr int DigThroughRockChance = 250; /* Chance to dig through rock with torch of out 1000 */
     /* The minimum distance between two tanks in the world. If this is set too high,
      * then the level generator may start throwing exceptions: */
