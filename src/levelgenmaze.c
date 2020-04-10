@@ -185,7 +185,7 @@ void maze_generator(Level *lvl) {
 	rough_up(lvl);
 	
 	/* Add in the bases: */
-	for(TankColor i=0; i< tweak::MaxPlayers; i++) {
+	for(TankColor i=0; i< tweak::world::MaxPlayers; i++) {
 		int tx, ty;
 		
 		/* Pick a random spot for the base: */

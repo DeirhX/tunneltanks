@@ -5,6 +5,8 @@
 #include <types.h>
 #include <chrono>
 
+#define _MEM_STATS
+
 namespace tweak {
 
 namespace system
@@ -12,16 +14,6 @@ namespace system
     constexpr char WindowTitle[] = "Diggerer";
     constexpr char Version[] = "0.1 alpha";
 } // namespace system
-
-namespace screen
-{
-	/* The default size of the window: */
-	constexpr Size WindowSize = { 640, 400 };
-    /* The virtual resolution of the game. (IE: How many blocks tall/wide) */
-    constexpr Size RenderSurfaceSize = {160, 100};
-
-}
-
 
 namespace perf {
 	constexpr int parallelism_percent = 100;
@@ -35,20 +27,17 @@ namespace perf {
 
 namespace world
 {
+    constexpr int MaxPlayers = 8;
+
     constexpr int DirtRecoverSpeed = 2; /* Average delay before growing finishes and new dirt is formed. More is faster. */
     constexpr int DirtRegrowSpeed = 5;  /* Average delay before it starts growing back. More is faster.*/
     constexpr int DigThroughRockChance = 250; /* Chance to dig through rock with torch of out 1000 */
     /* The minimum distance between two tanks in the world. If this is set too high,
      * then the level generator may start throwing exceptions: */
     constexpr int MinBaseDistance = 150;
-    /* Various base sizes: */
-    #define BASE_SIZE                      35
-    #define BASE_DOOR_SIZE                 7
-
+    constexpr int BaseSize = 35;
+    constexpr int BaseDoorSize = 7;
 } // namespace world
-
-
-constexpr int MaxPlayers = 8;
 
 namespace tank {
 
@@ -76,12 +65,19 @@ namespace tank {
     constexpr int TurretLength = 4;
 }
 
-/* Constants for drawing static: (The bottom 3 constants are out of 1000) */
-#define STATIC_THRESHOLD               (tweak::tank::StartingFuel/5)
-#define STATIC_TRANSPARENCY            200
-#define STATIC_BLACK_BAR_ODDS          500
-#define STATIC_BLACK_BAR_SIZE          500
+namespace screen
+{
+	/* The default size of the window: */
+	constexpr Size WindowSize = { 640, 400 };
+    /* The virtual resolution of the game. (IE: How many blocks tall/wide) */
+    constexpr Size RenderSurfaceSize = {160, 100};
 
+    /* Constants for drawing static: (The bottom 3 constants are out of 1000) */
+    constexpr int DrawStaticFuelThreshold = (tweak::tank::StartingFuel / 5);
+    constexpr int DrawStaticTransparency = 200;
+    constexpr int DrawStaticBlackBarOdds = 500;
+    constexpr int DrawStaticBlackBarSize = 500;
+ }
 
 namespace control
 {
@@ -131,17 +127,14 @@ namespace explosion::death
 
 namespace rules
 {
+    using namespace std::literals::chrono_literals;
+
     constexpr int HarvesterDirtCost = 500;
     constexpr int MinerDirtCost = 1000;
     constexpr int HarvesterHP = 100;
     constexpr int MinerHP = 200;
+    constexpr std::chrono::milliseconds HarvestTimer = 500ms;
 }
-
-
-/* Default to keeping memory stats: */
-#ifndef _MEM_STATS
-#define _MEM_STATS
-#endif
 
  
 }

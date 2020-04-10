@@ -118,17 +118,17 @@ void Level::GenerateDirtAndRocks()
 
 void Level::CreateBase(Position pos, TankColor color)
 {
-    if (color >= tweak::MaxPlayers)
+    if (color >= tweak::world::MaxPlayers)
         return;
 
-    for (int y = -BASE_SIZE / 2; y <= BASE_SIZE / 2; y++)
+    for (int y = -tweak::world::BaseSize / 2; y <= tweak::world::BaseSize / 2; y++)
     {
-        for (int x = -BASE_SIZE / 2; x <= BASE_SIZE / 2; x++)
+        for (int x = -tweak::world::BaseSize / 2; x <= tweak::world::BaseSize / 2; x++)
         {
             Position pix = pos + Offset{x, y};
-            if (abs(x) == BASE_SIZE / 2 || abs(y) == BASE_SIZE / 2)
+            if (abs(x) == tweak::world::BaseSize / 2 || abs(y) == tweak::world::BaseSize / 2)
             { // Outline
-                if (x >= -BASE_DOOR_SIZE / 2 && x <= BASE_DOOR_SIZE / 2)
+                if (x >= -tweak::world::BaseDoorSize / 2 && x <= tweak::world::BaseDoorSize / 2)
                     SetPixel(pix, LevelPixel::BaseBarrier);
                 else
                     SetPixel(pix, static_cast<LevelPixel>(static_cast<char>(LevelPixel::BaseMin) + color));
@@ -143,7 +143,7 @@ void Level::CreateBase(Position pos, TankColor color)
  *       you use MAX_TANKS tanks. */
 void Level::CreateBases()
 {
-    for (TankColor i = 0; i < tweak::MaxPlayers; i++)
+    for (TankColor i = 0; i < tweak::world::MaxPlayers; i++)
     {
         CreateBase({this->spawn[i]->GetPosition().x, this->spawn[i]->GetPosition().y}, i);
     }
@@ -157,7 +157,7 @@ TankBase * Level::GetSpawn(TankColor color) const
 
 void Level::SetSpawn(TankColor color, std::unique_ptr<TankBase> && tank_base)
 {
-    assert(color >= 0 && color < tweak::MaxPlayers);
+    assert(color >= 0 && color < tweak::world::MaxPlayers);
     if (TankColor(this->spawn.size()) <= color)
         this->spawn.resize(color + 1);
     this->spawn[color] = std::move(tank_base);
@@ -227,10 +227,10 @@ void Level::CommitPixels(const std::vector<Position> & positions)
  * take MAX_TANKS time. */
 BaseCollision Level::CheckBaseCollision(Position pos, TankColor color)
 {
-    for (TankColor id = 0; id < tweak::MaxPlayers; id++)
+    for (TankColor id = 0; id < tweak::world::MaxPlayers; id++)
     {
-        if (std::abs(this->spawn[id]->GetPosition().x - pos.x) < BASE_SIZE / 2 &&
-            std::abs(this->spawn[id]->GetPosition().y - pos.y) < BASE_SIZE / 2)
+        if (std::abs(this->spawn[id]->GetPosition().x - pos.x) < tweak::world::BaseSize / 2 &&
+            std::abs(this->spawn[id]->GetPosition().y - pos.y) < tweak::world::BaseSize / 2)
         {
             if (id == color)
                 return BaseCollision::Yours;

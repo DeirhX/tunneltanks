@@ -21,7 +21,7 @@ void widgets::TankView::DrawStatic(Screen *screen)
     int energy = this->tank->GetEnergy();
 
     /* Don't do static if we have a lot of energy: */
-    if (energy > STATIC_THRESHOLD)
+    if (energy > tweak::screen::DrawStaticFuelThreshold)
     {
         this->counter = this->showing_static = 0;
         return;
@@ -29,7 +29,7 @@ void widgets::TankView::DrawStatic(Screen *screen)
 
     if (!this->counter)
     {
-        int intensity = 1000 * energy / STATIC_THRESHOLD;
+        int intensity = 1000 * energy / tweak::screen::DrawStaticFuelThreshold;
         this->showing_static = !Random.Bool(intensity);
         this->counter =
             Random.Int(tweak::perf::TargetFps / 16, tweak::perf::TargetFps / 8) * this->showing_static ? 1u : 4u;
@@ -41,12 +41,12 @@ void widgets::TankView::DrawStatic(Screen *screen)
         return;
 
     auto black_bar_random_gen = [this]() {
-        return Random.Int(1, this->screen_rect.size.x * this->screen_rect.size.y * STATIC_BLACK_BAR_SIZE / 1000);
+        return Random.Int(1, this->screen_rect.size.x * this->screen_rect.size.y * tweak::screen::DrawStaticBlackBarSize / 1000);
     };
 
     /* Should we draw a black bar in the image? */
-    int black_counter = Random.Bool(STATIC_BLACK_BAR_ODDS) ? black_bar_random_gen() : 0;
-    int drawing_black = black_counter && Random.Bool(STATIC_BLACK_BAR_ODDS);
+    int black_counter = Random.Bool(tweak::screen::DrawStaticBlackBarOdds) ? black_bar_random_gen() : 0;
+    int drawing_black = black_counter && Random.Bool(tweak::screen::DrawStaticBlackBarOdds);
 
     /* Develop a static thing image for the window: */
     for (y = 0; y < this->screen_rect.size.y; y++) {
@@ -73,7 +73,7 @@ void widgets::TankView::DrawStatic(Screen *screen)
             }
 
             /* Make this semi-transparent: */
-            if (Random.Bool(STATIC_TRANSPARENCY))
+            if (Random.Bool(tweak::screen::DrawStaticTransparency))
                 continue;
 
             /* Finally, select a color (either black or random) and draw: */

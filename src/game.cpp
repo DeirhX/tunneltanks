@@ -28,7 +28,7 @@
 void GameMode::AssumeAIControl(TankList * tank_list, Level * level, TankColor starting_id)
 {
 
-    for (TankColor i = starting_id; i < tweak::MaxPlayers; i++)
+    for (TankColor i = starting_id; i < tweak::world::MaxPlayers; i++)
     {
         Tank * tank = tank_list->AddTank(i, level->GetSpawn(i));
         tank->SetController(std::make_shared<TwitchController>());

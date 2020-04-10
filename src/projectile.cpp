@@ -29,6 +29,7 @@ void Bullet::Advance(TankList * tankList)
         },
         [this](Harvester & harvester)
         {
+            harvester.AlterHealth(tweak::tank::ShotDamage);
             return true;
         },
         [this](LevelPixel level_pixel) { return Pixel::IsAnyCollision(level_pixel); }))

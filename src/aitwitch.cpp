@@ -9,7 +9,7 @@
 
 
 /* Used when seeking a base entrance: */
-#define OUTSIDE (BASE_SIZE/2 + 5)
+#define OUTSIDE (tweak::world::BaseSize/2 + 5)
 
 
 TwitchController::TwitchController()
@@ -62,7 +62,7 @@ ControllerOutput do_exit_down(PublicTankInfo *i, TwitchController* data) {
 ControllerOutput do_twitch(PublicTankInfo *i, TwitchController* data) {
 	
 	if(i->health < tweak::tank::StartingShield/2 || i->energy < tweak::tank::StartingFuel/3 ||
-	  (abs(i->x) < BASE_SIZE/2 && abs(i->y) < BASE_SIZE/2) ) {
+	  (abs(i->x) < tweak::world::BaseSize/2 && abs(i->y) < tweak::world::BaseSize/2) ) {
 		/* We need a quick pick-me-up... */
 		data->mode = TWITCH_RETURN;
 	}
@@ -86,7 +86,7 @@ ControllerOutput do_return(PublicTankInfo *i, TwitchController* data) {
 	
 	/* Check to see if we've gotten there: */
 	if((i->x == 0 && i->y == targety) || 
-	   (abs(i->x)<BASE_SIZE/2 && abs(i->y)<BASE_SIZE/2)) {
+	   (abs(i->x)<tweak::world::BaseSize/2 && abs(i->y)<tweak::world::BaseSize/2)) {
 		data->mode = TWITCH_RECHARGE;
 		return { };
 	}

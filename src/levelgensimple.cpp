@@ -128,7 +128,7 @@ static void add_spawns(Level *lvl)
 
     lvl->SetSpawn(0, generate_inside(lvl->GetSize(), BORDER));
 
-    for (TankColor i = 1; i < tweak::MaxPlayers; i++)
+    for (TankColor i = 1; i < tweak::world::MaxPlayers; i++)
     {
         bool done = false;
         while (!done)

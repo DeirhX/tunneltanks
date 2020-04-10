@@ -13,16 +13,22 @@ Harvester::Harvester(Position position, HarvesterType type) : position(position)
 
 void Harvester::Advance(Level * level)
 {
-    if (this->health <= 0)
+    this->health = std::max(0, this->health);
+    if (this->health == 0)
     {
         Die(level);
     }
 }
 
-void Harvester::Draw(Surface * surface)
+void Harvester::Draw(Surface * surface) const
 {
     ShapeRenderer::DrawCircle(surface, this->position, 4,
                               Palette.Get(Colors::ResourceInfoBackground), Palette.Get(Colors::ResourceInfoOutline));
+}
+
+void Harvester::AlterHealth(int shot_damage)
+{
+    this->health -= shot_damage;
 }
 
 void Harvester::Die(Level * level)

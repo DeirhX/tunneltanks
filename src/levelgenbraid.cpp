@@ -239,7 +239,7 @@ void braid_generator(Level *lvl) {
 	invert_all(lvl);
 	
 	/* Add in the bases: */
-	for(TankColor i=0; i< tweak::MaxPlayers; i++) {
+	for(TankColor i=0; i< tweak::world::MaxPlayers; i++) {
 		int tx, ty;
 		int x, y;
 		/* Pick a random spot for the base: */

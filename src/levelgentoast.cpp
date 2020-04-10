@@ -70,7 +70,7 @@ static void generate_tree(Level *lvl) {
 	
 	/* While we're here, copy in some of those points: */
 	lvl->SetSpawn(0, points[0]);
-	for(i=1,j=1; i< ToastParams::TreeSize && j< tweak::MaxPlayers; i++) {
+	for(i=1,j=1; i< ToastParams::TreeSize && j< tweak::world::MaxPlayers; i++) {
 		for(k=0; k<j; k++) {
 			if (pt_dist(points[i], lvl->GetSpawn(TankColor( k ))->GetPosition()) < tweak::world::MinBaseDistance * tweak::world::MinBaseDistance)
 				break;
@@ -79,7 +79,7 @@ static void generate_tree(Level *lvl) {
 		if(k!=j) continue;
 		lvl->SetSpawn(TankColor(j++), points[i]);
 	}
-	if(j!= tweak::MaxPlayers) {
+	if(j!= tweak::world::MaxPlayers) {
 		/* TODO: More robust error handling. */
 		gamelib_error("OH SHUCKS OH SHUCKS OH SHUCKS\n");
 		exit(1);
