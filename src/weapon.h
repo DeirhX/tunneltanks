@@ -53,5 +53,5 @@ class Weapon
     void CycleNext();
     void CyclePrevious();
 
-    DurationFrames Fire(Position pos, DirectionF direction, Tank * tank);
+    Duration Fire(Position pos, DirectionF direction, Tank * tank);
 };

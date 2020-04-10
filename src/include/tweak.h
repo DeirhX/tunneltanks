@@ -5,6 +5,8 @@
 #include <types.h>
 #include <chrono>
 
+#include "duration.h"
+
 #define _MEM_STATS
 
 namespace tweak
@@ -94,11 +96,13 @@ namespace control
 
 namespace weapon
 {
+    using namespace std::literals::chrono_literals;
+
 	/* The speed in pixels/frame of bullets: */
 	constexpr int CannonBulletSpeed = 3;
-    constexpr DurationFrames CannonCooldown = DurationFrames{3};
+    constexpr Duration CannonCooldown = Duration{100ms};
     constexpr float ConcreteBarrelSpeed = 2.f;
-    constexpr DurationFrames ConcreteSprayCooldown = DurationFrames{3};
+    constexpr Duration ConcreteSprayCooldown = Duration{100ms};
     constexpr int ConcreteDetonationDistance = 3;
     constexpr float DirtBarrelSpeed = 2.f;
     constexpr int DirtDetonationDistance = 3;

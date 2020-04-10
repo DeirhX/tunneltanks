@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <chrono>
 #include <memory>
 
 /* Generic types that are used all over the place.
@@ -284,24 +285,6 @@ struct NativeScreenRect : RectBase<NativeScreenPosition>
 //constexpr bool operator==(const NativeRect & left, const NativeRect & right) { return static_cast<Rect>(left) == static_cast<Rect>(right); }
 
 using TankColor = char;
-
-/* Force duration to be always of this class, don't mix various integers */
-struct DurationFrames
-{
-    int32_t value;
-    constexpr operator int32_t() const { return value; }
-    constexpr explicit DurationFrames(int32_t value) : value(value) {}
-    int32_t & operator--()
-    {
-        this->value--;
-        return this->value;
-    }
-    int32_t & operator++()
-    {
-        this->value++;
-        return this->value;
-    }
-};
 
 enum class Orientation
 {

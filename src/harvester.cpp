@@ -17,7 +17,16 @@ void Harvester::Advance(Level * level)
     if (this->health == 0)
     {
         Die(level);
+        return;
     }
+
+    this->harvest_timer -= tweak::world::AdvanceStep;
+    if (this->harvest_timer.count() <= 0)
+    {
+
+        this->harvest_timer -= tweak::world::AdvanceStep;
+    }
+
 }
 
 void Harvester::Draw(Surface * surface) const

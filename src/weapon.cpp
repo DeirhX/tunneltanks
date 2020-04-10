@@ -30,7 +30,7 @@ void Weapon::CyclePrevious()
         this->current = WeaponType{value};
 }
 
-DurationFrames Weapon::Fire(Position pos, DirectionF direction, Tank * tank)
+Duration Weapon::Fire(Position pos, DirectionF direction, Tank * tank)
 {
     switch (this->current)
     {

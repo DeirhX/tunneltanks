@@ -1,5 +1,6 @@
 ﻿#include "tank_turret.h"
 #include "controller.h"
+#include "duration.h"
 #include "level.h"
 #include "raycaster.h"
 #include "render_surface.h"
@@ -71,7 +72,7 @@ void TankTurret::Erase(Level * level) const
 void TankTurret::HandleShoot()
 {
     /* Handle all shooting logic: */
-    if (this->bullet_timer == 0)
+    if (this->bullet_timer.Finished())
     {
         if (this->is_shooting_primary)
         {
@@ -96,4 +97,4 @@ void TankTurret::HandleShoot()
         --this->bullet_timer;
 }
 
-void TankTurret::Reset() { this->bullet_timer = DurationFrames{0}; }
+void TankTurret::Reset() { this->bullet_timer = Duration::Zero(); }

@@ -35,6 +35,7 @@
     <ClCompile Include="src\bitmap_loader.cpp" />
     <ClCompile Include="src\collision_solver.cpp" />
     <ClCompile Include="src\color_palette.cpp" />
+    <ClCompile Include="src\duration.cpp" />
     <ClCompile Include="src\font_renderer.cpp" />
     <ClCompile Include="src\harvester.cpp" />
     <ClCompile Include="src\harvester_list.cpp" />
@@ -102,6 +103,7 @@
     <ClInclude Include="src\include\containers.h" />
     <ClInclude Include="src\include\containers_queue.h" />
     <ClInclude Include="src\include\controller.h" />
+    <ClInclude Include="src\include\duration.h" />
     <ClInclude Include="src\include\level_pixel_surface.h" />
     <ClInclude Include="src\include\game.h" />
     <ClInclude Include="src\include\gamelib.h" />
