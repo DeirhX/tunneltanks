@@ -56,17 +56,17 @@ void ShapeRenderer::DrawCircle(Surface * surface, Position center, int radius, C
 
     while (offset_y <= offset_x)
     {
-        if (offset_y)
+        if (offset_y && offset_y != offset_x)
         {   /* First pass should draw only 4 beginning pixels on x, -x, y and -y axes. Rest diverge into 8 directions. */
-            surface->SetPixel(center + Offset{offset_x, offset_y}, outline_color);
-            surface->SetPixel(center + Offset{offset_y, offset_x}, outline_color);
             surface->SetPixel(center + Offset{-offset_x, -offset_y}, outline_color);
-            surface->SetPixel(center + Offset{-offset_y, -offset_x}, outline_color);
+            surface->SetPixel(center + Offset{offset_x, offset_y}, outline_color);
+            surface->SetPixel(center + Offset{-offset_y, offset_x}, outline_color);
+            surface->SetPixel(center + Offset{offset_y, -offset_x}, outline_color);
         }
+        surface->SetPixel(center + Offset{-offset_y, -offset_x}, outline_color);
+        surface->SetPixel(center + Offset{offset_y, offset_x}, outline_color);
         surface->SetPixel(center + Offset{-offset_x, offset_y}, outline_color);
-        surface->SetPixel(center + Offset{-offset_y, offset_x}, outline_color);
         surface->SetPixel(center + Offset{offset_x, -offset_y}, outline_color);
-        surface->SetPixel(center + Offset{offset_y, -offset_x}, outline_color);
 
         /* Decide if we end up with distance error from center by going directly up 
          *  or by going up and left (this is then mirrored into every octant)
