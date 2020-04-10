@@ -33,7 +33,6 @@ void TankList::RemoveTank(TankColor color)
 
 Tank * TankList::GetTankAtPoint(Position query_pos, TankColor ignored)
 {
-
     for (Tank & tank : *this)
     {
         if (tank.GetColor() == ignored || tank.IsDead())

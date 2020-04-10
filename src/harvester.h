@@ -19,6 +19,7 @@ class Harvester
     class Tank * owner;
 
     int health = tweak::rules::HarvesterHP;
+    BoundingBox bounding_box = Size{5, 5};
     bool is_alive = true;
 
     RepetitiveTimer harvest_timer{tweak::rules::HarvestTimer};
@@ -28,11 +29,14 @@ class Harvester
 
     void Advance(Level * level);
     void Draw(Surface * surface) const;
+    bool IsColliding(Position position) const;
 
     bool IsInvalid() const { return !is_alive; }
     bool IsValid() const { return is_alive; }
     void Invalidate() { is_alive = false; }
+
     void AlterHealth(int shot_damage);
 private:
     void Die(Level * level);
 };
+

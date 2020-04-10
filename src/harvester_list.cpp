@@ -16,7 +16,12 @@ void HarvesterList::Draw(Surface * surface)
     this->items.ForEach([surface](Harvester & item) { item.Draw(surface); });
 }
 
-Harvester * HarvesterList::GetHarvesterAtPoint(Position position)
+Harvester * HarvesterList::GetHarvesterAtPoint(Position position) 
 {
-    return nullptr;
+    Harvester * result = nullptr;
+    this->items.ForEach([position, &result](Harvester & harvester) -> Harvester * {
+        if (harvester.IsColliding(position))
+            result = &harvester;
+    });
+    return result;
 }

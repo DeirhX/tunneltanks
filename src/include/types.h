@@ -283,6 +283,23 @@ struct NativeScreenRect : RectBase<NativeScreenPosition>
     constexpr NativeScreenRect(int pos_x, int pos_y, int size_x, int size_y) : RectBase{pos_x, pos_y, size_x, size_y} {}
 };
 
+struct BoundingBox : RectBase<Position>
+{
+    BoundingBox() = default;
+    BoundingBox(Size dimensions)
+        : RectBase(-dimensions.x / 2, -dimensions.y / 2, dimensions.x, dimensions.y)
+    {
+        assert(dimensions.x % 2 && dimensions.y % 2);
+    }
+    bool IsInside(Position tested_position, Position entity_origin) const
+    {
+        return tested_position.x >= this->Left() + entity_origin.x &&
+               tested_position.x <= this->Right() + entity_origin.x &&
+               tested_position.y >= this->Top() + entity_origin.y &&
+               tested_position.y <= this->Bottom() + entity_origin.y;
+    }
+};
+
 //constexpr bool operator==(const NativeRect & left, const NativeRect & right) { return static_cast<Rect>(left) == static_cast<Rect>(right); }
 
 using TankColor = char;

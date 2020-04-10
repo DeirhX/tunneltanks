@@ -30,7 +30,7 @@ void Harvester::Advance(Level * level)
             if (Pixel::IsDirt(pixel))
             {
                 float distance = (pos - this->position).GetSize();
-                if (nearest_distance > distance)
+                if (distance <= tweak::rules::HarvestMaxRange && nearest_distance > distance )
                 {
                     nearest_pos = pos;
                     nearest_distance = distance;
@@ -75,3 +75,5 @@ void Harvester::Die(Level * level)
                                                             tweak::explosion::death::Frames)
                                    .Explode<Shrapnel>(GetWorld()->GetLevel()));
 }
+
+bool Harvester::IsColliding(Position with_position) const { return this->bounding_box.IsInside(with_position, this->position); }
