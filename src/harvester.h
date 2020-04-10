@@ -19,7 +19,7 @@ class Harvester
     int health = tweak::rules::HarvesterHP;
     bool is_alive = true;
 
-    std::chrono::microseconds harvest_timer;
+    RepetitiveTimer harvest_timer{tweak::rules::HarvestTimer};
   public:
     Harvester(Position position, HarvesterType type);
 

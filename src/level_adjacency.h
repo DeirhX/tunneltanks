@@ -2,7 +2,8 @@
 #include <cstdint>
 #include <vector>
 
-#include "raw_level_data.h"
+
+#include "containers.h"
 #include "level_pixel.h"
 #include "types.h"
 
@@ -44,10 +45,10 @@ class LevelAdjacencyData
 class DirtAdjacencyData : public LevelAdjacencyData<uint8_t>
 {
     using Parent = LevelAdjacencyData<uint8_t>;
-    class RawLevelData * level_data;
+    Container2D<LevelPixel> * level_data;
 
   public:
-    DirtAdjacencyData(Size size, RawLevelData * level_data) : LevelAdjacencyData<uint8_t>(size), level_data(level_data) {}
+    DirtAdjacencyData(Size size, Container2D<LevelPixel> * level_data);
     uint8_t Get(Position pos);
 };
 
@@ -107,12 +108,6 @@ ValueType LevelAdjacencyData<ValueType>::AccumulateFromNeighbors(Position pos, S
     */
 }
 
-inline uint8_t DirtAdjacencyData::Get(Position pos)
-{
-    return Parent::Get(pos, [this](Position pos) {
-        return uint8_t(Pixel::IsDirt(this->level_data->operator[](pos.x + pos.y * this->size.x)) ? 1 : 0);
-    });
-}
 
 
 //template <typename ComputeFunc>

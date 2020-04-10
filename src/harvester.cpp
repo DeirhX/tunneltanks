@@ -19,14 +19,10 @@ void Harvester::Advance(Level * level)
         Die(level);
         return;
     }
-
-    this->harvest_timer -= tweak::world::AdvanceStep;
-    if (this->harvest_timer.count() <= 0)
+    if (!this->harvest_timer.AdvanceAndCheckElapsed())
     {
-
-        this->harvest_timer -= tweak::world::AdvanceStep;
+        
     }
-
 }
 
 void Harvester::Draw(Surface * surface) const

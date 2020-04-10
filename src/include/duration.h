@@ -30,7 +30,7 @@ public:
 class RepetitiveTimer
 {
     Duration cooldown;
-    const duration_t interval;
+    duration_t interval;
   public:
     RepetitiveTimer(duration_t timer_cooldown) : cooldown(timer_cooldown), interval(timer_cooldown) {}
 

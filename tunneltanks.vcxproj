@@ -70,7 +70,6 @@
     <ClCompile Include="src\memalloc.cpp" />
     <ClCompile Include="src\projectile.cpp" />
     <ClCompile Include="src\random.cpp" />
-    <ClCompile Include="src\raw_level_data.cpp" />
     <ClCompile Include="src\render_surface.cpp" />
     <ClCompile Include="src\scene.cpp" />
     <ClCompile Include="src\screen.cpp" />
@@ -142,7 +141,6 @@
       <FileType>CppHeader</FileType>
     </ClInclude>
     <ClInclude Include="src\machine_materializer.h" />
-    <ClInclude Include="src\raw_level_data.h" />
     <ClInclude Include="src\render_surface.h" />
     <ClInclude Include="src\shape_renderer.h" />
     <ClInclude Include="src\tank_turret.h" />

@@ -123,9 +123,6 @@
     <ClCompile Include="src\level_adjacency.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
-    <ClCompile Include="src\raw_level_data.cpp">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
     <ClCompile Include="src\weapon.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
@@ -295,9 +292,6 @@
       <Filter>src\system</Filter>
     </ClInclude>
     <ClInclude Include="src\level_adjacency.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\raw_level_data.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\include\level_pixel.h">

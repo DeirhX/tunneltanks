@@ -239,3 +239,26 @@ class MultiTypeContainer
         GetContainer<TValue>(this->items).MergeFrom(other);
     }
 };
+
+/*
+ * Container for raw level data
+ */
+template <typename ValueType>
+class Container2D
+{
+    using Container = std::vector<ValueType>;
+    Container array;
+    Size size;
+  public:
+    Container2D(Size size) : array(size.x * size.y), size(size) {}
+
+    ValueType & operator[](int i) { return array[i]; }
+    const ValueType & operator[](int i) const { return array[i]; }
+    ValueType & operator[](Offset o) { return array[o.x + o.y * this->size.x ]; }
+    const ValueType & operator[](Offset o) const { return array[o.x + o.y * this->size.x]; }
+
+    typename Container::iterator begin() { return array.begin(); }
+    typename Container::iterator end() { return array.end(); }
+    typename Container::const_iterator cbegin() const { return array.cbegin(); }
+    typename Container::const_iterator cend() const { return array.cend(); }
+};

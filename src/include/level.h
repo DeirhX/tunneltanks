@@ -8,9 +8,9 @@
 #include <vector>
 
 #include "bitmaps.h"
+#include "containers.h"
 #include "level_adjacency.h"
 #include "parallelism.h"
-#include "raw_level_data.h"
 #include "render_surface.h"
 
 enum class LevelPixel : char;
@@ -54,7 +54,7 @@ class Level
 {
   private:
     Size size;
-    RawLevelData data; /* Holds logical terrain pixels - enum LevelPixel : char */
+    Container2D<LevelPixel> data; /* Holds logical terrain pixels - enum LevelPixel : char */
     LevelSurfaces surfaces; /* Holds terrain and object surfaces for drawing */
 
     //DirtAdjacencyData dirt_adjacency_data;
@@ -90,6 +90,9 @@ class Level
 
     /* Color lookup. Can be somewhere else. */
     static Color GetVoxelColor(LevelPixel voxel);
+
+    template<typename PixelCompareFunc>
+    Position GetClosestPixel(Position origin, int max_radius, PixelCompareFunc compare_func);
 
     /* Count neighbors is used when level building and for ad-hoc queries (e.g. dirt regeneration) */
     int CountNeighborValues(Position pos);
@@ -161,6 +164,15 @@ void Level::ForEachVoxelParallel(VoxelFunc voxelFunc, WorkerCount worker_count)
     };
 
     parallel_for(parallel_slice, 0, this->GetSize().x - 1, worker_count);
+}
+
+template <typename PixelCompareFunc>
+Position Level::GetClosestPixel(Position origin, int max_radius, PixelCompareFunc compare_func)
+{
+    int square_radius = 1;
+    float closest_distance = std::numeric_limits<float>::max();
+
+
 }
 
 template <typename CountFunc>
