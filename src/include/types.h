@@ -70,8 +70,9 @@ struct Offset : public Vector
 {
     Offset() = default;
     constexpr Offset(int dx, int dy) : Vector(dx, dy) {}
-
     explicit Offset(Position pos) : Vector(pos.x, pos.y) {}
+
+    [[nodiscard]] float GetSize() const { return float(std::sqrt(x * x + y * y)); }
 };
 
 /*

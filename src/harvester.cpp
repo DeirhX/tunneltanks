@@ -22,12 +22,19 @@ void Harvester::Advance(Level * level)
 
     if (!this->harvest_timer.AdvanceAndCheckElapsed())
     {
-        auto check_pixel = [this](Position pos, const LevelPixel & pixel) {
+        float nearest_distance = std::numeric_limits<float>::max();
+        Position nearest_pos = this->position;
+
+        auto check_pixel = [this, &nearest_distance, &nearest_pos](Position pos, const LevelPixel & pixel)
+        {
             if (Pixel::IsDirt(pixel))
             {
-                GetWorld()->GetLevel()->SetPixel(pos, LevelPixel::Blank);
-                this->owner->GetResources().AddDirt(1);
-                return false;
+                float distance = (pos - this->position).GetSize();
+                if (nearest_distance > distance)
+                {
+                    nearest_pos = pos;
+                    nearest_distance = distance;
+                }
             }
             return true;
         };
@@ -35,14 +42,23 @@ void Harvester::Advance(Level * level)
         for (int i = 1; i < tweak::rules::HarvestMaxRange; ++i)
         {
             ShapeRenderer::InspectRectangle(GetWorld()->GetLevel()->GetLevelData(),
-                                            Rect{this->position.x - i, this->position.y - i, i*2 + 1, i*2 + 1}, check_pixel);
+                                            Rect{this->position.x - i, this->position.y - i, i * 2 + 1, i * 2 + 1},
+                                            check_pixel);
+            if (float(i) >= nearest_distance)
+                break;
+        }
+
+        if (nearest_pos != this->position)
+        {
+            GetWorld()->GetLevel()->SetPixel(nearest_pos, LevelPixel::Blank);
+            this->owner->GetResources().AddDirt(1);
         }
     }
 }
 
 void Harvester::Draw(Surface * surface) const
 {
-    ShapeRenderer::DrawCircle(surface, this->position, 4,
+    ShapeRenderer::DrawCircle(surface, this->position, 2,
                               Palette.Get(Colors::HarvesterInside), Palette.Get(Colors::HarvesterOutline));
 }
 

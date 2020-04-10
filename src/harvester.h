@@ -24,6 +24,7 @@ class Harvester
     RepetitiveTimer harvest_timer{tweak::rules::HarvestTimer};
   public:
     Harvester(Position position, HarvesterType type, Tank * tank);
+    const Position & GetPosition() { return this->position; }
 
     void Advance(Level * level);
     void Draw(Surface * surface) const;

@@ -122,7 +122,7 @@ ScreenPosition TankView::TranslatePosition(Position world_pos) const
     return ScreenPosition{tank_offset + this->screen_rect.pos + this->screen_rect.size / 2};
 }
 
-            /* Will draw two bars indicating the charge/health of a tank: */
+/* Will draw two bars indicating the charge/health of a tank: */
 /* TODO: This currently draws every frame. Can we make a dirty flag, and only
  *       redraw when it's needed? Also, can we put some of these calculations in
  *       the StatusBar structure, so they don't have to be done every frame? */
