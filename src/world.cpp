@@ -33,12 +33,9 @@ void World::GameIsOver() { this->game->GameOver(); }
 
 void World::RegrowPass()
 {
-    this->regrow_timer -= tweak::world::AdvanceStep;
-    if (this->regrow_timer.count() > 0)
+    if (!this->regrow_timer.AdvanceAndCheckElapsed())
         return;
 
-    this->regrow_timer = tweak::world::DirtRecoverInterval;
-    
     Stopwatch<> elapsed;
     int holes_decayed = 0;
     int dirt_grown = 0;
