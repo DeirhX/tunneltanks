@@ -131,8 +131,8 @@ namespace explosion::death
 
 namespace rules
 {
-    constexpr int HarvesterDirtCost = 50;
-    constexpr int MinerDirtCost = 100;
+    constexpr int HarvesterDirtCost = 500;
+    constexpr int MinerDirtCost = 1000;
     constexpr int HarvesterHP = 100;
     constexpr int MinerHP = 200;
 }

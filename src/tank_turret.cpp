@@ -8,12 +8,9 @@
 
 void TankTurret::ApplyControllerOutput(ControllerOutput controls)
 {
-    if (controls.is_shooting_primary)
-        this->is_shooting_primary = true;
-    else if (controls.is_shooting_secondary)
-        this->is_shooting_secondary = true;
-    else if (controls.is_shooting_tertiary)
-        this->is_shooting_tertiary = true;
+    this->is_shooting_primary = controls.is_shooting_primary;
+    this->is_shooting_secondary = controls.is_shooting_secondary;
+    this->is_shooting_tertiary = controls.is_shooting_tertiary;
 
     if (controls.switch_primary_weapon_next)
         this->primary_weapon.CycleNext();

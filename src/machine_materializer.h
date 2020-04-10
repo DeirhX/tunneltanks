@@ -26,7 +26,7 @@ class MachineMaterializer
     MachineMaterializer(Tank * owner_tank, Resources * resource_bank);
 
     void ApplyControllerOutput(ControllerOutput controls);
-    void Advance(Position tank_position, widgets::Crosshair * crosshair);
+    void Advance(Position tank_position);
 
 private:
     bool TryBuildMachine(MachineType type);

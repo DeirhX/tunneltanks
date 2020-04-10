@@ -12,13 +12,11 @@ MachineMaterializer::MachineMaterializer(Tank * tank, Resources * resource_bank)
 
 void MachineMaterializer::ApplyControllerOutput(ControllerOutput controls)
 {
-    if (controls.build_primary)
-        this->is_building_primary = true;
-    else if (controls.build_secondary)
-        this->is_building_secondary = true;
+    this->is_building_primary = controls.build_primary;
+    this->is_building_secondary = controls.build_secondary;
 }
 
-void MachineMaterializer::Advance(Position tank_position, widgets::Crosshair * crosshair)
+void MachineMaterializer::Advance(Position tank_position)
 {
     if (this->is_building_primary)
         TryBuildMachine(this->primary_construct);
@@ -31,7 +29,7 @@ bool MachineMaterializer::TryBuildMachine(MachineType type)
     switch (type)
     {
     case MachineType::Harvester:
-        if (this->resource_bank->PayMinerals(tweak::rules::HarvesterDirtCost))
+        if (this->resource_bank->PayDirt(tweak::rules::HarvesterDirtCost))
         {
             GetWorld()->GetHarvesterList()->Add(Harvester(this->owner_tank->GetPosition(), HarvesterType::Dirt));
             return true;

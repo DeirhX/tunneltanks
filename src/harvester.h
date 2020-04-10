@@ -17,7 +17,7 @@ class Harvester
     Position position;
     HarvesterType type;
     int health = tweak::rules::HarvesterHP;
-    bool is_alive = false;
+    bool is_alive = true;
 
   public:
     Harvester(Position position, HarvesterType type);

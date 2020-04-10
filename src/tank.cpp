@@ -100,6 +100,7 @@ void Tank::Advance(World * world)
         }
         /* Now override this by rotating according to crosshair if it is being used */
         this->turret.Advance(this->GetPosition(), this->crosshair);
+        this->materializer.Advance(this->GetPosition());
 
         /* Move, dig and solve collisions with other tanks */
         this->HandleMove(world->GetTankList());
@@ -288,6 +289,7 @@ void Tank::Die()
 void Tank::ApplyControllerOutput(ControllerOutput controls)
 {
     this->turret.ApplyControllerOutput(controls);
+    this->materializer.ApplyControllerOutput(controls);
     this->speed = controls.speed;
     if (this->crosshair)
     {
