@@ -10,6 +10,7 @@ enum class MachineType
 {
     Harvester,
     Miner,
+    Charger,
 };
 
 class MachineMaterializer

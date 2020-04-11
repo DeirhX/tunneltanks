@@ -27,9 +27,9 @@ void Bullet::Advance(TankList * tankList)
                 tank.AlterHealth(tweak::tank::ShotDamage);
                 return true;
         },
-        [this](Harvester & harvester)
+        [this](auto & machine)
         {
-            harvester.AlterHealth(-tweak::tank::ShotDamage);
+            machine.AlterHealth(-tweak::tank::ShotDamage);
             return true;
         },
         [this](LevelPixel level_pixel) { return Pixel::IsAnyCollision(level_pixel); }))
@@ -140,7 +140,7 @@ void DirtBarrel::Advance(TankList * tankList)
 
 /* Le Shrapnel */
 
-void Shrapnel::Advance(TankList * tankList)
+void ShrapnelBase::Advance(TankList * tankList)
 {
     auto AdvanceStepFunc = [this](PositionF tested_pos, PositionF prev_pos, TankList * tankList) {
         /* Make sure we didn't hit a level detail: */
@@ -165,7 +165,7 @@ void Shrapnel::Advance(TankList * tankList)
 }
 
 template <typename OnAdvanceFuncType>
-void Shrapnel::AdvanceShrapnel(TankList * tankList, OnAdvanceFuncType OnAdvanceFunc)
+void ShrapnelBase::AdvanceShrapnel(TankList * tankList, OnAdvanceFuncType OnAdvanceFunc)
 {
     /* Did this expire? */
     if (!this->life--)
@@ -186,7 +186,7 @@ void Shrapnel::AdvanceShrapnel(TankList * tankList, OnAdvanceFuncType OnAdvanceF
 }
 
 
-void Shrapnel::Draw(Surface * drawBuffer)
+void ShrapnelBase::Draw(Surface * drawBuffer)
 {
     drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::FireHot));
 }

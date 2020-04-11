@@ -303,6 +303,13 @@ struct BoundingBox : RectBase<Position>
 //constexpr bool operator==(const NativeRect & left, const NativeRect & right) { return static_cast<Rect>(left) == static_cast<Rect>(right); }
 
 using TankColor = char;
+using Health = int;
+
+struct Cost
+{
+    int dirt = {};
+    int minerals = {};
+};
 
 enum class Orientation
 {

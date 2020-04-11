@@ -33,12 +33,12 @@ bool Resources::PayMinerals(int amount)
     return true;
 }
 
-bool Resources::Pay(int pay_dirt, int pay_minerals)
+bool Resources::Pay(Cost payment)
 {
-    if (this->dirt - pay_dirt < 0 || this->minerals - pay_minerals < 0)
+    if (this->dirt - payment.dirt < 0 || this->minerals - payment.minerals < 0)
         return false;
-    this->dirt -= pay_dirt;
-    this->minerals -= pay_minerals;
+    this->dirt -= payment.dirt;
+    this->minerals -= payment.minerals;
     return true;
 }
 

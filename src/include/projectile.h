@@ -58,17 +58,18 @@ struct Projectile
  * 
  *  Non-damaging, non-collidable projectile in form of one pixel.
  */
-class Shrapnel : public Projectile
+class ShrapnelBase : public Projectile
 {
   protected:
     int life = 0;
 
-  public:
-    Shrapnel(Position position, SpeedF speed, int life, Level * level) : Projectile(position, speed, level), life(life)
+  protected:
+    ShrapnelBase(Position position, SpeedF speed, int life, Level * level)
+        : Projectile(position, speed, level), life(life)
     {
     }
     //ProjectileType GetType() override { return ProjectileType::Shrapnel; }
-
+  public:
     void Advance(class TankList * tankList) override;
     void Draw(class Surface * drawBuffer) override;
 
@@ -77,15 +78,24 @@ class Shrapnel : public Projectile
     void AdvanceShrapnel(TankList * tankList, OnAdvanceFuncType OnAdvanceFunc);
 };
 
+class Shrapnel final : public ShrapnelBase
+{
+  public:
+    Shrapnel(Position position, SpeedF speed, int life, Level * level)
+        : ShrapnelBase(position, speed, life, level)
+    {
+    }
+};
+
 /*
  * ConcreteFoam
  *
  * Flying concrete from exploded ConcreteBarrel, seeking to attach concrete to surfaces
  */
-class ConcreteFoam : public Shrapnel
+class ConcreteFoam final : public ShrapnelBase
 {
   public:
-    ConcreteFoam(Position position, SpeedF speed, int life, Level * level) : Shrapnel(position, speed, life, level) {}
+    ConcreteFoam(Position position, SpeedF speed, int life, Level * level) : ShrapnelBase(position, speed, life, level) {}
     void Advance(class TankList * tankList) override;
     void Draw(class Surface * drawBuffer) override;
 };
@@ -95,10 +105,10 @@ class ConcreteFoam : public Shrapnel
  *
  * Flying dirt, result of DirtBarrel
  */
-class DirtFoam : public Shrapnel
+class DirtFoam final : public ShrapnelBase
 {
   public:
-    DirtFoam(Position position, SpeedF speed, int life, Level * level) : Shrapnel(position, speed, life, level) {}
+    DirtFoam(Position position, SpeedF speed, int life, Level * level) : ShrapnelBase(position, speed, life, level) {}
     void Advance(class TankList * tankList) override;
     void Draw(class Surface * drawBuffer) override;
 };
@@ -121,7 +131,7 @@ class MotionBlurProjectile : public Projectile
  *
  * Basic cannot bullet shot by a tank
  */
-class Bullet : public MotionBlurProjectile
+class Bullet final: public MotionBlurProjectile
 {
     using Base = MotionBlurProjectile;
 
@@ -147,11 +157,12 @@ class FlyingBarrel : public Projectile
     class Tank * tank;
     Color draw_color;
     int explode_distance;
-  public:
+  protected:
     FlyingBarrel(Position position, SpeedF speed, Level * level, Tank * tank, Color draw_color, int explode_distance)
         : Base(position, speed, level), tank(tank), draw_color(draw_color), explode_distance(explode_distance)
     {
     }
+  public:
     template <typename ExplosionFuncType>
     void Advance(TankList * tankList, ExplosionFuncType explosionFunc);
 
@@ -163,7 +174,7 @@ class FlyingBarrel : public Projectile
  * Flying barrel exploding in a fan of concrete
  */
 
-class ConcreteBarrel : public FlyingBarrel
+class ConcreteBarrel final: public FlyingBarrel
 {
 public:
     ConcreteBarrel(Position position, SpeedF speed, Level * level, Tank * tank)
@@ -178,7 +189,7 @@ public:
  * DirtBarrel
  * Flying barrel exploding in a fan of dirt
  */
-class DirtBarrel : public FlyingBarrel
+class DirtBarrel final: public FlyingBarrel
 {
   public:
     DirtBarrel(Position position, SpeedF speed, Level * level, Tank * tank)

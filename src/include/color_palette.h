@@ -31,6 +31,7 @@ enum class Colors
     RadarOutline,
     HarvesterInside,
     HarvesterOutline,
+    ChargerOutline,
     Size,
 };
 

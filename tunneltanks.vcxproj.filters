@@ -150,14 +150,8 @@
     <ClCompile Include="src\shape_renderer.cpp">
       <Filter>src\draw\shapes</Filter>
     </ClCompile>
-    <ClCompile Include="src\harvester.cpp">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
     <ClCompile Include="src\render_surface.cpp">
       <Filter>src\draw</Filter>
-    </ClCompile>
-    <ClCompile Include="src\harvester_list.cpp">
-      <Filter>src\game_entity</Filter>
     </ClCompile>
     <ClCompile Include="src\gamelib\SDL\sdl_controller.cpp">
       <Filter>sdl_interface</Filter>
@@ -173,6 +167,12 @@
     </ClCompile>
     <ClCompile Include="src\duration.cpp">
       <Filter>src\system</Filter>
+    </ClCompile>
+    <ClCompile Include="src\machine.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\machine_list.cpp">
+      <Filter>src\game_entity</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -330,14 +330,8 @@
     <ClInclude Include="src\shape_renderer.h">
       <Filter>src\draw\shapes</Filter>
     </ClInclude>
-    <ClInclude Include="src\harvester.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
     <ClInclude Include="src\render_surface.h">
       <Filter>src\draw</Filter>
-    </ClInclude>
-    <ClInclude Include="src\harvester_list.h">
-      <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\gamelib\SDL\sdl_controller.h">
       <Filter>sdl_interface</Filter>
@@ -353,6 +347,12 @@
     </ClInclude>
     <ClInclude Include="src\include\duration.h">
       <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\machine.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\machine_list.h">
+      <Filter>src\game_entity</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

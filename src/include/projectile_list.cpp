@@ -14,9 +14,9 @@ void ProjectileList::Advance(Level * level, TankList * tankList)
     Shrink();
 
     /* Advance everything */
-    this->items.ForEach([tankList](Projectile & item) { item.Advance(tankList); });
+    this->items.ForEach([tankList](auto & item) { item.Advance(tankList); });
 }
 void ProjectileList::Draw(Surface * drawBuffer)
 {
-    this->items.ForEach([drawBuffer](Projectile & item) { item.Draw(drawBuffer); });
+    this->items.ForEach([drawBuffer](auto & item) { item.Draw(drawBuffer); });
 }

@@ -39,7 +39,7 @@ class Resources
 public:
     bool PayDirt(int amount);
     bool PayMinerals(int amount);
-    bool Pay(int pay_dirt, int pay_minerals);
+    bool Pay(Cost payment);
     void AddMinerals(int amount) { this->minerals += amount; }
     void AddDirt(int amount) { this->dirt += amount; }
     int GetDirt() const { return this->dirt; }

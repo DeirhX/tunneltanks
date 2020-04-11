@@ -138,13 +138,17 @@ namespace rules
 {
     using namespace std::literals::chrono_literals;
 
-    constexpr int HarvesterDirtCost = 500;
-    constexpr int MinerDirtCost = 1000;
+    constexpr Cost HarvesterCost = {.dirt = 500, .minerals = 0};
+    constexpr Cost MinerCost = {.dirt = 1000, .minerals = 0};
     constexpr int HarvesterHP = 100;
     constexpr int MinerHP = 200;
     constexpr std::chrono::milliseconds HarvestTimer = 500ms;
     constexpr int HarvestMaxRange = 20;
-}
+    constexpr Cost ChargerCost = {.dirt = 500, .minerals = 0};
+    constexpr int ChargerHP = 100;
+    constexpr std::chrono::milliseconds ChargeTimer = 500ms;
+    constexpr int ChargeMaxRange = 20;
+    }
 
  
 }

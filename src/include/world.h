@@ -1,7 +1,7 @@
 #pragma once
 
 #include "collision_solver.h"
-#include "harvester_list.h"
+#include "machine_list.h"
 #include "level.h"
 #include "projectile_list.h"
 #include "tanklist.h"
@@ -12,7 +12,7 @@ class World
 
     std::unique_ptr<Level> level;
     std::unique_ptr<ProjectileList> projectile_list;
-    std::unique_ptr<HarvesterList> harvester_list;
+    std::unique_ptr<MachineryList> harvester_list;
     std::unique_ptr<TankList> tank_list;
 
     CollisionSolver collision_solver;
@@ -23,7 +23,7 @@ class World
 
     TankList * GetTankList() { return this->tank_list.get(); }
     ProjectileList * GetProjectileList() { return this->projectile_list.get(); }
-    HarvesterList * GetHarvesterList() { return this->harvester_list.get(); }
+    MachineryList * GetHarvesterList() { return this->harvester_list.get(); }
     Level * GetLevel() { return this->level.get(); }
     const CollisionSolver * GetCollisionSolver() const { return &this->collision_solver; }
     void GameIsOver();

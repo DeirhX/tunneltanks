@@ -5,9 +5,9 @@ Tank * CollisionSolver::TestTank(Position world_position) const
     return this->tank_list->GetTankAtPoint(world_position);
 }
 
-Harvester * CollisionSolver::TestHarvester(Position world_position) const
+Machine * CollisionSolver::TestMachine(Position world_position) const
 {
-    return this->harvester_list->GetHarvesterAtPoint(world_position);
+    return this->harvester_list->GetMachineAtPoint(world_position);
 }
 
 LevelPixel CollisionSolver::TestTerrain(Position world_position) const
