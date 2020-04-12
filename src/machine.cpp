@@ -26,7 +26,7 @@ void Harvester::Advance(Level * level)
     if (!CheckAlive(level))
         return;
 
-    if (!this->harvest_timer.AdvanceAndCheckElapsed())
+    if (this->harvest_timer.AdvanceAndCheckElapsed())
     {
         auto closest_pixel = level::GetClosestPixel(GetWorld()->GetLevel()->GetLevelData(), this->position, tweak::rules::HarvestMaxRange,
                                [](LevelPixel pixel) { return Pixel::IsDirt(pixel); });
@@ -69,7 +69,7 @@ void Charger::Advance(Level * level)
     if (!CheckAlive(level))
         return;
 
-    if (!this->charge_timer.AdvanceAndCheckElapsed())
+    if (this->charge_timer.AdvanceAndCheckElapsed())
     {
         auto closest_pixel = level::GetClosestPixel(GetWorld()->GetLevel()->GetLevelData(), this->position,
                                                     tweak::rules::HarvestMaxRange,
@@ -77,8 +77,8 @@ void Charger::Advance(Level * level)
 
         if (closest_pixel.has_value() && closest_pixel.value() != this->position)
         {
-            if (!Pixel::IsScorched(GetWorld()->GetLevel()->GetPixel(closest_pixel.value())) || Random.Bool(250))
-                GetWorld()->GetLevel()->SetPixel(closest_pixel.value(), LevelPixel::Energy);
+            //if (!Pixel::IsScorched(GetWorld()->GetLevel()->GetPixel(closest_pixel.value())) || Random.Bool(250))
+            GetWorld()->GetLevel()->SetPixel(closest_pixel.value(), LevelPixel::Energy);
         }
     }
 }

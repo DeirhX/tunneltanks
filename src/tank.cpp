@@ -101,7 +101,9 @@ void Tank::Advance(World * world)
 
         /* Move, dig and solve collisions with other tanks */
         this->HandleMove(world->GetTankList());
-        
+
+        this->CollectItems();
+
         /* Shoot the turret if desired */
         this->turret.HandleShoot();
     }
@@ -206,7 +208,14 @@ void Tank::TryBaseHeal()
 
 void Tank::CollectItems()
 {
-
+    this->ForEachTankPixel([this](Position world_position) {
+        if (Pixel::IsEnergy(this->level->GetPixel(world_position)))
+        {
+            this->level->SetPixel(world_position, LevelPixel::Blank);
+            this->AlterEnergy(100);
+        }
+        return true;
+    });
 }
 
 void Tank::Draw(Surface * surface) const

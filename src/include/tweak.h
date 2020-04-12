@@ -146,7 +146,7 @@ namespace rules
     constexpr int HarvestMaxRange = 20;
     constexpr Cost ChargerCost = {.dirt = 500, .minerals = 0};
     constexpr int ChargerHP = 100;
-    constexpr std::chrono::milliseconds ChargeTimer = 500ms;
+    constexpr std::chrono::milliseconds ChargeTimer = 200ms;
     constexpr int ChargeMaxRange = 20;
     }
 
