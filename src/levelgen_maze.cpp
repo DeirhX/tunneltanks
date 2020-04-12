@@ -4,7 +4,7 @@
 #include <memalloc.h>
 #include <random.h>
 #include <queue>
-#include "levelgenmaze.h"
+#include "levelgen_maze.h"
 
 namespace levelgen::maze {
 

@@ -2,11 +2,10 @@
 #include <cmath>
 
 #include <level.h>
-#include <levelgensimple.h>
+#include <levelgen_simple.h>
 #include <levelgenutil.h>
 #include <random.h>
 #include <types.h>
-#include "levelgensimple.h"
 
 namespace levelgen::simple
 {

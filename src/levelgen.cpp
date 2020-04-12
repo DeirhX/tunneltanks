@@ -6,10 +6,10 @@
 #include <levelgen.h>
 #include <memory>
 
-#include <levelgenbraid.h>
-#include <levelgenmaze.h>
-#include <levelgensimple.h>
-#include <levelgentoast.h>
+#include <levelgen_braid.h>
+#include <levelgen_maze.h>
+#include <levelgen_simple.h>
+#include <levelgen_toast.h>
 #include <trace.h>
 
 namespace levelgen

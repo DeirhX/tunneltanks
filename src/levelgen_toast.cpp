@@ -4,7 +4,7 @@
 
 #include <gamelib.h>
 #include <levelgen.h>
-#include <levelgentoast.h>
+#include <levelgen_toast.h>
 #include <levelgenutil.h>
 #include <level.h>
 #include <memalloc.h>

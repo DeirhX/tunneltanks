@@ -4,7 +4,7 @@
 #include <memalloc.h>
 #include <queue>
 #include <random.h>
-#include "levelgenbraid.h"
+#include "levelgen_braid.h"
 
 namespace levelgen::braid
 {

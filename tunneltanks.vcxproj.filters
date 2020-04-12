@@ -102,12 +102,6 @@
     <ClCompile Include="src\levelgenutil.cpp">
       <Filter>src\generators</Filter>
     </ClCompile>
-    <ClCompile Include="src\levelgentoast.cpp">
-      <Filter>src\generators</Filter>
-    </ClCompile>
-    <ClCompile Include="src\levelgensimple.cpp">
-      <Filter>src\generators</Filter>
-    </ClCompile>
     <ClCompile Include="src\levelgen.cpp">
       <Filter>src\generators</Filter>
     </ClCompile>
@@ -168,10 +162,16 @@
     <ClCompile Include="src\machine_list.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
-    <ClCompile Include="src\levelgenmaze.cpp">
+    <ClCompile Include="src\levelgen_braid.cpp">
       <Filter>src\generators</Filter>
     </ClCompile>
-    <ClCompile Include="src\levelgen_braid.cpp">
+    <ClCompile Include="src\levelgen_maze.cpp">
+      <Filter>src\generators</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgen_simple.cpp">
+      <Filter>src\generators</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgen_toast.cpp">
       <Filter>src\generators</Filter>
     </ClCompile>
   </ItemGroup>
@@ -186,15 +186,6 @@
       <Filter>sdl_interface</Filter>
     </ClInclude>
     <ClInclude Include="src\include\levelgen.h">
-      <Filter>src\generators</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\levelgenmaze.h">
-      <Filter>src\generators</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\levelgensimple.h">
-      <Filter>src\generators</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\levelgentoast.h">
       <Filter>src\generators</Filter>
     </ClInclude>
     <ClInclude Include="src\include\levelgenutil.h">
@@ -355,6 +346,15 @@
       <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\include\levelgen_braid.h">
+      <Filter>src\generators</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\levelgen_maze.h">
+      <Filter>src\generators</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\levelgen_simple.h">
+      <Filter>src\generators</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\levelgen_toast.h">
       <Filter>src\generators</Filter>
     </ClInclude>
   </ItemGroup>
