@@ -58,7 +58,7 @@
     <ClCompile Include="src\include\projectile_list.cpp" />
     <ClCompile Include="src\level.cpp" />
     <ClCompile Include="src\levelgen.cpp" />
-    <ClCompile Include="src\levelgenbraid.cpp" />
+    <ClCompile Include="src\levelgen_braid.cpp" />
     <ClCompile Include="src\levelgenmaze.cpp" />
     <ClCompile Include="src\levelgensimple.cpp" />
     <ClCompile Include="src\levelgentoast.cpp" />
@@ -114,7 +114,7 @@
     <ClInclude Include="src\include\iterators.h" />
     <ClInclude Include="src\include\level.h" />
     <ClInclude Include="src\include\levelgen.h" />
-    <ClInclude Include="src\include\levelgenbraid.h" />
+    <ClInclude Include="src\include\levelgen_braid.h" />
     <ClInclude Include="src\include\levelgenmaze.h" />
     <ClInclude Include="src\include\levelgensimple.h" />
     <ClInclude Include="src\include\levelgentoast.h" />
