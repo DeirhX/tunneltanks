@@ -145,7 +145,7 @@ class MultiTypeContainer
   private:
     std::tuple<ValueContainer<TValues>...> items;
   private:
-    MultiTypeContainer(MultiTypeContainer &) = default; /* Do not allow implicit copy. It's most likely a mistake. */
+    MultiTypeContainer(const MultiTypeContainer &) = delete; /* Do not allow implicit copy. It's most likely a mistake. */
   public:
     MultiTypeContainer() = default;
 
@@ -251,6 +251,7 @@ class Container2D
     Size size;
   public:
     Container2D(Size size) : array(size.x * size.y), size(size) {}
+    Container2D(const Container2D &) = delete; /* Expensive to copy, don't do it unintentionally */
 
     ValueType & operator[](int i) { return array[i]; }
     const ValueType & operator[](int i) const { return array[i]; }

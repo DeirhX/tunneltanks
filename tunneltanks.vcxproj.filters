@@ -354,6 +354,9 @@
     <ClInclude Include="src\machine_list.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
+    <ClInclude Include="src\include\level_algorithm.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

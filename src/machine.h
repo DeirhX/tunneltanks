@@ -29,9 +29,10 @@ class Machine
     bool IsValid() const { return is_alive; }
     void Invalidate() { is_alive = false; }
 
+    bool CheckAlive(Level * level);
     virtual void Die(Level * level) = 0;
-    /* They will not be called via v-table, don't worry. Compile-time polymorphism only. Just so you don't forget to implement them.  */
-    virtual void Advance(Level * level);
+    /* They will not be called via v-table, don't worry. Compile-time polymorphism only. Just so you don't   */
+    virtual void Advance(Level * level) = 0;
     virtual void Draw(Surface * surface) const = 0;
 
     void AlterHealth(int shot_damage);

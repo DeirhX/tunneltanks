@@ -5,54 +5,35 @@
 #include "level.h"
 #include "projectile.h"
 #include "shape_renderer.h"
+#include "level_algorithm.h"
 #include "world.h"
 
-void Machine::Advance(Level * level)
+bool Machine::CheckAlive(Level * level)
 {
     this->health = std::max(0, this->health);
     if (this->health == 0)
     {
         Die(level);
-        return;
+        return false;
     }
+    return true;
 }
 
 void Machine::AlterHealth(int shot_damage) { this->health -= shot_damage; }
 
 void Harvester::Advance(Level * level)
 {
-    Base::Advance(level);
+    if (!CheckAlive(level))
+        return;
 
     if (!this->harvest_timer.AdvanceAndCheckElapsed())
     {
-        float nearest_distance = std::numeric_limits<float>::max();
-        Position nearest_pos = this->position;
+        auto closest_pixel = level::GetClosestPixel(GetWorld()->GetLevel()->GetLevelData(), this->position, tweak::rules::HarvestMaxRange,
+                               [](LevelPixel pixel) { return Pixel::IsDirt(pixel); });
 
-        auto check_pixel = [this, &nearest_distance, &nearest_pos](Position pos, const LevelPixel & pixel) {
-            if (Pixel::IsDirt(pixel))
-            {
-                float distance = (pos - this->position).GetSize();
-                if (distance <= tweak::rules::HarvestMaxRange && nearest_distance > distance)
-                {
-                    nearest_pos = pos;
-                    nearest_distance = distance;
-                }
-            }
-            return true;
-        };
-
-        for (int i = 1; i < tweak::rules::HarvestMaxRange; ++i)
+        if (closest_pixel.has_value() && closest_pixel.value() != this->position)
         {
-            ShapeRenderer::InspectRectangle(GetWorld()->GetLevel()->GetLevelData(),
-                                            Rect{this->position.x - i, this->position.y - i, i * 2 + 1, i * 2 + 1},
-                                            check_pixel);
-            if (float(i) >= nearest_distance)
-                break;
-        }
-
-        if (nearest_pos != this->position)
-        {
-            GetWorld()->GetLevel()->SetPixel(nearest_pos, LevelPixel::Blank);
+            GetWorld()->GetLevel()->SetPixel(closest_pixel.value(), LevelPixel::Blank);
             this->owner->GetResources().AddDirt(1);
         }
     }
@@ -84,7 +65,44 @@ void Harvester::Die(Level * level)
  */
 
 void Charger::Advance(Level * level)
-{ Base::Advance(level); }
+{
+    if (!CheckAlive(level))
+        return;
+
+    if (!this->charge_timer.AdvanceAndCheckElapsed())
+    {
+        float nearest_distance = std::numeric_limits<float>::max();
+        Position nearest_pos = this->position;
+
+        auto check_pixel = [this, &nearest_distance, &nearest_pos](Position pos, const LevelPixel & pixel) {
+            if (Pixel::IsEmpty(pixel))
+            {
+                float distance = (pos - this->position).GetSize();
+                if (distance <= tweak::rules::HarvestMaxRange && nearest_distance > distance)
+                {
+                    nearest_pos = pos;
+                    nearest_distance = distance;
+                }
+            }
+            return true;
+        };
+
+        for (int i = 1; i < tweak::rules::HarvestMaxRange; ++i)
+        {
+            ShapeRenderer::InspectRectangle(GetWorld()->GetLevel()->GetLevelData(),
+                                            Rect{this->position.x - i, this->position.y - i, i * 2 + 1, i * 2 + 1},
+                                            check_pixel);
+            if (float(i) >= nearest_distance)
+                break;
+        }
+
+        if (nearest_pos != this->position)
+        {
+            GetWorld()->GetLevel()->SetPixel(nearest_pos, LevelPixel::Blank);
+            this->owner->GetResources().AddDirt(1);
+        }
+    }
+}
 
 void Charger::Draw(Surface * surface) const
 {

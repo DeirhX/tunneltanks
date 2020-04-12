@@ -98,6 +98,7 @@ constexpr Offset operator-(Position p, Position o) noexcept { return {p.x - o.x,
 constexpr Position operator+(Position v, Offset o) noexcept { return {v.x + o.x, v.y + o.y}; }
 constexpr Position operator+(Position v, Size o) noexcept { return {v.x + o.x, v.y + o.y}; }
 constexpr bool operator==(Position l, Position r) noexcept { return l.x == r.x && l.y == r.y; }
+constexpr bool operator!=(Position l, Position r) noexcept { return !operator==(l, r); }
 constexpr bool operator==(Size l, Size r) noexcept { return l.x == r.x && l.y == r.y; }
 constexpr ScreenPosition operator+(ScreenPosition v, Offset o) noexcept { return {v.x + o.x, v.y + o.y}; }
 constexpr ScreenPosition operator+(ScreenPosition v, Size o) noexcept { return {v.x + o.x, v.y + o.y}; }

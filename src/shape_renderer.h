@@ -13,8 +13,8 @@ class ShapeRenderer
     static void FillRectangle(Surface * surface, Rect rect, Color color);
     static void DrawRectangle(Surface * screen, Rect rect, bool round_corners, Color fill_color,
                               Color outline_color);
-    template <typename ValueType, typename InspectFunc>
-    static bool InspectRectangle(const Container2D<ValueType> & container, Rect rect, InspectFunc inspect_func);
+    template <typename SurfaceType, typename InspectFunc>
+    static bool InspectRectangle(const SurfaceType & container, Rect rect, InspectFunc inspect_func);
 
     static void DrawCircle(Surface * screen, Position center, int radius, Color fill_color, Color outline_color);
 };
@@ -23,9 +23,10 @@ class ShapeRenderer
  * Inspects every item laying on (not inside) given rectangle.
  *   return true if every inspection returned true as well, false otherwise
  *   stops on first failed inspection.
+ * SurfaceType - a 2D container indexed by Position
  * InspectFunc - return true to continue inspection, false to terminate */
-template <typename ValueType, typename InspectFunc>
-bool ShapeRenderer::InspectRectangle(const Container2D<ValueType>& container, Rect rect, InspectFunc inspect_func)
+template <typename SurfaceType, typename InspectFunc>
+bool ShapeRenderer::InspectRectangle(const SurfaceType & container, Rect rect, InspectFunc inspect_func)
 {
     for (int x = rect.Left(); x <= rect.Right(); ++x)
         for (int y = rect.Top(); y <= rect.Bottom(); ++y)
