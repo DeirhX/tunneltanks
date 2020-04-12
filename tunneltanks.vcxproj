@@ -59,7 +59,7 @@
     <ClCompile Include="src\level.cpp" />
     <ClCompile Include="src\levelgen.cpp" />
     <ClCompile Include="src\levelgenbraid.cpp" />
-    <ClCompile Include="src\levelgenmaze.c" />
+    <ClCompile Include="src\levelgenmaze.cpp" />
     <ClCompile Include="src\levelgensimple.cpp" />
     <ClCompile Include="src\levelgentoast.cpp" />
     <ClCompile Include="src\levelgenutil.cpp" />

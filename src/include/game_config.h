@@ -13,7 +13,7 @@ struct GameConfig
 {
     VideoConfig video_config;
     Size level_size;
-    LevelGenerator level_generator;
+    levelgen::LevelGeneratorType level_generator;
     bool is_debug;
     int player_count;
     int rand_seed;

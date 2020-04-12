@@ -1,116 +1,146 @@
 #include "base.h"
 #include <cstdio>
 #include <cstring>
-#include <chrono>
+#include <array>
 #include <gamelib.h>
 #include <levelgen.h>
-#include <algorithm>
+#include <memory>
 
+#include <levelgenbraid.h>
+#include <levelgenmaze.h>
+#include <levelgensimple.h>
+#include <levelgentoast.h>
+#include <trace.h>
 
-struct LevelGeneratorDesc {
-	LevelGenerator     id;
-	const char*        name;
-	LevelGeneratorFunc gen;
-	const char         *desc;
+namespace levelgen
+{
+
+struct LevelGeneratorDesc
+{
+    LevelGeneratorType id;
+    const char * name;
+    std::unique_ptr<GeneratorAlgorithm> generator;
+    const char * desc;
 };
-
 
 /* === All the generator headers go here: =================================== */
 
-#include <levelgentoast.h>
-#include <levelgensimple.h>
-#include <levelgenmaze.h>
-#include <levelgenbraid.h>
-#include <trace.h>
-
 /* Add an entry for every generator: */
-std::array<LevelGeneratorDesc, 4> LevelGenerators =
-{
-	LevelGeneratorDesc{LevelGenerator::Toast,  "toast", levelgen::toast::toast_generator,  "Twisty, cavernous maps."},
-	LevelGeneratorDesc{LevelGenerator::Braid,  "braid", levelgen::braid::braid_generator,  "Maze-like maps with no dead ends." },
-	LevelGeneratorDesc{LevelGenerator::Maze,   "maze", levelgen::maze::maze_generator,   "Complicated maps with a maze surrounding the bases."},
-	LevelGeneratorDesc{LevelGenerator::Simple, "simple", levelgen::simple::simple_generator, "Simple rectangular maps with ragged sides."},
-	
+std::array<LevelGeneratorDesc, 4> LevelGenerators = {
+    LevelGeneratorDesc{.id = LevelGeneratorType::Toast,
+                       .name = "toast",
+                       .generator = std::make_unique<levelgen::toast::ToastLevelGenerator>(),
+                       .desc = "Twisty, cavernous maps."},
+    LevelGeneratorDesc{.id = LevelGeneratorType::Braid,
+                       .name = "braid",
+                       .generator = std::make_unique<levelgen::braid::BraidLevelGenerator>(),
+                       .desc = "Maze-like maps with no dead ends."},
+    LevelGeneratorDesc{.id = LevelGeneratorType::Maze,
+                       .name = "maze",
+                       .generator = std::make_unique<levelgen::maze::MazeLevelGenerator>(),
+                       .desc = "Complicated maps with a maze surrounding the bases."},
+    LevelGeneratorDesc{.id = LevelGeneratorType::Simple,
+                       .name = "simple",
+                       .generator = std::make_unique<levelgen::simple::SimpleLevelGenerator>(),
+                       .desc = "Simple rectangular maps with ragged sides."},
+
 };
 
-LevelGenerator GeneratorFromName(const char* name)
+LevelGeneratorType LevelGenerator::FromName(const char * name)
 {
-	if (name)
-	{
-		/* Look for the id: */
-		for (auto& generator : LevelGenerators)
-		{
-			if (!strcmp(name, generator.name)) {
-				return generator.id;
-			}
-		}
-	}
-	return LevelGenerator::None;
+    if (name)
+    {
+        /* Look for the id: */
+        for (auto & generator : LevelGenerators)
+        {
+            if (!strcmp(name, generator.name))
+            {
+                return generator.id;
+            }
+        }
+    }
+    return LevelGeneratorType::None;
 }
-
 
 /* ========================================================================== */
 
 /* Linear search is ok here, since there aren't many level generators: */
-std::chrono::milliseconds generate_level(Level *lvl, LevelGenerator generator) {
-	
-	/* If 'id' is null, go with the default: */
-	if(generator == LevelGenerator::None) 
-		generator = LevelGenerators[0].id;
+GeneratedLevel LevelGenerator::Generate(LevelGeneratorType generator, Size size)
+{
 
-	auto found = std::find_if(LevelGenerators.begin(), LevelGenerators.end(), [generator](const auto& desc) {return desc.id == generator; });
-	if (found == LevelGenerators.end())
-	{
-		/* Report what level generator we found: */
-		gamelib_print("Using default level generator: '%s'\n", LevelGenerators[0].id);
-	}
-	gamelib_print("Using level generator: '%s'\n", found->name);
-	LevelGeneratorFunc func = found->gen;
+    /* If 'id' is null, go with the default: */
+    if (generator == LevelGeneratorType::None)
+        generator = LevelGenerators[0].id;
 
-	{
-		Stopwatch<std::chrono::milliseconds> s;
+    auto found = std::find_if(LevelGenerators.begin(), LevelGenerators.end(),
+                              [generator](const auto & desc) { return desc.id == generator; });
+    if (found == LevelGenerators.end())
+    {
+        /* Report what level generator we found: */
+        gamelib_print("Using default level generator: '%s'\n", LevelGenerators[0].id);
+    }
+    gamelib_print("Using level generator: '%s'\n", found->name);
+    {
+        Stopwatch<std::chrono::milliseconds> s;
 
-		/* Ok, now generate the level: */
-		func(lvl);
+        /* Ok, now generate the level: */
+        std::unique_ptr<Level> level =  found->generator->Generate(size);
 
-		gamelib_print("Level generated in: ");
-		auto msecs = s.GetElapsed();
-		gamelib_print("%lld.%03lld sec\n", msecs.count() / 1000, msecs.count() % 1000);
+        gamelib_print("Level generated in: ");
+        auto msecs = s.GetElapsed();
+        gamelib_print("%lld.%03lld sec\n", msecs.count() / 1000, msecs.count() % 1000);
 
-		return { std::chrono::duration_cast<std::chrono::milliseconds>(msecs)};
-	}
+        return {.level = std::move(level), .generation_time = std::chrono::duration_cast<std::chrono::milliseconds>(msecs)};
+    }
 }
 
 /* Will print a specified number of spaces to the file: */
-static void put_chars(size_t i, char c) {
-	while( i-- )
-		gamelib_print("%c", c);
+static void put_chars(size_t i, char c)
+{
+    while (i--)
+        gamelib_print("%c", c);
 }
 
-void print_levels(FILE *out) {
-	size_t max_id = 7;
-	size_t max_desc = strlen("Description:");
-	
-	/* Get the longest ID/Description length: */
-	for (auto& generator : LevelGenerators)
-	{
-		max_id = std::max(max_id, strlen(generator.name));
-		max_desc = std::max(max_desc, strlen(generator.desc));
-	}
-	
-	/* Print the header: */
-	gamelib_print("ID:  ");
-	put_chars(max_id - strlen("ID:"), ' ');
-	gamelib_print("Description:\n");
-	put_chars(max_id + max_desc + 2, '-');
-	gamelib_print("\n");
-	
-	/* Print all things: */
-	for (auto i = 0u; i < LevelGenerators.size(); i++) {
-		gamelib_print("%s  ", LevelGenerators[i].name);
-		put_chars(max_id - strlen(LevelGenerators[i].name), ' ');
-		gamelib_print("%s%s\n", LevelGenerators[i].desc, i==0 ? " (Default)":"");
-	}
-	gamelib_print("\n");
+void LevelGenerator::PrintAllGenerators(FILE * out)
+{
+    size_t max_id = 7;
+    size_t max_desc = strlen("Description:");
+
+    /* Get the longest ID/Description length: */
+    for (auto & generator : LevelGenerators)
+    {
+        max_id = std::max(max_id, strlen(generator.name));
+        max_desc = std::max(max_desc, strlen(generator.desc));
+    }
+
+    /* Print the header: */
+    gamelib_print("ID:  ");
+    put_chars(max_id - strlen("ID:"), ' ');
+    gamelib_print("Description:\n");
+    put_chars(max_id + max_desc + 2, '-');
+    gamelib_print("\n");
+
+    /* Print all things: */
+    for (auto i = 0u; i < LevelGenerators.size(); i++)
+    {
+        gamelib_print("%s  ", LevelGenerators[i].name);
+        put_chars(max_id - strlen(LevelGenerators[i].name), ' ');
+        gamelib_print("%s%s\n", LevelGenerators[i].desc, i == 0 ? " (Default)" : "");
+    }
+    gamelib_print("\n");
 }
 
+
+int Queries::CountNeighborValues(Position pos, Level * level)
+{
+    return (char)level->GetVoxelRaw({pos.x - 1 + level->GetSize().x * (pos.y - 1)}) +
+           (char)level->GetVoxelRaw({pos.x + level->GetSize().x * (pos.y - 1)}) +
+           (char)level->GetVoxelRaw({pos.x + 1 + level->GetSize().x * (pos.y - 1)}) +
+           (char)level->GetVoxelRaw({pos.x - 1 + level->GetSize().x * (pos.y)}) +
+           (char)level->GetVoxelRaw({pos.x + 1 + level->GetSize().x * (pos.y)}) +
+           (char)level->GetVoxelRaw({pos.x - 1 + level->GetSize().x * (pos.y + 1)}) +
+           (char)level->GetVoxelRaw({pos.x + level->GetSize().x * (pos.y + 1)}) +
+           (char)level->GetVoxelRaw({pos.x + 1 + level->GetSize().x * (pos.y + 1)});
+}
+
+} // namespace levelgen

@@ -1,5 +1,4 @@
 #pragma once
-#include "levelgen.h"
 #include <cassert>
 #include <memory>
 #include <types.h>

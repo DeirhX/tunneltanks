@@ -1,18 +1,13 @@
 #pragma once
 
-#include "tweak.h"
-#include <array>
-
 #include <memory>
 #include <types.h>
 #include <vector>
 
-#include "bitmaps.h"
 #include "containers.h"
 #include "level_adjacency.h"
 #include "parallelism.h"
 #include "render_surface.h"
-#include "shape_renderer.h"
 
 enum class LevelPixel : char;
 
@@ -76,13 +71,11 @@ class Level
     /* Voxel get-set-reference operations */
     void SetPixel(Position pos, LevelPixel voxel);
     LevelPixel GetPixel(Position pos) const;
-    //LevelPixel & Voxel(Position pos);
 
     void SetVoxelRaw(Position pos, LevelPixel voxel);
     void SetVoxelRaw(int offset, LevelPixel voxel) { SetLevelData(offset, voxel); }
     LevelPixel GetVoxelRaw(Position pos) const;
     LevelPixel GetVoxelRaw(int offset) const { return this->data[offset]; }
-    //LevelPixel & VoxelRaw(Position pos);
 
     /* Terrain surface interaction */
     void CommitPixel(Position pos);
@@ -94,7 +87,6 @@ class Level
     static Color GetVoxelColor(LevelPixel voxel);
 
     /* Count neighbors is used when level building and for ad-hoc queries (e.g. dirt regeneration) */
-    int CountNeighborValues(Position pos);
     int CountNeighbors(Position pos, LevelPixel neighbor_value);
     template <typename CountFunc>
     int CountNeighborValues(Position pos, CountFunc count_func);

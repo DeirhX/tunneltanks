@@ -1,10 +1,14 @@
 #pragma once
 #include <level.h>
+#include <memory>
 
-namespace levelgen::braid {
+namespace levelgen::braid
+{
 
-	void braid_generator(Level *lvl) ;
+class BraidLevelGenerator : public GeneratorAlgorithm
+{
+  public:
+    std::unique_ptr<Level> Generate(Size size) override;
+};
 
-}
-
-
+} // namespace levelgen::braid

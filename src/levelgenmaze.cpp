@@ -4,6 +4,7 @@
 #include <memalloc.h>
 #include <random.h>
 #include <queue>
+#include "levelgenmaze.h"
 
 namespace levelgen::maze {
 
@@ -144,7 +145,10 @@ static void maze_free(Maze *m) {
 }
 
 
-void maze_generator(Level *lvl) {
+std::unique_ptr<Level> MazeLevelGenerator::Generate(Size size)
+{
+    std::unique_ptr<Level> level = std::make_unique<Level>(size);
+    Level * lvl = level.get();
 	int x, y;
 	Maze *m = maze_new(lvl->GetSize()/CELL_SIZE);
 	
@@ -207,6 +211,7 @@ void maze_generator(Level *lvl) {
 	}
 	
 	maze_free(m);
+    return std::move(level);
 }
 
 }

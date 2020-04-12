@@ -415,7 +415,7 @@ static int smooth_once(Level *lvl) {
 			for (int x = 1; x < size.x - 1; x++) {
                 LevelPixel oldbit = lvl->GetVoxelRaw({ x, y });
 
-				int n = lvl->CountNeighborValues({x, y});
+				int n = Queries::CountNeighborValues({x, y}, lvl);
 				bool paintRock = (oldbit != LevelPixel::LevelGenDirt) ? (n >= 3) : (n > 4);
 				lvl->SetVoxelRaw({ x, y }, paintRock ? LevelPixel::LevelGenRock : LevelPixel::LevelGenDirt);
 
@@ -452,12 +452,18 @@ static void smooth_cavern(Level *lvl) {
  * MAIN FUNCTIONS:                                                            *
  *----------------------------------------------------------------------------*/
 
-void toast_generator(Level *lvl) {
+std::unique_ptr<Level> ToastLevelGenerator::Generate(Size size)
+{
+    std::unique_ptr<Level> level = std::make_unique<Level>(size);
+    Level * lvl = level.get();
+
 	auto perf = MeasureFunction<1>{ __FUNCTION__ };
 
 	generate_tree(lvl);
 	randomly_expand(lvl);
 	smooth_cavern(lvl);
+
+	return std::move(level);
 }
 
 #ifdef _TESTING

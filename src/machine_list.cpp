@@ -19,7 +19,7 @@ void MachineryList::Draw(Surface * surface)
 Machine * MachineryList::GetMachineAtPoint(Position position) 
 {
     Machine * result = nullptr;
-    this->items.ForEach([position, &result](auto & harvester) -> Machine * {
+    this->items.ForEach([position, &result](auto & harvester) {
         if (harvester.IsColliding(position))
             result = &harvester;
     });

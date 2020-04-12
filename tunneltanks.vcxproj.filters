@@ -30,9 +30,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\levelgenmaze.c">
-      <Filter>src\generators</Filter>
-    </ClCompile>
     <ClCompile Include="src\exceptions.cpp">
       <Filter>src\system</Filter>
     </ClCompile>
@@ -173,6 +170,9 @@
     </ClCompile>
     <ClCompile Include="src\machine_list.cpp">
       <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgenmaze.cpp">
+      <Filter>src\generators</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

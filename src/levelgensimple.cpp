@@ -6,6 +6,7 @@
 #include <levelgenutil.h>
 #include <random.h>
 #include <types.h>
+#include "levelgensimple.h"
 
 namespace levelgen::simple
 {
@@ -151,8 +152,10 @@ static void add_spawns(Level *lvl)
     }
 }
 
-void simple_generator(Level *lvl)
+std::unique_ptr<Level> SimpleLevelGenerator::Generate(Size size)
 {
+    std::unique_ptr<Level> level = std::make_unique<Level>(size);
+    Level * lvl = level.get();
     /* Levels default to all rock. Set this to all dirt: */
     fill_all(lvl, LevelPixel::LevelGenDirt);
 
@@ -167,6 +170,7 @@ void simple_generator(Level *lvl)
 
     /* Add a few spawns, and we're good to go! */
     add_spawns(lvl);
+    return std::move(level);
 }
 
 } // namespace levelgen::simple

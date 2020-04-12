@@ -115,7 +115,7 @@ int GameMain(int argc, char * argv[])
         }
         else if (!strcmp("--show-levels", argv[i]))
         {
-            print_levels(stdout);
+            levelgen::LevelGenerator::PrintAllGenerators(stdout);
             return 0;
         }
         else if (!strcmp("--level", argv[i]))
@@ -161,14 +161,12 @@ int GameMain(int argc, char * argv[])
         /* If we're only writing the generated level to file, then just do that: */
         if (outfile_name)
         {
-            auto lvl = std::make_unique<Level>(size);
-
             /* Generate our random level: */
-            generate_level(lvl.get(), GeneratorFromName(id));
-            lvl->MaterializeLevelTerrainAndBases();
+            levelgen::GeneratedLevel generated_level = levelgen::LevelGenerator::Generate(levelgen::LevelGenerator::FromName(id), size );
+            generated_level.level->MaterializeLevelTerrainAndBases();
 
             /* Dump it out, and exit: */
-            lvl->DumpBitmap(outfile_name);
+            generated_level.level->DumpBitmap(outfile_name);
 
             gamelib_exit();
             return 0;
@@ -192,7 +190,7 @@ int GameMain(int argc, char * argv[])
                     .render_surface_size = tweak::screen::RenderSurfaceSize,
                 },
             .level_size = size,
-            .level_generator = GeneratorFromName(id),
+            .level_generator = levelgen::LevelGenerator::FromName(id),
             .is_debug = is_debug,
             .player_count = player_count,
             .use_ai = is_ai,

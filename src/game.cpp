@@ -121,8 +121,9 @@ Game::Game(GameConfig config)
     std::unique_ptr<Level> level;
     for (int i = TestIterations; i-- > 0;)
     {
-        level = std::make_unique<Level>(this->config.level_size);
-        time_taken += generate_level(level.get(), this->config.level_generator);
+        auto generated_level = levelgen::LevelGenerator::Generate(this->config.level_generator, this->config.level_size);
+        time_taken += generated_level.generation_time;
+        level = std::move(generated_level.level);
     }
     auto average_time = time_taken / TestIterations;
     gamelib_print("***\r\nAverage level time: %lld.%03lld sec\n", average_time.count() / 1000,

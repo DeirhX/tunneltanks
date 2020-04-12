@@ -1,11 +1,14 @@
 #pragma once
 #include <level.h>
+#include <memory>
 
-namespace levelgen::maze {
+namespace levelgen::maze
+{
 
-	void maze_generator(Level* lvl);
+class MazeLevelGenerator : public GeneratorAlgorithm
+{
+  public:
+    std::unique_ptr<Level> Generate(Size size) override;
+};
 
-}
-
-
-
+} // namespace levelgen::maze
