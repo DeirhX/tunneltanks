@@ -98,7 +98,8 @@ void draw_line(Level *dest, Vector a, Vector b, LevelPixel value, int fat_line) 
 	pt_func = (fat_line) ? set_circle : set_point;
 	
 	/* Swap x and y values when the graph gets too steep to operate normally: */
-	if((swap = abs(b.y - a.y) > abs(b.x - a.x))) {
+    swap = abs(b.y - a.y) > abs(b.x - a.x);
+	if(swap) {
 		SWAP(int, a.x, a.y);
 		SWAP(int, b.x, b.y);
 	}

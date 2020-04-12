@@ -134,18 +134,35 @@ CollisionType Tank::GetCollision(Direction dir, Position position, TankList * ta
 {
     CollisionType result = CollisionType::None;
 
-    tank::ForEachTankPixel([this, &result](Position position) {
-        LevelPixel pixel = this->level->GetPixel(position);
+    tank::ForEachTankPixel(
+        [this, &result](Position position) {
+            bool is_blocking_collision = GetWorld()->GetCollisionSolver()->TestCollide(
+                position,
+                [this, &result](Tank & tank) {
+                    if (tank.GetColor() != this->GetColor())
+                    {
+                        result = CollisionType::Blocked;
+                        return true;
+                    }
+                    return false;
+                },
+                [&result](Machine & machine) {
+                    result = CollisionType::Blocked;
+                    return true;
+                },
+                [&result](LevelPixel & pixel) {
+                    if (Pixel::IsDirt(pixel))
+                        result = CollisionType::Dirt;
 
-        if (Pixel::IsDirt(pixel))
-            result = CollisionType::Dirt;
+                    if (Pixel::IsBlockingCollision(pixel))
+                    {
+                        result = CollisionType::Blocked;
+                        return true;
+                    }
+                    return false;
+                });
 
-        if (Pixel::IsBlockingCollision(pixel))
-        {
-            result = CollisionType::Blocked;
-            return false;
-        }
-        return true;
+            return !is_blocking_collision;
     }, position, dir);
 
     if (result == CollisionType::Blocked || tank_list->CheckForCollision(*this, position, dir))

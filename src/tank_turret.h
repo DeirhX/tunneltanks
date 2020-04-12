@@ -33,6 +33,7 @@ class TankTurret
   public:
     TankTurret(Tank * owner, Color turret_color) : tank(owner), color(turret_color) { Reset(); }
     DirectionF GetDirection() const { return this->direction; }
+    PositionF GetBarrelPosition() const;
     bool IsShooting() const
     {
         return this->is_shooting_primary || this->is_shooting_secondary || this->is_shooting_tertiary;

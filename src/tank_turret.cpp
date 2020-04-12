@@ -7,6 +7,11 @@
 #include "tank.h"
 
 
+PositionF TankTurret::GetBarrelPosition() const
+{
+    return PositionF(this->tank->GetPosition()) + (this->direction * float(tweak::tank::TurretLength));
+}
+
 void TankTurret::ApplyControllerOutput(ControllerOutput controls)
 {
     this->is_shooting_primary = controls.is_shooting_primary;
@@ -47,7 +52,7 @@ void TankTurret::Advance(Position tank_position, widgets::Crosshair * crosshair)
         return true;
     };
     Raycaster::Cast(PositionF(tank_position),
-                    PositionF(tank_position) + (this->direction * float(tweak::tank::TurretLength)), visitor,
+                    GetBarrelPosition(), visitor,
                     Raycaster::VisitFlags::PixelsMustTouchCorners);
 
     this->current_length = turret_len;

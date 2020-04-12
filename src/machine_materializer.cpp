@@ -29,19 +29,21 @@ void MachineMaterializer::Advance(Position tank_position)
 
 bool MachineMaterializer::TryBuildMachine(MachineType type)
 {
+    Position position = (this->owner_tank->GetTurretBarrel() + this->owner_tank->GetTurretDirection() * 3.f).ToIntPosition();
+
     switch (type)
     {
     case MachineType::Harvester:
         if (this->resource_bank->Pay(tweak::rules::HarvesterCost))
         {
-            GetWorld()->GetHarvesterList()->Add(Harvester(this->owner_tank->GetPosition(), HarvesterType::Dirt, this->owner_tank));
+            GetWorld()->GetHarvesterList()->Add(Harvester(position, HarvesterType::Dirt, this->owner_tank));
             return true;
         }
         break;
     case MachineType::Miner:
         if (this->resource_bank->Pay(tweak::rules::MinerCost))
         {
-            GetWorld()->GetHarvesterList()->Add(Harvester(this->owner_tank->GetPosition(), HarvesterType::Mineral, this->owner_tank));
+            GetWorld()->GetHarvesterList()->Add(Harvester(position, HarvesterType::Mineral, this->owner_tank));
             return true;
         }
         break;
@@ -49,7 +51,7 @@ bool MachineMaterializer::TryBuildMachine(MachineType type)
         if (this->resource_bank->Pay(tweak::rules::ChargerCost))
         {
             GetWorld()->GetHarvesterList()->Add(
-                Charger(this->owner_tank->GetPosition(), this->owner_tank));
+                Charger(position, this->owner_tank));
             return true;
         }
         break;

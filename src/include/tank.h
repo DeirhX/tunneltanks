@@ -89,6 +89,8 @@ class Tank
     void SetCrosshair(widgets::Crosshair * cross);
 
     [[nodiscard]] Position GetPosition() const { return this->pos; }
+    [[nodiscard]] PositionF GetTurretBarrel() const { return this->turret.GetBarrelPosition(); }
+    [[nodiscard]] DirectionF GetTurretDirection() const { return this->turret.GetDirection(); }
     [[nodiscard]] TankColor GetColor() const { return this->color; }
     [[nodiscard]] DirectionF GetDirection() const { return this->direction; }
 
@@ -128,6 +130,7 @@ class Tank
 
 namespace tank
 {
+    /* return false to stop enumeration */
     template <typename PerPixelFunc>
     void ForEachTankPixel(PerPixelFunc per_pixel_func, Position position, Direction direction)
     {
