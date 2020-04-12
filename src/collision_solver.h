@@ -20,6 +20,7 @@ class CollisionSolver
                  TerrainCollideFunc terrain_collide) const;
 };
 
+/* Return true from collision functions if you registered the collision */
 template <typename TankCollideFunc, typename MachineCollideFunc, typename TerrainCollideFunc>
 bool CollisionSolver::TestCollide(Position world_position, TankCollideFunc tank_collide,
                               MachineCollideFunc machine_collide, TerrainCollideFunc terrain_collide) const

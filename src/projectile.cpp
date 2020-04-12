@@ -77,20 +77,20 @@ void FlyingBarrel::Advance(TankList * tankList, ExplosionFuncType explosionFunc)
         prev_positions.push_back(tested_pos);
         ++search_step;
 
-        Tank * hitTank = tankList->GetTankAtPoint(tested_pos.ToIntPosition(), this->tank->GetColor());
-        if (hitTank)
-        {
-            this->Invalidate();
-            return false;
-        }
-        LevelPixel c = level->GetPixel(tested_pos.ToIntPosition());
-        if (Pixel::IsAnyCollision(c))
+        bool is_collision = GetWorld()->GetCollisionSolver()->TestCollide(
+            tested_pos.ToIntPosition(),
+            [this](Tank & tank) { return tank.GetColor() != this->tank->GetColor(); },
+            [](Machine & machine) { return true; },
+            [](LevelPixel & pixel) { return Pixel::IsAnyCollision(pixel); });
+
+        if (is_collision)
         {
             this->Invalidate();
             return false;
         }
         return true;
     };
+
     bool collided = !Raycaster::Cast(this->pos, this->pos + (direction * float(search_step_count)),
                                      IteratePositions, Raycaster::VisitFlags::PixelsMustTouchCorners);
 
