@@ -4,6 +4,7 @@
 
 #include <level.h>
 #include <level_view.h>
+#include <optional>
 #include <projectile_list.h>
 
 
@@ -11,6 +12,7 @@
 #include "gui_widgets.h"
 #include "machine_materializer.h"
 #include "tank_turret.h"
+#include "tanksprites.h"
 #include "weapon.h"
 //#include <world.h>
 
@@ -46,6 +48,11 @@ public:
     int GetMinerals() const { return this->minerals; }
 };
 
+namespace tank
+{
+template <typename PerPixelFunc>
+void ForEachTankPixel(PerPixelFunc per_pixel_func, Position position, Direction direction);
+} // namespace tank
 
 class Tank 
 {
@@ -104,11 +111,35 @@ class Tank
 
     void ApplyControllerOutput(ControllerOutput controls);
 
-    CollisionType GetCollision(int dir, Position pos, TankList * tl);
+    CollisionType GetCollision(Direction dir, Position pos, TankList * tank_list);
+    template <typename PerPixelFunc> /* bool per_pixel_func(Position world_position). Return false to end iteration. */
+    void ForEachTankPixel(PerPixelFunc per_pixel_func)
+    {
+        tank::ForEachTankPixel(per_pixel_func, this->pos, this->direction);
+    }
 
     void Draw(Surface * surface) const;
 
   private:
     void HandleMove(class TankList * tl);
     void TryBaseHeal();
+    void CollectItems();
 };
+
+namespace tank
+{
+    template <typename PerPixelFunc>
+    void ForEachTankPixel(PerPixelFunc per_pixel_func, Position position, Direction direction)
+    {
+        Offset offset;
+        for (offset.y = -3; offset.y <= 3; offset.y++)
+            for (offset.x = -3; offset.x <= 3; offset.x++)
+            {
+                if (TANK_SPRITE[direction][3 + offset.y][3 + offset.x])
+                {
+                    if (!per_pixel_func(position + offset))
+                        return;
+                }
+            }
+    }
+} // namespace tank

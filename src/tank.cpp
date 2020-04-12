@@ -90,9 +90,6 @@ void Tank::Advance(World * world)
             this->ApplyControllerOutput(this->controller->ApplyControls(&controls));
         }
 
-        /* Place buildings */
-        
-
         /* Rotate the turret temporarily back directly to match our heading direction */
         if (this->speed.x || this->speed.y)
         {
@@ -131,32 +128,28 @@ void Tank::Advance(World * world)
 
 /* We don't use the Tank structure in this function, since we are checking the
  * tank's hypothetical position... ie: IF we were here, would we collide? */
-CollisionType Tank::GetCollision(int dir, Position position, TankList * tl)
+CollisionType Tank::GetCollision(Direction dir, Position position, TankList * tank_list)
 {
-    Offset off;
-    CollisionType out = CollisionType::None;
+    CollisionType result = CollisionType::None;
 
-    /* Level Collisions: */
-    for (off.y = -3; off.y <= 3; off.y++)
-        for (off.x = -3; off.x <= 3; off.x++)
+    tank::ForEachTankPixel([this, &result](Position position) {
+        LevelPixel pixel = this->level->GetPixel(position);
+
+        if (Pixel::IsDirt(pixel))
+            result = CollisionType::Dirt;
+
+        if (Pixel::IsBlockingCollision(pixel))
         {
-            char c = TANK_SPRITE[dir][3 + off.y][3 + off.x];
-            if (!c)
-                continue;
-
-            LevelPixel v = this->level->GetPixel(position + off);
-
-            if (Pixel::IsDirt(v))
-                out = CollisionType::Dirt;
-
-            if (Pixel::IsBlockingCollision(v))
-                return CollisionType::Blocked;
+            result = CollisionType::Blocked;
+            return false;
         }
+        return true;
+    }, position, dir);
 
-    /* Tank collisions: */
-    if (tl->CheckForCollision(*this, position, dir))
+    if (result == CollisionType::Blocked || tank_list->CheckForCollision(*this, position, dir))
         return CollisionType::Blocked;
-    return out;
+
+    return result;
 }
 
 void Tank::HandleMove(TankList * tl)
@@ -209,6 +202,11 @@ void Tank::TryBaseHeal()
     }
     else if (c == BaseCollision::Enemy)
         this->AlterEnergy(tweak::tank::EnemyChargeSpeed);
+}
+
+void Tank::CollectItems()
+{
+
 }
 
 void Tank::Draw(Surface * surface) const

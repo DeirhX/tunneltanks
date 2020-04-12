@@ -73,11 +73,12 @@ void Charger::Advance(Level * level)
     {
         auto closest_pixel = level::GetClosestPixel(GetWorld()->GetLevel()->GetLevelData(), this->position,
                                                     tweak::rules::HarvestMaxRange,
-                                                    [](LevelPixel pixel) { return Pixel::IsEmpty(pixel); });
+                                                    [](LevelPixel pixel) { return Pixel::IsEmpty(pixel) || Pixel::IsScorched(pixel); });
 
         if (closest_pixel.has_value() && closest_pixel.value() != this->position)
         {
-            GetWorld()->GetLevel()->SetPixel(closest_pixel.value(), LevelPixel::Energy);
+            if (!Pixel::IsScorched(GetWorld()->GetLevel()->GetPixel(closest_pixel.value())) || Random.Bool(250))
+                GetWorld()->GetLevel()->SetPixel(closest_pixel.value(), LevelPixel::Energy);
         }
     }
 }
