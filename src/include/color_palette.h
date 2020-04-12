@@ -32,6 +32,7 @@ enum class Colors
     HarvesterInside,
     HarvesterOutline,
     ChargerOutline,
+    EnergyField,
     Size,
 };
 

@@ -263,6 +263,8 @@ Color Level::GetVoxelColor(LevelPixel voxel)
         return Palette.Get(Colors::Blank);
     else if (voxel == LevelPixel::Blank)
         return Palette.Get(Colors::Blank);
+    else if (voxel == LevelPixel::Energy)
+        return Palette.Get(Colors::EnergyField);
     else if (Pixel::IsBase(voxel))
         return Palette.GetTank(static_cast<char>(voxel) - static_cast<char>(LevelPixel::BaseMin))[0];
     else

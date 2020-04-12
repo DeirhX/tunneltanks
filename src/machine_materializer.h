@@ -17,9 +17,11 @@ class MachineMaterializer
 {
     MachineType primary_construct = MachineType::Harvester;
     MachineType secondary_construct = MachineType::Miner;
+    MachineType tertiary_construct = MachineType::Charger;
 
     bool is_building_primary = false;
     bool is_building_secondary = false;
+    bool is_building_tertiary = false;
 
     Tank * owner_tank;
     Resources * resource_bank;

@@ -71,35 +71,13 @@ void Charger::Advance(Level * level)
 
     if (!this->charge_timer.AdvanceAndCheckElapsed())
     {
-        float nearest_distance = std::numeric_limits<float>::max();
-        Position nearest_pos = this->position;
+        auto closest_pixel = level::GetClosestPixel(GetWorld()->GetLevel()->GetLevelData(), this->position,
+                                                    tweak::rules::HarvestMaxRange,
+                                                    [](LevelPixel pixel) { return Pixel::IsEmpty(pixel); });
 
-        auto check_pixel = [this, &nearest_distance, &nearest_pos](Position pos, const LevelPixel & pixel) {
-            if (Pixel::IsEmpty(pixel))
-            {
-                float distance = (pos - this->position).GetSize();
-                if (distance <= tweak::rules::HarvestMaxRange && nearest_distance > distance)
-                {
-                    nearest_pos = pos;
-                    nearest_distance = distance;
-                }
-            }
-            return true;
-        };
-
-        for (int i = 1; i < tweak::rules::HarvestMaxRange; ++i)
+        if (closest_pixel.has_value() && closest_pixel.value() != this->position)
         {
-            ShapeRenderer::InspectRectangle(GetWorld()->GetLevel()->GetLevelData(),
-                                            Rect{this->position.x - i, this->position.y - i, i * 2 + 1, i * 2 + 1},
-                                            check_pixel);
-            if (float(i) >= nearest_distance)
-                break;
-        }
-
-        if (nearest_pos != this->position)
-        {
-            GetWorld()->GetLevel()->SetPixel(nearest_pos, LevelPixel::Blank);
-            this->owner->GetResources().AddDirt(1);
+            GetWorld()->GetLevel()->SetPixel(closest_pixel.value(), LevelPixel::Energy);
         }
     }
 }

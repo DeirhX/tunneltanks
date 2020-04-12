@@ -14,6 +14,7 @@ void MachineMaterializer::ApplyControllerOutput(ControllerOutput controls)
 {
     this->is_building_primary = controls.build_primary;
     this->is_building_secondary = controls.build_secondary;
+    this->is_building_tertiary = controls.build_tertiary;
 }
 
 void MachineMaterializer::Advance(Position tank_position)
@@ -22,6 +23,8 @@ void MachineMaterializer::Advance(Position tank_position)
         TryBuildMachine(this->primary_construct);
     else if (this->is_building_secondary)
         TryBuildMachine(this->secondary_construct);
+    else if (this->is_building_tertiary)
+        TryBuildMachine(this->tertiary_construct);
 }
 
 bool MachineMaterializer::TryBuildMachine(MachineType type)
