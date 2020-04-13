@@ -3,6 +3,7 @@
 #include "collision_solver.h"
 #include "machine_list.h"
 #include "level.h"
+#include "link.h"
 #include "projectile_list.h"
 #include "tank_list.h"
 
@@ -11,9 +12,10 @@ class World
     class Game * game;
 
     std::unique_ptr<Level> level;
-    std::unique_ptr<ProjectileList> projectile_list;
-    std::unique_ptr<MachineryList> harvester_list;
-    std::unique_ptr<TankList> tank_list;
+    ProjectileList projectile_list;
+    MachineryList harvester_list;
+    TankList tank_list;
+    LinkMap link_map;
 
     CollisionSolver collision_solver;
     RepetitiveTimer regrow_timer{tweak::world::DirtRecoverInterval};
@@ -21,9 +23,9 @@ class World
     World(Game * game, std::unique_ptr<Level> && level);
     void Advance(class WorldRenderSurface * objects_surface);
 
-    TankList * GetTankList() { return this->tank_list.get(); }
-    ProjectileList * GetProjectileList() { return this->projectile_list.get(); }
-    MachineryList * GetHarvesterList() { return this->harvester_list.get(); }
+    TankList * GetTankList() { return &this->tank_list; }
+    ProjectileList * GetProjectileList() { return &this->projectile_list; }
+    MachineryList * GetHarvesterList() { return &this->harvester_list; }
     Level * GetLevel() { return this->level.get(); }
     const CollisionSolver * GetCollisionSolver() const { return &this->collision_solver; }
     void GameIsOver();
