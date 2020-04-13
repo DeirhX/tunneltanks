@@ -230,7 +230,12 @@ void Tank::CollectItems()
         if (Pixel::IsEnergy(pixel))
         {
             this->level->SetPixel(world_position, LevelPixel::Blank);
-            this->AlterEnergy(100 * (1 + int(pixel) - int(LevelPixel::EnergyLow)));
+            int energy_collected = 100;
+            if (pixel == LevelPixel::EnergyMedium)
+                energy_collected *= 2;
+            else if (pixel == LevelPixel::EnergyHigh)
+                energy_collected *= 4;
+            this->AlterEnergy(energy_collected);
         }
         return true;
     });
