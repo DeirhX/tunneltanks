@@ -7,7 +7,6 @@
 #include <optional>
 #include <projectile_list.h>
 
-
 #include "controller.h"
 #include "gui_widgets.h"
 #include "machine_materializer.h"
@@ -68,7 +67,7 @@ class Tank
     MachineMaterializer materializer;
     widgets::Crosshair * crosshair = nullptr; /* Crosshair used for aiming */
 
-    int respawn_timer = 0;
+    ManualTimer respawn_timer = {tweak::tank::RespawnDelay};
 
     int health = tweak::tank::StartingShield;
     int energy = tweak::tank::StartingFuel;

@@ -306,12 +306,6 @@ struct BoundingBox : RectBase<Position>
 using TankColor = char;
 using Health = int;
 
-struct Cost
-{
-    int dirt = {};
-    int minerals = {};
-};
-
 enum class Orientation
 {
     Horizontal,
@@ -339,3 +333,20 @@ bool HasFlag(TEnum value, TEnum flag)
 {
     return (static_cast<std::underlying_type_t<TEnum>>(value) & static_cast<std::underlying_type_t<TEnum>>(value)) != 0;
 }
+
+struct Cost
+{
+    int dirt = {};
+    int minerals = {};
+    friend constexpr Cost operator+(Cost left, Cost other) 
+    {
+        return {left.dirt + other.dirt, left.minerals + other.minerals};
+    }
+    
+};
+
+constexpr Cost operator"" _dirt(std::uint64_t dirt_value) noexcept 
+{ return Cost{static_cast<int>(dirt_value), 0}; }
+
+constexpr Cost operator"" _minerals(std::uint64_t mineral_value) noexcept
+{ return Cost{0, static_cast<int>(mineral_value)}; }

@@ -48,8 +48,10 @@ namespace world
 
 namespace tank {
 
+    using namespace std::literals::chrono_literals;
+
 	constexpr int MaxLives = 3;
-	constexpr int RespawnDelay = perf::TargetFps * 3;
+	constexpr std::chrono::milliseconds RespawnDelay = 3000ms;
 	
 	/* The number of frames to wait in between shots: */
 	constexpr int TurretDelay = 3;
@@ -138,13 +140,13 @@ namespace rules
 {
     using namespace std::literals::chrono_literals;
 
-    constexpr Cost HarvesterCost = {.dirt = 500, .minerals = 0};
-    constexpr Cost MinerCost = {.dirt = 1000, .minerals = 0};
+    constexpr Cost HarvesterCost = 500_dirt;
+    constexpr Cost MinerCost = 1000_dirt + 50_minerals;
     constexpr int HarvesterHP = 100;
     constexpr int MinerHP = 200;
     constexpr std::chrono::milliseconds HarvestTimer = 500ms;
     constexpr int HarvestMaxRange = 20;
-    constexpr Cost ChargerCost = {.dirt = 500, .minerals = 0};
+    constexpr Cost ChargerCost = 500_dirt;
     constexpr int ChargerHP = 100;
     constexpr std::chrono::milliseconds ChargeTimer = 200ms;
     constexpr int ChargeMaxRange = 20;

@@ -110,9 +110,9 @@ void Tank::Advance(World * world)
     else
     {
         /* DEaD. Handle respawning. */
-        if (! --this->respawn_timer)
+        if (this->respawn_timer.AdvanceAndCheckElapsed())
         {
-            if (! --this->lives_left)
+            if (--this->lives_left)
             {
                 Spawn();
             }
@@ -302,7 +302,7 @@ void Tank::Die()
     /* Begin respawn timer and trigger a nice explosion */
     this->health = 0;
     this->energy = 0;
-    this->respawn_timer = tweak::tank::RespawnDelay;
+    this->respawn_timer.Restart();
 
     this->projectile_list->Add(ExplosionDesc::AllDirections(this->pos, tweak::explosion::death::ShrapnelCount,
                                                             tweak::explosion::death::Speed,
