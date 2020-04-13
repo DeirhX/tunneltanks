@@ -21,7 +21,7 @@ class Machine
         : position(position), owner(owner), bounding_box(bounding_box), health(health)
     {
     }
-    virtual ~Machine() = default;
+    virtual ~Machine() { Invalidate(); }
   public:
     const Position & GetPosition() { return this->position; }
 

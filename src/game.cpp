@@ -13,7 +13,7 @@
 #include <projectile.h>
 #include <random.h>
 #include <screen.h>
-#include <tanklist.h>
+#include <tank_list.h>
 #include <tweak.h>
 #include <world.h>
 

@@ -5,8 +5,8 @@
 #include <projectile.h>
 #include <ranges>
 #include <tank.h>
-#include <tanklist.h>
-#include <tanksprites.h>
+#include <tank_list.h>
+#include <tank_sprites.h>
 #include <tweak.h>
 #include <types.h>
 

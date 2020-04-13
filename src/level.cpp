@@ -133,22 +133,22 @@ void Level::CreateBases()
 {
     for (TankColor i = 0; i < tweak::world::MaxPlayers; i++)
     {
-        CreateBase({this->spawn[i]->GetPosition().x, this->spawn[i]->GetPosition().y}, i);
+        CreateBase({this->tank_bases[i].GetPosition().x, this->tank_bases[i].GetPosition().y}, i);
     }
 }
 
-TankBase * Level::GetSpawn(TankColor color) const
+TankBase * Level::GetSpawn(TankColor color) 
 {
-    assert(color >= 0 && color < (int)this->spawn.size());
-    return this->spawn[color].get();
+    assert(color >= 0 && color < (int)this->tank_bases.size());
+    return &this->tank_bases[color];
 }
 
 void Level::SetSpawn(TankColor color, std::unique_ptr<TankBase> && tank_base)
 {
     assert(color >= 0 && color < tweak::world::MaxPlayers);
-    if (TankColor(this->spawn.size()) <= color)
-        this->spawn.resize(color + 1);
-    this->spawn[color] = std::move(tank_base);
+    if (TankColor(this->tank_bases.size()) <= color)
+        this->tank_bases.resize(color + 1);
+    this->tank_bases[color] = *tank_base;
 }
 
 void Level::SetSpawn(TankColor color, Position position)
@@ -217,8 +217,8 @@ BaseCollision Level::CheckBaseCollision(Position pos, TankColor color)
 {
     for (TankColor id = 0; id < tweak::world::MaxPlayers; id++)
     {
-        if (std::abs(this->spawn[id]->GetPosition().x - pos.x) < tweak::world::BaseSize / 2 &&
-            std::abs(this->spawn[id]->GetPosition().y - pos.y) < tweak::world::BaseSize / 2)
+        if (std::abs(this->tank_bases[id].GetPosition().x - pos.x) < tweak::world::BaseSize / 2 &&
+            std::abs(this->tank_bases[id].GetPosition().y - pos.y) < tweak::world::BaseSize / 2)
         {
             if (id == color)
                 return BaseCollision::Yours;

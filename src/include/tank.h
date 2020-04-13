@@ -11,10 +11,11 @@
 #include "gui_widgets.h"
 #include "machine_materializer.h"
 #include "tank_turret.h"
-#include "tanksprites.h"
+#include "tank_sprites.h"
 #include "weapon.h"
 //#include <world.h>
 
+class TankBase;
 struct LevelView;
 class World;
 

@@ -8,6 +8,7 @@
 #include "level_adjacency.h"
 #include "parallelism.h"
 #include "render_surface.h"
+#include "tank_base.h"
 
 enum class LevelPixel : char;
 
@@ -23,19 +24,6 @@ struct DigResult
     int dirt = 0;
     int minerals = 0;
 };
-
-/*
- * Tank Base, part of the level
- */
-class TankBase
-{
-    Position position;
-
-  public:
-    TankBase(Position position) : position(position) {}
-    Position GetPosition() { return this->position; }
-};
-
 
 struct LevelSurfaces
 {
@@ -54,7 +42,7 @@ class Level
     LevelSurfaces surfaces; /* Holds terrain and object surfaces for drawing */
 
     //DirtAdjacencyData dirt_adjacency_data;
-    std::vector<std::unique_ptr<TankBase>> spawn;
+    std::vector<TankBase> tank_bases;
     bool is_ready = false;
 
   private:
@@ -100,7 +88,7 @@ class Level
     void ForEachVoxelParallel(VoxelFunc func, WorkerCount worker_count = {});
 
     /* Tank-related stuff */
-    TankBase * GetSpawn(TankColor color) const;
+    TankBase * GetSpawn(TankColor color);
     void SetSpawn(TankColor color, std::unique_ptr<TankBase> && tank_base);
     void SetSpawn(TankColor color, Position position);
     DigResult DigTankTunnel(Position pos, bool dig_with_torch);

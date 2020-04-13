@@ -72,9 +72,6 @@
     <ClCompile Include="src\screen.cpp">
       <Filter>src\draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\tanksprites.cpp">
-      <Filter>src\draw</Filter>
-    </ClCompile>
     <ClCompile Include="src\game.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
@@ -85,9 +82,6 @@
       <Filter>src\game_entity</Filter>
     </ClCompile>
     <ClCompile Include="src\tank.cpp">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
-    <ClCompile Include="src\tanklist.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
     <ClCompile Include="src\memalloc.cpp">
@@ -174,6 +168,18 @@
     <ClCompile Include="src\levelgen_toast.cpp">
       <Filter>src\generators</Filter>
     </ClCompile>
+    <ClCompile Include="src\link.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tank_base.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tank_sprites.cpp">
+      <Filter>src\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tank_list.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\require_sdl.h">
@@ -192,9 +198,6 @@
       <Filter>src\generators</Filter>
     </ClInclude>
     <ClInclude Include="src\include\screen.h">
-      <Filter>src\draw</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\tanksprites.h">
       <Filter>src\draw</Filter>
     </ClInclude>
     <ClInclude Include="src\include\iterators.h">
@@ -240,9 +243,6 @@
       <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\include\tank.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\tanklist.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\include\scene.h">
@@ -356,6 +356,18 @@
     </ClInclude>
     <ClInclude Include="src\include\levelgen_toast.h">
       <Filter>src\generators</Filter>
+    </ClInclude>
+    <ClInclude Include="src\link.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tank_base.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\tank_sprites.h">
+      <Filter>src\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\include\tank_list.h">
+      <Filter>src\game_entity</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

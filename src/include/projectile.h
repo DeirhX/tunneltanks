@@ -43,7 +43,7 @@ struct Projectile
     }
 
   public:
-    virtual ~Projectile() = default;
+    virtual ~Projectile() { Invalidate(); }
     //virtual ProjectileType GetType() = 0;
     virtual void Advance(class TankList * tankList) = 0;
     virtual void Draw(class Surface * drawBuffer) = 0;

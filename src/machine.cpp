@@ -29,12 +29,21 @@ void Harvester::Advance(Level * level)
 
     if (this->harvest_timer.AdvanceAndCheckElapsed())
     {
-        auto closest_pixel = level::GetClosestPixel(GetWorld()->GetLevel()->GetLevelData(), this->position, tweak::rules::HarvestMaxRange,
-                               [](LevelPixel pixel) { return Pixel::IsDirt(pixel); });
 
-        if (closest_pixel.has_value() && closest_pixel.value() != this->position)
+        auto is_suitable_position = [](Position tested_position) {
+            LevelPixel pixel = GetWorld()->GetLevel()->GetPixel(tested_position);
+            return Pixel::IsDirt(pixel);
+        };
+        /* Active algorithm: random pixel in radius. If full, first candidate on path to center from that position */
+        std::optional<Position> suitable_pos = ShapeInspector::FromRandomPointInCircleToCenter(
+            this->position, tweak::rules::HarvestMaxRange, is_suitable_position);
+
+        /*auto closest_pixel = level::GetClosestPixel(GetWorld()->GetLevel()->GetLevelData(), this->position, tweak::rules::HarvestMaxRange,
+                               [](LevelPixel pixel) { return Pixel::IsDirt(pixel); });*/
+
+        if (suitable_pos.has_value() && suitable_pos.value() != this->position)
         {
-            GetWorld()->GetLevel()->SetPixel(closest_pixel.value(), LevelPixel::Blank);
+            GetWorld()->GetLevel()->SetPixel(suitable_pos.value(), LevelPixel::DirtGrow);
             this->owner->GetResources().AddDirt(1);
         }
     }
@@ -72,31 +81,14 @@ void Charger::Advance(Level * level)
 
     if (this->charge_timer.AdvanceAndCheckElapsed())
     {
-        auto is_suitable_pixel = [](LevelPixel pixel) { return Pixel::IsEmpty(pixel) || Pixel::IsScorched(pixel) || Pixel::IsEnergy(pixel); };
-
-        std::optional<Position> suitable_pos;
-
-        /* Active algorithm: random pixel in radius. If full, first candidate on path to center from that position
-         */
-        /* Find a random pixel in reach that can be suitable to generate energy */
-        Position possible_pos = ShapeInspector::GetRandomPointInCircle(this->position, tweak::rules::HarvestMaxRange);
-        if (is_suitable_pixel(GetWorld()->GetLevel()->GetPixel(possible_pos)))
-            suitable_pos = possible_pos;
-        else
-        {   /* If found not suitable, cast a ray to the center and find first pixel that does */
-            if (Raycaster::Cast(
-                PositionF{possible_pos}, PositionF{this->position},
-                [&possible_pos, is_suitable_pixel](PositionF tested_pos, PositionF previous_pos) {
-                    if (is_suitable_pixel(GetWorld()->GetLevel()->GetPixel(tested_pos.ToIntPosition())))
-                    {
-                        possible_pos = tested_pos.ToIntPosition();
-                        return false;
-                    }
-                    return true;
-                    },
-                    Raycaster::VisitFlags::PixelsMustTouchCorners))
-                suitable_pos = possible_pos;
-        }
+        auto is_suitable_position = [](Position tested_position)
+        {
+            LevelPixel pixel = GetWorld()->GetLevel()->GetPixel(tested_position);
+            return Pixel::IsEmpty(pixel) || Pixel::IsScorched(pixel) || Pixel::IsEnergy(pixel);
+        };
+        /* Active algorithm: random pixel in radius. If full, first candidate on path to center from that position */
+        std::optional<Position> suitable_pos = ShapeInspector::FromRandomPointInCircleToCenter(
+            this->position, tweak::rules::ChargeMaxRange, is_suitable_position);
 
         /*
          * Grow radially from center

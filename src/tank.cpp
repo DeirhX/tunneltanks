@@ -7,8 +7,9 @@
 #include <random.h>
 #include <screen.h>
 #include <tank.h>
-#include <tanklist.h>
-#include <tanksprites.h>
+#include <tank_base.h>
+#include <tank_list.h>
+#include <tank_sprites.h>
 #include <tweak.h>
 #include <world.h>
 
