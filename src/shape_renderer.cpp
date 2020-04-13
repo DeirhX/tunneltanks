@@ -79,3 +79,10 @@ void ShapeRenderer::DrawCircle(Surface * surface, Position center, int radius, C
         ++offset_y;
     }
 }
+
+Position ShapeInspector::GetRandomPointInCircle(Position center, int radius)
+{
+    DirectionF direction = math::Radians{Random.Float(0, math::two_pi)}.ToDirection();
+    float distance = Random.Float(0, static_cast<float>(radius));
+    return center + Offset(distance * direction);
+}

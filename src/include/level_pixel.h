@@ -18,7 +18,9 @@ enum class LevelPixel : char
     BaseBarrier = '8',  /* Invisible base gates. Only blocks wild growth. */
     ConcreteLow = 'c',  /* Hardened concrete, tough to destroy */
     ConcreteHigh = 'C', /* Hardened concrete, tough to destroy */
-    Energy = 'e',       /* Raw energy, harvestable by tanks */
+    EnergyLow = 'e',    /* Raw energy, harvestable by tanks */
+    EnergyMedium = 'E', /* More raw energy, harvestable by tanks */
+    EnergyHigh = 'F',   /* A lot of raw energy, harvestable by tanks */
 
     LevelGenDirt = 0,
     LevelGenRock = 1,
@@ -51,6 +53,9 @@ class Pixel
     }
     static bool IsRock(LevelPixel pixel) { return pixel == LevelPixel::Rock;  }
     static bool IsMineral(LevelPixel pixel) { return IsConcrete(pixel) || IsRock(pixel); }
-    static bool IsEnergy(LevelPixel pixel) { return pixel == LevelPixel::Energy; }
+    static bool IsEnergy(LevelPixel pixel)
+    {
+        return pixel == LevelPixel::EnergyLow || pixel == LevelPixel::EnergyMedium || pixel == LevelPixel::EnergyHigh;
+    }
     static bool IsEmpty(LevelPixel pixel) { return pixel == LevelPixel::Blank; }
 };

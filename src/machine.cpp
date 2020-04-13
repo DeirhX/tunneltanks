@@ -6,6 +6,7 @@
 #include "projectile.h"
 #include "shape_renderer.h"
 #include "level_algorithm.h"
+#include "raycaster.h"
 #include "world.h"
 
 bool Machine::CheckAlive(Level * level)
@@ -71,14 +72,49 @@ void Charger::Advance(Level * level)
 
     if (this->charge_timer.AdvanceAndCheckElapsed())
     {
+        auto is_suitable_pixel = [](LevelPixel pixel) { return Pixel::IsEmpty(pixel) || Pixel::IsScorched(pixel) || Pixel::IsEnergy(pixel); };
+
+        std::optional<Position> suitable_pos;
+
+        /* Active algorithm: random pixel in radius. If full, first candidate on path to center from that position
+         */
+        /* Find a random pixel in reach that can be suitable to generate energy */
+        Position possible_pos = ShapeInspector::GetRandomPointInCircle(this->position, tweak::rules::HarvestMaxRange);
+        if (is_suitable_pixel(GetWorld()->GetLevel()->GetPixel(possible_pos)))
+            suitable_pos = possible_pos;
+        else
+        {   /* If found not suitable, cast a ray to the center and find first pixel that does */
+            if (Raycaster::Cast(
+                PositionF{possible_pos}, PositionF{this->position},
+                [&possible_pos, is_suitable_pixel](PositionF tested_pos, PositionF previous_pos) {
+                    if (is_suitable_pixel(GetWorld()->GetLevel()->GetPixel(tested_pos.ToIntPosition())))
+                    {
+                        possible_pos = tested_pos.ToIntPosition();
+                        return false;
+                    }
+                    return true;
+                    },
+                    Raycaster::VisitFlags::PixelsMustTouchCorners))
+                suitable_pos = possible_pos;
+        }
+
+        /*
+         * Grow radially from center
         auto closest_pixel = level::GetClosestPixel(GetWorld()->GetLevel()->GetLevelData(), this->position,
                                                     tweak::rules::HarvestMaxRange,
                                                     [](LevelPixel pixel) { return Pixel::IsEmpty(pixel) || Pixel::IsScorched(pixel); });
-
-        if (closest_pixel.has_value() && closest_pixel.value() != this->position)
+                                                    */
+        if (suitable_pos.has_value() && suitable_pos.value() != this->position)
         {
-            //if (!Pixel::IsScorched(GetWorld()->GetLevel()->GetPixel(closest_pixel.value())) || Random.Bool(250))
-            GetWorld()->GetLevel()->SetPixel(closest_pixel.value(), LevelPixel::Energy);
+            LevelPixel current_pixel = GetWorld()->GetLevel()->GetPixel(suitable_pos.value());
+            LevelPixel desired_pixel;
+            if (current_pixel == LevelPixel::EnergyLow)
+                desired_pixel = LevelPixel::EnergyMedium;
+            else if (current_pixel == LevelPixel::EnergyMedium || current_pixel == LevelPixel::EnergyHigh)
+                desired_pixel = LevelPixel::EnergyHigh;
+            else
+                desired_pixel = LevelPixel::EnergyLow;
+            GetWorld()->GetLevel()->SetPixel(suitable_pos.value(), desired_pixel);
         }
     }
 }

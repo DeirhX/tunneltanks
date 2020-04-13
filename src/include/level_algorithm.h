@@ -29,7 +29,7 @@ std::optional<Position> GetClosestPixel(const SurfaceType & surface, Position or
 
     for (int i = 1; i < max_radius; ++i)
     {
-        ShapeRenderer::InspectRectangle(surface, Rect{origin.x - i, origin.y - i, i * 2 + 1, i * 2 + 1}, check_pixel);
+        ShapeInspector::InspectRectangle(surface, Rect{origin.x - i, origin.y - i, i * 2 + 1, i * 2 + 1}, check_pixel);
         if (float(i) >= nearest_distance)
             break;
     }

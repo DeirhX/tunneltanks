@@ -226,10 +226,11 @@ void Tank::TryBaseHeal()
 void Tank::CollectItems()
 {
     this->ForEachTankPixel([this](Position world_position) {
-        if (Pixel::IsEnergy(this->level->GetPixel(world_position)))
+        LevelPixel pixel = this->level->GetPixel(world_position);
+        if (Pixel::IsEnergy(pixel))
         {
             this->level->SetPixel(world_position, LevelPixel::Blank);
-            this->AlterEnergy(100);
+            this->AlterEnergy(100 * (1 + int(pixel) - int(LevelPixel::EnergyLow)));
         }
         return true;
     });
