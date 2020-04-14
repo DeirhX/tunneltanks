@@ -6,6 +6,7 @@
 #include <chrono>
 
 #include "duration.h"
+#include "resources.h"
 
 #define _MEM_STATS
 
@@ -59,7 +60,8 @@ namespace tank {
 	constexpr int BulletMax = 6;
 
 	/* Various constants for energy calculation: */
-	constexpr int StartingFuel = 24000;
+    constexpr ResourceCapacity ResourcesMax = {{10000_dirt, 10000_minerals}};
+    constexpr int StartingFuel = 24000;
 	constexpr int ShootCost = -160;
 	constexpr int MoveCost = -8;
 	constexpr int IdleCost = -3;
@@ -141,7 +143,7 @@ namespace rules
     using namespace std::literals::chrono_literals;
 
     constexpr Cost HarvesterCost = 500_dirt;
-    constexpr Cost MinerCost = 1000_dirt + 50_minerals;
+    constexpr Cost MinerCost = {1000_dirt, 50_minerals};
     constexpr int HarvesterHP = 100;
     constexpr int MinerHP = 200;
     constexpr std::chrono::milliseconds HarvestTimer = 500ms;

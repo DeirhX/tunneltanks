@@ -11,6 +11,7 @@ World::World(Game * game, std::unique_ptr<Level> && level)
       link_map(this->level.get()),
       collision_solver(this->level.get(), &this->tank_list, &this->harvester_list)
 {
+    this->level->OnConnectWorld(this);
 }
 
 void World::Advance(WorldRenderSurface * objects_surface)

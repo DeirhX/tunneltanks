@@ -34,20 +34,6 @@ enum class CollisionType
     Blocked /* Hit a rock/base/tank/something we can't drive over. */
 };
 
-class Resources
-{
-    int dirt = {};
-    int minerals = {};
-public:
-    bool PayDirt(int amount);
-    bool PayMinerals(int amount);
-    bool Pay(Cost payment);
-    void AddMinerals(int amount) { this->minerals += amount; }
-    void AddDirt(int amount) { this->dirt += amount; }
-    int GetDirt() const { return this->dirt; }
-    int GetMinerals() const { return this->minerals; }
-};
-
 namespace tank
 {
 template <typename PerPixelFunc>
@@ -74,7 +60,7 @@ class Tank
     int energy = tweak::tank::StartingFuel;
     int lives_left = tweak::tank::MaxLives;
 
-    Resources resources = {};
+    Resources resources = {tweak::tank::ResourcesMax};
 
     std::shared_ptr<Controller> controller = nullptr;
 

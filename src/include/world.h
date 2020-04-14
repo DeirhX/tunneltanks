@@ -1,6 +1,7 @@
 #pragma once
 
 #include "collision_solver.h"
+#include "game.h"
 #include "machine_list.h"
 #include "level.h"
 #include "link.h"
@@ -23,10 +24,11 @@ class World
     World(Game * game, std::unique_ptr<Level> && level);
     void Advance(class WorldRenderSurface * objects_surface);
 
-    TankList * GetTankList() { return &this->tank_list; }
+    Level * GetLevel() { return this->level.get(); }
     ProjectileList * GetProjectileList() { return &this->projectile_list; }
     MachineryList * GetHarvesterList() { return &this->harvester_list; }
-    Level * GetLevel() { return this->level.get(); }
+    TankList * GetTankList() { return &this->tank_list; }
+    LinkMap * GetLinkMap() { return &this->link_map; }
     const CollisionSolver * GetCollisionSolver() const { return &this->collision_solver; }
     void GameIsOver();
 
@@ -38,3 +40,5 @@ class World
     /* Attempts to regrow destroyed dirt in empty places where there is some neighboring dirt to extend */
     void RegrowPass();
 };
+
+inline World * GetWorld() { return GetGame()->GetWorld(); }

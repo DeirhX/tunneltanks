@@ -12,6 +12,7 @@ class LinkPoint
     bool is_alive = true;
 
   public:
+    LinkPoint(Position position) : position(position) {}
     ~LinkPoint() { Invalidate(); }
     bool IsInvalid() const { return !is_alive; }
     void Invalidate() { is_alive = false; }
@@ -36,5 +37,8 @@ class LinkMap
     ValueContainer<Link> links = {};
 public:
     LinkMap(Level * level) : level(level) {}
+
+    LinkPoint * RegisterLinkPoint(LinkPoint && temp_point);
+
     void UpdateAll();
 };

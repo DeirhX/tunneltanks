@@ -10,6 +10,7 @@
 #include "render_surface.h"
 #include "tank_base.h"
 
+class World;
 enum class LevelPixel : char;
 
 enum class BaseCollision
@@ -51,8 +52,9 @@ class Level
 
   public:
     Level(Size size);
+    void OnConnectWorld(World * world);
 
-    Size GetSize() const { return this->size; };
+    Size GetSize() const { return this->size; }
     LevelSurfaces * GetSurfaces() { return &this->surfaces; }
     const Container2D<LevelPixel> & GetLevelData() const { return this->data; }
 
@@ -89,6 +91,8 @@ class Level
 
     /* Tank-related stuff */
     TankBase * GetSpawn(TankColor color);
+    /* TODO: Don't allow modification of the vector */
+    std::vector<TankBase> & GetSpawns() { return this->tank_bases; }
     void SetSpawn(TankColor color, std::unique_ptr<TankBase> && tank_base);
     void SetSpawn(TankColor color, Position position);
     DigResult DigTankTunnel(Position pos, bool dig_with_torch);

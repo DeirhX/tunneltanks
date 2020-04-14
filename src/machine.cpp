@@ -44,7 +44,7 @@ void Harvester::Advance(Level * level)
         if (suitable_pos.has_value() && suitable_pos.value() != this->position)
         {
             GetWorld()->GetLevel()->SetPixel(suitable_pos.value(), LevelPixel::DirtGrow);
-            this->owner->GetResources().AddDirt(1);
+            this->owner->GetResources().Add(1_dirt);
         }
     }
 }

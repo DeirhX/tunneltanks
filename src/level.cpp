@@ -15,6 +15,7 @@
 #include "color_palette.h"
 #include "trace.h"
 #include "level_pixel.h"
+#include "world.h"
 
 
 Level::Level(Size size)
@@ -23,6 +24,12 @@ Level::Level(Size size)
     surfaces.terrain_surface.SetDefaultColor(static_cast<Color>(Palette.Get(Colors::Rock)));
     surfaces.objects_surface.SetDefaultColor({});
     std::fill(this->data.begin(), this->data.end(), LevelPixel::LevelGenRock);
+}
+
+void Level::OnConnectWorld(World * world)
+{
+    for (TankBase & tank_base : this->tank_bases)
+        tank_base.RegisterLinkPoint(world);
 }
 
 void Level::SetLevelData(int i, LevelPixel value)
@@ -135,6 +142,7 @@ void Level::CreateBases()
     {
         CreateBase({this->tank_bases[i].GetPosition().x, this->tank_bases[i].GetPosition().y}, i);
     }
+
 }
 
 TankBase * Level::GetSpawn(TankColor color) 
