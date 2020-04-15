@@ -51,16 +51,22 @@ void Tank::Advance(World * world)
     {
         /* Recharge and discharge */
         this->AlterEnergy(tweak::tank::IdleCost);
-        this->TryBaseHeal();
+
+        TankBase * base = this->level->CheckBaseCollision(this->pos);
+        if (base)
+        {
+            this->TryBaseHeal(base);
+            this->TransferResourcesToBase(base);
+        }
 
         /* Get input from controller and figure what we *want* to do and do it: rotate turret, set desired direction and speed  */
         if (this->controller)
         {
-            Vector base = this->level->GetSpawn(this->color)->GetPosition();
+            Vector spawn_pos = this->level->GetSpawn(this->color)->GetPosition();
             PublicTankInfo controls = {.health = this->health,
                                        .energy = this->energy,
-                                       .x = static_cast<int>(this->pos.x - base.x),
-                                       .y = static_cast<int>(this->pos.y - base.y),
+                                       .x = static_cast<int>(this->pos.x - spawn_pos.x),
+                                       .y = static_cast<int>(this->pos.y - spawn_pos.y),
                                        .level_view = LevelView(this, this->level)};
             this->ApplyControllerOutput(this->controller->ApplyControls(&controls));
         }
@@ -185,16 +191,23 @@ void Tank::HandleMove(TankList * tl)
 }
 
 /* Check to see if we're in any bases, and heal based on that: */
-void Tank::TryBaseHeal()
+void Tank::TryBaseHeal(TankBase * base)
 {
-    BaseCollision c = this->level->CheckBaseCollision({this->pos.x, this->pos.y}, this->color);
-    if (c == BaseCollision::Yours)
+    if (base->GetColor() == this->GetColor())
     {
         this->AlterEnergy(tweak::tank::HomeChargeSpeed);
         this->AlterHealth(tweak::tank::HomeHealSpeed);
     }
-    else if (c == BaseCollision::Enemy)
+    else 
         this->AlterEnergy(tweak::tank::EnemyChargeSpeed);
+}
+
+void Tank::TransferResourcesToBase(TankBase * base)
+{
+    if (base->GetColor() == this->GetColor())
+    {
+        base->AbsorbResources(this->resources, {1_dirt});
+    }
 }
 
 void Tank::CollectItems()

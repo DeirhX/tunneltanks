@@ -79,6 +79,9 @@ class Tank
     [[nodiscard]] DirectionF GetTurretDirection() const { return this->turret.GetDirection(); }
     [[nodiscard]] TankColor GetColor() const { return this->color; }
     [[nodiscard]] DirectionF GetDirection() const { return this->direction; }
+    [[nodiscard]] TankBase * GetBase() const { return this->tank_base; }
+    [[nodiscard]] Resources & GetResources() { return this->resources; }
+    [[nodiscard]] Level * GetLevel() const { return this->level; };
 
     [[nodiscard]] bool IsDead() const;
     [[nodiscard]] bool IsValid() const { return this->is_valid; }    // For ValueContainer
@@ -86,8 +89,6 @@ class Tank
     [[nodiscard]] int GetEnergy() const { return this->energy; }
     [[nodiscard]] int GetHealth() const { return this->health; }
     [[nodiscard]] int GetLives() const { return this->lives_left; }
-    [[nodiscard]] Resources& GetResources() { return this->resources; }
-    [[nodiscard]] Level * GetLevel() { return this->level; };
 
     void Advance(World * world); /* Advance world-step */
 
@@ -110,7 +111,8 @@ class Tank
 
   private:
     void HandleMove(class TankList * tl);
-    void TryBaseHeal();
+    void TryBaseHeal(TankBase * base);
+    void TransferResourcesToBase(TankBase * base);
     void CollectItems();
 };
 

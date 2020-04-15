@@ -161,7 +161,7 @@ void Level::SetSpawn(TankColor color, std::unique_ptr<TankBase> && tank_base)
 
 void Level::SetSpawn(TankColor color, Position position)
 {
-    this->SetSpawn(color, std::make_unique<TankBase>(position));
+    this->SetSpawn(color, std::make_unique<TankBase>(position, color));
 }
 
 DigResult Level::DigTankTunnel(Position pos, bool dig_with_torch)
@@ -221,20 +221,17 @@ void Level::CommitPixels(const std::vector<Position> & positions)
 /* TODO: This needs to be done in a different way, as this approach will take 
  * MAX_TANKS^2 time to do all collision checks for all tanks. It should only
  * take MAX_TANKS time. */
-BaseCollision Level::CheckBaseCollision(Position pos, TankColor color)
+TankBase * Level::CheckBaseCollision(Position pos)
 {
     for (TankColor id = 0; id < tweak::world::MaxPlayers; id++)
     {
-        if (std::abs(this->tank_bases[id].GetPosition().x - pos.x) < tweak::world::BaseSize / 2 &&
-            std::abs(this->tank_bases[id].GetPosition().y - pos.y) < tweak::world::BaseSize / 2)
+        if (this->tank_bases[id].IsInside(pos))
         {
-            if (id == color)
-                return BaseCollision::Yours;
-            return BaseCollision::Enemy;
+            return &this->tank_bases[id];
         }
     }
 
-    return BaseCollision::None;
+    return nullptr;
 }
 
 Color Level::GetVoxelColor(LevelPixel voxel)

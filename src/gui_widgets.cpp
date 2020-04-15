@@ -279,7 +279,7 @@ void ResourcesMinedDisplay::Draw(Screen * screen)
     text_rect.pos.y += 9;
     text_rect.size.y -= 9;
     GetSystem()->GetFontRenderer()->Render(FontFace::Brodmin, screen, text_rect,
-                                           std::to_string(this->tank->GetResources().GetMinerals() / 10),
+                                           std::to_string(this->tank->GetBase()->GetResources().GetDirt() / 10),
                                            Palette.Get(Colors::StatusHealth), HorizontalAlign::Right);
 }
 

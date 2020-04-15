@@ -96,7 +96,7 @@ class Level
     void SetSpawn(TankColor color, std::unique_ptr<TankBase> && tank_base);
     void SetSpawn(TankColor color, Position position);
     DigResult DigTankTunnel(Position pos, bool dig_with_torch);
-    BaseCollision CheckBaseCollision(Position pos, TankColor color);
+    TankBase * CheckBaseCollision(Position pos);
 
   private:
     /* Level generation */

@@ -294,10 +294,13 @@ struct BoundingBox : RectBase<Position>
     }
     bool IsInside(Position tested_position, Position entity_origin) const
     {
-        return tested_position.x >= this->Left() + entity_origin.x &&
-               tested_position.x <= this->Right() + entity_origin.x &&
-               tested_position.y >= this->Top() + entity_origin.y &&
-               tested_position.y <= this->Bottom() + entity_origin.y;
+        return std::abs(tested_position.x - entity_origin.x) < this->size.x / 2 &&
+               std::abs(tested_position.y - entity_origin.y) < this->size.y / 2;
+
+        //return tested_position.x >= this->Left() + entity_origin.x &&
+        //       tested_position.x <= this->Right() + entity_origin.x &&
+        //       tested_position.y >= this->Top() + entity_origin.y &&
+        //       tested_position.y <= this->Bottom() + entity_origin.y;
     }
 };
 
