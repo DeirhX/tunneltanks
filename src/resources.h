@@ -80,6 +80,9 @@ constexpr HealthAmount operator"" _health(std::uint64_t health_value) noexcept
 }
 
 
+/*
+ * Template for binding two resources together. It can be chained further.
+ */
 template <typename FirstResourceType, typename SecondResourceType>
 struct TwoResourceAmount
 {
@@ -159,23 +162,75 @@ struct MaterialCapacity : public MaterialAmount
 /*
  * Resources: Resource cache entities can possess
  */
-class Materials
+template <typename AmountType, typename CapacityType>
+class ResourceContainer
 {
-    MaterialAmount current;
-    MaterialCapacity capacity;
+  protected:
+    AmountType current;
+    CapacityType capacity;
+
   public:
-    Materials(MaterialCapacity capacity_)
-        : capacity(capacity_)
-    { }
-    Materials(DirtAmount dirt, MineralsAmount minerals, MaterialCapacity capacity_)
-        : current(dirt, minerals), capacity(capacity_)
-    { }
+    ResourceContainer(CapacityType capacity_) : capacity(capacity_) {}
+    ResourceContainer(AmountType amount_, CapacityType capacity_)
+        : current(amount_), capacity(capacity_)
+    {
+    }
     /* true - paid the whole sum.  false - didn't have enough resources, state is unchanged */
-    bool Pay(MaterialAmount payment);
+    bool Pay(AmountType payment);
     /* true - added the whole sum.  false - didn't have enough space, added as much as possible */
-    bool Add(MaterialAmount gift);
+    bool Add(AmountType gift);
     /* Absorb as much we have space for, subtracting it from argument */
-    void Absorb(Materials & other);
+    void Absorb(ResourceContainer & other);
+};
+
+template <typename AmountType, typename CapacityType>
+bool ResourceContainer<AmountType, CapacityType>::Pay(AmountType payment)
+{
+    if ((this->current - payment).IsNegative())
+        return false;
+    this->current -= payment;
+    return true;
+}
+
+template <typename AmountType, typename CapacityType>
+bool ResourceContainer<AmountType, CapacityType>::Add(AmountType gift)
+{
+    bool exceeded = false;
+    if (this->current + gift > this->capacity)
+        exceeded = true;
+
+    /* Do the add */
+    this->current += gift;
+
+    /* Trim if it was too much */
+    auto excess = this->current - this->capacity;
+    excess.TrimNegative();
+    this->current -= excess;
+
+    return exceeded;
+}
+
+template <typename AmountType, typename CapacityType>
+void ResourceContainer<AmountType, CapacityType>::Absorb(ResourceContainer & other)
+{
+    this->current += other.current;
+    other.current = {};
+
+    auto excess = this->current - this->capacity;
+    excess.TrimNegative();
+    this->current -= excess;
+    other.current += excess;
+}
+
+
+class MaterialContainer : public ResourceContainer<MaterialAmount, MaterialCapacity>
+{
+    using Parent = ResourceContainer<MaterialAmount, MaterialCapacity>;
+  public:
+    MaterialContainer(MaterialCapacity capacity_): Parent(capacity_) { }
+    MaterialContainer(DirtAmount dirt, MineralsAmount minerals, MaterialCapacity capacity_)
+        : Parent({dirt, minerals}, capacity_)
+    { }
 
     int GetDirt() const { return this->current.Dirt().amount; }
     int GetMinerals() const { return this->current.Minerals().amount; }

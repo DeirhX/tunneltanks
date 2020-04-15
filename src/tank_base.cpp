@@ -17,15 +17,14 @@ bool TankBase::IsInside(Position tested_position) const
 {
     return this->bounding_box.IsInside(tested_position, this->position);
 }
-void TankBase::AbsorbResources(Materials & other)
-{
+void TankBase::AbsorbResources(MaterialContainer & other) {
     this->resources.Absorb(other);
 }
 
-void TankBase::AbsorbResources(Materials & other, MaterialAmount rate)
+void TankBase::AbsorbResources(MaterialContainer & other, MaterialAmount rate)
 {
     /* Absorb a maximum of rate limit from source */
-    Materials absorber = {MaterialCapacity{rate}};
+    MaterialContainer absorber = {MaterialCapacity{rate}};
     absorber.Absorb(other);
     /* Give it over to us, possibly keeping any left-over remainder */
     this->resources.Absorb(absorber);

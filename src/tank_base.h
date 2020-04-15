@@ -19,7 +19,7 @@ class TankBase
     TankColor color = {-1};
     LinkPoint * link_point{};
 
-    Materials resources = {0_dirt, 0_minerals, MaterialCapacity{MaterialAmount{1000_dirt, 1000_minerals}}};
+    MaterialContainer resources = {0_dirt, 0_minerals, MaterialCapacity{MaterialAmount{1000_dirt, 1000_minerals}}};
   public:
     TankBase() = default;
     explicit TankBase(Position position, TankColor color);
@@ -28,11 +28,11 @@ class TankBase
 
     [[nodiscard]] Position GetPosition() const { return this->position; }
     [[nodiscard]] TankColor GetColor() const { return this->color; }
-    [[nodiscard]] const Materials & GetResources() const { return this->resources; }
+    [[nodiscard]] const MaterialContainer & GetResources() const { return this->resources; }
     [[nodiscard]] bool IsInside(Position position) const;
     
-    void AbsorbResources(Materials & other);
-    void AbsorbResources(Materials & other, MaterialAmount rate);
+    void AbsorbResources(MaterialContainer & other);
+    void AbsorbResources(MaterialContainer & other, MaterialAmount rate);
 
     void Draw(Surface * surface) const;
     void Advance() {}
