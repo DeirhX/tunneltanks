@@ -60,7 +60,7 @@ namespace tank {
 	constexpr int BulletMax = 6;
 
 	/* Various constants for energy calculation: */
-    constexpr ResourceCapacity ResourcesMax = {{10000_dirt, 10000_minerals}};
+    constexpr MaterialCapacity ResourcesMax = {{10000_dirt, 10000_minerals}};
     constexpr int StartingFuel = 24000;
 	constexpr int ShootCost = -160;
 	constexpr int MoveCost = -8;
@@ -142,13 +142,13 @@ namespace rules
 {
     using namespace std::literals::chrono_literals;
 
-    constexpr Cost HarvesterCost = 500_dirt;
-    constexpr Cost MinerCost = {1000_dirt, 50_minerals};
+    constexpr MaterialAmount HarvesterCost = 500_dirt;
+    constexpr MaterialAmount MinerCost = {1000_dirt, 50_minerals};
     constexpr int HarvesterHP = 100;
     constexpr int MinerHP = 200;
     constexpr std::chrono::milliseconds HarvestTimer = 500ms;
     constexpr int HarvestMaxRange = 20;
-    constexpr Cost ChargerCost = 500_dirt;
+    constexpr MaterialAmount ChargerCost = 500_dirt;
     constexpr int ChargerHP = 100;
     constexpr std::chrono::milliseconds ChargeTimer = 200ms;
     constexpr int ChargeMaxRange = 20;

@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-class Resources;
+class Materials;
 class Tank;
 struct Position;
 struct ControllerOutput;
@@ -24,9 +24,9 @@ class MachineMaterializer
     bool is_building_tertiary = false;
 
     Tank * owner_tank;
-    Resources * resource_bank;
+    Materials * resource_bank;
   public:
-    MachineMaterializer(Tank * owner_tank, Resources * resource_bank);
+    MachineMaterializer(Tank * owner_tank, Materials * resource_bank);
 
     void ApplyControllerOutput(ControllerOutput controls);
     void Advance(Position tank_position);

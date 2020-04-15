@@ -60,7 +60,7 @@ class Tank
     int energy = tweak::tank::StartingFuel;
     int lives_left = tweak::tank::MaxLives;
 
-    Resources resources = {tweak::tank::ResourcesMax};
+    Materials resources = {tweak::tank::ResourcesMax};
 
     std::shared_ptr<Controller> controller = nullptr;
 
@@ -80,7 +80,7 @@ class Tank
     [[nodiscard]] TankColor GetColor() const { return this->color; }
     [[nodiscard]] DirectionF GetDirection() const { return this->direction; }
     [[nodiscard]] TankBase * GetBase() const { return this->tank_base; }
-    [[nodiscard]] Resources & GetResources() { return this->resources; }
+    [[nodiscard]] Materials & GetResources() { return this->resources; }
     [[nodiscard]] Level * GetLevel() const { return this->level; };
 
     [[nodiscard]] bool IsDead() const;

@@ -5,7 +5,7 @@
 #include "tank.h"
 #include "world.h"
 
-MachineMaterializer::MachineMaterializer(Tank * tank, Resources * resource_bank) : owner_tank(tank), resource_bank(resource_bank)
+MachineMaterializer::MachineMaterializer(Tank * tank, Materials * resource_bank) : owner_tank(tank), resource_bank(resource_bank)
 {
 
 }

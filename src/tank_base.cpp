@@ -17,15 +17,15 @@ bool TankBase::IsInside(Position tested_position) const
 {
     return this->bounding_box.IsInside(tested_position, this->position);
 }
-void TankBase::AbsorbResources(Resources & other)
+void TankBase::AbsorbResources(Materials & other)
 {
     this->resources.Absorb(other);
 }
 
-void TankBase::AbsorbResources(Resources & other, Cost rate)
+void TankBase::AbsorbResources(Materials & other, MaterialAmount rate)
 {
     /* Absorb a maximum of rate limit from source */
-    Resources absorber = {ResourceCapacity{rate}};
+    Materials absorber = {MaterialCapacity{rate}};
     absorber.Absorb(other);
     /* Give it over to us, possibly keeping any left-over remainder */
     this->resources.Absorb(absorber);
@@ -35,7 +35,14 @@ void TankBase::AbsorbResources(Resources & other, Cost rate)
 
 void TankBase::Draw(Surface * surface) const
 {
+    /* Energy layer */
     Size dirt_rect_size = BaseSize + Size{2, 2};
+    Rect dirt_rect = Rect{Position{this->position - dirt_rect_size / 2}, dirt_rect_size};
+    ShapeRenderer::DrawRectangle(surface, dirt_rect, false, Palette.Get(Colors::Transparent),
+                                 Palette.Get(Colors::FireCold));
+
+    /* Dirt layer */
+    /*Size dirt_rect_size = BaseSize + Size{2, 2};
     Rect dirt_rect = Rect{Position{this->position - dirt_rect_size / 2}, dirt_rect_size}; 
-    ShapeRenderer::DrawRectangle(surface, dirt_rect, false, Palette.Get(Colors::Transparent), Palette.Get(Colors::FireCold));
+    ShapeRenderer::DrawRectangle(surface, dirt_rect, false, Palette.Get(Colors::Transparent), Palette.Get(Colors::FireCold));*/
 }
