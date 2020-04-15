@@ -194,7 +194,8 @@ bool Game::AdvanceStep()
 
     /* Do the world advance - apply controller input, move stuff, commit level bitmap to DrawBuffer */
     /* TODO: Don't get the surface this stupid way */
-    world->Advance(&this->world->GetLevel()->GetSurfaces()->objects_surface);
+    world->Advance();
+    world->Draw(&this->world->GetLevel()->GetSurfaces()->objects_surface);
     /* Draw our current state */
     this->screen->DrawCurrentMode();
 

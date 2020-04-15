@@ -8,6 +8,8 @@
 #include "projectile_list.h"
 #include "tank_list.h"
 
+class WorldRenderSurface;
+
 class World
 {
     class Game * game;
@@ -22,7 +24,9 @@ class World
     RepetitiveTimer regrow_timer{tweak::world::DirtRecoverInterval};
   public:
     World(Game * game, std::unique_ptr<Level> && level);
-    void Advance(class WorldRenderSurface * objects_surface);
+
+    void Advance();
+    void Draw(WorldRenderSurface * objects_surface);
 
     Level * GetLevel() { return this->level.get(); }
     ProjectileList * GetProjectileList() { return &this->projectile_list; }

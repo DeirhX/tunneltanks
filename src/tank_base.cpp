@@ -1,4 +1,6 @@
 ﻿#include "tank_base.h"
+
+#include "shape_renderer.h"
 #include "world.h"
 
 TankBase::TankBase(Position position, TankColor color) : position(position), color(color) {
@@ -29,4 +31,11 @@ void TankBase::AbsorbResources(Resources & other, Cost rate)
     this->resources.Absorb(absorber);
     /* Return the left-over to original source*/
     other.Absorb(absorber);
+}
+
+void TankBase::Draw(Surface * surface) const
+{
+    Size dirt_rect_size = BaseSize + Size{2, 2};
+    Rect dirt_rect = Rect{Position{this->position - dirt_rect_size / 2}, dirt_rect_size}; 
+    ShapeRenderer::DrawRectangle(surface, dirt_rect, false, Palette.Get(Colors::Transparent), Palette.Get(Colors::FireCold));
 }

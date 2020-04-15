@@ -97,6 +97,7 @@ constexpr Offset operator-(Offset o, Size s) noexcept { return {o.x - s.x, o.y -
 constexpr Offset operator-(Position p, Position o) noexcept { return {p.x - o.x, p.y - o.y}; }
 constexpr Position operator+(Position v, Offset o) noexcept { return {v.x + o.x, v.y + o.y}; }
 constexpr Position operator+(Position v, Size o) noexcept { return {v.x + o.x, v.y + o.y}; }
+constexpr Position operator-(Position v, Size o) noexcept { return {v.x - o.x, v.y - o.y}; }
 constexpr bool operator==(Position l, Position r) noexcept { return l.x == r.x && l.y == r.y; }
 constexpr bool operator!=(Position l, Position r) noexcept { return !operator==(l, r); }
 constexpr bool operator==(Size l, Size r) noexcept { return l.x == r.x && l.y == r.y; }

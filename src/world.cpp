@@ -14,7 +14,7 @@ World::World(Game * game, std::unique_ptr<Level> && level)
     this->level->OnConnectWorld(this);
 }
 
-void World::Advance(WorldRenderSurface * objects_surface)
+void World::Advance()
 {
     ++this->advance_count;
     RegrowPass();
@@ -23,11 +23,20 @@ void World::Advance(WorldRenderSurface * objects_surface)
     this->projectile_list.Advance(this->level.get(), this->GetTankList());
     this->tank_list.for_each([=](Tank * t) { t->Advance(this); });
     this->harvester_list.Advance(this->level.get(), this->GetTankList());
+    /* TODO: get out of level? */
+    for (TankBase & base : this->level->GetSpawns())
+        base.Advance();
+}
 
+
+void World::Draw(WorldRenderSurface * objects_surface)
+{
     /* Draw everything: */
     this->projectile_list.Draw(objects_surface);
     this->harvester_list.Draw(objects_surface);
     this->tank_list.for_each([=](Tank * t) { t->Draw(objects_surface); });
+    for (const TankBase & base : this->level->GetSpawns())
+        base.Draw(objects_surface);
 }
 
 void World::GameIsOver() { this->game->GameOver(); }

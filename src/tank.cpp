@@ -206,7 +206,7 @@ void Tank::TransferResourcesToBase(TankBase * base)
 {
     if (base->GetColor() == this->GetColor())
     {
-        base->AbsorbResources(this->resources, {1_dirt});
+        base->AbsorbResources(this->resources, {3_dirt});
     }
 }
 

@@ -17,10 +17,11 @@ void ShapeRenderer::DrawRectangle(Surface * surface, Rect screen_rect, bool roun
     for (int x = screen_rect.Left(); x <= screen_rect.Right(); ++x)
         for (int y = screen_rect.Top(); y <= screen_rect.Bottom(); ++y)
         {
-            if (round_corner_pixels && (x == screen_rect.Left() && y == screen_rect.Top()) ||
-                (x == screen_rect.Right() && y == screen_rect.Top()) ||
-                (x == screen_rect.Left() && y == screen_rect.Bottom()) ||
-                (x == screen_rect.Right() && y == screen_rect.Bottom()))
+            if (round_corner_pixels && 
+                ((x == screen_rect.Left() && y == screen_rect.Top()) ||
+                 (x == screen_rect.Right() && y == screen_rect.Top()) ||
+                 (x == screen_rect.Left() && y == screen_rect.Bottom()) ||
+                 (x == screen_rect.Right() && y == screen_rect.Bottom())))
             {
                 /* Don't draw if rounded */
                 continue;
