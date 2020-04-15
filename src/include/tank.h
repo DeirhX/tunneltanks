@@ -22,7 +22,8 @@ class World;
 /* Put inside a structure, so we are protected from casual AI cheating: */
 struct PublicTankInfo
 {
-    int health, energy;
+    HealthAmount health;
+    EnergyAmount energy;
     int x, y; /* relative from home base */
     LevelView level_view;
 };
@@ -56,10 +57,9 @@ class Tank
 
     ManualTimer respawn_timer = {tweak::tank::RespawnDelay};
 
-    int health = tweak::tank::StartingShield;
-    int energy = tweak::tank::StartingFuel;
     int lives_left = tweak::tank::MaxLives;
 
+    Reactor reactor = tweak::tank::DefaultTankReactor;
     MaterialContainer resources = {tweak::tank::ResourcesMax};
 
     std::shared_ptr<Controller> controller = nullptr;
@@ -81,19 +81,20 @@ class Tank
     [[nodiscard]] DirectionF GetDirection() const { return this->direction; }
     [[nodiscard]] TankBase * GetBase() const { return this->tank_base; }
     [[nodiscard]] MaterialContainer & GetResources() { return this->resources; }
+    [[nodiscard]] Reactor & GetReactor() { return this->reactor; }
     [[nodiscard]] Level * GetLevel() const { return this->level; };
 
     [[nodiscard]] bool IsDead() const;
     [[nodiscard]] bool IsValid() const { return this->is_valid; }    // For ValueContainer
     [[nodiscard]] bool IsInvalid() const { return !this->is_valid; } // For ValueContainer
-    [[nodiscard]] int GetEnergy() const { return this->energy; }
-    [[nodiscard]] int GetHealth() const { return this->health; }
+    [[nodiscard]] int GetEnergy() const { return this->reactor.GetEnergy(); }
+    [[nodiscard]] int GetHealth() const { return this->reactor.GetHealth(); }
     [[nodiscard]] int GetLives() const { return this->lives_left; }
 
     void Advance(World * world); /* Advance world-step */
 
-    void AlterEnergy(int diff);
-    void AlterHealth(int diff);
+    //void AlterEnergy(int diff);
+    //void AlterHealth(int diff);
 
     void Spawn();
     void Die();

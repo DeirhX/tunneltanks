@@ -13,12 +13,12 @@ class Machine
     class Tank * owner;
 
     BoundingBox bounding_box;
-    Health health;
+    Reactor reactor = tweak::rules::DefaultMachineReactor;
     bool is_alive = true;
 
   protected:
-    Machine(Position position, Tank * owner, Health health, BoundingBox bounding_box)
-        : position(position), owner(owner), bounding_box(bounding_box), health(health)
+    Machine(Position position, Tank * owner, Reactor reactor_, BoundingBox bounding_box)
+        : position(position), owner(owner), bounding_box(bounding_box), reactor(reactor_)
     {
     }
     virtual ~Machine() { Invalidate(); }
@@ -35,7 +35,7 @@ class Machine
     virtual void Advance(Level * level) = 0;
     virtual void Draw(Surface * surface) const = 0;
 
-    void AlterHealth(int shot_damage);
+    Reactor & GetReactor() { return this->reactor; }
 };
 
 enum class HarvesterType
@@ -54,7 +54,7 @@ class Harvester final : public Machine
     Harvester(Position position, HarvesterType type, Tank * tank)
         : Machine{
             position, tank,
-            Health{tweak::rules::HarvesterHP},
+            tweak::rules::HarvesterReactor,
             BoundingBox{Size{5, 5}}},
         type(type)
     {
@@ -75,7 +75,7 @@ class Charger final : public Machine
 
   public:
     Charger(Position position, Tank * tank)
-        : Machine{position, tank, Health{tweak::rules::ChargerHP}, BoundingBox{Size{5, 5}}}
+        : Machine{position, tank, tweak::rules::ChargerReactor, BoundingBox{Size{5, 5}}}
     {
     }
     void Advance(Level * level) override;

@@ -37,6 +37,7 @@ class Timer
     Timer(duration_t timer_cooldown, bool auto_reset) : cooldown(timer_cooldown), interval(timer_cooldown), auto_reset(auto_reset), is_running(auto_reset) {}
 
     bool Ready() const { return this->cooldown.Finished(); }
+    bool IsRunning() const { return this->is_running; }
     bool AdvanceAndCheckElapsed()
     {
         if (!this->is_running)

@@ -81,21 +81,19 @@ void TankTurret::HandleShoot()
     {
         if (this->is_shooting_primary)
         {
-            this->bullet_timer = this->primary_weapon.Fire(this->tank->GetPosition(), this->GetDirection(), this->tank);
+            if (this->tank->GetReactor().Pay(tweak::tank::ShootCost))
+                this->bullet_timer = this->primary_weapon.Fire(this->tank->GetPosition(), this->GetDirection(), this->tank);
             /* We just fired. Let's charge ourselves: */
-            this->tank->AlterEnergy(tweak::tank::ShootCost);
         }
         if (this->is_shooting_secondary)
         {
-            this->bullet_timer =
-                this->secondary_weapon.Fire(this->tank->GetPosition(), this->GetDirection(), this->tank);
-            this->tank->AlterEnergy(tweak::tank::ShootCost);
+            if (this->tank->GetReactor().Pay(tweak::tank::ShootCost))
+                this->bullet_timer = this->secondary_weapon.Fire(this->tank->GetPosition(), this->GetDirection(), this->tank);
         }
         if (this->is_shooting_tertiary)
         {
-            this->bullet_timer =
-                this->tertiary_weapon.Fire(this->tank->GetPosition(), this->GetDirection(), this->tank);
-            this->tank->AlterEnergy(tweak::tank::ShootCost);
+            if (this->tank->GetReactor().Pay(tweak::tank::ShootCost))
+                this->bullet_timer = this->tertiary_weapon.Fire(this->tank->GetPosition(), this->GetDirection(), this->tank);
         }
     }
     else

@@ -137,14 +137,14 @@ void StatusBar::Draw(Screen *screen)
     /* How many pixels are filled in? */
     int energy_filled = this->tank->GetEnergy();
     int health_filled = this->tank->GetHealth();
-    int half_energy_pixel = tweak::tank::StartingFuel / ((this->screen_rect.size.x - SharedLayout::status_border * 2) * 2);
+    int half_energy_pixel = tweak::tank::StartingEnergy.amount / ((this->screen_rect.size.x - SharedLayout::status_border * 2) * 2);
 
     energy_filled += half_energy_pixel;
 
     energy_filled *= (this->screen_rect.size.x - SharedLayout::status_border * 2);
-    energy_filled /= tweak::tank::StartingFuel;
+    energy_filled /= tweak::tank::StartingEnergy.amount;
     health_filled *= (this->screen_rect.size.x - SharedLayout::status_border * 2);
-    health_filled /= tweak::tank::StartingShield;
+    health_filled /= tweak::tank::StartingShield.amount;
 
     /* If we are decreasing to the right, we need to invert those values: */
     if (!this->decreases_to_left)

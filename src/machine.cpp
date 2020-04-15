@@ -11,16 +11,13 @@
 
 bool Machine::CheckAlive(Level * level)
 {
-    this->health = std::max(0, this->health);
-    if (this->health == 0)
+    if (this->GetReactor().GetHealth() == 0)
     {
         Die(level);
         return false;
     }
     return true;
 }
-
-void Machine::AlterHealth(int shot_damage) { this->health -= shot_damage; }
 
 void Harvester::Advance(Level * level)
 {

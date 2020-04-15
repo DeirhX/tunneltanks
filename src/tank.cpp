@@ -50,7 +50,7 @@ void Tank::Advance(World * world)
     if (!this->IsDead())
     {
         /* Recharge and discharge */
-        this->AlterEnergy(tweak::tank::IdleCost);
+        this->GetReactor().Exhaust(tweak::tank::IdleCost);
 
         TankBase * base = this->level->CheckBaseCollision(this->pos);
         if (base)
@@ -63,8 +63,8 @@ void Tank::Advance(World * world)
         if (this->controller)
         {
             Vector spawn_pos = this->level->GetSpawn(this->color)->GetPosition();
-            PublicTankInfo controls = {.health = this->health,
-                                       .energy = this->energy,
+            PublicTankInfo controls = {.health = this->GetHealth(),
+                                       .energy = this->GetEnergy(),
                                        .x = static_cast<int>(this->pos.x - spawn_pos.x),
                                        .y = static_cast<int>(this->pos.y - spawn_pos.y),
                                        .level_view = LevelView(this, this->level)};
@@ -91,6 +91,11 @@ void Tank::Advance(World * world)
     else
     {
         /* DEaD. Handle respawning. */
+        if (!this->respawn_timer.IsRunning())
+        {
+            Die();
+        }
+
         if (this->respawn_timer.AdvanceAndCheckElapsed())
         {
             if (--this->lives_left)
@@ -186,7 +191,7 @@ void Tank::HandleMove(TankList * tl)
         this->pos.y += this->speed.y;
 
         /* Well, we moved, so let's charge ourselves: */
-        this->AlterEnergy(tweak::tank::MoveCost);
+        this->GetReactor().Exhaust(tweak::tank::MoveCost);
     }
 }
 
@@ -195,11 +200,11 @@ void Tank::TryBaseHeal(TankBase * base)
 {
     if (base->GetColor() == this->GetColor())
     {
-        this->AlterEnergy(tweak::tank::HomeChargeSpeed);
-        this->AlterHealth(tweak::tank::HomeHealSpeed);
+        this->GetReactor().Add(tweak::tank::HomeChargeSpeed);
+        this->GetReactor().Add(tweak::tank::HomeHealSpeed);
     }
     else 
-        this->AlterEnergy(tweak::tank::EnemyChargeSpeed);
+        this->GetReactor().Add(tweak::tank::EnemyChargeSpeed);
 }
 
 void Tank::TransferResourcesToBase(TankBase * base)
@@ -217,12 +222,12 @@ void Tank::CollectItems()
         if (Pixel::IsEnergy(pixel))
         {
             this->level->SetPixel(world_position, LevelPixel::Blank);
-            int energy_collected = 100;
+            EnergyAmount energy_collected = 100_energy;
             if (pixel == LevelPixel::EnergyMedium)
-                energy_collected *= 2;
+                energy_collected.amount *= 2;
             else if (pixel == LevelPixel::EnergyHigh)
-                energy_collected *= 4;
-            this->AlterEnergy(energy_collected);
+                energy_collected.amount *= 4;
+            this->GetReactor().Add(energy_collected);
         }
         return true;
     });
@@ -230,7 +235,7 @@ void Tank::CollectItems()
 
 void Tank::Draw(Surface * surface) const
 {
-    if (!this->health)
+    if (!this->reactor.GetHealth())
         return;
 
     for (int y = 0; y < 7; y++)
@@ -245,47 +250,46 @@ void Tank::Draw(Surface * surface) const
     this->turret.Draw(surface);
 }
 
-void Tank::AlterEnergy(int diff)
-{
-    /* You can't alter energy if the tank is dead: */
-    if (this->IsDead())
-        return;
-
-    /* If the diff would make the energy negative, then we just set it to 0: */
-    if (diff < 0 && -diff >= this->energy)
-    {
-        this->energy = 0;
-        this->AlterHealth(-tweak::tank::StartingShield);
-        return;
-    }
-
-    /* Else, just add, and account for overflow: */
-    this->energy = std::min(this->energy + diff, tweak::tank::StartingFuel);
-}
-
-void Tank::AlterHealth(int diff)
-{
-    /* Make sure we don't come back from the dead: */
-    if (this->IsDead())
-        return;
-
-    /* Die if it's our time (health would be less than 1) */
-    if (diff < 0 && -diff >= this->health)
-    {
-        Die();
-        return;
-    }
-
-    /* Apply new health */
-    this->health = std::min(this->health + diff, tweak::tank::StartingShield);
-}
+//void Tank::AlterEnergy(int diff)
+//{
+//    /* You can't alter energy if the tank is dead: */
+//    if (this->IsDead())
+//        return;
+//
+//    /* If the diff would make the energy negative, then we just set it to 0: */
+//    if (diff < 0 && -diff >= this->reactor)
+//    {
+//        this->energy = 0;
+//        this->AlterHealth(-tweak::tank::StartingShield);
+//        return;
+//    }
+//
+//    /* Else, just add, and account for overflow: */
+//    this->energy = std::min(this->energy + diff, tweak::tank::StartingEnergy);
+//}
+//
+//void Tank::AlterHealth(int diff)
+//{
+//    /* Make sure we don't come back from the dead: */
+//    if (this->IsDead())
+//        return;
+//
+//    ReactorState amount = {0_energy, HealthAmount{diff}};
+//    this->reactor.Add(amount);
+//
+//    /* Die if it's our time (health would be less than 1) */
+//    if (this->reactor.GetHealth() < 0)
+//    {
+//        Die();
+//    }
+//    this->reactor.TrimNegative();
+//}
 
 void Tank::Spawn()
 {
     this->turret.Reset();
 
-    this->health = tweak::tank::StartingShield;
-    this->energy = tweak::tank::StartingFuel;
+    this->reactor.Fill();
 
     this->pos = this->tank_base->GetPosition();
 }
@@ -293,8 +297,8 @@ void Tank::Spawn()
 void Tank::Die()
 {
     /* Begin respawn timer and trigger a nice explosion */
-    this->health = 0;
-    this->energy = 0;
+    this->reactor.Clear();
+    this->resources.Clear();
     this->respawn_timer.Restart();
 
     this->projectile_list->Add(ExplosionDesc::AllDirections(this->pos, tweak::explosion::death::ShrapnelCount,
@@ -321,4 +325,7 @@ void Tank::ApplyControllerOutput(ControllerOutput controls)
     }
 }
 
-bool Tank::IsDead() const { return this->health <= 0; }
+bool Tank::IsDead() const
+{
+    return this->reactor.GetHealth() <= 0 || this->reactor.GetEnergy() <= 0;
+}

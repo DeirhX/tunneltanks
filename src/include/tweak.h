@@ -51,28 +51,31 @@ namespace tank {
 
     using namespace std::literals::chrono_literals;
 
-	constexpr int MaxLives = 3;
-	constexpr std::chrono::milliseconds RespawnDelay = 3000ms;
-	
-	/* The number of frames to wait in between shots: */
-	constexpr int TurretDelay = 3;
-	/* The maximum number of bullets allowed from a given tank: */
-	constexpr int BulletMax = 6;
+    constexpr int MaxLives = 3;
+    constexpr std::chrono::milliseconds RespawnDelay = 3000ms;
 
-	/* Various constants for energy calculation: */
+    /* The number of frames to wait in between shots: */
+    constexpr int TurretDelay = 3;
+    /* The maximum number of bullets allowed from a given tank: */
+    constexpr int BulletMax = 6;
+
+    /* Various constants for energy calculation: */
     constexpr MaterialCapacity ResourcesMax = {{10000_dirt, 10000_minerals}};
-    constexpr int StartingFuel = 24000;
-	constexpr int ShootCost = -160;
-	constexpr int MoveCost = -8;
-	constexpr int IdleCost = -3;
-	constexpr int HomeChargeSpeed = 300;
-	constexpr int EnemyChargeSpeed = 90;
-				  
-	/* Various constants for health calculation: */
-	constexpr int StartingShield = 1000;
-	constexpr int ShotDamage = -160;
-	constexpr int HomeHealSpeed = 3;
+    constexpr EnergyAmount StartingEnergy = 24000_energy;
+    constexpr EnergyAmount ShootCost = 160_energy;
+    constexpr EnergyAmount MoveCost = 8_energy;
+    constexpr EnergyAmount IdleCost = 3_energy;
+    constexpr EnergyAmount HomeChargeSpeed = 300_energy;
+    constexpr EnergyAmount EnemyChargeSpeed = 90_energy;
 
+    /* Various constants for health calculation: */
+    constexpr HealthAmount StartingShield = 1000_health;
+    constexpr HealthAmount ShotDamage = 160_health;
+    constexpr HealthAmount HomeHealSpeed = 3_health;
+
+    constexpr Reactor DefaultTankReactor = {
+        StartingEnergy, StartingShield,
+        ReactorCapacity{{StartingEnergy, StartingShield}}};
     constexpr int TurretLength = 4;
 }
 
@@ -84,7 +87,7 @@ namespace screen
     constexpr Size RenderSurfaceSize = {160, 100};
 
     /* Constants for drawing static: (The bottom 3 constants are out of 1000) */
-    constexpr int DrawStaticFuelThreshold = (tweak::tank::StartingFuel / 5);
+    constexpr int DrawStaticFuelThreshold = (tweak::tank::StartingEnergy.amount / 5);
     constexpr int DrawStaticTransparency = 200;
     constexpr int DrawStaticBlackBarOdds = 500;
     constexpr int DrawStaticBlackBarSize = 500;
@@ -144,14 +147,17 @@ namespace rules
 
     constexpr MaterialAmount HarvesterCost = 500_dirt;
     constexpr MaterialAmount MinerCost = {1000_dirt, 50_minerals};
-    constexpr int HarvesterHP = 100;
-    constexpr int MinerHP = 200;
     constexpr std::chrono::milliseconds HarvestTimer = 500ms;
     constexpr int HarvestMaxRange = 20;
     constexpr MaterialAmount ChargerCost = 500_dirt;
-    constexpr int ChargerHP = 100;
     constexpr std::chrono::milliseconds ChargeTimer = 200ms;
     constexpr int ChargeMaxRange = 20;
+
+    constexpr Reactor DefaultMachineReactor = {0_energy, 1000_health, ReactorCapacity{{10000_energy, 1000_health}}};
+    constexpr Reactor HarvesterReactor = {0_energy, 1000_health, ReactorCapacity{{10000_energy, 1000_health}}};
+    constexpr Reactor MinerReactor = {0_energy, 1000_health, ReactorCapacity{{10000_energy, 1000_health}}};
+    constexpr Reactor ChargerReactor = {0_energy, 1000_health, ReactorCapacity{{10000_energy, 1000_health}}};
+
     }
 
  

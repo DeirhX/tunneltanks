@@ -13,7 +13,7 @@ struct ResourceAmount
 {
     int amount;
     ResourceAmount() = default;
-    constexpr ResourceAmount(int amount) : amount(amount) {}
+    constexpr explicit ResourceAmount(int amount) : amount(amount) {}
     constexpr ResourceAmount & operator=(ResourceType other)
     {
         this->amount = other.amount;
@@ -114,7 +114,7 @@ struct TwoResourceAmount
     {
         return {{left.first - other.first}, {left.second - other.second}};
     }
-    bool IsNegative() { return this->first < 0 || this->second < 0; }
+    bool IsNegative() { return this->first.amount < 0 || this->second.amount < 0; }
     void TrimNegative()
     {
         this->first = std::max(0, this->first.amount);
@@ -124,7 +124,7 @@ struct TwoResourceAmount
 };
 
 /*
- * MaterialAmount:  Describe costs in a nice way
+ * MaterialAmount:  Describe material costs in a nice way
  */
 struct MaterialAmount : public TwoResourceAmount<DirtAmount, MineralsAmount>
 {
@@ -141,24 +141,33 @@ public:
     MineralsAmount Minerals() const { return this->second; }
 };
 
+struct MaterialCapacity : public MaterialAmount
+{
+};
+
 /*
  * Reactor: powers every destructable, has energy and health 
  */
-struct ReactorCapacity
+struct ReactorState : public TwoResourceAmount<EnergyAmount, HealthAmount>
 {
-    EnergyAmount energy;
-    HealthAmount health;
+    using Parent = TwoResourceAmount<EnergyAmount, HealthAmount>;
+
+  public:
+    ReactorState() = default;
+    constexpr ReactorState(EnergyAmount first_) : Parent(first_) {}
+    constexpr ReactorState(HealthAmount second_) : Parent(second_) {}
+    constexpr ReactorState(EnergyAmount first_, HealthAmount second_) : Parent(first_, second_) {}
+
+    EnergyAmount & Energy() { return this->first; }
+    HealthAmount & Health() { return this->second; }
+    EnergyAmount Energy() const { return this->first; }
+    HealthAmount Health() const { return this->second; }
 };
 
-class Reactor
+struct ReactorCapacity : public ReactorState
 {
-    EnergyAmount energy;
 };
 
-struct MaterialCapacity : public MaterialAmount
-{
-    
-};
 /*
  * Resources: Resource cache entities can possess
  */
@@ -170,8 +179,8 @@ class ResourceContainer
     CapacityType capacity;
 
   public:
-    ResourceContainer(CapacityType capacity_) : capacity(capacity_) {}
-    ResourceContainer(AmountType amount_, CapacityType capacity_)
+    constexpr ResourceContainer(CapacityType capacity_) : capacity(capacity_) {}
+    constexpr ResourceContainer(AmountType amount_, CapacityType capacity_)
         : current(amount_), capacity(capacity_)
     {
     }
@@ -179,8 +188,14 @@ class ResourceContainer
     bool Pay(AmountType payment);
     /* true - added the whole sum.  false - didn't have enough space, added as much as possible */
     bool Add(AmountType gift);
+    /* true - removed the whole sum.  false - didn't have enough enough, reached zero in some members */
+    bool Exhaust(AmountType reduction);
     /* Absorb as much we have space for, subtracting it from argument */
     void Absorb(ResourceContainer & other);
+
+    void Fill() { this->current = this->capacity; }
+    void Clear() { this->current = {}; }
+    void TrimNegative() { this->current.TrimNegative(); }
 };
 
 template <typename AmountType, typename CapacityType>
@@ -192,6 +207,7 @@ bool ResourceContainer<AmountType, CapacityType>::Pay(AmountType payment)
     return true;
 }
 
+/* true - added the whole sum.  false - didn't have enough space, added as much as possible */
 template <typename AmountType, typename CapacityType>
 bool ResourceContainer<AmountType, CapacityType>::Add(AmountType gift)
 {
@@ -211,6 +227,15 @@ bool ResourceContainer<AmountType, CapacityType>::Add(AmountType gift)
 }
 
 template <typename AmountType, typename CapacityType>
+bool ResourceContainer<AmountType, CapacityType>::Exhaust(AmountType reduction)
+{
+    this->current -= reduction;
+    bool negative = this->current.IsNegative();
+    this->current.TrimNegative();
+    return !negative;
+}
+
+template <typename AmountType, typename CapacityType>
 void ResourceContainer<AmountType, CapacityType>::Absorb(ResourceContainer & other)
 {
     this->current += other.current;
@@ -223,17 +248,37 @@ void ResourceContainer<AmountType, CapacityType>::Absorb(ResourceContainer & oth
 }
 
 
+/*
+ * Container for gathered materials that can be transferred with other container
+ */
 class MaterialContainer : public ResourceContainer<MaterialAmount, MaterialCapacity>
 {
     using Parent = ResourceContainer<MaterialAmount, MaterialCapacity>;
   public:
-    MaterialContainer(MaterialCapacity capacity_): Parent(capacity_) { }
-    MaterialContainer(DirtAmount dirt, MineralsAmount minerals, MaterialCapacity capacity_)
+    constexpr MaterialContainer(MaterialCapacity capacity_) : Parent(capacity_) {}
+    constexpr MaterialContainer(DirtAmount dirt, MineralsAmount minerals, MaterialCapacity capacity_)
         : Parent({dirt, minerals}, capacity_)
     { }
 
     int GetDirt() const { return this->current.Dirt().amount; }
     int GetMinerals() const { return this->current.Minerals().amount; }
+};
+
+/*
+ * Everything that has energy has also health. Everything with health may have also energy.
+ */
+class Reactor : public ResourceContainer<ReactorState, ReactorCapacity>
+{
+    using Parent = ResourceContainer<ReactorState, ReactorCapacity>;
+
+  public:
+    constexpr Reactor(ReactorCapacity capacity_) : Parent(capacity_) {}
+    constexpr Reactor(EnergyAmount energy, HealthAmount health, ReactorCapacity capacity_)
+        : Parent({energy, health}, capacity_)
+    { }
+
+    int GetHealth() const { return this->current.Health().amount; }
+    int GetEnergy() const { return this->current.Energy().amount; }
 };
 
 

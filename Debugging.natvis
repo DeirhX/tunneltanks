@@ -31,7 +31,10 @@
     <DisplayString>{{ r={r}, g={g}, b={b}, a={a} }}</DisplayString>
   </Type>
   <Type Name="MaterialAmount">
-    <DisplayString>{{ dirt={dirt.amount}, minerals={minerals.amount} }}</DisplayString>
+    <DisplayString>{{ dirt={first.amount}, minerals={second.amount} }}</DisplayString>
+  </Type>
+  <Type Name="ReactorState">
+    <DisplayString>{{ energy={first.amount}, health={second.amount} }}</DisplayString>
   </Type>
   
 </AutoVisualizer>

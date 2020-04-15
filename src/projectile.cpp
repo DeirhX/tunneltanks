@@ -24,12 +24,12 @@ void Bullet::Advance(TankList * tankList)
         {
                 if (tank.GetColor() == this->tank->GetColor())
                     return false;
-                tank.AlterHealth(tweak::tank::ShotDamage);
+                tank.GetReactor().Exhaust(tweak::tank::ShotDamage);
                 return true;
         },
         [this](auto & machine)
         {
-            machine.AlterHealth(-tweak::tank::ShotDamage);
+            machine.GetReactor().Exhaust(tweak::tank::ShotDamage);
             return true;
         },
         [this](LevelPixel level_pixel) { return Pixel::IsAnyCollision(level_pixel); }))
