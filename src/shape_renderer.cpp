@@ -2,6 +2,74 @@
 #include "color.h"
 #include "screen.h"
 
+void ShapeRenderer::DrawLine(Surface * surface, Position from, Position to, Color color)
+{
+    Offset diff = to - from;
+    if (diff.x == 0 || diff.y == 0)
+    {
+        /* Easy horizontal / vertical line */
+        Offset step = {std::clamp(diff.x, -1, +1), std::clamp(diff.y, -1, +1)};
+        do
+        {
+            surface->SetPixel(from, color);
+            from += step;
+        } while (from != to);
+    }
+    else
+    {
+        /* Not so easy free-form line */
+        OffsetF one_step = OffsetF{diff} / static_cast<float>(std::max(std::abs(diff.x), std::abs(diff.y)));
+        PositionF curr = PositionF{from};
+        PositionF target = PositionF{to};
+
+        int steps = std::max(diff.x, diff.y);
+        int curr_step = 0;
+        do
+        {
+            surface->SetPixel(curr.ToIntPosition(), color);
+            curr += one_step;
+        } while (curr_step <= steps);
+    }
+}
+
+void ShapeRenderer::DrawLinePart(Surface * surface, Position from, Position to, int skip_pixels, int draw_pixels,
+    Color color)
+{
+    Offset diff = to - from;
+    int pixels_drawn = 0;
+    const int start_draw = std::max(0, skip_pixels);
+    const int stop_draw = start_draw + draw_pixels;
+    int steps = 1 + std::max(std::abs(diff.x), std::abs(diff.y));
+
+    if (diff.x == 0 || diff.y == 0)
+    {
+        /* Easy horizontal / vertical line */
+        Offset step = {std::clamp(diff.x, -1, +1), std::clamp(diff.y, -1, +1)};
+        do
+        {
+            if (pixels_drawn >= start_draw && pixels_drawn < stop_draw)
+                surface->SetPixel(from, color);
+            from += step;
+            ++pixels_drawn;
+        } while (--steps && pixels_drawn < stop_draw);
+    }
+    else
+    {
+        /* Not so easy free-form line */
+        OffsetF one_step = OffsetF{diff} / static_cast<float>(std::max(std::abs(diff.x), std::abs(diff.y)));
+        PositionF curr = PositionF{from};
+        PositionF target = PositionF{to};
+
+        do
+        {
+            if (pixels_drawn >= start_draw && pixels_drawn < stop_draw)
+                surface->SetPixel(curr.ToIntPosition(), color);
+            curr += one_step;
+            ++pixels_drawn;
+        } while (--steps && pixels_drawn < stop_draw);
+    }
+}
+
 void ShapeRenderer::FillRectangle(Surface * surface, Rect rect, Color color)
 {
     Position pos;
@@ -11,7 +79,7 @@ void ShapeRenderer::FillRectangle(Surface * surface, Rect rect, Color color)
 }
 
 
-void ShapeRenderer::DrawRectangle(Surface * surface, Rect screen_rect, bool round_corner_pixels, Color fill_color,
+void ShapeRenderer::DrawFilledRectangle(Surface * surface, Rect screen_rect, bool round_corner_pixels, Color fill_color,
                                   Color outline_color)
 {
     for (int x = screen_rect.Left(); x <= screen_rect.Right(); ++x)
@@ -42,26 +110,52 @@ void ShapeRenderer::DrawRectangle(Surface * surface, Rect screen_rect, bool roun
         }
 }
 
+void ShapeRenderer::DrawRectangle(Surface * surface, Rect screen_rect, bool round_corners, Color outline_color)
+{
+    const int drawn_pixels = 2 * screen_rect.size.x + 2 * screen_rect.size.y - 4;
+    if (!round_corners)
+    {
+        DrawRectanglePart(surface, screen_rect, 0, drawn_pixels, outline_color);
+    }
+    else
+    {
+        /* Draw separate lines, stopping and skipping over corners */
+        int start_pixel = 1;
+        DrawRectanglePart(surface, screen_rect, start_pixel, start_pixel + screen_rect.size.x - 2, outline_color);
+        start_pixel = screen_rect.size.x;
+        DrawRectanglePart(surface, screen_rect, start_pixel, start_pixel + screen_rect.size.y - 2, outline_color);
+        start_pixel += screen_rect.size.y - 1 ;
+        DrawRectanglePart(surface, screen_rect, start_pixel, start_pixel + screen_rect.size.x - 2, outline_color);
+        start_pixel += screen_rect.size.x - 1;
+        DrawRectanglePart(surface, screen_rect, start_pixel, start_pixel + screen_rect.size.y - 2, outline_color);
+    }
+}
+
 void ShapeRenderer::DrawRectanglePart(Surface * surface, Rect screen_rect, int skip_pixels, int draw_pixels,
-    Color outline_color)
+                                      Color outline_color)
 {
     int pixels_drawn = 0;
-    const int start_draw = skip_pixels;
+    const int start_draw = std::max(0, skip_pixels);
     const int stop_draw = start_draw + draw_pixels;
-    for (int x = screen_rect.Left(); x <= screen_rect.Right(); ++x)
-        for (int y = screen_rect.Top(); y <= screen_rect.Bottom(); ++y)
-        {
-            /* Are we inside edges?  */
-            if ((x == screen_rect.Left() || x == screen_rect.Right() || y == screen_rect.Top() ||
-                y == screen_rect.Bottom()))
-            {
-                if (pixels_drawn >= skip_pixels && pixels_drawn < stop_draw)
-                    surface->SetPixel(Position{x, y}, outline_color);
-                ++pixels_drawn;
-            }
-            if (pixels_drawn >= stop_draw)
-                return;
-        }
+
+    /* Draw outline using 4 lines */
+    DrawLinePart(surface, {screen_rect.Left(), screen_rect.Top()}, 
+                 {screen_rect.Right(), screen_rect.Top()},
+                 skip_pixels, draw_pixels, outline_color);
+    pixels_drawn += screen_rect.size.x;
+    DrawLinePart(surface, {screen_rect.Right(), screen_rect.Top() + 1}, 
+                 {screen_rect.Right(), screen_rect.Bottom() - 1},       
+                 skip_pixels - pixels_drawn, draw_pixels - pixels_drawn,
+                 outline_color);
+    pixels_drawn += screen_rect.size.y - 2;
+    DrawLinePart(surface, {screen_rect.Right(), screen_rect.Bottom()},
+                 {screen_rect.Left(), screen_rect.Bottom()},
+                 skip_pixels - pixels_drawn, draw_pixels - pixels_drawn, outline_color);
+    pixels_drawn += screen_rect.size.x;
+    DrawLinePart(surface, {screen_rect.Left(), screen_rect.Bottom() - 1},
+                 {screen_rect.Left(), screen_rect.Top() + 1}, skip_pixels - pixels_drawn,
+                 draw_pixels - pixels_drawn,
+                 outline_color);
 }
 
 void ShapeRenderer::DrawCircle(Surface * surface, Position center, int radius, Color fill_color,

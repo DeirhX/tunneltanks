@@ -267,7 +267,7 @@ void Crosshair::Draw(Screen *)
 void ResourcesMinedDisplay::Draw(Screen * screen)
 {
     /* Draw outline and background */
-    ShapeRenderer::DrawRectangle(screen->GetScreenSurface(), Rect{this->screen_rect}, true,
+    ShapeRenderer::DrawFilledRectangle(screen->GetScreenSurface(), Rect{this->screen_rect}, true,
                                  Palette.Get(Colors::ResourceInfoBackground),
                                  Palette.Get(Colors::ResourceInfoOutline)); 
 

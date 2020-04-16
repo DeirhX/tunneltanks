@@ -35,6 +35,10 @@ enum class Colors
     EnergyFieldLow,
     EnergyFieldMedium,
     EnergyFieldHigh,
+    EnergyShieldActive,
+    EnergyShieldPassive,
+    DirtShieldActive,
+    DirtShieldPassive,
     Size,
 };
 

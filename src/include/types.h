@@ -83,27 +83,33 @@ struct Offset : public Vector
  *   Size * scalar -> Size
  */
 
-constexpr Vector operator+(Vector v, Vector o) noexcept { return {v.x + o.x, v.y + o.y}; }
-constexpr Vector operator-(Vector v, Vector o) noexcept { return {v.x - o.x, v.y - o.y}; }
-constexpr Offset operator*(Speed s, int t) noexcept { return {s.x * t, s.y * t}; }
-constexpr Offset operator*(int t, Speed s) noexcept { return {s.x * t, s.y * t}; }
-constexpr Size operator+(Size l, Size r) noexcept { return {l.x + r.x, l.y + r.y}; }
-constexpr Size operator-(Size l, Size r) noexcept { return {l.x - r.x, l.y - r.y}; }
-constexpr Size operator*(Size s, int t) noexcept { return {s.x * t, s.y * t}; }
-constexpr Size operator*(int t, Size s) noexcept { return {s.x * t, s.y * t}; }
-constexpr Size operator/(Size s, int t) noexcept { return {s.x / t, s.y / t}; }
-constexpr Offset operator+(Offset o, Size s) noexcept { return {o.x + s.x, o.y + s.y}; }
-constexpr Offset operator-(Offset o, Size s) noexcept { return {o.x - s.x, o.y - s.y}; }
-constexpr Offset operator-(Position p, Position o) noexcept { return {p.x - o.x, p.y - o.y}; }
-constexpr Position operator+(Position v, Offset o) noexcept { return {v.x + o.x, v.y + o.y}; }
-constexpr Position operator+(Position v, Size o) noexcept { return {v.x + o.x, v.y + o.y}; }
-constexpr Position operator-(Position v, Size o) noexcept { return {v.x - o.x, v.y - o.y}; }
-constexpr bool operator==(Position l, Position r) noexcept { return l.x == r.x && l.y == r.y; }
-constexpr bool operator!=(Position l, Position r) noexcept { return !operator==(l, r); }
-constexpr bool operator==(Size l, Size r) noexcept { return l.x == r.x && l.y == r.y; }
-constexpr ScreenPosition operator+(ScreenPosition v, Offset o) noexcept { return {v.x + o.x, v.y + o.y}; }
-constexpr ScreenPosition operator+(ScreenPosition v, Size o) noexcept { return {v.x + o.x, v.y + o.y}; }
-constexpr Offset operator-(ScreenPosition p, ScreenPosition o) noexcept { return {p.x - o.x, p.y - o.y}; }
+constexpr Vector operator+(Vector v, Vector o) { return {v.x + o.x, v.y + o.y}; }
+constexpr Vector operator-(Vector v, Vector o) { return {v.x - o.x, v.y - o.y}; }
+constexpr Offset operator*(Speed s, int t) { return {s.x * t, s.y * t}; }
+constexpr Offset operator*(int t, Speed s) { return {s.x * t, s.y * t}; }
+constexpr Size operator+(Size l, Size r) { return {l.x + r.x, l.y + r.y}; }
+constexpr Size operator-(Size l, Size r) { return {l.x - r.x, l.y - r.y}; }
+constexpr Size operator*(Size s, int t) { return {s.x * t, s.y * t}; }
+constexpr Size operator*(int t, Size s) { return {s.x * t, s.y * t}; }
+constexpr Size operator/(Size s, int t) { return {s.x / t, s.y / t}; }
+constexpr Offset operator+(Offset o, Size s) { return {o.x + s.x, o.y + s.y}; }
+constexpr Offset operator-(Offset o, Size s) { return {o.x - s.x, o.y - s.y}; }
+constexpr Offset operator-(Position p, Position o) { return {p.x - o.x, p.y - o.y}; }
+constexpr Position operator+(Position v, Offset o) { return {v.x + o.x, v.y + o.y}; }
+constexpr Position operator+(Position v, Size o) { return {v.x + o.x, v.y + o.y}; }
+constexpr Position operator-(Position v, Size o) { return {v.x - o.x, v.y - o.y}; }
+constexpr bool operator==(Position l, Position r) { return l.x == r.x && l.y == r.y; }
+constexpr bool operator!=(Position l, Position r) { return !operator==(l, r); }
+constexpr bool operator==(Size l, Size r) { return l.x == r.x && l.y == r.y; }
+constexpr ScreenPosition operator+(ScreenPosition v, Offset o) { return {v.x + o.x, v.y + o.y}; }
+constexpr ScreenPosition operator+(ScreenPosition v, Size o) { return {v.x + o.x, v.y + o.y}; }
+constexpr Offset operator-(ScreenPosition p, ScreenPosition o) { return {p.x - o.x, p.y - o.y}; }
+constexpr Position & operator+=(Position & p, const Offset & o)
+{
+    p.x += o.x;
+    p.y += o.y;
+    return p;
+}
 constexpr ScreenPosition & operator+=(ScreenPosition & p, Offset o) noexcept
 {
     p.x += o.x;

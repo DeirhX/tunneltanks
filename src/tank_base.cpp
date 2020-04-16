@@ -39,18 +39,18 @@ void TankBase::Draw(Surface * surface) const
     Rect energy_rect = Rect{Position{this->position - energy_rect_size / 2}, energy_rect_size};
     int energy_drawn_pixels = 2 * energy_rect.size.x + 2 * energy_rect.size.y - 4;
     ShapeRenderer::DrawRectanglePart(surface, energy_rect, 0, energy_drawn_pixels / 3,
-                                 Palette.Get(Colors::EnergyFieldMedium));
+                                 Palette.Get(Colors::EnergyShieldActive));
     ShapeRenderer::DrawRectanglePart(surface, energy_rect, energy_drawn_pixels / 3, energy_drawn_pixels,
-                                     Palette.Get(Colors::ConcreteLow));
+                                     Palette.Get(Colors::EnergyShieldPassive));
 
     /* Dirt layer */
     Size dirt_rect_size = BaseSize + Size{4, 4};
     Rect dirt_rect = Rect{Position{this->position - dirt_rect_size / 2}, dirt_rect_size}; 
-    int dirt_drawn_pixels = 2 * energy_rect.size.x + 2 * energy_rect.size.y - 4;
+    int dirt_drawn_pixels = 2 * dirt_rect.size.x + 2 * dirt_rect.size.y - 4;
     ShapeRenderer::DrawRectanglePart(surface, dirt_rect, 0, dirt_drawn_pixels / 4,
-                                     Palette.Get(Colors::EnergyFieldHigh));
+                                     Palette.Get(Colors::DirtShieldActive));
     ShapeRenderer::DrawRectanglePart(surface, dirt_rect, dirt_drawn_pixels / 4, dirt_drawn_pixels,
-                                     Palette.Get(Colors::ConcreteHigh));
+                                     Palette.Get(Colors::DirtShieldPassive));
 }
 
 void TankBase::Advance()
