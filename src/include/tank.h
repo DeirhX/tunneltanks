@@ -93,9 +93,6 @@ class Tank
 
     void Advance(World * world); /* Advance world-step */
 
-    //void AlterEnergy(int diff);
-    //void AlterHealth(int diff);
-
     void Spawn();
     void Die();
 

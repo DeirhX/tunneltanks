@@ -26,11 +26,14 @@ struct Color : public ColorLayout
     {
         if (a == 0)
             return other;
-        if (a == 255)
+        else if (a == 255)
             return PixelDataType(r, g, b);
-        return PixelDataType((this->r * a) / 255 + other.r * (255 - a) / 255,
-                             (this->g * a) / 255 + other.g * (255 - a) / 255,
-                             (this->b * a) / 255 + other.b * (255 - a) / 255);
+        else if (other.a == 0)
+            return *this;
+        else //if (other.a == 255)
+            return PixelDataType((this->r * a) / 255 + other.r * (255 - a) / 255,
+                                 (this->g * a) / 255 + other.g * (255 - a) / 255,
+                                 (this->b * a) / 255 + other.b * (255 - a) / 255, this->a);
     }
 };
 

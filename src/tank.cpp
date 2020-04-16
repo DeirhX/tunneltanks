@@ -196,22 +196,13 @@ void Tank::HandleMove(TankList * tl)
 }
 
 /* Check to see if we're in any bases, and heal based on that: */
-void Tank::TryBaseHeal(TankBase * base)
-{
-    if (base->GetColor() == this->GetColor())
-    {
-        this->GetReactor().Add(tweak::tank::HomeChargeSpeed);
-        this->GetReactor().Add(tweak::tank::HomeHealSpeed);
-    }
-    else 
-        this->GetReactor().Add(tweak::tank::EnemyChargeSpeed);
-}
+void Tank::TryBaseHeal(TankBase * base) { base->RechargeTank(this); }
 
 void Tank::TransferResourcesToBase(TankBase * base)
 {
     if (base->GetColor() == this->GetColor())
     {
-        base->AbsorbResources(this->resources, {3_dirt});
+        base->AbsorbResources(this->resources, tweak::base::MaterialsAbsorbRate);
     }
 }
 

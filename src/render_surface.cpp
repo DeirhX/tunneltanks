@@ -24,9 +24,7 @@ RenderedPixel Surface::GetPixel(const Position & position) const
 void Surface::SetPixel(Position position, Color color)
 {
     assert(size.FitsInside(position.x, position.y));
-    if (color.a == 255)
-        surface[position.x + position.y * size.x] = RenderedPixel{color};
-    else if (color.a == 0)
+    if (color.a == 0)
         return;
     else
         surface[position.x + position.y * size.x] = color.BlendWith(surface[position.x + position.y * size.x]);

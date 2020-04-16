@@ -49,9 +49,10 @@ namespace base
     constexpr int MinDistance = 150;
     constexpr int BaseSize = 35;
     constexpr int DoorSize = 7;
-    constexpr Reactor Reactor = {30000_energy, 2000_health, {{30000_energy, 2000_health}}};
+    constexpr Reactor Reactor = {15000_energy, 2000_health, {{30000_energy, 2000_health}}};
     constexpr MaterialContainer MaterialContainer = {0_dirt, 0_minerals, {{20000_dirt, 20000_minerals}}};
     constexpr ReactorState ReactorRecoveryRate = {2_energy, 2_health};
+    constexpr MaterialAmount MaterialsAbsorbRate = {10_dirt, 10_minerals};
 }
 
 namespace tank {
@@ -79,6 +80,7 @@ namespace tank {
     constexpr HealthAmount StartingShield = 1000_health;
     constexpr HealthAmount ShotDamage = 160_health;
     constexpr HealthAmount HomeHealSpeed = 3_health;
+    constexpr HealthAmount EnemyHealSpeed = 1_health;
 
     constexpr Reactor DefaultTankReactor = {
         StartingEnergy, StartingShield,

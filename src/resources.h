@@ -262,6 +262,8 @@ class MaterialContainer : public ResourceContainer<MaterialAmount, MaterialCapac
 
     int GetDirt() const { return this->current.Dirt().amount; }
     int GetMinerals() const { return this->current.Minerals().amount; }
+    int GetDirtCapacity() const { return this->capacity.Dirt().amount; }
+    int GetMineralsCapacity() const { return this->capacity.Minerals().amount; }
 };
 
 /*
@@ -278,7 +280,9 @@ class Reactor : public ResourceContainer<ReactorState, ReactorCapacity>
     { }
 
     int GetHealth() const { return this->current.Health().amount; }
+    int GetHealthCapacity() const { return this->capacity.Health().amount; }
     int GetEnergy() const { return this->current.Energy().amount; }
+    int GetEnergyCapacity() const { return this->capacity.Energy().amount; }
 };
 
 
