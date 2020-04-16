@@ -116,14 +116,14 @@ void Level::CreateBase(Position pos, TankColor color)
     if (color >= tweak::world::MaxPlayers)
         return;
 
-    for (int y = -tweak::world::BaseSize / 2; y <= tweak::world::BaseSize / 2; y++)
+    for (int y = -tweak::base::BaseSize / 2; y <= tweak::base::BaseSize / 2; y++)
     {
-        for (int x = -tweak::world::BaseSize / 2; x <= tweak::world::BaseSize / 2; x++)
+        for (int x = -tweak::base::BaseSize / 2; x <= tweak::base::BaseSize / 2; x++)
         {
             Position pix = pos + Offset{x, y};
-            if (abs(x) == tweak::world::BaseSize / 2 || abs(y) == tweak::world::BaseSize / 2)
+            if (abs(x) == tweak::base::BaseSize / 2 || abs(y) == tweak::base::BaseSize / 2)
             { // Outline
-                if (x >= -tweak::world::BaseDoorSize / 2 && x <= tweak::world::BaseDoorSize / 2)
+                if (x >= -tweak::base::DoorSize / 2 && x <= tweak::base::DoorSize / 2)
                     SetPixel(pix, LevelPixel::BaseBarrier);
                 else
                     SetPixel(pix, static_cast<LevelPixel>(static_cast<char>(LevelPixel::BaseMin) + color));

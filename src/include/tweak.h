@@ -40,12 +40,19 @@ namespace world
     constexpr int DirtRecoverSpeed = 10; /* Average delay before growing finishes and new dirt is formed. More is faster. */
     constexpr int DirtRegrowSpeed = 4;  /* Average delay before it starts growing back. More is faster.*/
     constexpr int DigThroughRockChance = 250; /* Chance to dig through rock with torch of out 1000 */
+} // namespace world
+
+namespace base
+{
     /* The minimum distance between two tanks in the world. If this is set too high,
      * then the level generator may start throwing exceptions: */
-    constexpr int MinBaseDistance = 150;
+    constexpr int MinDistance = 150;
     constexpr int BaseSize = 35;
-    constexpr int BaseDoorSize = 7;
-} // namespace world
+    constexpr int DoorSize = 7;
+    constexpr Reactor Reactor = {30000_energy, 2000_health, {{30000_energy, 2000_health}}};
+    constexpr MaterialContainer MaterialContainer = {0_dirt, 0_minerals, {{20000_dirt, 20000_minerals}}};
+    constexpr ReactorState ReactorRecoveryRate = {2_energy, 2_health};
+}
 
 namespace tank {
 

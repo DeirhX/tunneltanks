@@ -42,8 +42,30 @@ void ShapeRenderer::DrawRectangle(Surface * surface, Rect screen_rect, bool roun
         }
 }
 
-void ShapeRenderer::DrawCircle(Surface * surface, Position center, int radius, Color fill_color,
+void ShapeRenderer::DrawRectanglePart(Surface * surface, Rect screen_rect, int skip_pixels, int draw_pixels,
     Color outline_color)
+{
+    int pixels_drawn = 0;
+    const int start_draw = skip_pixels;
+    const int stop_draw = start_draw + draw_pixels;
+    for (int x = screen_rect.Left(); x <= screen_rect.Right(); ++x)
+        for (int y = screen_rect.Top(); y <= screen_rect.Bottom(); ++y)
+        {
+            /* Are we inside edges?  */
+            if ((x == screen_rect.Left() || x == screen_rect.Right() || y == screen_rect.Top() ||
+                y == screen_rect.Bottom()))
+            {
+                if (pixels_drawn >= skip_pixels && pixels_drawn < stop_draw)
+                    surface->SetPixel(Position{x, y}, outline_color);
+                ++pixels_drawn;
+            }
+            if (pixels_drawn >= stop_draw)
+                return;
+        }
+}
+
+void ShapeRenderer::DrawCircle(Surface * surface, Position center, int radius, Color fill_color,
+                               Color outline_color)
 {
     /* Start on right side of circle and mirror every drawn pixel into 8 octants */
     int offset_x = radius;

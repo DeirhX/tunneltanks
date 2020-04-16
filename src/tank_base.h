@@ -12,14 +12,15 @@ class World;
  */
 class TankBase
 {
-    static constexpr Size BaseSize = Size{tweak::world::BaseSize, tweak::world::BaseSize};
+    static constexpr Size BaseSize = Size{tweak::base::BaseSize, tweak::base::BaseSize};
 
     Position position = {-1, -1};
     BoundingBox bounding_box = {BaseSize};
     TankColor color = {-1};
     LinkPoint * link_point{};
 
-    MaterialContainer resources = {0_dirt, 0_minerals, MaterialCapacity{MaterialAmount{1000_dirt, 1000_minerals}}};
+    Reactor reactor = tweak::base::Reactor;
+    MaterialContainer resources = tweak::base::MaterialContainer;
   public:
     TankBase() = default;
     explicit TankBase(Position position, TankColor color);
@@ -35,5 +36,5 @@ class TankBase
     void AbsorbResources(MaterialContainer & other, MaterialAmount rate);
 
     void Draw(Surface * surface) const;
-    void Advance() {}
+    void Advance();
 };

@@ -15,10 +15,12 @@ class Screen;
 class ShapeRenderer
 {
   public:
-    static void FillRectangle(Surface * surface, Rect rect, Color color);
-    static void DrawRectangle(Surface * screen, Rect rect, bool round_corners, Color fill_color,
+    static void FillRectangle(Surface * surface, Rect screen_rect, Color color);
+    static void DrawRectangle(Surface * surface, Rect screen_rect, bool round_corners, Color fill_color,
                               Color outline_color);
-     static void DrawCircle(Surface * screen, Position center, int radius, Color fill_color, Color outline_color);
+    static void DrawRectanglePart(Surface * surface, Rect screen_rect, int skip_pixels, int draw_pixels, Color outline_color);
+
+    static void DrawCircle(Surface * surface, Position center, int radius, Color fill_color, Color outline_color);
 };
 
 class ShapeInspector

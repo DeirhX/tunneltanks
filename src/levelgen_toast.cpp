@@ -72,7 +72,8 @@ static void generate_tree(Level *lvl) {
 	lvl->SetSpawn(0, points[0]);
 	for(i=1,j=1; i< ToastParams::TreeSize && j< tweak::world::MaxPlayers; i++) {
 		for(k=0; k<j; k++) {
-			if (pt_dist(points[i], lvl->GetSpawn(TankColor( k ))->GetPosition()) < tweak::world::MinBaseDistance * tweak::world::MinBaseDistance)
+            if (pt_dist(points[i], lvl->GetSpawn(TankColor(k))->GetPosition()) <
+                tweak::base::MinDistance * tweak::base::MinDistance)
 				break;
 		}
 		
