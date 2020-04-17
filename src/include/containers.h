@@ -29,7 +29,7 @@ class ValueContainer
 
     // Various ways to get to IsInvalid - value type vs. pointer type
     template <typename TArgument, std::enable_if_t<std::is_class<TArgument>::value, int> = 0>
-    static bool IsInvalid(TArgument val)
+    static bool IsInvalid(TArgument & val)
     {
         return val.IsInvalid();
     }
@@ -40,14 +40,14 @@ class ValueContainer
   public:
     using ItemType = TElement;
 
-    template <typename ElementRefType>
+    template <typename ElementRefType, typename ContainerType>
     class iterator_template
     {
-        Container * container;
+        ContainerType * container;
         size_t index;
 
       public:
-        iterator_template(Container & container, size_t index) : container(&container), index(index) {}
+        iterator_template(ContainerType & container, size_t index) : container(&container), index(index) {}
         ElementRefType operator*() const { return (*container)[index]; }
         bool operator!=(iterator_template other) { return index != other.index; }
         iterator_template operator++() // prefix increment
@@ -59,8 +59,8 @@ class ValueContainer
         }
     };
 
-    using iterator = iterator_template<TElement&>;
-    using const_iterator = iterator_template<const TElement&>;
+    using iterator = iterator_template<TElement&, Container>;
+    using const_iterator = iterator_template<const TElement&, const Container>;
 
     Container container;
 
@@ -74,7 +74,7 @@ class ValueContainer
     template <typename... ConstructionArgs>
     TElement & ConstructElement(ConstructionArgs &&... args)
     {
-        auto dead_item = std::find_if(container.begin(), container.end(), [this](auto val) { return IsInvalid(val); });
+        auto dead_item = std::find_if(container.begin(), container.end(), [this](auto & val) { return IsInvalid(val); });
 
         /* Find if we can insert into already allocated space */
         if (dead_item != container.end())
@@ -93,7 +93,7 @@ class ValueContainer
     TElement & Add(TElement item)
     {
         /* Place over a dead item by assignment if such dead item exists. Otherwise append to back. */
-        auto dead_item = std::find_if(container.begin(), container.end(), [this](auto val) { return IsInvalid(val); });
+        auto dead_item = std::find_if(container.begin(), container.end(), [this](auto & val) { return IsInvalid(val); });
         if (dead_item != container.end())
         {
             *dead_item = item;
