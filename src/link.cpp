@@ -18,7 +18,9 @@ void LinkPoint::SetPosition(Position position_)
     if (this->position == position_)
         return;
 
+    assert(this->owner);
     this->position = position_;
+    this->owner->UpdateLinksToPoint(this);
 }
 
 void LinkPoint::RemovePossibleLink(LinkPoint * possible_link)
@@ -77,7 +79,14 @@ void LinkMap::UnregisterPoint(LinkPoint * link_point)
             point.RemovePossibleLink(link_point);
 }
 
-void LinkMap::UpdateAll()
+void LinkMap::UpdateLinksToPoint(LinkPoint * link_point)
+{
+    for (LinkPoint & point : this->link_points)
+        if (&point != link_point)
+            point.UpdateLink(link_point);
+}
+
+void LinkMap::SolveLinks()
 {
     //for( TankBase & base : this->level->GetSpawns())
     {

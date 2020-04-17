@@ -48,16 +48,17 @@ class LinkMap
 public:
     LinkMap(Level * level) : level(level) {}
 
+    [[nodiscard]] ValueContainerView<LinkPoint> & GetLinkPoints() { return this->link_points; }
+
     template <class... LinkPointArgs>
     LinkPoint * RegisterLinkPoint(LinkPointArgs &&... args)
     {
         return &this->link_points.ConstructElement(std::forward<LinkPointArgs>(args)..., this);
     }
-    //LinkPoint * RegisterLinkPoint(LinkPoint && temp_point);
     void UnregisterPoint(LinkPoint * point);
+    void UpdateLinksToPoint(LinkPoint * point);
 
-    void UpdateAll();
+    void SolveLinks();
 
-    ValueContainerView<LinkPoint> & GetLinkPoints() { return this->link_points; }
 };
 

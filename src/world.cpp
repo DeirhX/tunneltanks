@@ -26,7 +26,7 @@ void World::Advance()
     /* TODO: get out of level? */
     for (TankBase & base : this->level->GetSpawns())
         base.Advance();
-    this->link_map.UpdateAll();
+    //this->link_map.UpdateAll();
 }
 
 
