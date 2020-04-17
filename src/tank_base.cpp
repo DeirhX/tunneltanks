@@ -10,7 +10,7 @@ TankBase::TankBase(Position position, TankColor color) : position(position), col
 void TankBase::RegisterLinkPoint(World * world)
 {
     assert(!this->link_point);
-    this->link_point = world->GetLinkMap()->RegisterLinkPoint(LinkPoint{this->position});
+    this->link_point = world->GetLinkMap()->RegisterLinkPoint(this->position);
 }
 
 bool TankBase::IsInside(Position tested_position) const

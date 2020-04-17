@@ -10,17 +10,17 @@ class Machine
 {
   protected:
     Position position;
+    BoundingBox bounding_box;
+
     class Tank * owner;
 
-    BoundingBox bounding_box;
+    class LinkPoint * link_point = nullptr;
     Reactor reactor = tweak::rules::DefaultMachineReactor;
+
     bool is_alive = true;
 
   protected:
-    Machine(Position position, Tank * owner, Reactor reactor_, BoundingBox bounding_box)
-        : position(position), owner(owner), bounding_box(bounding_box), reactor(reactor_)
-    {
-    }
+    Machine(Position position, Tank * owner, Reactor reactor_, BoundingBox bounding_box);
     virtual ~Machine() { Invalidate(); }
   public:
     const Position & GetPosition() { return this->position; }

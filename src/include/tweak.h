@@ -167,6 +167,8 @@ namespace rules
     constexpr Reactor MinerReactor = {0_energy, 1000_health, ReactorCapacity{{10000_energy, 1000_health}}};
     constexpr Reactor ChargerReactor = {0_energy, 1000_health, ReactorCapacity{{10000_energy, 1000_health}}};
 
+    constexpr float MaximumLinkDistance = 50.f;
+
     }
 
  

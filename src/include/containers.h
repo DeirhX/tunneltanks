@@ -23,8 +23,9 @@ concept Invalidable = requires(T t)
 };
 
 template <Invalidable TElement>
-class ValueContainer
+class ValueContainerView
 {
+  protected:
     using Container = std::deque<TElement>; // As long we grow/shrink on start/end, element references are valid forever
 
     // Various ways to get to IsInvalid - value type vs. pointer type
@@ -52,7 +53,7 @@ class ValueContainer
         bool operator!=(iterator_template other) { return index != other.index; }
         iterator_template operator++() // prefix increment
         {                     // Advance over dead elements
-            while (++index < container->size() && ValueContainer::IsInvalid((*container)[index]))
+            while (++index < container->size() && ValueContainerView::IsInvalid((*container)[index]))
             {
             };
             return *this;
@@ -66,18 +67,49 @@ class ValueContainer
 
   public:
     /* Size and lookup */
-    auto Size() { return container.size(); };
+    auto Size() const { return container.size(); };
     TElement & operator[](int index) { return container[index]; }
+    const TElement & operator[](int index) const { return container[index]; }
 
+  
+    template <typename IteratorType, typename ContainerType>
+    static IteratorType GetBegin(ContainerType & container) 
+    {
+        auto it = IteratorType(container, 0);
+        // Skip also dead elements at the start
+        while (it != GetEnd<IteratorType>(container) && ValueContainerView::IsInvalid(*it))
+            ++it;
+        return it;
+    }
+    template <typename IteratorType, typename ContainerType>
+    static IteratorType GetEnd(ContainerType & container) 
+    {
+        return IteratorType(container, container.size());
+    }
+
+    iterator begin() { return GetBegin<iterator>(this->container); }
+    iterator end() { return GetEnd<iterator>(this->container); }
+    const_iterator begin() const { return GetBegin<const_iterator>(this->container); }
+    const_iterator end() const { return GetEnd<const_iterator>(this->container); }
+    const_iterator cbegin() { return GetBegin<const_iterator>(this->container); }
+    const_iterator cend() { return GetEnd<const_iterator>(this->container); }
+};
+
+template <Invalidable TElement>
+class ValueContainer : public ValueContainerView<TElement>
+{
+    using Parent = ValueContainerView<TElement>;
+public:
     /* In-place forwarding construction avoiding any copy. Must use if you want to use [this] in your constructor or if
      * your item in non-copyable */
     template <typename... ConstructionArgs>
     TElement & ConstructElement(ConstructionArgs &&... args)
     {
-        auto dead_item = std::find_if(container.begin(), container.end(), [this](auto & val) { return IsInvalid(val); });
+        auto dead_item =
+            std::find_if(this->container.begin(), this->container.end(), [this](auto & val) { return Parent::IsInvalid(val); });
 
         /* Find if we can insert into already allocated space */
-        if (dead_item != container.end())
+        if (dead_item != this->container.end())
         {
             /* Manually destroy old and in-place construct new */
             (*dead_item).~TElement();
@@ -86,20 +118,21 @@ class ValueContainer
         }
 
         /* If not, we need to grow with an invalid item, then in-place construct it */
-        TElement & new_alloc = container.emplace_back(std::forward<ConstructionArgs>(args)...);
+        TElement & new_alloc = this->container.emplace_back(std::forward<ConstructionArgs>(args)...);
         return new_alloc;
     }
     /* Copying construction */
     TElement & Add(TElement item)
     {
         /* Place over a dead item by assignment if such dead item exists. Otherwise append to back. */
-        auto dead_item = std::find_if(container.begin(), container.end(), [this](auto & val) { return IsInvalid(val); });
-        if (dead_item != container.end())
+        auto dead_item =
+            std::find_if(this->container.begin(), this->container.end(), [this](auto & val) { return Parent::IsInvalid(val); });
+        if (dead_item != this->container.end())
         {
             *dead_item = item;
             return *dead_item;
         }
-        return container.emplace_back(item);
+        return this->container.emplace_back(item);
     }
     /* Merge two containers together */
     // TODO: Add const correctness, const iterators
@@ -118,39 +151,18 @@ class ValueContainer
     }
     void Shrink()
     { // Slice out dead objects on the beginning and end of deque. Don't invalidate references.
-        auto size_before = container.size();
-        while (!container.empty() && ValueContainer::IsInvalid(container.front()))
-            container.pop_front();
-        while (!container.empty() && ValueContainer::IsInvalid(container.back()))
-            container.pop_back();
+        auto size_before = this->container.size();
+        while (!this->container.empty() && ValueContainer::IsInvalid(this->container.front()))
+            this->container.pop_front();
+        while (!this->container.empty() && ValueContainer::IsInvalid(this->container.back()))
+            this->container.pop_back();
 
-        if (container.size() != size_before && size_before >= 50)
+        if (this->container.size() != size_before && size_before >= 50)
         {
-            DebugTrace<5>("Shrunk %zd items, now size: %zd\r\n", size_before - container.size(), container.size());
+            DebugTrace<5>("Shrunk %zd items, now size: %zd\r\n", size_before - this->container.size(),
+                          this->container.size());
         }
     }
-
-    template <typename IteratorType, typename ContainerType>
-    static IteratorType GetBegin(ContainerType & container) 
-    {
-        auto it = IteratorType(container, 0);
-        // Skip also dead elements at the start
-        while (it != GetEnd<IteratorType>(container) && ValueContainer::IsInvalid(*it))
-            ++it;
-        return it;
-    }
-    template <typename IteratorType, typename ContainerType>
-    static IteratorType GetEnd(ContainerType & container) 
-    {
-        return IteratorType(container, container.size());
-    }
-
-    iterator begin() { return GetBegin<iterator>(this->container); }
-    iterator end() { return GetEnd<iterator>(this->container); }
-    const_iterator begin() const { return GetBegin<const_iterator>(this->container); }
-    const_iterator end() const { return GetEnd<const_iterator>(this->container); }
-    const_iterator cbegin() { return GetBegin<const_iterator>(this->container); }
-    const_iterator cend() { return GetEnd<const_iterator>(this->container); }
 };
 
 /* List of containers for arbitrary number of types, hiding it under a unified interface of a single list

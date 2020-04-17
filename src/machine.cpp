@@ -9,6 +9,12 @@
 #include "raycaster.h"
 #include "world.h"
 
+Machine::Machine(Position position, Tank * owner, Reactor reactor_, BoundingBox bounding_box)
+    : position(position), bounding_box(bounding_box), owner(owner), reactor(reactor_)
+{
+    this->link_point = GetWorld()->GetLinkMap()->RegisterLinkPoint(position);
+}
+
 bool Machine::CheckAlive(Level * level)
 {
     if (this->GetReactor().GetHealth() == 0)
@@ -44,6 +50,8 @@ void Harvester::Advance(Level * level)
             this->owner->GetResources().Add(1_dirt);
         }
     }
+
+    this->link_point->SetPosition(this->position);
 }
 
 void Harvester::Draw(Surface * surface) const
