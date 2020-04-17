@@ -39,16 +39,18 @@ class ValueContainer
     // static bool IsInvalid(TArgument val) { return val->IsInvalid(); }
   public:
     using ItemType = TElement;
-    class iterator
+
+    template <typename ElementRefType>
+    class iterator_template
     {
         Container * container;
         size_t index;
 
       public:
-        iterator(Container & container, size_t index) : container(&container), index(index) {}
-        typename TElement & operator*() const { return (*container)[index]; }
-        bool operator!=(iterator other) { return index != other.index; }
-        iterator operator++() // prefix increment
+        iterator_template(Container & container, size_t index) : container(&container), index(index) {}
+        ElementRefType operator*() const { return (*container)[index]; }
+        bool operator!=(iterator_template other) { return index != other.index; }
+        iterator_template operator++() // prefix increment
         {                     // Advance over dead elements
             while (++index < container->size() && ValueContainer::IsInvalid((*container)[index]))
             {
@@ -56,6 +58,9 @@ class ValueContainer
             return *this;
         }
     };
+
+    using iterator = iterator_template<TElement&>;
+    using const_iterator = iterator_template<const TElement&>;
 
     Container container;
 
@@ -125,16 +130,27 @@ class ValueContainer
         }
     }
 
-    iterator begin()
+    template <typename IteratorType, typename ContainerType>
+    static IteratorType GetBegin(ContainerType & container) 
     {
-        auto it = iterator(container, 0);
+        auto it = IteratorType(container, 0);
         // Skip also dead elements at the start
-        while (it != end() && ValueContainer::IsInvalid(*it))
+        while (it != GetEnd<IteratorType>(container) && ValueContainer::IsInvalid(*it))
             ++it;
         return it;
     }
-    iterator end() { return iterator(container, container.size()); }
-    // TODO: add cbegin cend
+    template <typename IteratorType, typename ContainerType>
+    static IteratorType GetEnd(ContainerType & container) 
+    {
+        return IteratorType(container, container.size());
+    }
+
+    iterator begin() { return GetBegin<iterator>(this->container); }
+    iterator end() { return GetEnd<iterator>(this->container); }
+    const_iterator begin() const { return GetBegin<const_iterator>(this->container); }
+    const_iterator end() const { return GetEnd<const_iterator>(this->container); }
+    const_iterator cbegin() { return GetBegin<const_iterator>(this->container); }
+    const_iterator cend() { return GetEnd<const_iterator>(this->container); }
 };
 
 /* List of containers for arbitrary number of types, hiding it under a unified interface of a single list
