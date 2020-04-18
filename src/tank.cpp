@@ -91,7 +91,7 @@ void Tank::Advance(World * world)
 
         /* Move, dig and solve collisions with other tanks */
         this->HandleMove(world->GetTankList());
-
+        this->link_source.UpdatePosition(this->GetPosition());
         this->CollectItems();
 
         /* Shoot the turret if desired */
