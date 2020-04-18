@@ -67,7 +67,7 @@ class ValueContainerView
 
   public:
     /* Size and lookup */
-    auto Size() const { return container.size(); };
+    auto CurrentCapacity() const { return container.size(); };
     TElement & operator[](int index) { return container[index]; }
     const TElement & operator[](int index) const { return container[index]; }
 

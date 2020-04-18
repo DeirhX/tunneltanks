@@ -28,6 +28,7 @@ class TankBase
     void RegisterLinkPoint(World * world);
 
     [[nodiscard]] Position GetPosition() const { return this->position; }
+//    [[nodiscard]] LinkPoint * GetLinkPoint() const { return this->link_point; }
     [[nodiscard]] TankColor GetColor() const { return this->color; }
     [[nodiscard]] const MaterialContainer & GetResources() const { return this->materials; }
     [[nodiscard]] bool IsInside(Position position) const;

@@ -12,7 +12,7 @@
 Machine::Machine(Position position, Tank * owner, Reactor reactor_, BoundingBox bounding_box)
     : position(position), bounding_box(bounding_box), owner(owner), reactor(reactor_)
 {
-    this->link_point = GetWorld()->GetLinkMap()->RegisterLinkPoint(position);
+    this->link_point = GetWorld()->GetLinkMap()->RegisterLinkPoint(position, LinkPointType::Machine);
 }
 
 bool Machine::CheckAlive(Level * level)
