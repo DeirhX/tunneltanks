@@ -37,7 +37,7 @@ class Invalidable
         movable.is_alive = false;
         return *this;
     }
-    ~Invalidable() { Invalidate(); }
+    virtual ~Invalidable() { Invalidate(); }
 
     bool IsInvalid() const { return !is_alive; }
     bool IsValid() const { return is_alive; }

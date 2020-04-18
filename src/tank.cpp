@@ -22,14 +22,8 @@
  * TANK
  */
 
-void Tank::Invalidate()
-{
-    this->is_valid = false;
-    this->link_source.Destroy();
-}
-
 Tank::Tank(TankColor color, Level * level, ProjectileList * projectile_list, TankBase * tank_base)
-    : is_valid(true), position(tank_base->GetPosition()), color(color), tank_base(tank_base),
+    : position(tank_base->GetPosition()), color(color), tank_base(tank_base),
       turret(this, Palette.GetTank(color)[2]), materializer(this, &this->resources),
       link_source(GetWorld(), position, LinkPointType::Tank)
 {

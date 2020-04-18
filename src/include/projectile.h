@@ -26,31 +26,23 @@ enum class ProjectileType
 };
 
 /* Projectile base class. Doesn't do much, just adds shared member.  */
-/* TODO: We're not doing to use polymorphism so do we really need it? */
-struct Projectile
+struct Projectile : public Invalidable
 {
     PositionF pos;
     SpeedF speed;
     bool is_alive = false;
-    class Level * level;
+    class Level * level{};
 
-  private:
-    Projectile() = default; // Never use manually. Will be used inside intrusive containers
   protected:
     Projectile(Position position, SpeedF speed, Level * level)
         : pos(position), speed(speed.x, speed.y), is_alive(true), level(level)
-    {
-    }
+    { }
 
-  public:
-    virtual ~Projectile() { Invalidate(); }
+    public:
     //virtual ProjectileType GetType() = 0;
     virtual void Advance(class TankList * tankList) = 0;
     virtual void Draw(class Surface * drawBuffer) = 0;
 
-    bool IsInvalid() const { return !is_alive; }
-    bool IsValid() const { return is_alive; }
-    void Invalidate() { is_alive = false; }
 };
 
 /*  

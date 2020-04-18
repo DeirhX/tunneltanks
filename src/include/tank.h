@@ -41,10 +41,8 @@ template <typename PerPixelFunc>
 void ForEachTankPixel(PerPixelFunc per_pixel_func, Position position, Direction direction);
 } // namespace tank
 
-class Tank 
+class Tank : public Invalidable
 {
-    bool is_valid = false;
-
     Position position; /* Current tank position */
     Speed speed;  /* Velocity... ie: is it moving now? */
     Direction direction = {}; /* Heading of the tank */
@@ -69,9 +67,6 @@ class Tank
 
   public:
     Tank(TankColor color, Level * level, ProjectileList * projectile_list, TankBase * tank_base);
-    Tank(const Tank & other) = delete;
-    ~Tank() { Invalidate(); }
-    void Invalidate();
     
     void SetController(std::shared_ptr<Controller> newController) { this->controller = newController; }
     void SetCrosshair(widgets::Crosshair * cross);
@@ -87,8 +82,6 @@ class Tank
     [[nodiscard]] Level * GetLevel() const { return this->level; };
 
     [[nodiscard]] bool IsDead() const;
-    [[nodiscard]] bool IsValid() const { return this->is_valid; }    // For ValueContainer
-    [[nodiscard]] bool IsInvalid() const { return !this->is_valid; } // For ValueContainer
     [[nodiscard]] int GetEnergy() const { return this->reactor.GetEnergy(); }
     [[nodiscard]] int GetHealth() const { return this->reactor.GetHealth(); }
     [[nodiscard]] int GetLives() const { return this->lives_left; }
