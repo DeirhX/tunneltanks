@@ -13,7 +13,8 @@ class Surface;
 enum class LinkPointType
 {
     Base,
-    Machine,
+    Machine, /* Placed machine */
+    Transit, /* Not yet placed */
 };
 
 struct NeighborLinkPoint
@@ -22,6 +23,7 @@ struct NeighborLinkPoint
     float distance;
 };
 
+/* LinkPoint: Linkable point to others */
 class LinkPoint
 {
     LinkPointType type;
@@ -35,6 +37,7 @@ class LinkPoint
     bool is_connected = false;
   public:
     LinkPoint(Position position, LinkPointType type_, LinkMap * owner_ = nullptr);
+    //LinkPoint(LinkPoint && movable) noexcept;
     ~LinkPoint() { Invalidate(); }
 
     [[nodiscard]] bool IsInvalid() const { return !is_alive; }
@@ -45,33 +48,41 @@ class LinkPoint
     [[nodiscard]] bool IsConnected() const { return this->is_connected; }
     [[nodiscard]] const std::vector<NeighborLinkPoint> & GetNeighbors() const { return this->possible_links; }
     [[nodiscard]] std::optional<NeighborLinkPoint> GetClosestUnconnectedPoint() const;
+    [[nodiscard]] bool IsInRange(LinkPoint * other_link) const;
 
     void SetPosition(Position position_);
     void SetConnected(bool connected) { this->is_connected = connected; }
     void RemovePossibleLink(LinkPoint * possible_link);
     void UpdateLink(LinkPoint * possible_link); 
-    void UpdateAllLinks();
+    void ComputePossibleLinks();
 };
 
+enum class LinkType
+{
+    Live,      /* Flowing normally */
+    Blocked,     /* Blocked by and obstacle */
+    Theoretical, /* Too far from source */
+};
+
+/* Link: A connected link between two points */
 class Link
 {
     LinkPoint * from = {};
     LinkPoint * to = {};
 
+    LinkType type;
     bool is_alive = true;
   public:
-    Link(LinkPoint * from_, LinkPoint * to_) : from(from_), to(to_)
-    {
-        assert(from_ && to_);
-        this->from->SetConnected(true);
-        this->to->SetConnected(true);
-    }
+    Link(LinkPoint * from_, LinkPoint * to_);
     ~Link() { Invalidate(); }
     bool IsInvalid() const { return !is_alive; }
     void Invalidate() { is_alive = false; }
+
+    [[nodiscard]] LinkType GetType() const { return this->type; }
     void Draw(Surface * surface) const;
 };
 
+/* LinkMap: Manages all link point updates and links */
 class LinkMap
 {
     Level * level;
@@ -79,7 +90,8 @@ class LinkMap
     std::vector<Link> links = {};
 
     RepetitiveTimer relink_timer = {tweak::world::LinkReactorsInterval};
-    bool modified = false;
+    bool is_collection_modified = false;
+    bool is_linkpoint_moved = false;
 
   public:
     LinkMap(Level * level) : level(level) {}
@@ -89,10 +101,12 @@ class LinkMap
     template <class... LinkPointArgs>
     LinkPoint * RegisterLinkPoint(LinkPointArgs &&... args)
     {
-        modified = true;
+        is_collection_modified = true;
         return &this->link_points.ConstructElement(std::forward<LinkPointArgs>(args)..., this);
     }
     void UnregisterPoint(LinkPoint * point);
+    void RemoveAll();
+
     void UpdateLinksToPoint(LinkPoint * point);
 
     void SolveLinks();

@@ -15,6 +15,29 @@ Machine::Machine(Position position, Tank * owner, Reactor reactor_, BoundingBox 
     this->link_point = GetWorld()->GetLinkMap()->RegisterLinkPoint(position, LinkPointType::Machine);
 }
 
+Machine::Machine(Machine && movable) noexcept
+{
+    *this = std::move(movable);
+}
+
+Machine & Machine::operator=(Machine && movable) noexcept
+{
+    *this = movable;
+    movable.link_point = nullptr;
+    movable.is_alive = false;
+    return *this;
+}
+
+void Machine::Invalidate()
+{
+    if (!this->is_alive)
+        return;
+    this->is_alive = false;
+
+    GetWorld()->GetLinkMap()->UnregisterPoint(this->link_point);
+    this->link_point = nullptr;
+}
+
 bool Machine::CheckAlive(Level * level)
 {
     if (this->GetReactor().GetHealth() == 0)

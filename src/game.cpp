@@ -204,6 +204,11 @@ bool Game::AdvanceStep()
 
 void Game::GameOver() { assert(!"Implement game over!"); }
 
+void Game::ClearWorld()
+{
+    world->Clear();
+}
+
 /* Done with a game structure: */
 Game::~Game()
 {

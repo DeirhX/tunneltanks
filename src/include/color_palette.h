@@ -39,6 +39,9 @@ enum class Colors
     EnergyShieldPassive,
     DirtShieldActive,
     DirtShieldPassive,
+    LinkActive,
+    LinkTheoretical,
+    LinkBlocked,
     Size,
 };
 

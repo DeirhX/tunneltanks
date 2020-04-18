@@ -5,13 +5,21 @@
 
 World::World(Game * game, std::unique_ptr<Level> && level)
     : game(game), level(std::move(level)),
+      link_map(this->level.get()),
       projectile_list(),
       harvester_list(),
       tank_list(this->level.get(), &this->projectile_list),
-      link_map(this->level.get()),
       collision_solver(this->level.get(), &this->tank_list, &this->harvester_list)
 {
     this->level->OnConnectWorld(this);
+}
+
+void World::Clear()
+{
+    this->projectile_list.RemoveAll();
+    this->tank_list.RemoveAll();
+    this->harvester_list.RemoveAll();
+    this->link_map.RemoveAll();
 }
 
 void World::Advance()

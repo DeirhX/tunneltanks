@@ -42,7 +42,9 @@ namespace world
     constexpr int DigThroughRockChance = 250; /* Chance to dig through rock with torch of out 1000 */
 
     constexpr std::chrono::microseconds LinkReactorsInterval = 200ms;
-} // namespace world
+    constexpr float MaximumLiveLinkDistance = 100.f;
+    constexpr float MaximumTheoreticalLinkDistance = 170.f;
+    } // namespace world
 
 namespace base
 {
@@ -53,7 +55,7 @@ namespace base
     constexpr int DoorSize = 7;
     constexpr Reactor Reactor = {15000_energy, 2000_health, {{30000_energy, 2000_health}}};
     constexpr MaterialContainer MaterialContainer = {0_dirt, 0_minerals, {{20000_dirt, 20000_minerals}}};
-    constexpr ReactorState ReactorRecoveryRate = {2_energy, 2_health};
+    constexpr ReactorState ReactorRecoveryRate = {100_energy, 10_health};
     constexpr MaterialAmount MaterialsAbsorbRate = {10_dirt, 10_minerals};
 }
 
@@ -156,7 +158,7 @@ namespace rules
 {
     using namespace std::literals::chrono_literals;
 
-    constexpr MaterialAmount HarvesterCost = 500_dirt;
+    constexpr MaterialAmount HarvesterCost = 100_dirt;
     constexpr MaterialAmount MinerCost = {1000_dirt, 50_minerals};
     constexpr std::chrono::milliseconds HarvestTimer = 500ms;
     constexpr int HarvestMaxRange = 20;
@@ -168,8 +170,6 @@ namespace rules
     constexpr Reactor HarvesterReactor = {0_energy, 1000_health, ReactorCapacity{{10000_energy, 1000_health}}};
     constexpr Reactor MinerReactor = {0_energy, 1000_health, ReactorCapacity{{10000_energy, 1000_health}}};
     constexpr Reactor ChargerReactor = {0_energy, 1000_health, ReactorCapacity{{10000_energy, 1000_health}}};
-
-    constexpr float MaximumLinkDistance = 100.f;
 
     }
 

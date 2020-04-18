@@ -25,22 +25,28 @@ concept Invalidable = requires(T t)
 template <Invalidable TElement>
 class ValueContainerView
 {
+  public:
+    using ItemType = TElement;
+
   protected:
     using Container = std::deque<TElement>; // As long we grow/shrink on start/end, element references are valid forever
+    Container container;
 
-    // Various ways to get to IsInvalid - value type vs. pointer type
+    /* Interface */
+  public:
+    /* Size and lookup */
+    auto CurrentCapacity() const { return container.size(); };
+    TElement & operator[](int index) { return container[index]; }
+    const TElement & operator[](int index) const { return container[index]; }
+
     template <typename TArgument, std::enable_if_t<std::is_class<TArgument>::value, int> = 0>
     static bool IsInvalid(TArgument & val)
     {
         return val.IsInvalid();
     }
-    // template <typename TArgument, std::enable_if_t<std::is_reference<TArgument>::value, int> = 0>
-    // static bool IsInvalid(TArgument val) { return val.IsInvalid(); }
-    // template <typename TArgument, std::enable_if_t<std::is_pointer<TArgument>::value, int> = 0>
-    // static bool IsInvalid(TArgument val) { return val->IsInvalid(); }
-  public:
-    using ItemType = TElement;
 
+  public:
+    /* Iterator implementation */
     template <typename ElementRefType, typename ContainerType>
     class iterator_template
     {
@@ -52,28 +58,19 @@ class ValueContainerView
         ElementRefType operator*() const { return (*container)[index]; }
         bool operator!=(iterator_template other) { return index != other.index; }
         iterator_template operator++() // prefix increment
-        {                     // Advance over dead elements
+        {                              // Advance over dead elements
             while (++index < container->size() && ValueContainerView::IsInvalid((*container)[index]))
             {
             };
             return *this;
         }
     };
+    using iterator = iterator_template<TElement &, Container>;
+    using const_iterator = iterator_template<const TElement &, const Container>;
 
-    using iterator = iterator_template<TElement&, Container>;
-    using const_iterator = iterator_template<const TElement&, const Container>;
-
-    Container container;
-
-  public:
-    /* Size and lookup */
-    auto CurrentCapacity() const { return container.size(); };
-    TElement & operator[](int index) { return container[index]; }
-    const TElement & operator[](int index) const { return container[index]; }
-
-  
+    /* iterator implementation */
     template <typename IteratorType, typename ContainerType>
-    static IteratorType GetBegin(ContainerType & container) 
+    static IteratorType GetBegin(ContainerType & container)
     {
         auto it = IteratorType(container, 0);
         // Skip also dead elements at the start
@@ -82,7 +79,7 @@ class ValueContainerView
         return it;
     }
     template <typename IteratorType, typename ContainerType>
-    static IteratorType GetEnd(ContainerType & container) 
+    static IteratorType GetEnd(ContainerType & container)
     {
         return IteratorType(container, container.size());
     }
@@ -99,14 +96,15 @@ template <Invalidable TElement>
 class ValueContainer : public ValueContainerView<TElement>
 {
     using Parent = ValueContainerView<TElement>;
-public:
+
+  public:
     /* In-place forwarding construction avoiding any copy. Must use if you want to use [this] in your constructor or if
      * your item in non-copyable */
     template <typename... ConstructionArgs>
     TElement & ConstructElement(ConstructionArgs &&... args)
     {
-        auto dead_item =
-            std::find_if(this->container.begin(), this->container.end(), [this](auto & val) { return Parent::IsInvalid(val); });
+        auto dead_item = std::find_if(this->container.begin(), this->container.end(),
+                                      [this](auto & val) { return Parent::IsInvalid(val); });
 
         /* Find if we can insert into already allocated space */
         if (dead_item != this->container.end())
@@ -122,11 +120,11 @@ public:
         return new_alloc;
     }
     /* Copying construction */
-    TElement & Add(TElement item)
+    TElement & Add(const TElement & item)
     {
         /* Place over a dead item by assignment if such dead item exists. Otherwise append to back. */
-        auto dead_item =
-            std::find_if(this->container.begin(), this->container.end(), [this](auto & val) { return Parent::IsInvalid(val); });
+        auto dead_item = std::find_if(this->container.begin(), this->container.end(),
+                                      [this](auto & val) { return Parent::IsInvalid(val); });
         if (dead_item != this->container.end())
         {
             *dead_item = item;
@@ -134,12 +132,33 @@ public:
         }
         return this->container.emplace_back(item);
     }
+    /* Move construction because it's awesome */
+    TElement & Add(TElement && item)
+    {
+        /* Place over a dead item by assignment if such dead item exists. Otherwise append to back. */
+        auto dead_item = std::find_if(this->container.begin(), this->container.end(),
+                                      [this](auto & val) { return Parent::IsInvalid(val); });
+        if (dead_item != this->container.end())
+        {
+            *dead_item = std::move(item);
+            return *dead_item;
+        }
+        this->container.push_back(std::move(item));
+        return this->container.back();
+    }
+
     /* Merge two containers together */
-    // TODO: Add const correctness, const iterators
-    void MergeFrom(ValueContainer & other)
+    void MergeFrom(const ValueContainer & other)
     {
         for (const auto & value : other)
             this->Add(value);
+    }
+    /* Move from other container */
+    void MoveFrom(ValueContainer & other)
+    {
+        for (auto && value : other)
+            this->Add(std::move(value));
+        other.RemoveAll();
     }
 
     void Remove(TElement & item) { item.Invalidate(); }
@@ -172,8 +191,10 @@ class MultiTypeContainer
 {
   private:
     std::tuple<ValueContainer<TValues>...> items;
+
   private:
-    MultiTypeContainer(const MultiTypeContainer &) = delete; /* Do not allow implicit copy. It's most likely a mistake. */
+    MultiTypeContainer(const MultiTypeContainer &) =
+        delete; /* Do not allow implicit copy. It's most likely a mistake. */
   public:
     MultiTypeContainer() = default;
 
@@ -183,15 +204,30 @@ class MultiTypeContainer
         using Typo = typename ValueContainer<TValue>::ItemType;
         return std::get<ValueContainer<TValue>>(this->items).Add(item);
     }
-    // TODO: Add const correctness
-    void MergeFrom(MultiTypeContainer & other)
+
+    /* Merge two containers via copy */
+    void MergeFrom(const MultiTypeContainer & other)
     {
         std::apply(
             [&other](auto &&... cont) {
-                (..., cont.MergeFrom(other.GetContainer(cont))); /* TODO: No idea how to extract type from [cont]. Passing as parameter as a workaround */
+                (...,
+                 cont.MergeFrom(other.GetContainer(
+                     cont))); /* TODO: No idea how to extract type from [cont]. Passing as parameter as a workaround */
             },
             items);
     }
+    /* Move from another, destroying it */
+    void MoveFrom(MultiTypeContainer & other)
+    {
+        std::apply(
+            [&other](auto &&... cont) {
+                (...,
+                 cont.MoveFrom(other.GetContainer(
+                     cont))); /* TODO: No idea how to extract type from [cont]. Passing as parameter as a workaround */
+            },
+            items);
+    }
+
     /* In-place construction of element, TValue has to be specified */
     template <typename TValue, typename... ConstructionArgs>
     TValue & ConstructElement(ConstructionArgs &&... args)
@@ -256,11 +292,22 @@ class MultiTypeContainer
         return std::get<ValueContainer<TValue>>(this->items);
     }
     template <typename TValue>
+    const ValueContainer<TValue> & GetContainer() const
+    {
+        return const_cast<MultiTypeContainer *>(this)->GetContainer<TValue>();
+    }
+    template <typename TValue>
     ValueContainer<TValue> & GetContainer(const ValueContainer<TValue> & /* Deduction only */) 
     {
         return std::get<ValueContainer<TValue>>(this->items);
     }
-    /* Get container for a specified type */
+    template <typename TValue>
+    const ValueContainer<TValue> & GetContainer(const ValueContainer<TValue> & type_ref /* Deduction only */) const
+    {
+        return const_cast<MultiTypeContainer *>(this)->GetContainer<TValue>(type_ref);
+    }
+
+    /* Merge container for a specified type */
     template <typename TValue>
     void MergeContainers(const ValueContainer<TValue> & other)
     {
@@ -277,6 +324,7 @@ class Container2D
     using Container = std::vector<ValueType>;
     Container array;
     Size size;
+
   public:
     Container2D(Size size) : array(size.x * size.y), size(size) {}
     Container2D(const Container2D &) = delete; /* Expensive to copy, don't do it unintentionally */

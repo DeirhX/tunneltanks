@@ -205,6 +205,7 @@ int GameMain(int argc, char * argv[])
         gamelib_main_loop([&frames_to_do]() -> bool { return global_game->AdvanceStep(); });
 
         /* Release global resources earlier than atexit global teardown*/
+        ::global_game->ClearWorld();
         ::global_game.reset();
         ::global_game_system.reset();
 

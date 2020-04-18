@@ -15,15 +15,16 @@ class World
     class Game * game;
 
     std::unique_ptr<Level> level;
+    LinkMap link_map;
     ProjectileList projectile_list;
     MachineryList harvester_list;
     TankList tank_list;
-    LinkMap link_map;
 
     CollisionSolver collision_solver;
     RepetitiveTimer regrow_timer{tweak::world::DirtRecoverInterval};
   public:
     World(Game * game, std::unique_ptr<Level> && level);
+    void Clear(); /* Clear the world of everything */
 
     void Advance();
     void Draw(WorldRenderSurface * objects_surface);
@@ -34,6 +35,7 @@ class World
     TankList * GetTankList() { return &this->tank_list; }
     LinkMap * GetLinkMap() { return &this->link_map; }
     const CollisionSolver * GetCollisionSolver() const { return &this->collision_solver; }
+
     void GameIsOver();
 
   private:

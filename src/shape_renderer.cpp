@@ -18,11 +18,11 @@ void ShapeRenderer::DrawLine(Surface * surface, Position from, Position to, Colo
     else
     {
         /* Not so easy free-form line */
-        OffsetF one_step = OffsetF{diff} / static_cast<float>(std::max(std::abs(diff.x), std::abs(diff.y)));
+        int steps = std::max(std::abs(diff.x), std::abs(diff.y));
+        OffsetF one_step = OffsetF{diff} / static_cast<float>(steps);
         PositionF curr = PositionF{from};
         PositionF target = PositionF{to};
-
-        int steps = std::max(diff.x, diff.y);
+        
         int curr_step = 0;
         do
         {

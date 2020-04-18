@@ -9,8 +9,7 @@
 void ProjectileList::Advance(Level * level, TankList * tankList)
 {
     /* Append everything that was created last tick */
-    this->items.MergeFrom(this->newly_created_items);
-    this->newly_created_items.RemoveAll();
+    this->items.MoveFrom(this->newly_created_items);
     Shrink();
 
     /* Advance everything */

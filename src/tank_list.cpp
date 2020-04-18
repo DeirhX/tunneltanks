@@ -31,6 +31,9 @@ void TankList::RemoveTank(TankColor color)
     (*found).Invalidate();
 }
 
+void TankList::RemoveAll()
+{ this->list.RemoveAll(); }
+
 Tank * TankList::GetTankAtPoint(Position query_pos, TankColor ignored)
 {
     for (Tank & tank : *this)

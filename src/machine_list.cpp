@@ -3,8 +3,7 @@
 void MachineryList::Advance(Level * level, TankList * tank_list)
 {
     /* Append everything that was created last tick */
-    this->items.MergeFrom(this->newly_created_items);
-    this->newly_created_items.RemoveAll();
+    this->items.MoveFrom(this->newly_created_items);
     Shrink();
 
     /* Advance everything */

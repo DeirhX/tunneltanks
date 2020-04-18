@@ -26,6 +26,7 @@ class ProjectileList
     }
 
     void Remove(Projectile & projectile) { projectile.Invalidate(); }
+    void RemoveAll() { items.RemoveAll(); };
     void Shrink() { this->items.Shrink(); }
 
     void Advance(class Level * level, class TankList * tankList);

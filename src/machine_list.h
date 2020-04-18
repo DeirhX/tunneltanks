@@ -14,12 +14,18 @@ class MachineryList
     MachineryList() = default;
 
     /* Add/remove  */
-    template <typename THarverster>
-    THarverster & Add(THarverster && projectile)
+    template <typename TMachine>
+    TMachine & Add(TMachine && projectile)
     {
         return this->newly_created_items.Add(projectile);
     }
+    template <typename TMachine, typename... TConstructArgs>
+    TMachine & Emplace(TConstructArgs... args)
+    {
+        return this->newly_created_items.ConstructElement<TMachine>(std::forward<TConstructArgs>(args)...);
+    }
     void Remove(Machine & harvester) { harvester.Invalidate(); }
+    void RemoveAll() { this->items.RemoveAll(); }
     void Shrink() { this->items.Shrink(); }
 
     void Advance(class Level * level, class TankList * tank_list);

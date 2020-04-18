@@ -9,6 +9,7 @@ LinkPoint::LinkPoint(Position position, LinkPointType type_, LinkMap * owner_)
     : type(type_), position(position), owner(owner_)
 {
     this->owner->UpdateLinksToPoint(this);
+    ComputePossibleLinks();
 }
 
 void LinkPoint::Invalidate()
@@ -38,6 +39,13 @@ std::optional<NeighborLinkPoint> LinkPoint::GetClosestUnconnectedPoint() const
     return std::nullopt;
 }
 
+bool LinkPoint::IsInRange(LinkPoint * other_link) const
+{
+    float distance = (other_link->GetPosition() - this->GetPosition()).GetSize();
+    return distance <= tweak::world::MaximumLiveLinkDistance ||
+        (this->type == LinkPointType::Transit && distance <= tweak::world::MaximumTheoreticalLinkDistance);
+}
+
 void LinkPoint::SetPosition(Position position_)
 {
     if (this->position == position_)
@@ -59,8 +67,7 @@ void LinkPoint::RemovePossibleLink(LinkPoint * possible_link)
 void LinkPoint::UpdateLink(LinkPoint * possible_link)
 {
     /* Figure if we are a possible candidate */
-    float distance = (possible_link->GetPosition() - this->GetPosition()).GetSize();
-    bool in_range = distance <= tweak::rules::MaximumLinkDistance;
+    bool in_range = IsInRange(possible_link);
 
     if (!in_range)
         std::erase_if(this->possible_links, [possible_link](auto & value) { return possible_link == value.point; });
@@ -78,21 +85,49 @@ void LinkPoint::UpdateLink(LinkPoint * possible_link)
 /*
  * Discard and recompute a list of possible links that are close enough to be candidates for connection
  */
-void LinkPoint::UpdateAllLinks()
+void LinkPoint::ComputePossibleLinks()
 {
     assert(this->owner);
     this->possible_links.clear();
     for (LinkPoint & link : this->owner->GetLinkPoints())
     {
-        if ((link.GetPosition() - this->GetPosition()).GetSize() <= tweak::rules::MaximumLinkDistance)
+        if (IsInRange(&link))
             this->possible_links.push_back(
                 NeighborLinkPoint{.point = &link, .distance = (link.GetPosition() - this->GetPosition()).GetSize()});
     }
 }
 
+Link::Link(LinkPoint * from_, LinkPoint * to_)
+    : from(from_), to(to_)
+{
+    assert(from_ && to_);
+    this->from->SetConnected(true);
+    this->to->SetConnected(true);
+
+    this->type = LinkType::Live;
+    float distance = (this->to->GetPosition() - this->from->GetPosition()).GetSize();
+    if (distance > tweak::world::MaximumLiveLinkDistance)
+        this->type = LinkType::Theoretical;
+    //else find if blocked
+    //
+}
+
 void Link::Draw(Surface * surface) const
 {
-    ShapeRenderer::DrawLine(surface, this->from->GetPosition(), this->to->GetPosition(), Palette.Get(Colors::EnergyFieldHigh));
+    Color color;
+    switch (this->type)
+    {
+    case LinkType::Live:
+        color = Palette.Get(Colors::LinkActive);
+        break;
+    case LinkType::Theoretical:
+        color = Palette.Get(Colors::LinkTheoretical);
+        break;
+    case LinkType::Blocked:
+        color = Palette.Get(Colors::LinkBlocked);
+        break;
+    }
+    ShapeRenderer::DrawLine(surface, this->from->GetPosition(), this->to->GetPosition(), color);
 }
 
 //LinkPoint * LinkMap::RegisterLinkPoint(LinkPoint && temp_point)
@@ -103,7 +138,7 @@ void Link::Draw(Surface * surface) const
 
 void LinkMap::UnregisterPoint(LinkPoint * link_point)
 {
-    this->modified = true;
+    this->is_collection_modified = true;
     /* Doesn't do anything on this container but may be needed if they are switched */
     this->link_points.Remove(*link_point); 
     /* Must erase any notion of existence from cached possible links*/
@@ -112,9 +147,15 @@ void LinkMap::UnregisterPoint(LinkPoint * link_point)
             point.RemovePossibleLink(link_point);
 }
 
+void LinkMap::RemoveAll()
+{
+    this->links.clear();
+    this->link_points.RemoveAll();
+}
+
 void LinkMap::UpdateLinksToPoint(LinkPoint * link_point)
 {
-    this->modified = true;
+    this->is_linkpoint_moved = true;
     /* Offer this point to all others to adopt it into their possible links */
     for (LinkPoint & point : this->link_points)
         if (&point != link_point)
@@ -171,6 +212,7 @@ void LinkMap::SolveLinks()
 
         /* Connect the link */
         updated_links.emplace_back(closest_point.point, connect_target);
+        connected_nodes.push_back(closest_point.point);
     }
 
     /* Replace current links with this one */
@@ -179,12 +221,13 @@ void LinkMap::SolveLinks()
 
 void LinkMap::Advance()
 {
-    if (this->relink_timer.AdvanceAndCheckElapsed())
+    if (this->relink_timer.AdvanceAndCheckElapsed() || this->is_collection_modified)
     {
-        if (this->modified)
+        if (this->is_linkpoint_moved || this->is_collection_modified)
         {
             SolveLinks();
-            this->modified = false;
+            this->is_collection_modified = false;
+            this->is_linkpoint_moved = false;
         }
     }
 }

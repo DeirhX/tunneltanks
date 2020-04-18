@@ -37,22 +37,21 @@ bool MachineMaterializer::TryBuildMachine(MachineType type)
     case MachineType::Harvester:
         if (this->resource_bank->Pay(tweak::rules::HarvesterCost))
         {
-            GetWorld()->GetHarvesterList()->Add(Harvester(position, HarvesterType::Dirt, this->owner_tank));
+            GetWorld()->GetHarvesterList()->Emplace<Harvester>(position, HarvesterType::Dirt, this->owner_tank);
             return true;
         }
         break;
     case MachineType::Miner:
         if (this->resource_bank->Pay(tweak::rules::MinerCost))
         {
-            GetWorld()->GetHarvesterList()->Add(Harvester(position, HarvesterType::Mineral, this->owner_tank));
+            GetWorld()->GetHarvesterList()->Emplace<Harvester>(position, HarvesterType::Mineral, this->owner_tank);
             return true;
         }
         break;
     case MachineType::Charger:
         if (this->resource_bank->Pay(tweak::rules::ChargerCost))
         {
-            GetWorld()->GetHarvesterList()->Add(
-                Charger(position, this->owner_tank));
+            GetWorld()->GetHarvesterList()->Emplace<Charger>(position, this->owner_tank);
             return true;
         }
         break;
