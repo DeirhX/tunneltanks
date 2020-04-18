@@ -54,6 +54,7 @@ void LinkPoint::SetPosition(Position position_)
 
     assert(this->owner);
     this->position = position_;
+    ComputePossibleLinks();
     this->owner->UpdateLinksToPoint(this);
 }
 
@@ -68,6 +69,8 @@ void LinkPoint::RemovePossibleLink(LinkPoint * possible_link)
 void LinkPoint::UpdateLink(LinkPoint * possible_link)
 {
     /* Figure if we are a possible candidate */
+    if (this == possible_link)
+        return;
     bool in_range = IsInRange(possible_link);
 
     if (!in_range)
