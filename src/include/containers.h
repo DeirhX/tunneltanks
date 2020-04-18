@@ -4,16 +4,16 @@
 #include <queue>
 #include <trace.h>
 #include <vector>
+/*
+ Effective container for storing in-place, cache-local objects - deleting does not shift, dead objects can be reused
+ later and references to live objects are valid forever.
+ We risk fragmentation after long use but let's have this as an experiment how to reduce the number of dynamic
+ allocations to minimum.
+ Iterator and foreach support - skips over dead elements
+ */
 
-// Effective container for storing in-place, cache-local objects - deleting does not shift, dead objects can be reused
-// later
-//  and references to live objects are valid forever.
-// We risk fragmentation after long use but let's have this as an experiment how to reduce the number of dynamic
-// allocations
-//  to minimum.
-// Iterator and foreach support - skips over dead elements
 template <typename T>
-concept Invalidable = requires(T t)
+concept IsInvalidable = requires(T t)
 {
     {
         t.IsInvalid()
@@ -22,7 +22,30 @@ concept Invalidable = requires(T t)
     {t.Invalidate()};
 };
 
-template <Invalidable TElement>
+class Invalidable
+{
+    bool is_alive = true;
+
+  public:
+    Invalidable() = default;
+    Invalidable(const Invalidable & other) = delete;
+    Invalidable & operator=(const Invalidable & movable) = delete;
+    Invalidable(Invalidable && movable) noexcept { *this = std::move(movable); }
+    Invalidable & operator=(Invalidable && movable) noexcept
+    {
+        this->is_alive = movable.is_alive;
+        movable.is_alive = false;
+        return *this;
+    }
+    ~Invalidable() { Invalidate(); }
+
+    bool IsInvalid() const { return !is_alive; }
+    bool IsValid() const { return is_alive; }
+    void Invalidate() { this->is_alive = false; } /* No way to return back to life, consider it destroyed */
+};
+
+
+template <IsInvalidable TElement>
 class ValueContainerView
 {
   public:
@@ -34,6 +57,11 @@ class ValueContainerView
 
     /* Interface */
   public:
+    ValueContainerView() = default;
+    /* Do not allow implicit copy. It's most likely a mistake. */
+    ValueContainerView(const ValueContainerView &) = delete;
+    ValueContainerView & operator=(const ValueContainerView &) = delete;
+
     /* Size and lookup */
     auto CurrentCapacity() const { return container.size(); };
     TElement & operator[](int index) { return container[index]; }
@@ -92,7 +120,7 @@ class ValueContainerView
     const_iterator cend() { return GetEnd<const_iterator>(this->container); }
 };
 
-template <Invalidable TElement>
+template <IsInvalidable TElement>
 class ValueContainer : public ValueContainerView<TElement>
 {
     using Parent = ValueContainerView<TElement>;
@@ -120,18 +148,20 @@ class ValueContainer : public ValueContainerView<TElement>
         return new_alloc;
     }
     /* Copying construction */
-    TElement & Add(const TElement & item)
-    {
-        /* Place over a dead item by assignment if such dead item exists. Otherwise append to back. */
-        auto dead_item = std::find_if(this->container.begin(), this->container.end(),
-                                      [this](auto & val) { return Parent::IsInvalid(val); });
-        if (dead_item != this->container.end())
-        {
-            *dead_item = item;
-            return *dead_item;
-        }
-        return this->container.emplace_back(item);
-    }
+    
+    //TElement & Add(const TElement & item)
+    //{
+    //    /* Place over a dead item by assignment if such dead item exists. Otherwise append to back. */
+    //    auto dead_item = std::find_if(this->container.begin(), this->container.end(),
+    //                                  [this](auto & val) { return Parent::IsInvalid(val); });
+    //    if (dead_item != this->container.end())
+    //    {
+    //        *dead_item = item;
+    //        return *dead_item;
+    //    }
+    //    return this->container.emplace_back(item);
+    //}
+
     /* Move construction because it's awesome */
     TElement & Add(TElement && item)
     {
@@ -192,17 +222,18 @@ class MultiTypeContainer
   private:
     std::tuple<ValueContainer<TValues>...> items;
 
-  private:
-    MultiTypeContainer(const MultiTypeContainer &) =
-        delete; /* Do not allow implicit copy. It's most likely a mistake. */
   public:
     MultiTypeContainer() = default;
+  public:
+    /* Do not allow implicit copy. It's most likely a mistake. */
+    MultiTypeContainer(const MultiTypeContainer &) = delete;
+    MultiTypeContainer & operator=(const MultiTypeContainer &) = delete;
 
     template <typename TValue>
-    TValue & Add(const TValue & item)
+    TValue & Add(TValue && item)
     {
         using Typo = typename ValueContainer<TValue>::ItemType;
-        return std::get<ValueContainer<TValue>>(this->items).Add(item);
+        return std::get<ValueContainer<TValue>>(this->items).Add(std::move(item));
     }
 
     /* Merge two containers via copy */

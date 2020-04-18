@@ -103,6 +103,13 @@ LinkPointSource::LinkPointSource(World * world, Position position, LinkPointType
     this->link_point = world->GetLinkMap()->RegisterLinkPoint(position, type);
 }
 
+LinkPointSource & LinkPointSource::operator=(LinkPointSource && movable) noexcept
+{
+    this->link_point = movable.link_point;
+    movable.link_point = nullptr;
+    return *this;
+}
+
 void LinkPointSource::Destroy()
 {
     if (this->link_point)

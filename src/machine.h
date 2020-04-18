@@ -7,7 +7,7 @@
 
 class Level;
 
-class Machine
+class Machine : public Invalidable
 {
   protected:
     Position position;
@@ -18,24 +18,10 @@ class Machine
     LinkPointSource link_source;
     Reactor reactor = tweak::rules::DefaultMachineReactor;
 
-    bool is_alive = true;
-
-  private:
-    /* Private use for move assignment  */
-    Machine & operator=(const Machine & other) = default;
   protected:
     Machine(Position position, Tank * owner, Reactor reactor_, BoundingBox bounding_box);
-    Machine(Machine && movable) noexcept;
-    Machine & operator=(Machine && movable) noexcept;
-    /* Thou shalt not copy these items, we own resources */
-    Machine(const Machine & copyable) noexcept = delete;
-    virtual ~Machine() { Invalidate(); }
   public:
-    const Position & GetPosition() { return this->position; }
-
-    bool IsInvalid() const { return !is_alive; }
-    bool IsValid() const { return is_alive; }
-    void Invalidate();
+    const Position & GetPosition() const { return this->position; }
 
     bool CheckAlive(Level * level);
     virtual void Die(Level * level) = 0;
@@ -67,7 +53,6 @@ class Harvester final : public Machine
         type(type)
     {
     }
-
     void Advance(Level * level) override;
     void Draw(Surface * surface) const override;
     bool IsColliding(Position position) const;
@@ -86,10 +71,7 @@ class Charger final : public Machine
         : Machine{position, tank, tweak::rules::ChargerReactor, BoundingBox{Size{5, 5}}}
     {
     }
-    //Charger(Charger && movable) noexcept
-    //{ }
-    //Charger(const Charger & copyable) noexcept {}
-    //Charger & operator=(const Charger & other) = default;
+
     void Advance(Level * level) override;
     void Draw(Surface * surface) const override;
     bool IsColliding(Position position) const;

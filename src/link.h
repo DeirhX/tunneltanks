@@ -73,7 +73,13 @@ private:
 public:
     LinkPointSource() = default;
     LinkPointSource(class World * world, Position position, LinkPointType type);
+    /* Ban copies, force move to transfer ownership of link_point */
+    LinkPointSource(const LinkPointSource &) = delete;
+    LinkPointSource & operator=(const LinkPointSource &) = delete;
+    LinkPointSource(LinkPointSource && movable) noexcept { *this = std::move(movable); }
+    LinkPointSource & operator=(LinkPointSource && movable) noexcept;
     ~LinkPointSource() { Destroy(); }
+
     void Detach() { link_point = nullptr; }
     void Destroy();
 

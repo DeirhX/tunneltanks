@@ -15,28 +15,6 @@ Machine::Machine(Position position, Tank * owner, Reactor reactor_, BoundingBox 
     
 }
 
-Machine::Machine(Machine && movable) noexcept
-{
-    *this = std::move(movable);
-}
-
-Machine & Machine::operator=(Machine && movable) noexcept
-{
-    *this = movable;
-    movable.link_source.Detach();
-    movable.is_alive = false;
-    return *this;
-}
-
-void Machine::Invalidate()
-{
-    if (!this->is_alive)
-        return;
-    this->is_alive = false;
-
-    this->link_source.Destroy();
-}
-
 bool Machine::CheckAlive(Level * level)
 {
     if (this->GetReactor().GetHealth() == 0)
@@ -89,11 +67,12 @@ bool Harvester::IsColliding(Position with_position) const
 
 void Harvester::Die(Level * level)
 {
-    this->is_alive = false;
     GetWorld()->GetProjectileList()->Add(
         ExplosionDesc::AllDirections(this->position, tweak::explosion::death::ShrapnelCount,
                                      tweak::explosion::death::Speed, tweak::explosion::death::Frames)
             .Explode<Shrapnel>(GetWorld()->GetLevel()));
+
+    this->Invalidate();
 }
 
 
@@ -151,10 +130,11 @@ bool Charger::IsColliding(Position with_position) const
 
 void Charger::Die(Level * level)
 {
-    this->is_alive = false;
     GetWorld()->GetProjectileList()->Add(
         ExplosionDesc::AllDirections(this->position, tweak::explosion::death::ShrapnelCount,
                                      tweak::explosion::death::Speed, tweak::explosion::death::Frames)
             .Explode<Shrapnel>(GetWorld()->GetLevel()));
+
+    this->Invalidate();
 }
 

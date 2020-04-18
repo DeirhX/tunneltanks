@@ -16,7 +16,7 @@ class ProjectileList
     template <typename TProjectile>
     TProjectile & Add(TProjectile && projectile)
     {
-        return this->newly_created_items.Add(projectile);
+        return this->newly_created_items.Add(std::move(projectile));
     }
     template <typename TProjectile>
     void Add(std::vector<TProjectile> && array)
