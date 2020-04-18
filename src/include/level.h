@@ -63,9 +63,9 @@ class Level
     LevelPixel GetPixel(Position pos) const;
 
     void SetVoxelRaw(Position pos, LevelPixel voxel);
-    __inline void SetVoxelRaw(int offset, LevelPixel voxel) { SetLevelData(offset, voxel); }
+    void SetVoxelRaw(int offset, LevelPixel voxel) { SetLevelData(offset, voxel); }
     LevelPixel GetVoxelRaw(Position pos) const;
-    __inline LevelPixel GetVoxelRaw(int offset) const { return this->data[offset]; }
+    LevelPixel GetVoxelRaw(int offset) const { return this->data[offset]; }
 
     /* Terrain surface interaction */
     void CommitPixel(Position pos);

@@ -9,8 +9,8 @@ class TankList;
 
 class Game
 {
-    int is_active = false;
-    int is_debug = false;
+    bool is_active = false;
+    bool is_debug = false;
 
     GameConfig config = {};
 
@@ -22,6 +22,7 @@ class Game
     Game(GameConfig config);
     ~Game();
 
+    void BeginGame();
     bool AdvanceStep();
     void GameOver();
 

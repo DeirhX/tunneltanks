@@ -15,6 +15,7 @@ enum class LinkPointType
     Base,
     Machine, /* Placed machine */
     Transit, /* Not yet placed */
+    Tank,    /* Tank being charged */
 };
 
 struct NeighborLinkPoint
@@ -32,9 +33,9 @@ class LinkPoint
     class LinkMap * owner;
 
     std::vector<NeighborLinkPoint> possible_links;
-    bool is_alive = true;
-
+    bool is_alive = true; /* Once false, object is dead forever */
     bool is_connected = false;
+    bool is_enabled = true;
   public:
     LinkPoint(Position position, LinkPointType type_, LinkMap * owner_ = nullptr);
     //LinkPoint(LinkPoint && movable) noexcept;
@@ -45,17 +46,42 @@ class LinkPoint
 
     [[nodiscard]] LinkPointType GetType() const { return this->type; }
     [[nodiscard]] Position GetPosition() const { return this->position; }
+    [[nodiscard]] LinkMap * GetLinkMap() const { return this->owner; }
     [[nodiscard]] bool IsConnected() const { return this->is_connected; }
     [[nodiscard]] const std::vector<NeighborLinkPoint> & GetNeighbors() const { return this->possible_links; }
     [[nodiscard]] std::optional<NeighborLinkPoint> GetClosestUnconnectedPoint() const;
     [[nodiscard]] bool IsInRange(LinkPoint * other_link) const;
+    [[nodiscard]] bool IsEnabled() const { return this->is_enabled; }
 
     void SetPosition(Position position_);
+
     void SetConnected(bool connected) { this->is_connected = connected; }
     void RemovePossibleLink(LinkPoint * possible_link);
     void UpdateLink(LinkPoint * possible_link); 
     void ComputePossibleLinks();
+    void Disable() { this->is_enabled = false; }
+    void Enable() { this->is_enabled = true; }
 };
+
+/* LinkPointSource: Wrapper to manage the lifetime of LinkPoint that resides in LinkMap array.
+ */
+class LinkPointSource
+{
+private:
+    LinkPoint * link_point = nullptr;
+
+public:
+    LinkPointSource() = default;
+    LinkPointSource(class World * world, Position position, LinkPointType type);
+    ~LinkPointSource() { Destroy(); }
+    void Detach() { link_point = nullptr; }
+    void Destroy();
+
+    void UpdatePosition(Position position) { link_point->SetPosition(position); }
+    void Disable() { this->link_point->Disable(); }
+    void Enable() { this->link_point->Enable(); }
+};
+
 
 enum class LinkType
 {

@@ -45,7 +45,7 @@ class Tank
 {
     bool is_valid = false;
 
-    Position pos; /* Current tank position */
+    Position position; /* Current tank position */
     Speed speed;  /* Velocity... ie: is it moving now? */
     Direction direction = {}; /* Heading of the tank */
 
@@ -56,9 +56,9 @@ class Tank
     widgets::Crosshair * crosshair = nullptr; /* Crosshair used for aiming */
 
     ManualTimer respawn_timer = {tweak::tank::RespawnDelay};
-
     int lives_left = tweak::tank::MaxLives;
 
+    LinkPointSource link_source;
     Reactor reactor = tweak::tank::DefaultTankReactor;
     MaterialContainer resources = {tweak::tank::ResourcesMax};
 
@@ -68,13 +68,15 @@ class Tank
     ProjectileList * projectile_list;
 
   public:
-    void Invalidate() { this->is_valid = false; }
-
     Tank(TankColor color, Level * level, ProjectileList * projectile_list, TankBase * tank_base);
+    Tank(const Tank & other) = delete;
+    ~Tank() { Invalidate(); }
+    void Invalidate();
+    
     void SetController(std::shared_ptr<Controller> newController) { this->controller = newController; }
     void SetCrosshair(widgets::Crosshair * cross);
 
-    [[nodiscard]] Position GetPosition() const { return this->pos; }
+    [[nodiscard]] Position GetPosition() const { return this->position; }
     [[nodiscard]] PositionF GetTurretBarrel() const { return this->turret.GetBarrelPosition(); }
     [[nodiscard]] DirectionF GetTurretDirection() const { return this->turret.GetDirection(); }
     [[nodiscard]] TankColor GetColor() const { return this->color; }
@@ -102,7 +104,7 @@ class Tank
     template <typename PerPixelFunc> /* bool per_pixel_func(Position world_position). Return false to end iteration. */
     void ForEachTankPixel(PerPixelFunc per_pixel_func)
     {
-        tank::ForEachTankPixel(per_pixel_func, this->pos, this->direction);
+        tank::ForEachTankPixel(per_pixel_func, this->position, this->direction);
     }
 
     void Draw(Surface * surface) const;

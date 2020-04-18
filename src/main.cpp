@@ -201,6 +201,7 @@ int GameMain(int argc, char * argv[])
         ::global_game_system = CreateGameSystem(config.video_config);
         ::global_game = std::make_unique<Game>(config);
         /* Play the game: */
+        ::global_game->BeginGame();
         int frames_to_do = 1500;
         gamelib_main_loop([&frames_to_do]() -> bool { return global_game->AdvanceStep(); });
 

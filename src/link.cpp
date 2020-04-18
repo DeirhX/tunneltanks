@@ -4,6 +4,7 @@
 #include "level.h"
 #include "render_surface.h"
 #include "shape_renderer.h"
+#include "world.h"
 
 LinkPoint::LinkPoint(Position position, LinkPointType type_, LinkMap * owner_)
     : type(type_), position(position), owner(owner_)
@@ -97,6 +98,18 @@ void LinkPoint::ComputePossibleLinks()
     }
 }
 
+LinkPointSource::LinkPointSource(World * world, Position position, LinkPointType type)
+{
+    this->link_point = world->GetLinkMap()->RegisterLinkPoint(position, type);
+}
+
+void LinkPointSource::Destroy()
+{
+    if (this->link_point)
+        this->link_point->GetLinkMap()->UnregisterPoint(link_point);
+    this->link_point = nullptr;
+}
+
 Link::Link(LinkPoint * from_, LinkPoint * to_)
     : from(from_), to(to_)
 {
@@ -174,6 +187,9 @@ void LinkMap::SolveLinks()
      *  Subsequently we'll try to link everything else to them */
     for (LinkPoint & point : this->link_points)
     {
+        if (!point.IsEnabled())
+            continue;
+        ;
         if (point.GetType() == LinkPointType::Base)
         {
             connected_nodes.push_back(&point);
@@ -219,6 +235,8 @@ void LinkMap::SolveLinks()
     this->links = updated_links;
 }
 
+/* Resolve connections immediately only if new link was added or removed, 
+ *  otherwise do it only once per timer elapsed (links will still move, just not recompute) */
 void LinkMap::Advance()
 {
     if (this->relink_timer.AdvanceAndCheckElapsed() || this->is_collection_modified)

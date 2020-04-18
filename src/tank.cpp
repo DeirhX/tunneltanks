@@ -22,9 +22,16 @@
  * TANK
  */
 
+void Tank::Invalidate()
+{
+    this->is_valid = false;
+    this->link_source.Destroy();
+}
+
 Tank::Tank(TankColor color, Level * level, ProjectileList * projectile_list, TankBase * tank_base)
-    : is_valid(true), pos(tank_base->GetPosition()), color(color), tank_base(tank_base),
-      turret(this, Palette.GetTank(color)[2]), materializer(this, &this->resources)
+    : is_valid(true), position(tank_base->GetPosition()), color(color), tank_base(tank_base),
+      turret(this, Palette.GetTank(color)[2]), materializer(this, &this->resources),
+      link_source(GetWorld(), position, LinkPointType::Tank)
 {
     // this->cached_slice = std::make_shared<LevelView>(this, lvl);
 
@@ -36,6 +43,8 @@ Tank::Tank(TankColor color, Level * level, ProjectileList * projectile_list, Tan
     this->direction = dir; // DirectionF{ dir };
     this->level = level;
     this->projectile_list = projectile_list;
+
+    Spawn();
 }
 
 void Tank::SetCrosshair(widgets::Crosshair * cross)
@@ -52,7 +61,7 @@ void Tank::Advance(World * world)
         /* Recharge and discharge */
         this->GetReactor().Exhaust(tweak::tank::IdleCost);
 
-        TankBase * base = this->level->CheckBaseCollision(this->pos);
+        TankBase * base = this->level->CheckBaseCollision(this->position);
         if (base)
         {
             this->TryBaseHeal(base);
@@ -65,8 +74,8 @@ void Tank::Advance(World * world)
             Vector spawn_pos = this->level->GetSpawn(this->color)->GetPosition();
             PublicTankInfo controls = {.health = this->GetHealth(),
                                        .energy = this->GetEnergy(),
-                                       .x = static_cast<int>(this->pos.x - spawn_pos.x),
-                                       .y = static_cast<int>(this->pos.y - spawn_pos.y),
+                                       .x = static_cast<int>(this->position.x - spawn_pos.x),
+                                       .y = static_cast<int>(this->position.y - spawn_pos.y),
                                        .level_view = LevelView(this, this->level)};
             this->ApplyControllerOutput(this->controller->ApplyControls(&controls));
         }
@@ -116,14 +125,14 @@ void Tank::Advance(World * world)
 
 /* We don't use the Tank structure in this function, since we are checking the
  * tank's hypothetical position... ie: IF we were here, would we collide? */
-CollisionType Tank::GetCollision(Direction dir, Position position, TankList * tank_list)
+CollisionType Tank::GetCollision(Direction dir, Position position_, TankList * tank_list)
 {
     CollisionType result = CollisionType::None;
 
     tank::ForEachTankPixel(
-        [this, &result](Position position) {
+        [this, &result](Position position_) {
             bool is_blocking_collision = GetWorld()->GetCollisionSolver()->TestCollide(
-                position,
+                position_,
                 [this, &result](Tank & tank) {
                     if (tank.GetColor() != this->GetColor())
                     {
@@ -149,7 +158,7 @@ CollisionType Tank::GetCollision(Direction dir, Position position, TankList * ta
                 });
 
             return !is_blocking_collision;
-    }, position, dir);
+    }, position_, dir);
 
     if (result == CollisionType::Blocked || tank_list->CheckForCollision(*this, position, dir))
         return CollisionType::Blocked;
@@ -163,12 +172,12 @@ void Tank::HandleMove(TankList * tl)
     if (this->speed.x != 0 || this->speed.y != 0)
     {
         Direction dir = Direction::FromSpeed(this->speed);
-        CollisionType collision = this->GetCollision(dir, this->pos + 1 * this->speed, tl);
+        CollisionType collision = this->GetCollision(dir, this->position + 1 * this->speed, tl);
         /* Now, is there room to move forward in that direction? */
         if (collision != CollisionType::None)
         {
             /* Attempt to dig and see the results */
-            DigResult dug = this->level->DigTankTunnel(this->pos + (1 * this->speed), this->turret.IsShooting());
+            DigResult dug = this->level->DigTankTunnel(this->position + (1 * this->speed), this->turret.IsShooting());
             this->resources.Add({dug.dirt, dug.minerals});
 
             /* If we didn't use a torch pointing roughly in the right way, we don't move in the frame of digging*/
@@ -180,15 +189,15 @@ void Tank::HandleMove(TankList * tl)
             }
 
             /* Now if we used a torch, test the collision again - we might have failed to dig some of the minerals */
-            collision = this->GetCollision(dir, this->pos + 1 * this->speed, tl);
+            collision = this->GetCollision(dir, this->position + 1 * this->speed, tl);
             if (collision != CollisionType::None)
                 return;
         }
 
         /* We're free to move, do it*/
         this->direction = Direction{dir};
-        this->pos.x += this->speed.x;
-        this->pos.y += this->speed.y;
+        this->position.x += this->speed.x;
+        this->position.y += this->speed.y;
 
         /* Well, we moved, so let's charge ourselves: */
         this->GetReactor().Exhaust(tweak::tank::MoveCost);
@@ -234,55 +243,19 @@ void Tank::Draw(Surface * surface) const
         {
             char val = TANK_SPRITE[this->direction][y][x];
             if (val)
-                surface->SetPixel(Position{this->pos.x + x - 3, this->pos.y + y - 3},
+                surface->SetPixel(Position{this->position.x + x - 3, this->position.y + y - 3},
                                    Palette.GetTank(this->color)[val - 1]);
         }
 
     this->turret.Draw(surface);
 }
 
-//void Tank::AlterEnergy(int diff)
-//{
-//    /* You can't alter energy if the tank is dead: */
-//    if (this->IsDead())
-//        return;
-//
-//    /* If the diff would make the energy negative, then we just set it to 0: */
-//    if (diff < 0 && -diff >= this->reactor)
-//    {
-//        this->energy = 0;
-//        this->AlterHealth(-tweak::tank::StartingShield);
-//        return;
-//    }
-//
-//    /* Else, just add, and account for overflow: */
-//    this->energy = std::min(this->energy + diff, tweak::tank::StartingEnergy);
-//}
-//
-//void Tank::AlterHealth(int diff)
-//{
-//    /* Make sure we don't come back from the dead: */
-//    if (this->IsDead())
-//        return;
-//
-//    ReactorState amount = {0_energy, HealthAmount{diff}};
-//    this->reactor.Add(amount);
-//
-//    /* Die if it's our time (health would be less than 1) */
-//    if (this->reactor.GetHealth() < 0)
-//    {
-//        Die();
-//    }
-//    this->reactor.TrimNegative();
-//}
-
 void Tank::Spawn()
 {
     this->turret.Reset();
-
     this->reactor.Fill();
-
-    this->pos = this->tank_base->GetPosition();
+    this->position = this->tank_base->GetPosition();
+    this->link_source.Enable();
 }
 
 void Tank::Die()
@@ -291,8 +264,9 @@ void Tank::Die()
     this->reactor.Clear();
     this->resources.Clear();
     this->respawn_timer.Restart();
+    this->link_source.Disable();
 
-    this->projectile_list->Add(ExplosionDesc::AllDirections(this->pos, tweak::explosion::death::ShrapnelCount,
+    this->projectile_list->Add(ExplosionDesc::AllDirections(this->position, tweak::explosion::death::ShrapnelCount,
                                                             tweak::explosion::death::Speed,
                                                             tweak::explosion::death::Frames)
                                    .Explode<Shrapnel>(this->level));

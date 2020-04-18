@@ -10,9 +10,9 @@
 #include "world.h"
 
 Machine::Machine(Position position, Tank * owner, Reactor reactor_, BoundingBox bounding_box)
-    : position(position), bounding_box(bounding_box), owner(owner), reactor(reactor_)
+    : position(position), bounding_box(bounding_box), owner(owner), link_source(GetWorld(), position, LinkPointType::Machine), reactor(reactor_)
 {
-    this->link_point = GetWorld()->GetLinkMap()->RegisterLinkPoint(position, LinkPointType::Machine);
+    
 }
 
 Machine::Machine(Machine && movable) noexcept
@@ -23,7 +23,7 @@ Machine::Machine(Machine && movable) noexcept
 Machine & Machine::operator=(Machine && movable) noexcept
 {
     *this = movable;
-    movable.link_point = nullptr;
+    movable.link_source.Detach();
     movable.is_alive = false;
     return *this;
 }
@@ -34,8 +34,7 @@ void Machine::Invalidate()
         return;
     this->is_alive = false;
 
-    GetWorld()->GetLinkMap()->UnregisterPoint(this->link_point);
-    this->link_point = nullptr;
+    this->link_source.Destroy();
 }
 
 bool Machine::CheckAlive(Level * level)
@@ -74,7 +73,7 @@ void Harvester::Advance(Level * level)
         }
     }
 
-    this->link_point->SetPosition(this->position);
+    this->link_source.UpdatePosition(this->position);
 }
 
 void Harvester::Draw(Surface * surface) const

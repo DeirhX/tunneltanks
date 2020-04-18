@@ -142,22 +142,6 @@ Game::Game(GameConfig config)
 
     /* Create the world */
     world = std::make_unique<World>(this, std::move(level));
-
-    /* Set up the players/GUI inside the world */
-    if (this->config.player_count > gamelib_get_max_players())
-        throw GameException("Tried to use more players than the platform can support.");
-
-    if (this->config.player_count == 1)
-        this->mode = SinglePlayerMode::Setup(this->screen.get(), this->world.get(), this->config.use_ai);
-    else if (this->config.player_count == 2)
-        this->mode = LocalTwoPlayerMode::Setup(this->screen.get(), this->world.get(), this->config.use_ai);
-    else
-    {
-        throw GameException("Don't know how to draw more than 2 players at once...");
-    }
-
-    /* Copy all of our variables into the GameData struct: */
-    this->is_active = 1;
 }
 
 /* Step the game simulation by handling events, and drawing: */
@@ -202,13 +186,6 @@ bool Game::AdvanceStep()
     return true;
 }
 
-void Game::GameOver() { assert(!"Implement game over!"); }
-
-void Game::ClearWorld()
-{
-    world->Clear();
-}
-
 /* Done with a game structure: */
 Game::~Game()
 {
@@ -220,3 +197,30 @@ Game::~Game()
         this->mode->TearDown();
     }
 }
+
+void Game::BeginGame()
+{
+    /* Set up the players/GUI inside the world */
+    if (this->config.player_count > gamelib_get_max_players())
+        throw GameException("Tried to use more players than the platform can support.");
+
+    if (this->config.player_count == 1)
+        this->mode = SinglePlayerMode::Setup(this->screen.get(), this->world.get(), this->config.use_ai);
+    else if (this->config.player_count == 2)
+        this->mode = LocalTwoPlayerMode::Setup(this->screen.get(), this->world.get(), this->config.use_ai);
+    else
+    {
+        throw GameException("Don't know how to draw more than 2 players at once...");
+    }
+
+    /* Copy all of our variables into the GameData struct: */
+    this->is_active = true;
+}
+
+void Game::GameOver() { assert(!"Implement game over!"); }
+
+void Game::ClearWorld()
+{
+    world->Clear();
+}
+

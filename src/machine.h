@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "link.h"
 #include "render_surface.h"
 #include "tweak.h"
 #include "types.h"
@@ -14,7 +15,7 @@ class Machine
 
     class Tank * owner;
 
-    class LinkPoint * link_point = nullptr;
+    LinkPointSource link_source;
     Reactor reactor = tweak::rules::DefaultMachineReactor;
 
     bool is_alive = true;
