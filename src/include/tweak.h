@@ -40,6 +40,8 @@ namespace world
     constexpr int DirtRecoverSpeed = 10; /* Average delay before growing finishes and new dirt is formed. More is faster. */
     constexpr int DirtRegrowSpeed = 4;  /* Average delay before it starts growing back. More is faster.*/
     constexpr int DigThroughRockChance = 250; /* Chance to dig through rock with torch of out 1000 */
+
+    constexpr std::chrono::microseconds LinkReactorsInterval = 200ms;
 } // namespace world
 
 namespace base
@@ -167,7 +169,7 @@ namespace rules
     constexpr Reactor MinerReactor = {0_energy, 1000_health, ReactorCapacity{{10000_energy, 1000_health}}};
     constexpr Reactor ChargerReactor = {0_energy, 1000_health, ReactorCapacity{{10000_energy, 1000_health}}};
 
-    constexpr float MaximumLinkDistance = 50.f;
+    constexpr float MaximumLinkDistance = 100.f;
 
     }
 

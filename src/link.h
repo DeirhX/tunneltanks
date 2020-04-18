@@ -1,9 +1,14 @@
 ﻿#pragma once
+#include <optional>
 #include <vector>
 
 
 #include "containers.h"
+#include "duration.h"
+#include "tweak.h"
 #include "types.h"
+
+class Surface;
 
 enum class LinkPointType
 {
@@ -29,8 +34,7 @@ class LinkPoint
 
     bool is_connected = false;
   public:
-    LinkPoint(Position position, LinkPointType type_, LinkMap * owner_ = nullptr)
-        : type(type_), position(position), owner(owner_) {}
+    LinkPoint(Position position, LinkPointType type_, LinkMap * owner_ = nullptr);
     ~LinkPoint() { Invalidate(); }
 
     [[nodiscard]] bool IsInvalid() const { return !is_alive; }
@@ -40,7 +44,7 @@ class LinkPoint
     [[nodiscard]] Position GetPosition() const { return this->position; }
     [[nodiscard]] bool IsConnected() const { return this->is_connected; }
     [[nodiscard]] const std::vector<NeighborLinkPoint> & GetNeighbors() const { return this->possible_links; }
-    [[nodiscard]] NeighborLinkPoint GetClosestUnconnectedPoint() const;
+    [[nodiscard]] std::optional<NeighborLinkPoint> GetClosestUnconnectedPoint() const;
 
     void SetPosition(Position position_);
     void SetConnected(bool connected) { this->is_connected = connected; }
@@ -65,6 +69,7 @@ class Link
     ~Link() { Invalidate(); }
     bool IsInvalid() const { return !is_alive; }
     void Invalidate() { is_alive = false; }
+    void Draw(Surface * surface) const;
 };
 
 class LinkMap
@@ -72,6 +77,8 @@ class LinkMap
     Level * level;
     ValueContainer<LinkPoint> link_points = {};
     std::vector<Link> links = {};
+
+    RepetitiveTimer relink_timer = {tweak::world::LinkReactorsInterval};
     bool modified = false;
 
   public:
@@ -91,5 +98,6 @@ class LinkMap
     void SolveLinks();
 
     void Advance();
+    void Draw(Surface * surface) const;
 };
 

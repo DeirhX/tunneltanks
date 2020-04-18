@@ -28,7 +28,7 @@ void ShapeRenderer::DrawLine(Surface * surface, Position from, Position to, Colo
         {
             surface->SetPixel(curr.ToIntPosition(), color);
             curr += one_step;
-        } while (curr_step <= steps);
+        } while (++curr_step < steps);
     }
 }
 

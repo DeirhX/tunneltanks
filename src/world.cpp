@@ -26,7 +26,7 @@ void World::Advance()
     /* TODO: get out of level? */
     for (TankBase & base : this->level->GetSpawns())
         base.Advance();
-    //this->link_map.UpdateAll();
+    this->link_map.Advance();
 }
 
 
@@ -38,6 +38,7 @@ void World::Draw(WorldRenderSurface * objects_surface)
     this->tank_list.for_each([=](Tank * t) { t->Draw(objects_surface); });
     for (const TankBase & base : this->level->GetSpawns())
         base.Draw(objects_surface);
+    this->link_map.Draw(objects_surface);
 }
 
 void World::GameIsOver() { this->game->GameOver(); }

@@ -1,5 +1,15 @@
 ﻿#include "link.h"
+
+#include "color_palette.h"
 #include "level.h"
+#include "render_surface.h"
+#include "shape_renderer.h"
+
+LinkPoint::LinkPoint(Position position, LinkPointType type_, LinkMap * owner_)
+    : type(type_), position(position), owner(owner_)
+{
+    this->owner->UpdateLinksToPoint(this);
+}
 
 void LinkPoint::Invalidate()
 {
@@ -13,7 +23,7 @@ void LinkPoint::Invalidate()
     this->owner = nullptr;
 }
 
-NeighborLinkPoint LinkPoint::GetClosestUnconnectedPoint() const
+std::optional<NeighborLinkPoint> LinkPoint::GetClosestUnconnectedPoint() const
 {
     const NeighborLinkPoint * closest_point = nullptr;
     for (const NeighborLinkPoint & neighbor : this->possible_links)
@@ -23,7 +33,9 @@ NeighborLinkPoint LinkPoint::GetClosestUnconnectedPoint() const
             closest_point = &neighbor;
         }
     }
-    return *closest_point;
+    if (closest_point)
+        return *closest_point;
+    return std::nullopt;
 }
 
 void LinkPoint::SetPosition(Position position_)
@@ -57,7 +69,7 @@ void LinkPoint::UpdateLink(LinkPoint * possible_link)
         /* Add if not already present */
         auto existing = std::find_if(this->possible_links.begin(), this->possible_links.end(),
                                      [possible_link](auto & value) { return value.point == possible_link; });
-        if (existing != this->possible_links.end())
+        if (existing == this->possible_links.end())
             this->possible_links.push_back(
                 {.point = possible_link, .distance = (this->GetPosition() - possible_link->GetPosition()).GetSize()});
     }
@@ -76,6 +88,11 @@ void LinkPoint::UpdateAllLinks()
             this->possible_links.push_back(
                 NeighborLinkPoint{.point = &link, .distance = (link.GetPosition() - this->GetPosition()).GetSize()});
     }
+}
+
+void Link::Draw(Surface * surface) const
+{
+    ShapeRenderer::DrawLine(surface, this->from->GetPosition(), this->to->GetPosition(), Palette.Get(Colors::EnergyFieldHigh));
 }
 
 //LinkPoint * LinkMap::RegisterLinkPoint(LinkPoint && temp_point)
@@ -138,15 +155,19 @@ void LinkMap::SolveLinks()
         LinkPoint * connect_target = nullptr;
         /* Walk through visited nodes and find one closest new node to any of them */
         for (LinkPoint * point : connected_nodes)
-            if (!point->IsConnected())
+        {
+            auto candidate = point->GetClosestUnconnectedPoint();
+            if (!candidate.has_value())
+                continue;
+            if (!closest_point.point || closest_point.distance > candidate.value().distance)
             {
-                NeighborLinkPoint candidate = point->GetClosestUnconnectedPoint();
-                if (!closest_point.point || closest_point.distance > candidate.distance)
-                {
-                    connect_target = point;
-                    closest_point = candidate;
-                }
+                connect_target = point;
+                closest_point = candidate.value();
             }
+        }
+
+        if (connect_target == nullptr)
+            break;
 
         /* Connect the link */
         updated_links.emplace_back(closest_point.point, connect_target);
@@ -158,9 +179,20 @@ void LinkMap::SolveLinks()
 
 void LinkMap::Advance()
 {
-    if (this->modified)
+    if (this->relink_timer.AdvanceAndCheckElapsed())
     {
-        SolveLinks();
-        this->modified = false;
+        if (this->modified)
+        {
+            SolveLinks();
+            this->modified = false;
+        }
+    }
+}
+
+void LinkMap::Draw(Surface * surface) const
+{
+    for (const Link & link : this->links)
+    {
+        link.Draw(surface);
     }
 }
