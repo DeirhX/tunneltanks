@@ -152,6 +152,8 @@ class Link : public Invalidable
     void Draw(Surface * surface) const;
     void DisconnectPoint(LinkPoint * point);
     void Advance();
+
+    static bool IsConnectionBlocked(Position from, Position to);
   private:
     void CheckForCollisions();
 };

@@ -33,7 +33,7 @@ std::optional<NeighborLinkPoint> LinkPoint::GetClosestOrphanedPoint(CompareFunc 
     for (const NeighborLinkPoint & neighbor : this->possible_links)
     {
         if (neighbor.point->IsOrphaned() && (!closest_point || neighbor.distance < closest_point->distance) &&
-            compare_func(neighbor))
+            compare_func(*this, neighbor))
         {
             closest_point = &neighbor;
         }
@@ -45,7 +45,7 @@ std::optional<NeighborLinkPoint> LinkPoint::GetClosestOrphanedPoint(CompareFunc 
 
 std::optional<NeighborLinkPoint> LinkPoint::GetClosestOrphanedPoint() const
 {
-    return GetClosestOrphanedPoint([](const NeighborLinkPoint & candidate) { return true; });
+    return GetClosestOrphanedPoint([](const LinkPoint & from, const NeighborLinkPoint & candidate) { return true; });
 }
 
 bool LinkPoint::IsInRange(LinkPoint * other_link) const
@@ -219,13 +219,17 @@ void Link::Advance()
     }
 }
 
+bool Link::IsConnectionBlocked(Position from, Position to)
+{
+    return !Raycaster::Cast(PositionF{from}, PositionF{to}, [](PositionF tested_pos, PositionF previous_pos) {
+        auto pixel = GetWorld()->GetLevel()->GetPixel(tested_pos.ToIntPosition());
+        return Pixel::IsAnyCollision(pixel) ? false : true;
+    });
+}
+
 void Link::CheckForCollisions()
 {
-    if (!Raycaster::Cast(PositionF{this->from.GetPoint()->GetPosition()}, PositionF{this->to.GetPoint()->GetPosition()},
-                         [this](PositionF tested_pos, PositionF previous_pos) {
-                             auto pixel = GetWorld()->GetLevel()->GetPixel(tested_pos.ToIntPosition());
-                             return Pixel::IsAnyCollision(pixel) ? false : true;
-                         }))
+    if (IsConnectionBlocked(this->from.GetPoint()->GetPosition(), this->to.GetPoint()->GetPosition()))
     {
         this->type = LinkType::Blocked;
     }
@@ -321,32 +325,55 @@ void LinkMap::SolveLinks()
      */
     enum class ConnectPhase
     {
-        Machines,
-        Tanks,
+        LiveMachines,
+        BlockedMachines,
+        LiveTanks,
+        BlockedTanks,
         Done
     };
-    auto connect_with_machines_only = [](const NeighborLinkPoint & possible_link) {
+    auto connect_with_live_machines_only = [](const LinkPoint & from, const NeighborLinkPoint & possible_link)-> bool {
+        return possible_link.point->GetType() == LinkPointType::Machine &&
+               !Link::IsConnectionBlocked(from.GetPosition(), possible_link.point->GetPosition());
+    };
+    auto connect_with_blocked_machines = [](const LinkPoint & from, const NeighborLinkPoint & possible_link) -> bool {
         return possible_link.point->GetType() == LinkPointType::Machine;
     };
-    auto connect_with_tanks = [](const NeighborLinkPoint & possible_link) {
+    auto connect_with_live_tanks = [](const LinkPoint & from, const NeighborLinkPoint & possible_link) -> bool {
+        return possible_link.point->GetType() == LinkPointType::Tank &&
+               possible_link.distance <= tweak::tank::MaximumAbsorbEnergyDistance &&
+               !Link::IsConnectionBlocked(from.GetPosition(), possible_link.point->GetPosition());
+    };
+    auto connect_with_blocked_tanks = [](const LinkPoint & from, const NeighborLinkPoint & possible_link) -> bool {
         return possible_link.point->GetType() == LinkPointType::Tank &&
                possible_link.distance <= tweak::tank::MaximumAbsorbEnergyDistance;
     };
 
     /* Loop until we have connected everything we can */
     BestCandidate best_candidate;
-    ConnectPhase phase = ConnectPhase::Machines;
+    ConnectPhase phase = ConnectPhase::LiveMachines;
     do
     {
-        if (phase == ConnectPhase::Machines)
+        if (phase == ConnectPhase::LiveMachines)
         {
-            best_candidate = find_best_candidate(connect_with_machines_only);
+            best_candidate = find_best_candidate(connect_with_live_machines_only);
             if (best_candidate.source == nullptr)
-                phase = ConnectPhase::Tanks;
+                phase = ConnectPhase::BlockedMachines;
         }
-        if (phase == ConnectPhase::Tanks)
+        if (phase == ConnectPhase::BlockedMachines)
         {
-            best_candidate = find_best_candidate(connect_with_tanks);
+            best_candidate = find_best_candidate(connect_with_blocked_machines);
+            if (best_candidate.source == nullptr)
+                phase = ConnectPhase::LiveTanks;
+        }
+        if (phase == ConnectPhase::LiveTanks)
+        {
+            best_candidate = find_best_candidate(connect_with_live_tanks);
+            if (best_candidate.source == nullptr)
+                phase = ConnectPhase::BlockedTanks;
+        }
+        if (phase == ConnectPhase::BlockedTanks)
+        {
+            best_candidate = find_best_candidate(connect_with_blocked_tanks);
             if (best_candidate.source == nullptr)
                 phase = ConnectPhase::Done;
         }
