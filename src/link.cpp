@@ -13,6 +13,7 @@ LinkPoint::LinkPoint(Position position, LinkPointType type_, LinkMap * owner_)
 {
     this->owner->UpdateLinksToPoint(this);
     ComputePossibleLinks();
+    ComputeIsPowered();
 }
 
 LinkPoint::~LinkPoint()
@@ -111,6 +112,14 @@ void LinkPoint::ComputePossibleLinks()
     }
 }
 
+void LinkPoint::ComputeIsPowered()
+{
+    this->is_powered =
+        this->type == LinkPointType::Base || std::any_of(this->active_links.begin(), this->active_links.end(),
+                                                         [](Link * link) { return link->GetType() == LinkType::Live; });
+        
+}
+
 void LinkPoint::AddActiveLink(Link * active_link) { this->active_links.push_back(active_link); }
 
 void LinkPoint::RemoveActiveLink(Link * active_link)
@@ -153,23 +162,29 @@ Link::Link(LinkPoint * from_, LinkPoint * to_) : from(from_, this), to(to_, this
     float distance = (this->to.GetPoint()->GetPosition() - this->from.GetPoint()->GetPosition()).GetSize();
     if (distance > tweak::world::MaximumLiveLinkDistance)
     {
-        this->type = LinkType::Theoretical;
+        UpdateType(LinkType::Theoretical);
     }
     else
     {
-        if (from.GetPoint()->GetType() == LinkPointType::Base)
-            this->type = LinkType::Live;
+        if (IsConnectionBlocked())
+            UpdateType(LinkType::Blocked);
         else
         {
-            if (std::any_of(from.GetPoint()->GetActiveLinks().begin(), from.GetPoint()->GetActiveLinks().end(),
-                            [this](Link * link) { return link->to.GetPoint() != this->to.GetPoint() &&  link->GetType() == LinkType::Live; }))
-                this->type = LinkType::Live;
+            if (from.GetPoint()->GetType() == LinkPointType::Base)
+                UpdateType(LinkType::Live);
             else
-                this->type = LinkType::Blocked;
+            {
+                if (std::any_of(from.GetPoint()->GetActiveLinks().begin(), from.GetPoint()->GetActiveLinks().end(),
+                                [this](Link * link) {
+                                    return link->to.GetPoint() != this->to.GetPoint() &&
+                                           link->GetType() == LinkType::Live;
+                                }))
+                    UpdateType(this->type = LinkType::Live);
+                else
+                    UpdateType(this->type = LinkType::Blocked);
+            }
         }
     }
-
-    CheckForCollisions();
 }
 
 void Link::Draw(Surface * surface) const
@@ -215,7 +230,8 @@ void Link::Advance()
 
     if (this->collision_check_timer.AdvanceAndCheckElapsed())
     {
-        CheckForCollisions();
+        if (IsConnectionBlocked())
+            UpdateType(LinkType::Blocked);
     }
 }
 
@@ -227,13 +243,26 @@ bool Link::IsConnectionBlocked(Position from, Position to)
     });
 }
 
-void Link::CheckForCollisions()
+bool Link::IsConnectionBlocked() const
 {
-    if (IsConnectionBlocked(this->from.GetPoint()->GetPosition(), this->to.GetPoint()->GetPosition()))
-    {
-        this->type = LinkType::Blocked;
-    }
+    return IsConnectionBlocked(this->from.GetPoint()->GetPosition(), this->to.GetPoint()->GetPosition());
 }
+
+void Link::UpdateType(LinkType value)
+{
+    if (value == LinkType::Live && this->type != LinkType::Live)
+    { /* Optimization to true but maybe should be unified to call ComputeIsPowered? */
+        this->from.GetPoint()->SetIsPowered(true);
+        this->to.GetPoint()->SetIsPowered(true);
+    }
+    else if (value == LinkType::Blocked && this->type != LinkType::Blocked)
+    {
+        this->from.GetPoint()->ComputeIsPowered();
+        this->to.GetPoint()->ComputeIsPowered();
+    }
+    this->type = value;
+}
+
 
 /*
  * LinkMap
@@ -332,7 +361,8 @@ void LinkMap::SolveLinks()
         Done
     };
     auto connect_with_live_machines_only = [](const LinkPoint & from, const NeighborLinkPoint & possible_link)-> bool {
-        return possible_link.point->GetType() == LinkPointType::Machine &&
+        return possible_link.point->GetType() == LinkPointType::Machine && 
+               from.IsPowered() &&
                !Link::IsConnectionBlocked(from.GetPosition(), possible_link.point->GetPosition());
     };
     auto connect_with_blocked_machines = [](const LinkPoint & from, const NeighborLinkPoint & possible_link) -> bool {
@@ -340,7 +370,8 @@ void LinkMap::SolveLinks()
     };
     auto connect_with_live_tanks = [](const LinkPoint & from, const NeighborLinkPoint & possible_link) -> bool {
         return possible_link.point->GetType() == LinkPointType::Tank &&
-               possible_link.distance <= tweak::tank::MaximumAbsorbEnergyDistance &&
+               possible_link.distance <= tweak::tank::MaximumAbsorbEnergyDistance && 
+               from.IsPowered() &&
                !Link::IsConnectionBlocked(from.GetPosition(), possible_link.point->GetPosition());
     };
     auto connect_with_blocked_tanks = [](const LinkPoint & from, const NeighborLinkPoint & possible_link) -> bool {
@@ -353,6 +384,7 @@ void LinkMap::SolveLinks()
     ConnectPhase phase = ConnectPhase::LiveMachines;
     do
     {
+
         if (phase == ConnectPhase::LiveMachines)
         {
             best_candidate = find_best_candidate(connect_with_live_machines_only);

@@ -32,12 +32,14 @@ class LinkPoint : public Invalidable
 
     class LinkMap * owner;
 
-    std::vector<NeighborLinkPoint> possible_links;
-    std::vector<class Link *> active_links;
+    std::vector<NeighborLinkPoint> possible_links; /* Links sufficiently near to be able to connect */
+    std::vector<class Link *> active_links;        /* Links actually connected */
 
-    bool is_enabled = true;
-    bool is_part_of_graph = false;
-  public:
+    bool is_enabled = true;  /* Is currently active and able to receive links */
+    bool is_powered = false; /* Is connected to a powered node */
+
+    bool is_part_of_graph = false; /* Is already parsed by solver  */
+    public:
     LinkPoint(Position position, LinkPointType type_, LinkMap * owner_ = nullptr);
     ~LinkPoint();
 
@@ -52,14 +54,17 @@ class LinkPoint : public Invalidable
     [[nodiscard]] std::optional<NeighborLinkPoint> GetClosestOrphanedPoint() const;
     [[nodiscard]] bool IsInRange(LinkPoint * other_link) const;
     [[nodiscard]] bool IsEnabled() const { return this->is_enabled; }
+    [[nodiscard]] bool IsPowered() const { return this->is_powered; }
+
 
     void SetPosition(Position position_);
-
+    void SetIsPowered(bool value) { this->is_powered = value; }
     void SetIsPartOfGraph(bool value) { this->is_part_of_graph = value; }
 
     void RemovePossibleLink(LinkPoint * possible_link);
     void UpdatePossibleLink(LinkPoint * possible_link); 
     void ComputePossibleLinks();
+    void ComputeIsPowered();
 
     void AddActiveLink(Link * active_link);
     void RemoveActiveLink(Link * active_link);
@@ -154,8 +159,10 @@ class Link : public Invalidable
     void Advance();
 
     static bool IsConnectionBlocked(Position from, Position to);
+    bool IsConnectionBlocked() const;
+
   private:
-    void CheckForCollisions();
+    void UpdateType(LinkType value);
 };
 
 /* LinkMap: Manages all link point updates and links */
