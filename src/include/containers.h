@@ -19,13 +19,13 @@ concept IsInvalidable = requires(T t)
         t.IsInvalid()
     }
     ->bool;
-    {t.Invalidate()};
 };
 
 class Invalidable
 {
     bool is_alive = true;
-
+  protected:
+    bool destructor_called = false;
   public:
     Invalidable() = default;
     Invalidable(const Invalidable & other) = delete;
@@ -37,11 +37,22 @@ class Invalidable
         movable.is_alive = false;
         return *this;
     }
-    virtual ~Invalidable() { Invalidate(); }
-
+    virtual ~Invalidable()
+    {
+        this->destructor_called = true;
+        Invalidate();
+    }
     bool IsInvalid() const { return !is_alive; }
     bool IsValid() const { return is_alive; }
-    void Invalidate() { this->is_alive = false; } /* No way to return back to life, consider it destroyed */
+
+  public:
+    void Invalidate()
+    {
+        if (!this->destructor_called)
+            this->~Invalidable(); /* This is virtual call and I'm sorry for that. However, you could have called it yourself to save this call if needed */
+        this->is_alive = false;
+    } /* No way to return back to life, consider it destroyed */
+    //void SetDestroyed() { this->destructor_called = true; }
 };
 
 
@@ -147,20 +158,6 @@ class ValueContainer : public ValueContainerView<TElement>
         TElement & new_alloc = this->container.emplace_back(std::forward<ConstructionArgs>(args)...);
         return new_alloc;
     }
-    /* Copying construction */
-    
-    //TElement & Add(const TElement & item)
-    //{
-    //    /* Place over a dead item by assignment if such dead item exists. Otherwise append to back. */
-    //    auto dead_item = std::find_if(this->container.begin(), this->container.end(),
-    //                                  [this](auto & val) { return Parent::IsInvalid(val); });
-    //    if (dead_item != this->container.end())
-    //    {
-    //        *dead_item = item;
-    //        return *dead_item;
-    //    }
-    //    return this->container.emplace_back(item);
-    //}
 
     /* Move construction because it's awesome */
     TElement & Add(TElement && item)

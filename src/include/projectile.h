@@ -36,9 +36,9 @@ struct Projectile : public Invalidable
   protected:
     Projectile(Position position, SpeedF speed, Level * level)
         : pos(position), speed(speed.x, speed.y), is_alive(true), level(level)
-    { }
-
-    public:
+    {
+    }
+  public:
     //virtual ProjectileType GetType() = 0;
     virtual void Advance(class TankList * tankList) = 0;
     virtual void Draw(class Surface * drawBuffer) = 0;

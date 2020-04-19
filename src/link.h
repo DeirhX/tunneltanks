@@ -154,7 +154,7 @@ class LinkMap
 {
     Level * level;
     ValueContainer<LinkPoint> link_points = {};
-    std::vector<Link> links = {};
+    ValueContainer<Link> links = {};
 
     RepetitiveTimer relink_timer = {tweak::world::LinkReactorsInterval};
     bool is_collection_modified = false;

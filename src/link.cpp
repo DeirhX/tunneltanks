@@ -15,9 +15,10 @@ LinkPoint::LinkPoint(Position position, LinkPointType type_, LinkMap * owner_)
 
 LinkPoint::~LinkPoint()
 {
+    this->destructor_called = true;
     for (Link * link : this->active_links)
     {
-        RemoveActiveLink(link);
+        link->DisconnectPoint(this);
     }
     if (this->owner)
         this->owner->UnregisterPoint(this);
@@ -194,7 +195,7 @@ void LinkMap::UnregisterPoint(LinkPoint * link_point)
 
 void LinkMap::RemoveAll()
 {
-    this->links.clear();
+    this->links.RemoveAll();
     this->link_points.RemoveAll();
 }
 
@@ -210,7 +211,7 @@ void LinkMap::UpdateLinksToPoint(LinkPoint * link_point)
 void LinkMap::SolveLinks()
 {
     /* Throw away existing ones. We can optimize this if needed */
-    this->links.clear();
+    this->links.RemoveAll();
 
     /* Prepare lists of all nodes and currently connected nodes */
     std::vector<LinkPoint *> all_nodes;
@@ -259,7 +260,7 @@ void LinkMap::SolveLinks()
 
         /* Connect the link */
         closest_point.point->SetIsPartOfGraph(true);
-        this->links.emplace_back(closest_point.point, connect_target);
+        this->links.ConstructElement(closest_point.point, connect_target);
         connected_nodes.push_back(closest_point.point);
         //closest_point.point->SetIsPartOfGraph();
     }
