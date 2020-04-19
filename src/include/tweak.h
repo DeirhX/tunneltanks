@@ -79,6 +79,7 @@ namespace tank {
     constexpr EnergyAmount IdleCost = 3_energy;
     constexpr EnergyAmount HomeChargeSpeed = 300_energy;
     constexpr EnergyAmount EnemyChargeSpeed = 90_energy;
+    constexpr float MaximumAbsorbEnergyDistance = 60.f;
 
     /* Various constants for health calculation: */
     constexpr HealthAmount StartingShield = 1000_health;

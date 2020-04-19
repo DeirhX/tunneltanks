@@ -122,6 +122,10 @@ void LinkPoint::RemoveActiveLink(Link * active_link)
     std::erase(this->active_links, active_link);
 }
 
+/*
+ * LinkPointSource
+ */
+
 LinkPointSource::LinkPointSource(World * world, Position position, LinkPointType type)
 {
     this->link_point = world->GetLinkMap()->RegisterLinkPoint(position, type);
@@ -140,6 +144,10 @@ void LinkPointSource::Destroy()
         this->link_point->GetLinkMap()->UnregisterPoint(link_point);
     this->link_point = nullptr;
 }
+
+/*
+ * Link & Zelda
+ */
 
 Link::Link(LinkPoint * from_, LinkPoint * to_) : from(from_, this), to(to_, this)
 {
@@ -193,6 +201,10 @@ void Link::DisconnectPoint(LinkPoint * point)
 //    return ret_val;
 //}
 
+/*
+ * LinkMap
+ */
+
 void LinkMap::UnregisterPoint(LinkPoint * link_point)
 {
     this->is_collection_modified = true;
@@ -224,7 +236,7 @@ void LinkMap::UpdateLinksToPoint(LinkPoint * link_point)
  */
 void LinkMap::SolveLinks()
 {
-    /* Throw away existing ones. We can optimize this if needed */
+    /* Throw away existing ones. We can optimize this to updating only modified parts if needed, not needed now  */
     this->links.RemoveAll();
 
     /* Prepare lists of all nodes and currently connected nodes */
@@ -282,7 +294,7 @@ void LinkMap::SolveLinks()
         return possible_link.point->GetType() == LinkPointType::Machine;
     };
     auto connect_with_tanks = [](const NeighborLinkPoint & possible_link) {
-        return possible_link.point->GetType() == LinkPointType::Tank;
+        return possible_link.point->GetType() == LinkPointType::Tank && possible_link.distance <= tweak::tank::MaximumAbsorbEnergyDistance;
     };
 
     /* Loop until we have connected everything we can */
