@@ -22,11 +22,10 @@ struct NeighborLinkPoint
 {
     class LinkPoint * point;
     float distance;
-    //class Link * active_link = nullptr;
 };
 
 /* LinkPoint: Linkable point to others */
-class LinkPoint
+class LinkPoint : public Invalidable
 {
     LinkPointType type;
     Position position;
@@ -34,18 +33,13 @@ class LinkPoint
     class LinkMap * owner;
 
     std::vector<NeighborLinkPoint> possible_links;
-    int connected_links = 0;
+    std::vector<class Link *> active_links;
 
-    bool is_alive = true; /* Once false, object is dead forever */
     bool is_enabled = true;
     bool is_part_of_graph = false;
   public:
     LinkPoint(Position position, LinkPointType type_, LinkMap * owner_ = nullptr);
-    //LinkPoint(LinkPoint && movable) noexcept;
-    ~LinkPoint() { Invalidate(); }
-
-    [[nodiscard]] bool IsInvalid() const { return !is_alive; }
-    void Invalidate();
+    ~LinkPoint();
 
     [[nodiscard]] LinkPointType GetType() const { return this->type; }
     [[nodiscard]] Position GetPosition() const { return this->position; }
@@ -59,19 +53,20 @@ class LinkPoint
     void SetPosition(Position position_);
 
     void SetIsPartOfGraph(bool value) { this->is_part_of_graph = value; }
-    //void ConnectWith(class Link * link);
-    //void DisconnectWith(class Link * link);
-    //void DisconnectAll();
 
     void RemovePossibleLink(LinkPoint * possible_link);
-    void UpdateLink(LinkPoint * possible_link); 
+    void UpdatePossibleLink(LinkPoint * possible_link); 
     void ComputePossibleLinks();
+
+    void AddActiveLink(Link * active_link);
+    void RemoveActiveLink(Link * active_link);
 
     void Disable() { this->is_enabled = false; }
     void Enable() { this->is_enabled = true; }
 };
 
 /* LinkPointSource: Wrapper to manage the lifetime of LinkPoint that resides in LinkMap array.
+ *   Should be member of classes that own a LinkPoint
  */
 class LinkPointSource
 {
@@ -104,24 +99,54 @@ enum class LinkType
     Theoretical, /* Too far from source */
 };
 
+/* LinkPointConnector: Encapsulates reference to LinkPoint held by Link which
+ *   should also sync with a list of Links inside a LinkPoint. It will delete
+ *   the reference inside LinkPoint if this is destroyed.
+ */
+class LinkPointConnector
+{
+    Link * link = nullptr;
+    LinkPoint * link_point = nullptr;
+
+  public:
+    LinkPointConnector(LinkPoint * point, Link * link_) : link(link_), link_point(point)
+    {
+        point->AddActiveLink(link_);
+    }
+    ~LinkPointConnector()
+    {
+        if (link_point)
+            link_point->RemoveActiveLink(link);
+    }
+    LinkPointConnector(LinkPointConnector && movable) noexcept { *this = std::move(movable); }
+    LinkPointConnector & operator=(LinkPointConnector && movable) noexcept
+    {
+        this->link = movable.link;
+        std::swap(this->link_point, movable.link_point);
+        return *this;
+    }
+
+    void Disconnect() { this->link_point = nullptr; }
+    [[nodiscard]] LinkPoint * GetPoint() const { return this->link_point; }
+};
+
 /* Link: A connected link between two points */
 class Link : public Invalidable
 {
-    LinkPoint * from = {};
-    LinkPoint * to = {};
+    /* Will register to LinkPoint and disconnect on destruction */
+    LinkPointConnector from;
+    LinkPointConnector to;
 
     LinkType type;
-    bool is_alive = true;
+
   public:
     Link(LinkPoint * from_, LinkPoint * to_);
-    ~Link();
-    Link(Link && movable) = default;
-    Link & operator=(Link && movable) noexcept = default;
 
     [[nodiscard]] LinkType GetType() const { return this->type; }
-    [[nodiscard]] LinkPoint * GetSource() const { return this->from; }
-    [[nodiscard]] LinkPoint * GetTarget() const { return this->to; }
+    [[nodiscard]] LinkPoint * GetSource() const { return this->from.GetPoint(); }
+    [[nodiscard]] LinkPoint * GetTarget() const { return this->to.GetPoint(); }
     void Draw(Surface * surface) const;
+    void DisconnectPoint(LinkPoint * point);
 };
 
 /* LinkMap: Manages all link point updates and links */

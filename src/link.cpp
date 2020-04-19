@@ -13,16 +13,14 @@ LinkPoint::LinkPoint(Position position, LinkPointType type_, LinkMap * owner_)
     ComputePossibleLinks();
 }
 
-void LinkPoint::Invalidate()
+LinkPoint::~LinkPoint()
 {
-    if (!this->is_alive)
-        return;
-
-    this->is_alive = false;
-
+    for (Link * link : this->active_links)
+    {
+        RemoveActiveLink(link);
+    }
     if (this->owner)
         this->owner->UnregisterPoint(this);
-    this->owner = nullptr;
 }
 
 std::optional<NeighborLinkPoint> LinkPoint::GetClosestOrphanedPoint() const
@@ -57,39 +55,6 @@ void LinkPoint::SetPosition(Position position_)
     ComputePossibleLinks();
     this->owner->UpdateLinksToPoint(this);
 }
-//
-//void LinkPoint::ConnectWith(Link * link)
-//{
-//    auto neighbor = std::find_if(this->possible_links.begin(), this->possible_links.end(), [link](NeighborLinkPoint & value) {
-//            return value.point == link->GetSource() || value.point == link->GetTarget();
-//    });
-//    assert(neighbor != this->possible_links.end() && neighbor->active_link == nullptr);
-//
-//    neighbor->active_link = link;
-//    ++this->connected_links;
-//}
-//
-//void LinkPoint::DisconnectWith(Link * link)
-//{
-//    auto neighbor =
-//        std::find_if(this->possible_links.begin(), this->possible_links.end(), [link](NeighborLinkPoint & value) {
-//        return value.active_link == link;
-//    });
-//    assert(neighbor != this->possible_links.end());
-//
-//    neighbor->active_link = nullptr;
-//    --this->connected_links;
-//    assert(this->connected_links >= 0);
-//}
-//
-//void LinkPoint::DisconnectAll()
-//{
-//    for (NeighborLinkPoint & neighbor : this->possible_links)
-//    {
-//        neighbor.active_link = nullptr;
-//    }
-//    this->connected_links = 0;
-//}
 
 void LinkPoint::RemovePossibleLink(LinkPoint * possible_link)
 {
@@ -99,7 +64,7 @@ void LinkPoint::RemovePossibleLink(LinkPoint * possible_link)
 /* Retest distance and make sure that:
  *  - if outside distance, delete link from list of possibles if there
  *  - if inside distance, add link to list of possibles if not already there */
-void LinkPoint::UpdateLink(LinkPoint * possible_link)
+void LinkPoint::UpdatePossibleLink(LinkPoint * possible_link)
 {
     /* Figure if we are a possible candidate */
     if (this == possible_link)
@@ -134,6 +99,17 @@ void LinkPoint::ComputePossibleLinks()
     }
 }
 
+void LinkPoint::AddActiveLink(Link * active_link)
+{
+    this->active_links.push_back(active_link);
+}
+
+void LinkPoint::RemoveActiveLink(Link * active_link)
+{
+    assert(std::find(this->active_links.begin(), this->active_links.end(), active_link) != this->active_links.end());
+    std::erase(this->active_links, active_link);
+}
+
 LinkPointSource::LinkPointSource(World * world, Position position, LinkPointType type)
 {
     this->link_point = world->GetLinkMap()->RegisterLinkPoint(position, type);
@@ -153,33 +129,23 @@ void LinkPointSource::Destroy()
     this->link_point = nullptr;
 }
 
-Link::Link(LinkPoint * from_, LinkPoint * to_)
-    : from(from_), to(to_)
+Link::Link(LinkPoint * from_, LinkPoint * to_) : from(from_, this), to(to_, this)
 {
     assert(from_ && to_);
-    this->from->SetIsPartOfGraph(true);
-    this->to->SetIsPartOfGraph(true);
 
     this->type = LinkType::Live;
-    float distance = (this->to->GetPosition() - this->from->GetPosition()).GetSize();
+    float distance = (this->to.GetPoint()->GetPosition() - this->from.GetPoint()->GetPosition()).GetSize();
     if (distance > tweak::world::MaximumLiveLinkDistance)
         this->type = LinkType::Theoretical;
     //else find if blocked
     //
 }
 
-Link::~Link()
-{
-    /*
-    if (this->from)
-        this->from->DisconnectWith(this);
-    if (this->to)
-        this->to->DisconnectWith(this);
-        */
-}
-
 void Link::Draw(Surface * surface) const
 {
+    if (!this->from.GetPoint() || !this->to.GetPoint())
+        return;
+
     Color color;
     switch (this->type)
     {
@@ -193,8 +159,21 @@ void Link::Draw(Surface * surface) const
         color = Palette.Get(Colors::LinkBlocked);
         break;
     }
-    ShapeRenderer::DrawLine(surface, this->from->GetPosition(), this->to->GetPosition(), color);
+    ShapeRenderer::DrawLine(surface, this->from.GetPoint()->GetPosition(), this->to.GetPoint()->GetPosition(), color);
 }
+
+void Link::DisconnectPoint(LinkPoint * point)
+{
+    if (point == this->from.GetPoint())
+        this->from.Disconnect();
+    else if (point == this->to.GetPoint())
+        this->to.Disconnect();
+    else
+    {
+        assert("Invalid point");
+    }
+}
+
 
 //LinkPoint * LinkMap::RegisterLinkPoint(LinkPoint && temp_point)
 //{
@@ -225,11 +204,14 @@ void LinkMap::UpdateLinksToPoint(LinkPoint * link_point)
     /* Offer this point to all others to adopt it into their possible links */
     for (LinkPoint & point : this->link_points)
         if (&point != link_point)
-            point.UpdateLink(link_point);
+            point.UpdatePossibleLink(link_point);
 }
 
 void LinkMap::SolveLinks()
 {
+    /* Throw away existing ones. We can optimize this if needed */
+    this->links.clear();
+
     /* Prepare lists of all nodes and currently connected nodes */
     std::vector<LinkPoint *> all_nodes;
     all_nodes.reserve(this->link_points.CurrentCapacity());
@@ -254,10 +236,6 @@ void LinkMap::SolveLinks()
         all_nodes.push_back(&point);
     }
 
-    /* Links will be generated here */
-    std::vector<Link> updated_links;
-    updated_links.reserve(all_nodes.size() - 1);
-
     /* Loop until we have visited all nodes */
     while (connected_nodes.size() != all_nodes.size())
     {
@@ -280,13 +258,11 @@ void LinkMap::SolveLinks()
             break;
 
         /* Connect the link */
-        updated_links.emplace_back(closest_point.point, connect_target);
+        closest_point.point->SetIsPartOfGraph(true);
+        this->links.emplace_back(closest_point.point, connect_target);
         connected_nodes.push_back(closest_point.point);
         //closest_point.point->SetIsPartOfGraph();
     }
-
-    /* Replace current links with this one */
-    this->links = std::move(updated_links);
 }
 
 /* Resolve connections immediately only if new link was added or removed, 
