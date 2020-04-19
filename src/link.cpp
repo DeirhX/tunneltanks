@@ -6,6 +6,8 @@
 #include "shape_renderer.h"
 #include "world.h"
 
+#include <algorithm>
+
 LinkPoint::LinkPoint(Position position, LinkPointType type_, LinkMap * owner_)
     : type(type_), position(position), owner(owner_)
 {
@@ -24,16 +26,14 @@ LinkPoint::~LinkPoint()
         this->owner->UnregisterPoint(this);
 }
 
-
 template <typename CompareFunc>
 std::optional<NeighborLinkPoint> LinkPoint::GetClosestOrphanedPoint(CompareFunc compare_func) const
 {
     const NeighborLinkPoint * closest_point = nullptr;
     for (const NeighborLinkPoint & neighbor : this->possible_links)
     {
-        if (neighbor.point->IsOrphaned() 
-            && (!closest_point || neighbor.distance < closest_point->distance)
-            && compare_func(neighbor))
+        if (neighbor.point->IsOrphaned() && (!closest_point || neighbor.distance < closest_point->distance) &&
+            compare_func(neighbor))
         {
             closest_point = &neighbor;
         }
@@ -52,7 +52,7 @@ bool LinkPoint::IsInRange(LinkPoint * other_link) const
 {
     float distance = (other_link->GetPosition() - this->GetPosition()).GetSize();
     return distance <= tweak::world::MaximumLiveLinkDistance ||
-        (this->type == LinkPointType::Transit && distance <= tweak::world::MaximumTheoreticalLinkDistance);
+           (this->type == LinkPointType::Transit && distance <= tweak::world::MaximumTheoreticalLinkDistance);
 }
 
 void LinkPoint::SetPosition(Position position_)
@@ -111,10 +111,7 @@ void LinkPoint::ComputePossibleLinks()
     }
 }
 
-void LinkPoint::AddActiveLink(Link * active_link)
-{
-    this->active_links.push_back(active_link);
-}
+void LinkPoint::AddActiveLink(Link * active_link) { this->active_links.push_back(active_link); }
 
 void LinkPoint::RemoveActiveLink(Link * active_link)
 {
@@ -153,12 +150,26 @@ Link::Link(LinkPoint * from_, LinkPoint * to_) : from(from_, this), to(to_, this
 {
     assert(from_ && to_);
 
-    this->type = LinkType::Live;
     float distance = (this->to.GetPoint()->GetPosition() - this->from.GetPoint()->GetPosition()).GetSize();
     if (distance > tweak::world::MaximumLiveLinkDistance)
+    {
         this->type = LinkType::Theoretical;
-    //else find if blocked
-    //
+    }
+    else
+    {
+        if (from.GetPoint()->GetType() == LinkPointType::Base)
+            this->type = LinkType::Live;
+        else
+        {
+            if (std::any_of(from.GetPoint()->GetActiveLinks().begin(), from.GetPoint()->GetActiveLinks().end(),
+                            [this](Link * link) { return link->to.GetPoint() != this->to.GetPoint() &&  link->GetType() == LinkType::Live; }))
+                this->type = LinkType::Live;
+            else
+                this->type = LinkType::Blocked;
+        }
+    }
+
+    CheckForCollisions();
 }
 
 void Link::Draw(Surface * surface) const
@@ -194,12 +205,31 @@ void Link::DisconnectPoint(LinkPoint * point)
     }
 }
 
+void Link::Advance()
+{
+    if (!this->from.GetPoint() || !this->to.GetPoint())
+    {
+        Invalidate();
+        return;
+    }
 
-//LinkPoint * LinkMap::RegisterLinkPoint(LinkPoint && temp_point)
-//{
-//    LinkPoint * ret_val = &this->link_points.Add(temp_point);
-//    return ret_val;
-//}
+    if (this->collision_check_timer.AdvanceAndCheckElapsed())
+    {
+        CheckForCollisions();
+    }
+}
+
+void Link::CheckForCollisions()
+{
+    if (!Raycaster::Cast(PositionF{this->from.GetPoint()->GetPosition()}, PositionF{this->to.GetPoint()->GetPosition()},
+                         [this](PositionF tested_pos, PositionF previous_pos) {
+                             auto pixel = GetWorld()->GetLevel()->GetPixel(tested_pos.ToIntPosition());
+                             return Pixel::IsAnyCollision(pixel) ? false : true;
+                         }))
+    {
+        this->type = LinkType::Blocked;
+    }
+}
 
 /*
  * LinkMap
@@ -209,7 +239,7 @@ void LinkMap::UnregisterPoint(LinkPoint * link_point)
 {
     this->is_collection_modified = true;
     /* Doesn't do anything on this container but may be needed if they are switched */
-    this->link_points.Remove(*link_point); 
+    this->link_points.Remove(*link_point);
     /* Must erase any notion of existence from cached possible links*/
     for (LinkPoint & point : this->link_points)
         if (&point != link_point)
@@ -266,8 +296,8 @@ void LinkMap::SolveLinks()
     /* Prepare functions to find best candidate based on variable predicates */
     struct BestCandidate
     {
-        NeighborLinkPoint source = {};
-        LinkPoint * target = nullptr;
+        LinkPoint * source = {};
+        NeighborLinkPoint target = {};
     };
     auto find_best_candidate = [&connected_nodes](auto & predicate) {
         BestCandidate best_match;
@@ -277,10 +307,10 @@ void LinkMap::SolveLinks()
             auto candidate = point->GetClosestOrphanedPoint(predicate);
             if (!candidate.has_value())
                 continue;
-            if (!best_match.source.point || best_match.source.distance > candidate.value().distance)
+            if (!best_match.source || best_match.target.distance > candidate.value().distance)
             {
-                best_match.target = point;
-                best_match.source = candidate.value();
+                best_match.target = candidate.value();
+                best_match.source = point;
             }
         }
         return best_match;
@@ -289,40 +319,46 @@ void LinkMap::SolveLinks()
      * 1) connect immovable machines
      * 2) add tank reactors (possibly machines in transit?)
      */
-    enum class ConnectPhase { Machines, Tanks, Done};
+    enum class ConnectPhase
+    {
+        Machines,
+        Tanks,
+        Done
+    };
     auto connect_with_machines_only = [](const NeighborLinkPoint & possible_link) {
         return possible_link.point->GetType() == LinkPointType::Machine;
     };
     auto connect_with_tanks = [](const NeighborLinkPoint & possible_link) {
-        return possible_link.point->GetType() == LinkPointType::Tank && possible_link.distance <= tweak::tank::MaximumAbsorbEnergyDistance;
+        return possible_link.point->GetType() == LinkPointType::Tank &&
+               possible_link.distance <= tweak::tank::MaximumAbsorbEnergyDistance;
     };
 
     /* Loop until we have connected everything we can */
     BestCandidate best_candidate;
     ConnectPhase phase = ConnectPhase::Machines;
-    do 
+    do
     {
         if (phase == ConnectPhase::Machines)
         {
             best_candidate = find_best_candidate(connect_with_machines_only);
-            if (best_candidate.target == nullptr)
+            if (best_candidate.source == nullptr)
                 phase = ConnectPhase::Tanks;
         }
         if (phase == ConnectPhase::Tanks)
         {
             best_candidate = find_best_candidate(connect_with_tanks);
-            if (best_candidate.target == nullptr)
+            if (best_candidate.source == nullptr)
                 phase = ConnectPhase::Done;
         }
-        if (best_candidate.target == nullptr)
+        if (best_candidate.source == nullptr)
             break;
 
         /* Connect the link */
-        best_candidate.source.point->SetIsPartOfGraph(true);
-        this->links.ConstructElement(best_candidate.source.point, best_candidate.target);
-        connected_nodes.push_back(best_candidate.source.point);
+        best_candidate.target.point->SetIsPartOfGraph(true);
+        this->links.ConstructElement(best_candidate.source, best_candidate.target.point);
+        connected_nodes.push_back(best_candidate.target.point);
         //closest_point.point->SetIsPartOfGraph();
-    } while (best_candidate.target != nullptr);
+    } while (best_candidate.source != nullptr);
 }
 
 /* Resolve connections immediately only if new link was added or removed, 
@@ -338,6 +374,9 @@ void LinkMap::Advance()
             this->is_linkpoint_moved = false;
         }
     }
+
+    for (Link & link : this->links)
+        link.Advance();
 }
 
 void LinkMap::Draw(Surface * surface) const

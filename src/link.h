@@ -44,6 +44,7 @@ class LinkPoint : public Invalidable
     [[nodiscard]] LinkPointType GetType() const { return this->type; }
     [[nodiscard]] Position GetPosition() const { return this->position; }
     [[nodiscard]] LinkMap * GetLinkMap() const { return this->owner; }
+    [[nodiscard]] const std::vector<class Link *> & GetActiveLinks() const { return this->active_links; }
     [[nodiscard]] bool IsOrphaned() const { return !this->is_part_of_graph; } /* Used by link solver.*/
     [[nodiscard]] const std::vector<NeighborLinkPoint> & GetNeighbors() const { return this->possible_links; }
     template <typename CompareFunc> /* CompareFunc(const NeighborLinkPoint & candidate) -> bool */
@@ -97,7 +98,7 @@ public:
 
 enum class LinkType
 {
-    Live,      /* Flowing normally */
+    Live,        /* Flowing normally */
     Blocked,     /* Blocked by and obstacle */
     Theoretical, /* Too far from source */
 };
@@ -140,8 +141,8 @@ class Link : public Invalidable
     LinkPointConnector from;
     LinkPointConnector to;
 
-    LinkType type;
-
+    LinkType type = LinkType::Blocked;
+    RepetitiveTimer collision_check_timer = {tweak::world::LinkCollisionCheckInterval};
   public:
     Link(LinkPoint * from_, LinkPoint * to_);
 
@@ -150,6 +151,9 @@ class Link : public Invalidable
     [[nodiscard]] LinkPoint * GetTarget() const { return this->to.GetPoint(); }
     void Draw(Surface * surface) const;
     void DisconnectPoint(LinkPoint * point);
+    void Advance();
+  private:
+    void CheckForCollisions();
 };
 
 /* LinkMap: Manages all link point updates and links */
@@ -159,7 +163,8 @@ class LinkMap
     ValueContainer<LinkPoint> link_points = {};
     ValueContainer<Link> links = {};
 
-    RepetitiveTimer relink_timer = {tweak::world::LinkReactorsInterval};
+    RepetitiveTimer relink_timer = {tweak::world::RefreshLinkMapInterval};
+
     bool is_collection_modified = false;
     bool is_linkpoint_moved = false;
 

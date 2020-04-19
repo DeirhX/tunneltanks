@@ -41,7 +41,8 @@ namespace world
     constexpr int DirtRegrowSpeed = 4;  /* Average delay before it starts growing back. More is faster.*/
     constexpr int DigThroughRockChance = 250; /* Chance to dig through rock with torch of out 1000 */
 
-    constexpr std::chrono::microseconds LinkReactorsInterval = 200ms;
+    constexpr std::chrono::microseconds RefreshLinkMapInterval = 200ms;
+    constexpr std::chrono::microseconds LinkCollisionCheckInterval = 200ms;
     constexpr float MaximumLiveLinkDistance = 100.f;
     constexpr float MaximumTheoreticalLinkDistance = 170.f;
     } // namespace world
