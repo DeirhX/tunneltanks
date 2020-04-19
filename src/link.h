@@ -46,6 +46,8 @@ class LinkPoint : public Invalidable
     [[nodiscard]] LinkMap * GetLinkMap() const { return this->owner; }
     [[nodiscard]] bool IsOrphaned() const { return !this->is_part_of_graph; } /* Used by link solver.*/
     [[nodiscard]] const std::vector<NeighborLinkPoint> & GetNeighbors() const { return this->possible_links; }
+    template <typename CompareFunc> /* CompareFunc(const NeighborLinkPoint & candidate) -> bool */
+    [[nodiscard]] std::optional<NeighborLinkPoint> GetClosestOrphanedPoint(CompareFunc compare_func) const;
     [[nodiscard]] std::optional<NeighborLinkPoint> GetClosestOrphanedPoint() const;
     [[nodiscard]] bool IsInRange(LinkPoint * other_link) const;
     [[nodiscard]] bool IsEnabled() const { return this->is_enabled; }
@@ -64,6 +66,7 @@ class LinkPoint : public Invalidable
     void Disable() { this->is_enabled = false; }
     void Enable() { this->is_enabled = true; }
 };
+
 
 /* LinkPointSource: Wrapper to manage the lifetime of LinkPoint that resides in LinkMap array.
  *   Should be member of classes that own a LinkPoint
