@@ -25,12 +25,12 @@ void LinkPoint::Invalidate()
     this->owner = nullptr;
 }
 
-std::optional<NeighborLinkPoint> LinkPoint::GetClosestUnconnectedPoint() const
+std::optional<NeighborLinkPoint> LinkPoint::GetClosestOrphanedPoint() const
 {
     const NeighborLinkPoint * closest_point = nullptr;
     for (const NeighborLinkPoint & neighbor : this->possible_links)
     {
-        if (!neighbor.point->IsConnected() && (!closest_point || neighbor.distance < closest_point->distance))
+        if (neighbor.point->IsOrphaned() && (!closest_point || neighbor.distance < closest_point->distance))
         {
             closest_point = &neighbor;
         }
@@ -57,6 +57,39 @@ void LinkPoint::SetPosition(Position position_)
     ComputePossibleLinks();
     this->owner->UpdateLinksToPoint(this);
 }
+//
+//void LinkPoint::ConnectWith(Link * link)
+//{
+//    auto neighbor = std::find_if(this->possible_links.begin(), this->possible_links.end(), [link](NeighborLinkPoint & value) {
+//            return value.point == link->GetSource() || value.point == link->GetTarget();
+//    });
+//    assert(neighbor != this->possible_links.end() && neighbor->active_link == nullptr);
+//
+//    neighbor->active_link = link;
+//    ++this->connected_links;
+//}
+//
+//void LinkPoint::DisconnectWith(Link * link)
+//{
+//    auto neighbor =
+//        std::find_if(this->possible_links.begin(), this->possible_links.end(), [link](NeighborLinkPoint & value) {
+//        return value.active_link == link;
+//    });
+//    assert(neighbor != this->possible_links.end());
+//
+//    neighbor->active_link = nullptr;
+//    --this->connected_links;
+//    assert(this->connected_links >= 0);
+//}
+//
+//void LinkPoint::DisconnectAll()
+//{
+//    for (NeighborLinkPoint & neighbor : this->possible_links)
+//    {
+//        neighbor.active_link = nullptr;
+//    }
+//    this->connected_links = 0;
+//}
 
 void LinkPoint::RemovePossibleLink(LinkPoint * possible_link)
 {
@@ -124,8 +157,8 @@ Link::Link(LinkPoint * from_, LinkPoint * to_)
     : from(from_), to(to_)
 {
     assert(from_ && to_);
-    this->from->SetConnected(true);
-    this->to->SetConnected(true);
+    this->from->SetIsPartOfGraph(true);
+    this->to->SetIsPartOfGraph(true);
 
     this->type = LinkType::Live;
     float distance = (this->to->GetPosition() - this->from->GetPosition()).GetSize();
@@ -133,6 +166,16 @@ Link::Link(LinkPoint * from_, LinkPoint * to_)
         this->type = LinkType::Theoretical;
     //else find if blocked
     //
+}
+
+Link::~Link()
+{
+    /*
+    if (this->from)
+        this->from->DisconnectWith(this);
+    if (this->to)
+        this->to->DisconnectWith(this);
+        */
 }
 
 void Link::Draw(Surface * surface) const
@@ -203,10 +246,10 @@ void LinkMap::SolveLinks()
         if (point.GetType() == LinkPointType::Base)
         {
             connected_nodes.push_back(&point);
-            point.SetConnected(true);
+            point.SetIsPartOfGraph(true);
         }
         else
-            point.SetConnected(false);
+            point.SetIsPartOfGraph(false);
 
         all_nodes.push_back(&point);
     }
@@ -223,7 +266,7 @@ void LinkMap::SolveLinks()
         /* Walk through visited nodes and find one closest new node to any of them */
         for (LinkPoint * point : connected_nodes)
         {
-            auto candidate = point->GetClosestUnconnectedPoint();
+            auto candidate = point->GetClosestOrphanedPoint();
             if (!candidate.has_value())
                 continue;
             if (!closest_point.point || closest_point.distance > candidate.value().distance)
@@ -239,10 +282,11 @@ void LinkMap::SolveLinks()
         /* Connect the link */
         updated_links.emplace_back(closest_point.point, connect_target);
         connected_nodes.push_back(closest_point.point);
+        //closest_point.point->SetIsPartOfGraph();
     }
 
     /* Replace current links with this one */
-    this->links = updated_links;
+    this->links = std::move(updated_links);
 }
 
 /* Resolve connections immediately only if new link was added or removed, 

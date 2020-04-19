@@ -13,6 +13,8 @@ class WorldRenderSurface;
 class World
 {
     class Game * game;
+    int advance_count = 0;
+    std::chrono::microseconds time_elapsed = {};
 
     std::unique_ptr<Level> level;
     LinkMap link_map;
@@ -29,19 +31,19 @@ class World
     void Advance();
     void Draw(WorldRenderSurface * objects_surface);
 
-    Level * GetLevel() { return this->level.get(); }
-    ProjectileList * GetProjectileList() { return &this->projectile_list; }
-    MachineryList * GetHarvesterList() { return &this->harvester_list; }
-    TankList * GetTankList() { return &this->tank_list; }
-    LinkMap * GetLinkMap() { return &this->link_map; }
-    const CollisionSolver * GetCollisionSolver() const { return &this->collision_solver; }
+    [[nodiscard]] Level * GetLevel() { return this->level.get(); }
+    [[nodiscard]] ProjectileList * GetProjectileList() { return &this->projectile_list; }
+    [[nodiscard]] MachineryList * GetHarvesterList() { return &this->harvester_list; }
+    [[nodiscard]] TankList * GetTankList() { return &this->tank_list; }
+    [[nodiscard]] LinkMap * GetLinkMap() { return &this->link_map; }
+    [[nodiscard]] const CollisionSolver * GetCollisionSolver() const { return &this->collision_solver; }
+    [[nodiscard]] std::chrono::microseconds GetElapsedTime() const { return this->time_elapsed; }
 
-    void GameIsOver();
+    void SetGameOver();
 
   private:
     std::chrono::microseconds regrow_elapsed = {};
     std::chrono::microseconds regrow_average = {};
-    int advance_count = 0;
 
     /* Attempts to regrow destroyed dirt in empty places where there is some neighboring dirt to extend */
     void RegrowPass();

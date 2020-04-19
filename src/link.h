@@ -22,6 +22,7 @@ struct NeighborLinkPoint
 {
     class LinkPoint * point;
     float distance;
+    //class Link * active_link = nullptr;
 };
 
 /* LinkPoint: Linkable point to others */
@@ -33,9 +34,11 @@ class LinkPoint
     class LinkMap * owner;
 
     std::vector<NeighborLinkPoint> possible_links;
+    int connected_links = 0;
+
     bool is_alive = true; /* Once false, object is dead forever */
-    bool is_connected = false;
     bool is_enabled = true;
+    bool is_part_of_graph = false;
   public:
     LinkPoint(Position position, LinkPointType type_, LinkMap * owner_ = nullptr);
     //LinkPoint(LinkPoint && movable) noexcept;
@@ -47,18 +50,23 @@ class LinkPoint
     [[nodiscard]] LinkPointType GetType() const { return this->type; }
     [[nodiscard]] Position GetPosition() const { return this->position; }
     [[nodiscard]] LinkMap * GetLinkMap() const { return this->owner; }
-    [[nodiscard]] bool IsConnected() const { return this->is_connected; }
+    [[nodiscard]] bool IsOrphaned() const { return !this->is_part_of_graph; } /* Used by link solver.*/
     [[nodiscard]] const std::vector<NeighborLinkPoint> & GetNeighbors() const { return this->possible_links; }
-    [[nodiscard]] std::optional<NeighborLinkPoint> GetClosestUnconnectedPoint() const;
+    [[nodiscard]] std::optional<NeighborLinkPoint> GetClosestOrphanedPoint() const;
     [[nodiscard]] bool IsInRange(LinkPoint * other_link) const;
     [[nodiscard]] bool IsEnabled() const { return this->is_enabled; }
 
     void SetPosition(Position position_);
 
-    void SetConnected(bool connected) { this->is_connected = connected; }
+    void SetIsPartOfGraph(bool value) { this->is_part_of_graph = value; }
+    //void ConnectWith(class Link * link);
+    //void DisconnectWith(class Link * link);
+    //void DisconnectAll();
+
     void RemovePossibleLink(LinkPoint * possible_link);
     void UpdateLink(LinkPoint * possible_link); 
     void ComputePossibleLinks();
+
     void Disable() { this->is_enabled = false; }
     void Enable() { this->is_enabled = true; }
 };
@@ -97,7 +105,7 @@ enum class LinkType
 };
 
 /* Link: A connected link between two points */
-class Link
+class Link : public Invalidable
 {
     LinkPoint * from = {};
     LinkPoint * to = {};
@@ -106,11 +114,13 @@ class Link
     bool is_alive = true;
   public:
     Link(LinkPoint * from_, LinkPoint * to_);
-    ~Link() { Invalidate(); }
-    bool IsInvalid() const { return !is_alive; }
-    void Invalidate() { is_alive = false; }
+    ~Link();
+    Link(Link && movable) = default;
+    Link & operator=(Link && movable) noexcept = default;
 
     [[nodiscard]] LinkType GetType() const { return this->type; }
+    [[nodiscard]] LinkPoint * GetSource() const { return this->from; }
+    [[nodiscard]] LinkPoint * GetTarget() const { return this->to; }
     void Draw(Surface * surface) const;
 };
 

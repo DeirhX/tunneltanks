@@ -85,36 +85,37 @@ void Charger::Advance(Level * level)
     if (!CheckAlive(level))
         return;
 
-    if (this->charge_timer.AdvanceAndCheckElapsed())
-    {
-        auto is_suitable_position = [](Position tested_position)
-        {
-            LevelPixel pixel = GetWorld()->GetLevel()->GetPixel(tested_position);
-            return Pixel::IsEmpty(pixel) || Pixel::IsScorched(pixel) || Pixel::IsEnergy(pixel);
-        };
-        /* Active algorithm: random pixel in radius. If full, first candidate on path to center from that position */
-        std::optional<Position> suitable_pos = ShapeInspector::FromRandomPointInCircleToCenter(
-            this->position, tweak::rules::ChargeMaxRange, is_suitable_position);
 
-        /*
-         * Grow radially from center
-        auto closest_pixel = level::GetClosestPixel(GetWorld()->GetLevel()->GetLevelData(), this->position,
-                                                    tweak::rules::HarvestMaxRange,
-                                                    [](LevelPixel pixel) { return Pixel::IsEmpty(pixel) || Pixel::IsScorched(pixel); });
-                                                    */
-        if (suitable_pos.has_value() && suitable_pos.value() != this->position)
-        {
-            LevelPixel current_pixel = GetWorld()->GetLevel()->GetPixel(suitable_pos.value());
-            LevelPixel desired_pixel;
-            if (current_pixel == LevelPixel::EnergyLow)
-                desired_pixel = LevelPixel::EnergyMedium;
-            else if (current_pixel == LevelPixel::EnergyMedium || current_pixel == LevelPixel::EnergyHigh)
-                desired_pixel = LevelPixel::EnergyHigh;
-            else
-                desired_pixel = LevelPixel::EnergyLow;
-            GetWorld()->GetLevel()->SetPixel(suitable_pos.value(), desired_pixel);
-        }
-    }
+    //if (this->charge_timer.AdvanceAndCheckElapsed())
+    //{
+    //    auto is_suitable_position = [](Position tested_position)
+    //    {
+    //        LevelPixel pixel = GetWorld()->GetLevel()->GetPixel(tested_position);
+    //        return Pixel::IsEmpty(pixel) || Pixel::IsScorched(pixel) || Pixel::IsEnergy(pixel);
+    //    };
+    //    /* Active algorithm: random pixel in radius. If full, first candidate on path to center from that position */
+    //    std::optional<Position> suitable_pos = ShapeInspector::FromRandomPointInCircleToCenter(
+    //        this->position, tweak::rules::ChargeMaxRange, is_suitable_position);
+
+    //    /*
+    //     * Grow radially from center
+    //    auto closest_pixel = level::GetClosestPixel(GetWorld()->GetLevel()->GetLevelData(), this->position,
+    //                                                tweak::rules::HarvestMaxRange,
+    //                                                [](LevelPixel pixel) { return Pixel::IsEmpty(pixel) || Pixel::IsScorched(pixel); });
+    //                                                */
+    //    if (suitable_pos.has_value() && suitable_pos.value() != this->position)
+    //    {
+    //        LevelPixel current_pixel = GetWorld()->GetLevel()->GetPixel(suitable_pos.value());
+    //        LevelPixel desired_pixel;
+    //        if (current_pixel == LevelPixel::EnergyLow)
+    //            desired_pixel = LevelPixel::EnergyMedium;
+    //        else if (current_pixel == LevelPixel::EnergyMedium || current_pixel == LevelPixel::EnergyHigh)
+    //            desired_pixel = LevelPixel::EnergyHigh;
+    //        else
+    //            desired_pixel = LevelPixel::EnergyLow;
+    //        GetWorld()->GetLevel()->SetPixel(suitable_pos.value(), desired_pixel);
+    //    }
+    //}
 }
 
 void Charger::Draw(Surface * surface) const

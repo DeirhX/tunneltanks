@@ -25,6 +25,7 @@ void World::Clear()
 void World::Advance()
 {
     ++this->advance_count;
+    this->time_elapsed += tweak::world::AdvanceStep;
     RegrowPass();
 
     /* Move everything: */
@@ -49,7 +50,7 @@ void World::Draw(WorldRenderSurface * objects_surface)
     this->link_map.Draw(objects_surface);
 }
 
-void World::GameIsOver() { this->game->GameOver(); }
+void World::SetGameOver() { this->game->GameOver(); }
 
 
 void World::RegrowPass()

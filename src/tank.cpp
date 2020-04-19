@@ -111,7 +111,7 @@ void Tank::Advance(World * world)
                     std::any_of(world->GetTankList()->begin(), world->GetTankList()->end(),
                                 [](Tank & tank) { return tank.controller->IsPlayer() && !tank.IsDead(); });
                 if (!players_remaining)
-                    world->GameIsOver();
+                    world->SetGameOver();
             }
         }
     }
