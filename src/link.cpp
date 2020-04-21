@@ -116,7 +116,9 @@ void LinkPoint::ComputeIsPowered()
 {
     this->is_powered =
         this->type == LinkPointType::Base || std::any_of(this->active_links.begin(), this->active_links.end(),
-                                                         [](Link * link) { return link->GetType() == LinkType::Live; });
+                                                         [this](Link * link) { return link->GetType() == LinkType::Live && 
+                                                         link->GetSource() != this && /* Consider only links that lead to this one (this one is the target, not source) */
+                                                         link->IsConnectedToLiveLink() ; });
         
 }
 
@@ -126,6 +128,11 @@ void LinkPoint::RemoveActiveLink(Link * active_link)
 {
     assert(std::find(this->active_links.begin(), this->active_links.end(), active_link) != this->active_links.end());
     std::erase(this->active_links, active_link);
+}
+
+void LinkPoint::Advance()
+{
+    ComputeIsPowered();
 }
 
 /*
@@ -221,13 +228,21 @@ void Link::Advance()
     if (!this->from.GetPoint() || !this->to.GetPoint())
     {
         Invalidate();
-        return;
+    }
+
+    if (!IsConnectedToLiveLink())
+    {
+        UpdateType(LinkType::Blocked);
     }
 
     if (this->collision_check_timer.AdvanceAndCheckElapsed())
     {
-        if (IsConnectionBlocked() || !IsConnectedToLiveLink())
-            UpdateType(LinkType::Blocked);
+        if (this->GetType() == LinkType::Live)
+            if (IsConnectionBlocked())
+            {
+                UpdateType(LinkType::Blocked);
+                this->from.GetPoint()->GetLinkMap()->RequestRecompute();
+            }
     }
 }
 
@@ -255,17 +270,20 @@ bool Link::IsConnectedToLiveLink() const
 
 void Link::UpdateType(LinkType value)
 {
-    if (value == LinkType::Live && this->type != LinkType::Live)
+    if (value == this->type)
+        return;
+
+    this->type = value;
+    if (value == LinkType::Live)
     { /* Optimization to true but maybe should be unified to call ComputeIsPowered? */
         this->from.GetPoint()->SetIsPowered(true);
         this->to.GetPoint()->SetIsPowered(true);
     }
-    else if (value == LinkType::Blocked && this->type != LinkType::Blocked)
+    else if (value == LinkType::Blocked)
     {
         this->from.GetPoint()->ComputeIsPowered();
         this->to.GetPoint()->ComputeIsPowered();
     }
-    this->type = value;
 }
 
 

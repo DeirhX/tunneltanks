@@ -71,6 +71,8 @@ class LinkPoint : public Invalidable
 
     void Disable() { this->is_enabled = false; }
     void Enable() { this->is_enabled = true; }
+
+    void Advance();
 };
 
 
@@ -193,6 +195,7 @@ class LinkMap
     void RemoveAll();
 
     void UpdateLinksToPoint(LinkPoint * point);
+    void RequestRecompute() { this->is_collection_modified = true; }
 
     void SolveLinks();
 
