@@ -160,6 +160,7 @@ class Link : public Invalidable
 
     static bool IsConnectionBlocked(Position from, Position to);
     bool IsConnectionBlocked() const;
+    bool IsConnectedToLiveLink() const;
 
   private:
     void UpdateType(LinkType value);

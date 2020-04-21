@@ -174,14 +174,10 @@ Link::Link(LinkPoint * from_, LinkPoint * to_) : from(from_, this), to(to_, this
                 UpdateType(LinkType::Live);
             else
             {
-                if (std::any_of(from.GetPoint()->GetActiveLinks().begin(), from.GetPoint()->GetActiveLinks().end(),
-                                [this](Link * link) {
-                                    return link->to.GetPoint() != this->to.GetPoint() &&
-                                           link->GetType() == LinkType::Live;
-                                }))
-                    UpdateType(this->type = LinkType::Live);
+                if (IsConnectedToLiveLink())
+                    UpdateType(LinkType::Live);
                 else
-                    UpdateType(this->type = LinkType::Blocked);
+                    UpdateType(LinkType::Blocked);
             }
         }
     }
@@ -230,7 +226,7 @@ void Link::Advance()
 
     if (this->collision_check_timer.AdvanceAndCheckElapsed())
     {
-        if (IsConnectionBlocked())
+        if (IsConnectionBlocked() || !IsConnectedToLiveLink())
             UpdateType(LinkType::Blocked);
     }
 }
@@ -246,6 +242,15 @@ bool Link::IsConnectionBlocked(Position from, Position to)
 bool Link::IsConnectionBlocked() const
 {
     return IsConnectionBlocked(this->from.GetPoint()->GetPosition(), this->to.GetPoint()->GetPosition());
+}
+
+bool Link::IsConnectedToLiveLink() const
+{
+    return from.GetPoint()->IsPowered();
+    /*return std::any_of(from.GetPoint()->GetActiveLinks().begin(), from.GetPoint()->GetActiveLinks().end(),
+                       [this](Link * link) {
+                           return link->to.GetPoint() != this->to.GetPoint() && link->GetType() == LinkType::Live;
+                       });*/
 }
 
 void Link::UpdateType(LinkType value)
