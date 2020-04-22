@@ -6,6 +6,7 @@
 #include <tank.h>
 
 #include "exceptions.h"
+#include "game_system.h"
 #include "require_sdl.h"
 
 /* Any SDL-based controllers go in this file. */
@@ -38,7 +39,8 @@ ControllerOutput KeyboardWithMouseController::ApplyControls(PublicTankInfo * tan
     int x, y;
     auto buttons = SDL_GetMouseState(&x, &y);
     output.is_crosshair_absolute = true;
-    output.crosshair_screen_pos = {x, y};
+    Size window_size = GetSystem()->GetWindow()->GetResolution();
+    output.crosshair_screen_pos = {static_cast<float>(x) / float(window_size.x), static_cast<float>(y) / float(window_size.y)};
     output.is_shooting_primary = buttons & SDL_BUTTON(1);
     return output;
 }

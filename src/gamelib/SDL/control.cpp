@@ -59,6 +59,8 @@ bool gamelib_get_can_fullscreen() { return 1; }
 bool gamelib_get_can_window() { return 1; }
 int gamelib_get_target_fps() { return tweak::perf::TargetFps; }
 
+
+/* TODO: Move to classes. ControllerAssigner? */
 static bool try_attach_gamepad(Tank * tank, int gamepad_num)
 {
     if (SDL_NumJoysticks() < gamepad_num)
@@ -80,6 +82,7 @@ static bool try_attach_gamepad(Tank * tank, int gamepad_num)
 #define TWO_KEYBOARD_A SDL_SCANCODE_A, SDL_SCANCODE_D, SDL_SCANCODE_W, SDL_SCANCODE_S, SDL_SCANCODE_LCTRL
 #define TWO_KEYBOARD_B SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT, SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_SLASH
 
+/* TODO: move to ControllerAssigner */
 void gamelib_tank_attach(Tank * tank, int tank_num, int num_players)
 {
     static bool used_controller = false; /* TODO: put into class state */

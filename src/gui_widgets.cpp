@@ -237,15 +237,15 @@ void Crosshair::MoveRelative(Offset offset)
     this->UpdateVisual();
 }
 
-void Crosshair::SetRelativePosition(const Tank * tank, DirectionF direction)
+void Crosshair::SetRelativeDirection(const Tank * tank, DirectionF direction)
 {
     SetWorldPosition(tank->GetPosition() + Offset{tweak::control::GamePadCrosshairRadius * direction});
     is_hidden = (direction == DirectionF{});
 }
 
-void Crosshair::SetScreenPosition(NativeScreenPosition position)
+void Crosshair::SetScreenRelativePosition(OffsetF screen_offset)
 {
-    this->center = screen->FromNativeScreen(position);
+    this->center = this->screen->FromNativeScreen(screen_offset);
     this->center = ScreenPosition{this->parent_view->GetRect().MakeInside(this->center)};
     this->UpdateVisual();
     is_hidden = false;

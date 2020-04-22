@@ -10,10 +10,12 @@ android/obj/*
 cmake_install.cmake
 pack/*.cpack
 tunneltanks
-*.bmp
 /SDL/docs/
 /Build/
 /obj/
 *.vcxproj.user
 **/.vs/
 /packages/
+/sdl2/test/**/*.bmp
+/debug_*.bmp
+/sdl2/**/*.bmp

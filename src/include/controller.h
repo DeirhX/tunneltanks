@@ -17,7 +17,7 @@ struct ControllerOutput
 	DirectionF turret_dir = { 0, 0 };
 
     bool is_crosshair_absolute = false; /* Use either native screen position (mouse) or relative direction (gamepad) */
-    NativeScreenPosition crosshair_screen_pos = {};
+    OffsetF crosshair_screen_pos = {}; /* Relative to native screen size - 0 = top/left, 1 = bottom/right */
     DirectionF crosshair_direction = {};
 };
 

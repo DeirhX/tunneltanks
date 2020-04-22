@@ -50,7 +50,6 @@
     <ClCompile Include="src\gamelib\SDL\control.cpp" />
     <ClCompile Include="src\gamelib\SDL\sdl_controller.cpp" />
     <ClCompile Include="src\gamelib\SDL\events.cpp" />
-    <ClCompile Include="src\gamelib\SDL\gui.cpp" />
     <ClCompile Include="src\gamelib\SDL\logging.cpp" />
     <ClCompile Include="src\gamelib\SDL\sdldata.cpp" />
     <ClCompile Include="src\gamelib\SDL\sdl_system.cpp" />

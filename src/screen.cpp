@@ -175,24 +175,10 @@ void Screen::DrawPixel(ScreenPosition pos, Color color)
     return;
 }
 
-ScreenPosition Screen::FromNativeScreen(NativeScreenPosition native_pos)
+ScreenPosition Screen::FromNativeScreen(OffsetF offset) const
 {
-    auto pos = ScreenPosition{native_pos.x, native_pos.y};
-    pos.x -= this->screen_offset.x;
-    pos.x -= pos.x / (int)this->pixel_size.x * (int)this->pixels_skip.x / tweak::screen::RenderSurfaceSize.x;
-    pos.x /= (int)this->pixel_size.x;
-
-    pos.y -= this->screen_offset.y;
-    pos.y -= pos.y / (int)this->pixel_size.y * (int)this->pixels_skip.y / tweak::screen::RenderSurfaceSize.y;
-    pos.y /= (int)this->pixel_size.y;
-
-    return pos;
+    return {int(float(this->screen_size.x) * offset.x), int(float(this->screen_size.y) * offset.y)};
 }
-
-//NativeScreenPosition Screen::ToNativeScreen(ScreenPosition pos)
-//{
-//
-//}
 
 void Screen::DrawLevel()
 {
@@ -251,55 +237,13 @@ void Screen::SetFullscreen(bool new_fullscreen)
 /* Returns if successful */
 void Screen::Resize(Size size)
 {
-    Size render_size;
-    this->pixels_skip = {};
-    this->screen_offset = {};
-    this->pixel_size = {};
-
-    /* Make sure that we aren't scaling to something too small: */
-    size.x = std::max(tweak::screen::RenderSurfaceSize.x, size.x);
-    size.y = std::max(tweak::screen::RenderSurfaceSize.y, size.y);
-
-    /* A little extra logic for fullscreen: */
-    size = GetSystem()->GetRenderer()->GetSurfaceResolution();
-
     auto current_fullscreen = GetSystem()->GetWindow()->IsFullscreen();
     if (this->is_fullscreen != current_fullscreen)
         GetSystem()->GetWindow()->Resize(size, this->is_fullscreen);
 
-    /* What is the limiting factor in our scaling to maintain aspect ratio? */
-    int yw = size.y * tweak::screen::RenderSurfaceSize.x;
-    int xh = size.x * tweak::screen::RenderSurfaceSize.y;
-    if (yw < xh)
-    {
-        /* size.y is. Correct aspect ratio using offset */
-        render_size.x = (tweak::screen::RenderSurfaceSize.x * size.y) / (tweak::screen::RenderSurfaceSize.y);
-        render_size.y = size.y;
-        this->screen_offset.x = (size.x - render_size.x) / 2;
-        this->screen_offset.y = 0;
-    }
-    else
-    {
-        /* size.x is. Correct aspect ratio using offset */
-        render_size.x = size.x;
-        render_size.y = (tweak::screen::RenderSurfaceSize.y * size.x) / (tweak::screen::RenderSurfaceSize.x);
-        this->screen_offset.x = 0;
-        this->screen_offset.y = (size.y - render_size.y) / 2;
-    }
-
-    /* Calculate the pixel sizing variables: */
-    this->pixel_size.x = render_size.x / tweak::screen::RenderSurfaceSize.x;
-    this->pixel_size.y = render_size.y / tweak::screen::RenderSurfaceSize.y;
-    this->pixels_skip.x = render_size.x % tweak::screen::RenderSurfaceSize.x;
-    this->pixels_skip.y = render_size.y % tweak::screen::RenderSurfaceSize.y;
-
     /* Draw a nice bg: */
     Screen::FillBackground();
-
     this->screen_size = size;
-
-    /* Redraw the game: */
-    // this->DrawCurrentMode();
 }
 
 void Screen::SetDrawLevelSurfaces(LevelSurfaces * surfaces)

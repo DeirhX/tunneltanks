@@ -275,11 +275,11 @@ void Tank::ApplyControllerOutput(ControllerOutput controls)
     {
         if (controls.is_crosshair_absolute)
         {
-            this->crosshair->SetScreenPosition(controls.crosshair_screen_pos);
+            this->crosshair->SetScreenRelativePosition(controls.crosshair_screen_pos);
         }
         else
         {
-            this->crosshair->SetRelativePosition(this, controls.crosshair_direction);
+            this->crosshair->SetRelativeDirection(this, controls.crosshair_direction);
         }
     }
 }

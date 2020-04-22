@@ -105,8 +105,8 @@ class Crosshair : public BitmapRender
 
     void UpdateVisual();
     void MoveRelative(Offset offset);
-    void SetRelativePosition(const Tank * tank, DirectionF direction);
-    void SetScreenPosition(NativeScreenPosition position);
+    void SetRelativeDirection(const Tank * tank, DirectionF direction);
+    void SetScreenRelativePosition(OffsetF relative_offset); /* Relative to top-left */
     [[nodiscard]] ScreenPosition GetScreenPosition() const { return this->center; }
     Position GetWorldPosition() const { return parent_view->TranslatePosition(GetScreenPosition()); }
     void SetWorldPosition(Position position);

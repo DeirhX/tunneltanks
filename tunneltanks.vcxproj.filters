@@ -57,9 +57,6 @@
     <ClCompile Include="src\gamelib\SDL\logging.cpp">
       <Filter>sdl_interface</Filter>
     </ClCompile>
-    <ClCompile Include="src\gamelib\SDL\gui.cpp">
-      <Filter>sdl_interface</Filter>
-    </ClCompile>
     <ClCompile Include="src\gamelib\SDL\sdldata.cpp">
       <Filter>sdl_interface</Filter>
     </ClCompile>

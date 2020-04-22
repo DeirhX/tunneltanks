@@ -28,8 +28,6 @@ class Screen
 
     Size screen_size = {};
     Offset screen_offset = {};
-    Size pixel_size = {};
-    Size pixels_skip = {};
 
     std::vector<std::unique_ptr<widgets::GuiWidget>> widgets;
 
@@ -57,8 +55,7 @@ class Screen
     void DrawPixel(ScreenPosition pos, Color color);
 
     /* These will say what virtual pixel a physical pixel resides on: */
-    ScreenPosition FromNativeScreen(NativeScreenPosition pos);
-    //NativeScreenPosition ToNativeScreen(ScreenPosition pos);
+    ScreenPosition FromNativeScreen(OffsetF offset) const;
     /*  Draw whatever it is now supposed to draw */
     void DrawCurrentMode();
 
