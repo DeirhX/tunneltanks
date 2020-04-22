@@ -57,8 +57,7 @@ struct SinglePlayerLayout : public widgets::SharedLayout
         ScreenRect{tank_health_bars_rect.Right() + 3, tank_health_bars_rect.Top() + 1, 2, status_height};
 
     /* Resource overlays */
-    constexpr static ScreenRect resource_overlay = ScreenRect{player_view_rect.pos, Size{10, 10}};
-    
+    constexpr static ScreenRect resource_overlay = ScreenRect{player_view_rect.pos, Size{20, 20}};
 };
 
 struct TwoPlayerLayout : public SinglePlayerLayout
@@ -124,7 +123,7 @@ void Screens::SinglePlayerScreenSetup(Screen * screen, World * world, Tank * pla
     screen->AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(SinglePlayerLayout::resource_overlay,
                                                                        HorizontalAlign::Left, player));
 
-    GetSystem()->GetCursor()->Show();
+    GetSystem()->GetCursor()->Hide();
 }
 
 void Screens::TwoPlayerScreenSetup(Screen * screen, World * world, Tank * player_one, Tank * player_two)
@@ -164,7 +163,7 @@ void Screens::TwoPlayerScreenSetup(Screen * screen, World * world, Tank * player
     screen->AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(TwoPlayerLayout::resource_overlay_two,
                                                                        HorizontalAlign::Right, player_two));
 
-    GetSystem()->GetCursor()->Hide();
+    GetSystem()->GetCursor()->Show();
 }
 
 void Screen::DrawPixel(ScreenPosition pos, Color color)
