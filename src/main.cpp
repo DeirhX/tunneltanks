@@ -1,6 +1,8 @@
 #include "base.h"
 #include <control.h>
+#ifdef _WIN32
 #include <crtdbg.h>
+#endif
 #include <cstdlib>
 #include <cstring>
 #include <game.h>
@@ -29,7 +31,9 @@ int main(int argc, char * argv[])
 {
     try
     {
+        #ifdef _WIN32
         _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+        #endif
 
         return GameMain(argc, argv);
     }
@@ -202,8 +206,7 @@ int GameMain(int argc, char * argv[])
         ::global_game = std::make_unique<Game>(config);
         /* Play the game: */
         ::global_game->BeginGame();
-        int frames_to_do = 1500;
-        gamelib_main_loop([&frames_to_do]() -> bool { return global_game->AdvanceStep(); });
+        gamelib_main_loop([]() -> bool { return global_game->AdvanceStep(); });
 
         /* Release global resources earlier than atexit global teardown*/
         ::global_game->ClearWorld();

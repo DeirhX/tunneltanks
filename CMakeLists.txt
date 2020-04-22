@@ -1,12 +1,13 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.13)
 
 ################################################################################
 ### COMPILING THE PROJECT: #####################################################
 ################################################################################
 
-project(tunneltanks C)
+project(tunneltanks VERSION 2.0)
 
-set(SDL_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/sdl2/include")
+find_package(SDL2 REQUIRED)
+find_package(Boost REQUIRED)
 
 # Support both 32 and 64 bit builds
 if (${CMAKE_SIZEOF_VOID_P} MATCHES 8)
@@ -15,19 +16,20 @@ else ()
   set(SDL_LIBRARY "${CMAKE_CURRENT_LIST_DIR}/sdl2/lib/x86/SDL2.lib;${CMAKE_CURRENT_LIST_DIR}/lib/x86/SDL2main.lib")
 endif ()
 
-string(STRIP "${SDL2_LIBRARIES}" SDL2_LIBRARIES)
-
-# Verify that SDL is installed:
-include_directories( ${SDL_INCLUDE_DIR} )
-include_directories( "src/include" )
-
 # Set up the compiler, and find all source files:
-set(CMAKE_C_FLAGS "-g -ansi -Wall -O3 -DUSE_SDL_GAMELIB")
-file(GLOB source_files "src/*.c" "src/gamelib/SDL/*.c")
+file(GLOB source_files "src/*.c" "src/*.cpp" "src/include/*.cpp" "src/gamelib/SDL/*.c" "src/gamelib/SDL/*.cpp")
 
 # Link and compile:
-link_libraries( ${SDL_LIBRARY} )
 add_executable( tunneltanks ${source_files} )
+
+if (NOT WINDOWS)
+	target_compile_options(tunneltanks PUBLIC "-Wall")
+endif()
+
+target_compile_definitions(tunneltanks PUBLIC "USE_SDL_GAMELIB" "DEBUG_TRACE_LEVEL=3")
+target_compile_features(tunneltanks PUBLIC cxx_std_20)
+target_link_libraries(tunneltanks PUBLIC ${SDL2_LIBRARIES} Boost::boost)
+target_include_directories(tunneltanks PUBLIC ${SDL2_INCLUDE_DIRS} "src/include" "src" "src/gamelib" "src/gamelib/SDL")
 
 # Enable the make install:
 install(

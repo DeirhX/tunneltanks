@@ -152,12 +152,12 @@ void Level::ForEachVoxelParallel(VoxelFunc voxelFunc, WorkerCount worker_count)
 template <typename CountFunc>
 int Level::CountNeighborValues(Position pos, CountFunc count_func)
 {
-    return count_func(GetVoxelRaw({pos.x - 1 + GetSize().x * (pos.y - 1)})) +
-           count_func(GetVoxelRaw({pos.x + GetSize().x * (pos.y - 1)})) +
-           count_func(GetVoxelRaw({pos.x + 1 + GetSize().x * (pos.y - 1)})) +
-           count_func(GetVoxelRaw({pos.x - 1 + GetSize().x * (pos.y)})) +
-           count_func(GetVoxelRaw({pos.x + 1 + GetSize().x * (pos.y)})) +
-           count_func(GetVoxelRaw({pos.x - 1 + GetSize().x * (pos.y + 1)})) +
-           count_func(GetVoxelRaw({pos.x + GetSize().x * (pos.y + 1)})) +
-           count_func(GetVoxelRaw({pos.x + 1 + GetSize().x * (pos.y + 1)}));
+    return count_func(GetVoxelRaw((pos.x - 1 + GetSize().x * (pos.y - 1)))) +
+           count_func(GetVoxelRaw((pos.x + GetSize().x * (pos.y - 1)))) +
+           count_func(GetVoxelRaw((pos.x + 1 + GetSize().x * (pos.y - 1)))) +
+           count_func(GetVoxelRaw((pos.x - 1 + GetSize().x * (pos.y)))) +
+           count_func(GetVoxelRaw((pos.x + 1 + GetSize().x * (pos.y)))) +
+           count_func(GetVoxelRaw((pos.x - 1 + GetSize().x * (pos.y + 1)))) +
+           count_func(GetVoxelRaw((pos.x + GetSize().x * (pos.y + 1)))) +
+           count_func(GetVoxelRaw((pos.x + 1 + GetSize().x * (pos.y + 1))));
 }

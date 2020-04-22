@@ -4,6 +4,11 @@
 #include <queue>
 #include <trace.h>
 #include <vector>
+#include <type_traits>
+
+template <typename T, typename U>
+concept same_as = std::is_same_v<T, U> && std::is_same_v<U, T>;
+
 /*
  Effective container for storing in-place, cache-local objects - deleting does not shift, dead objects can be reused
  later and references to live objects are valid forever.
@@ -18,7 +23,7 @@ concept IsInvalidable = requires(T t)
     {
         t.IsInvalid()
     }
-    ->bool;
+    -> same_as<bool>;
 };
 
 class Invalidable
@@ -143,7 +148,7 @@ class ValueContainer : public ValueContainerView<TElement>
     TElement & ConstructElement(ConstructionArgs &&... args)
     {
         auto dead_item = std::find_if(this->container.begin(), this->container.end(),
-                                      [this](auto & val) { return Parent::IsInvalid(val); });
+                                      [this](auto & val) { return this->Parent::IsInvalid(val); });
 
         /* Find if we can insert into already allocated space */
         if (dead_item != this->container.end())
@@ -164,7 +169,7 @@ class ValueContainer : public ValueContainerView<TElement>
     {
         /* Place over a dead item by assignment if such dead item exists. Otherwise append to back. */
         auto dead_item = std::find_if(this->container.begin(), this->container.end(),
-                                      [this](auto & val) { return Parent::IsInvalid(val); });
+                                      [this](auto & val) { return this->Parent::IsInvalid(val); });
         if (dead_item != this->container.end())
         {
             *dead_item = std::move(item);
@@ -229,7 +234,6 @@ class MultiTypeContainer
     template <typename TValue>
     TValue & Add(TValue && item)
     {
-        using Typo = typename ValueContainer<TValue>::ItemType;
         return std::get<ValueContainer<TValue>>(this->items).Add(std::move(item));
     }
 

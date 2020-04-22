@@ -12,6 +12,7 @@ pack/*.cpack
 tunneltanks
 /SDL/docs/
 /Build/
+/build/
 /obj/
 *.vcxproj.user
 **/.vs/

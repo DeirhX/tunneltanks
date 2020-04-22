@@ -41,7 +41,7 @@ enum class HarvesterType
 class Harvester final : public Machine
 {
     using Base = Machine;
-    HarvesterType type;
+    [[maybe_unused]] HarvesterType type;
 
     RepetitiveTimer harvest_timer{tweak::rules::HarvestTimer};
   public:

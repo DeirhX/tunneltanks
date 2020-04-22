@@ -171,7 +171,7 @@ class Link : public Invalidable
 /* LinkMap: Manages all link point updates and links */
 class LinkMap
 {
-    Level * level;
+    [[maybe_unused]] Level * level;
     ValueContainer<LinkPoint> link_points = {};
     ValueContainer<Link> links = {};
 

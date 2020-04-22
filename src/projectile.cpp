@@ -15,7 +15,7 @@
 
 void Bullet::Advance(TankList * tankList)
 {
-    auto IteratePositions = [this, tankList](PositionF tested_pos, PositionF prev_pos) {
+    auto IteratePositions = [this](PositionF tested_pos, PositionF prev_pos) {
         this->pos = tested_pos;
         this->pos_blur_from = prev_pos;
 
@@ -27,12 +27,13 @@ void Bullet::Advance(TankList * tankList)
                 tank.GetReactor().Exhaust(tweak::tank::ShotDamage);
                 return true;
         },
-        [this](auto & machine)
+        [](auto & machine)
         {
             machine.GetReactor().Exhaust(tweak::tank::ShotDamage);
             return true;
         },
-        [this](LevelPixel level_pixel) { return Pixel::IsAnyCollision(level_pixel); }))
+        [](LevelPixel level_pixel) { return Pixel::IsAnyCollision(level_pixel); }))
+
         {
             for (Shrapnel & shrapnel : ExplosionDesc::AllDirections(
                                            this->pos_blur_from.ToIntPosition(), tweak::explosion::normal::ShrapnelCount,
@@ -70,10 +71,8 @@ void FlyingBarrel::Advance(TankList * tankList, ExplosionFuncType explosionFunc)
     auto prev_positions = boost::circular_buffer<PositionF>{this->explode_distance + 1ull};
     int search_step = 0;
     const int search_step_count = this->explode_distance + int(std::round(this->speed.GetSize()));
-    
-    PositionF advanced_pos = {};
 
-    auto IteratePositions = [this, &search_step, &prev_positions, tankList](PositionF tested_pos, PositionF prev_pos) {
+    auto IteratePositions = [this, &search_step, &prev_positions](PositionF tested_pos, PositionF prev_pos) {
         prev_positions.push_back(tested_pos);
         ++search_step;
 

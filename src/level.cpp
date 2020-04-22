@@ -65,14 +65,14 @@ void Level::SetVoxelRaw(int offset, LevelPixel voxel)
 
 int Level::CountNeighbors(Position pos, LevelPixel value)
 {
-    return !!(value == GetVoxelRaw({pos.x - 1 + GetSize().x * (pos.y - 1)})) +
-           !!(value == GetVoxelRaw({pos.x + GetSize().x * (pos.y - 1)})) +
-           !!(value == GetVoxelRaw({pos.x + 1 + GetSize().x * (pos.y - 1)})) +
-           !!(value == GetVoxelRaw({pos.x - 1 + GetSize().x * (pos.y)})) +
-           !!(value == GetVoxelRaw({pos.x + 1 + GetSize().x * (pos.y)})) +
-           !!(value == GetVoxelRaw({pos.x - 1 + GetSize().x * (pos.y + 1)})) +
-           !!(value == GetVoxelRaw({pos.x + GetSize().x * (pos.y + 1)})) +
-           !!(value == GetVoxelRaw({pos.x + 1 + GetSize().x * (pos.y + 1)}));
+    return !!(value == GetVoxelRaw((pos.x - 1 + GetSize().x * (pos.y - 1)))) +
+           !!(value == GetVoxelRaw((pos.x + GetSize().x * (pos.y - 1)))) +
+           !!(value == GetVoxelRaw((pos.x + 1 + GetSize().x * (pos.y - 1)))) +
+           !!(value == GetVoxelRaw((pos.x - 1 + GetSize().x * (pos.y)))) +
+           !!(value == GetVoxelRaw((pos.x + 1 + GetSize().x * (pos.y)))) +
+           !!(value == GetVoxelRaw((pos.x - 1 + GetSize().x * (pos.y + 1)))) +
+           !!(value == GetVoxelRaw((pos.x + GetSize().x * (pos.y + 1)))) +
+           !!(value == GetVoxelRaw((pos.x + 1 + GetSize().x * (pos.y + 1))));
 }
 
 void Level::MaterializeLevelTerrainAndBases()
@@ -282,7 +282,7 @@ void Level::DumpBitmap(const char * filename) const
             color_data[i] = static_cast<Color>(GetVoxelColor(this->GetVoxelRaw(i)));
 
         {
-            auto trace = MeasureFunction<5>("DumpBitmap");
+            [[maybe_unused]] auto trace = MeasureFunction<5>("DumpBitmap");
             BmpFile::SaveToFile(color_data, filename);
         }
     }

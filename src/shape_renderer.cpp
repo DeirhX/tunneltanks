@@ -135,8 +135,8 @@ void ShapeRenderer::DrawRectanglePart(Surface * surface, Rect screen_rect, int s
                                       Color outline_color)
 {
     int pixels_drawn = 0;
-    const int start_draw = std::max(0, skip_pixels);
-    const int stop_draw = start_draw + draw_pixels;
+    //const int start_draw = std::max(0, skip_pixels);
+    //const int stop_draw = start_draw + draw_pixels;
 
     /* Draw outline using 4 lines */
     DrawLinePart(surface, {screen_rect.Left(), screen_rect.Top()}, 
