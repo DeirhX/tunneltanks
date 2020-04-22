@@ -3,7 +3,6 @@
 
 #include <level.h>
 #include <projectile.h>
-#include <ranges>
 #include <tank.h>
 #include <tank_list.h>
 #include <tank_sprites.h>

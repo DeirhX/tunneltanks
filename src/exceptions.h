@@ -1,11 +1,11 @@
 #pragma once
 #include <cstdint>
-#include <exception>
+#include <stdexcept>
 
-class GameException : public std::exception
+class GameException : public std::runtime_error
 {
   public:
-    GameException(const char * message) : std::exception(message) {}
+    GameException(const char * message) : std::runtime_error(message) {}
 };
 
 class GameInitException : public GameException

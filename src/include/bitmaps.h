@@ -31,7 +31,7 @@ class ImageData
 
   public:
     /* In-place value initialization from hardcoded byte-array */
-    ImageData(Size size, std::initializer_list<DataType> data) : data(data), size(size)
+    ImageData(Size size, std::initializer_list<DataType> data) : size(size), data(data)
     {
         assert(size.x * size.y == int(data.size()));
     }

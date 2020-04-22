@@ -294,7 +294,7 @@ std::unique_ptr<Level> BraidLevelGenerator::Generate(Size size)
 	
 	braid_free(b);
 
-    return std::move(lvl);
+    return lvl;
 }
 
 }

@@ -133,14 +133,14 @@ void LevelGenerator::PrintAllGenerators(FILE * out)
 
 int Queries::CountNeighborValues(Position pos, Level * level)
 {
-    return (char)level->GetVoxelRaw({pos.x - 1 + level->GetSize().x * (pos.y - 1)}) +
-           (char)level->GetVoxelRaw({pos.x + level->GetSize().x * (pos.y - 1)}) +
-           (char)level->GetVoxelRaw({pos.x + 1 + level->GetSize().x * (pos.y - 1)}) +
-           (char)level->GetVoxelRaw({pos.x - 1 + level->GetSize().x * (pos.y)}) +
-           (char)level->GetVoxelRaw({pos.x + 1 + level->GetSize().x * (pos.y)}) +
-           (char)level->GetVoxelRaw({pos.x - 1 + level->GetSize().x * (pos.y + 1)}) +
-           (char)level->GetVoxelRaw({pos.x + level->GetSize().x * (pos.y + 1)}) +
-           (char)level->GetVoxelRaw({pos.x + 1 + level->GetSize().x * (pos.y + 1)});
+    return (char)level->GetVoxelRaw((pos.x - 1 + level->GetSize().x * (pos.y - 1))) +
+           (char)level->GetVoxelRaw((pos.x + level->GetSize().x * (pos.y - 1))) +
+           (char)level->GetVoxelRaw((pos.x + 1 + level->GetSize().x * (pos.y - 1))) +
+           (char)level->GetVoxelRaw((pos.x - 1 + level->GetSize().x * (pos.y))) +
+           (char)level->GetVoxelRaw((pos.x + 1 + level->GetSize().x * (pos.y))) +
+           (char)level->GetVoxelRaw((pos.x - 1 + level->GetSize().x * (pos.y + 1))) +
+           (char)level->GetVoxelRaw((pos.x + level->GetSize().x * (pos.y + 1))) +
+           (char)level->GetVoxelRaw((pos.x + 1 + level->GetSize().x * (pos.y + 1)));
 }
 
 } // namespace levelgen

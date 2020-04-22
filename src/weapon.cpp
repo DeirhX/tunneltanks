@@ -4,6 +4,8 @@
 #include "projectile.h"
 #include "world.h"
 
+#include <cassert>
+
 /*
 void WeaponCannonDescriptor::SpawnProjectile(Position pos, DirectionF direction, Tank * tank)
 {
@@ -46,6 +48,8 @@ Duration Weapon::Fire(Position pos, DirectionF direction, Tank * tank)
         GetWorld()->GetProjectileList()->Add(
             DirtBarrel{pos, direction * tweak::weapon::DirtBarrelSpeed, GetWorld()->GetLevel(), tank});
         return tweak::weapon::ConcreteSprayCooldown;
+    default:
+        assert(false);
     }
     return tweak::weapon::CannonCooldown;
 }

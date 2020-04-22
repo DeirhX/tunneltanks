@@ -211,7 +211,7 @@ std::unique_ptr<Level> MazeLevelGenerator::Generate(Size size)
 	}
 	
 	maze_free(m);
-    return std::move(level);
+    return level;
 }
 
 }

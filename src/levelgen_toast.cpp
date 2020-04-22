@@ -142,14 +142,14 @@ static void generate_tree(Level *lvl) {
 //
 // Much less instructions. Optimizer cannot see it through and fold it :(
 static int has_neighbor(Level* lvl, int x, int y) {
-	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y - 1) }) == LevelPixel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x     + lvl->GetSize().x * (y - 1) }) == LevelPixel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y - 1) }) == LevelPixel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y    ) }) == LevelPixel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y    ) }) == LevelPixel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x - 1 + lvl->GetSize().x * (y + 1) }) == LevelPixel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x     + lvl->GetSize().x * (y + 1) }) == LevelPixel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw({ x + 1 + lvl->GetSize().x * (y + 1) }) == LevelPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw(( x - 1 + lvl->GetSize().x * (y - 1) )) == LevelPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw(( x     + lvl->GetSize().x * (y - 1) )) == LevelPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw(( x + 1 + lvl->GetSize().x * (y - 1) )) == LevelPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw(( x - 1 + lvl->GetSize().x * (y    ) )) == LevelPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw(( x + 1 + lvl->GetSize().x * (y    ) )) == LevelPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw(( x - 1 + lvl->GetSize().x * (y + 1) )) == LevelPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw(( x     + lvl->GetSize().x * (y + 1) )) == LevelPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw(( x + 1 + lvl->GetSize().x * (y + 1) )) == LevelPixel::LevelGenDirt) return 1;
 	return 0;
 }
 
@@ -464,7 +464,7 @@ std::unique_ptr<Level> ToastLevelGenerator::Generate(Size size)
 	randomly_expand(lvl);
 	smooth_cavern(lvl);
 
-	return std::move(level);
+	return level;
 }
 
 #ifdef _TESTING

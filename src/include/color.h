@@ -4,10 +4,11 @@
 struct ColorLayout
 {
     /* The order is actually important - if it's identical to memory layout of our render surface, it's just a memcopy*/
+    /* and it will be UB, if you do memcopy :) */
     uint8_t b{}, g{}, r{}, a{};
 
     ColorLayout() = default;
-    ColorLayout(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255) : r(r), g(g), b(b), a(a) {}
+    ColorLayout(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255) : b(b), g(g), r(r), a(a) {}
 };
 
 struct Color : public ColorLayout

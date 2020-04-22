@@ -13,6 +13,7 @@ tunneltanks
 *.bmp
 /SDL/docs/
 /Build/
+/build/
 /obj/
 *.vcxproj.user
 **/.vs/

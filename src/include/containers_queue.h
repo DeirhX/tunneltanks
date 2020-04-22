@@ -40,12 +40,12 @@ template <typename Value> class counted_lockfree_queue : private boost::lockfree
     counted_lockfree_queue(int capacity) : parent(capacity) {}
     bool pop(Value & val)
     {
-        count.fetch_sub(1, std::memory_order::memory_order_relaxed);
+        count.fetch_sub(1, std::memory_order_relaxed);
         return parent::pop(val);
     }
     bool push(const Value & val)
     {
-        count.fetch_add(1, std::memory_order::memory_order_relaxed);
+        count.fetch_add(1, std::memory_order_relaxed);
         return parent::push(val);
     }
     size_t size() { return count; }

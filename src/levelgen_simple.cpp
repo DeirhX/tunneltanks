@@ -169,7 +169,7 @@ std::unique_ptr<Level> SimpleLevelGenerator::Generate(Size size)
 
     /* Add a few spawns, and we're good to go! */
     add_spawns(lvl);
-    return std::move(level);
+    return level;
 }
 
 } // namespace levelgen::simple

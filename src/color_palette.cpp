@@ -82,13 +82,13 @@ Color ColorPalette::Get(Colors colorName)
 Color ColorPalette::GetPrimary(TankColor index)
 {
     assert(index >= 0 && index < PrimaryColors);
-    return Primaries[index];
+    return Primaries[static_cast<int>(index)];
 }
 
 Color * ColorPalette::GetTank(TankColor index)
 {
     assert(index >= 0 && index < PrimaryColors);
-    return Tanks[index];
+    return Tanks[static_cast<int>(index)];
 }
 
 void ColorPalette::Set(Colors colorName, Color color) { Values[static_cast<int>(colorName)] = color; }
@@ -96,13 +96,13 @@ void ColorPalette::Set(Colors colorName, Color color) { Values[static_cast<int>(
 void ColorPalette::SetPrimary(TankColor index, Color color)
 {
     assert(index >= 0 && index < PrimaryColors);
-    Primaries[index] = color;
+    Primaries[static_cast<int>(index)] = color;
 }
 
 void ColorPalette::SetTank(TankColor index, Color color_1, Color color_2, Color color_3)
 {
     assert(index >= 0 && index < PrimaryColors);
-    Tanks[index][0] = color_1;
-    Tanks[index][1] = color_2;
-    Tanks[index][2] = color_3;
+    Tanks[static_cast<int>(index)][0] = color_1;
+    Tanks[static_cast<int>(index)][1] = color_2;
+    Tanks[static_cast<int>(index)][2] = color_3;
 }
