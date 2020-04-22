@@ -60,10 +60,18 @@ void BmpFile::SaveToFile(const ColorBitmap & data, std::string_view file_name)
 template <typename BitmapType, typename RawDataType, typename RawDataDecodeFunc>
 BitmapType BmpFile::LoadFromFile(std::string_view file_name, RawDataDecodeFunc DecodeFunc)
 {
-    const auto native_surface = std::unique_ptr<SDL_Surface, void (*)(SDL_Surface *)>(
-        SDL_LoadBMP(file_name.data()), [](SDL_Surface * surface) { SDL_FreeSurface(surface); });
+    /* zero size SDL_Deleted will give you sizeof(std::unique_ptr<T, Deleter>) == sizeof(void *) */
+    
+    struct SDL_Deleter {
+        void operator()(SDL_Surface * v) const noexcept {
+            SDL_FreeSurface(v);
+        }
+    };
+    
+    const auto native_surface = std::unique_ptr<SDL_Surface, SDL_Deleter>(SDL_LoadBMP(file_name.data()));
+    
     if (!native_surface)
-        throw GameException("Failed to load bitmap");
+        throw GameException(SDL_GetError());
 
     assert(sizeof(RawDataType) == native_surface->format->BytesPerPixel);
     auto loaded_data = BitmapType(Size{native_surface->w, native_surface->h});
