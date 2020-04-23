@@ -1,5 +1,4 @@
 #pragma once
-#include <cstdint>
 #include <stdexcept>
 
 class GameException : public std::runtime_error

@@ -1,6 +1,8 @@
 #pragma once
 #include <level.h>
 
+#include "levelgen.h"
+
 namespace levelgen::simple {
 
 	class SimpleLevelGenerator : public GeneratorAlgorithm

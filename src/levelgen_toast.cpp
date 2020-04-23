@@ -1,6 +1,4 @@
-#include "base.h"
 #include <cstdlib>
-#include <ctime>
 
 #include <gamelib.h>
 #include <levelgen.h>
@@ -10,7 +8,6 @@
 #include <memalloc.h>
 #include <random.h>
 #include <trace.h>
-#include <containers.h>
 
 #include <atomic>
 #include <future>

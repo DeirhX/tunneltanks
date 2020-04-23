@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <chrono>
 #include <memory>
 
 /* Generic types that are used all over the place.

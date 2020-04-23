@@ -1,12 +1,10 @@
 ﻿#include "machine.h"
 
 #include "color_palette.h"
-#include "game.h"
 #include "level.h"
 #include "projectile.h"
 #include "shape_renderer.h"
 #include "level_algorithm.h"
-#include "raycaster.h"
 #include "world.h"
 
 Machine::Machine(Position position, Tank * owner, Reactor reactor_, BoundingBox bounding_box)

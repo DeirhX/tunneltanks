@@ -2,7 +2,6 @@
 
 #include <string>
 
-#include "base.h"
 #include "game_system.h"
 #include "screen.h"
 

@@ -1,6 +1,3 @@
-#include "base.h"
-#include <cmath>
-
 #include <level.h>
 #include <levelgen_simple.h>
 #include <levelgenutil.h>

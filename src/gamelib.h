@@ -5,9 +5,6 @@
  * Android.) */
 
 #include <types.h>
-#include <vector>
-
-#include "game_config.h"
 
 /* If the gamelib needs initialization, this'll do it: */
 void gamelib_init();

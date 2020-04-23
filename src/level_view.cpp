@@ -2,7 +2,6 @@
 
 #include <level.h>
 #include <level_view.h>
-#include <tweak.h>
 #include <tank.h>
 
 LevelView::QueryResult LevelView::QueryPoint(Offset offset)

@@ -2,13 +2,11 @@
 #include <cstdlib>
 
 
-#include <gamelib.h>
 #include <level.h>
 #include <random.h>
 #include <tweak.h>
 #include <types.h>
 
-#include "exceptions.h"
 #include <cassert>
 
 #include "gamelib/sdl/bitmap.h"

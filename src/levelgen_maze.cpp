@@ -1,4 +1,3 @@
-#include "base.h"
 #include <level.h>
 #include <levelgenutil.h>
 #include <memalloc.h>

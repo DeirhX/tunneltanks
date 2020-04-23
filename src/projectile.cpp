@@ -1,13 +1,10 @@
 #include "projectile.h"
-#include "base.h"
 #include <boost/circular_buffer.hpp>
-#include <cstdio>
 #include <level.h>
 #include <random.h>
 #include <tank.h>
 #include <tweak.h>
 
-#include "game.h"
 #include "world.h"
 #include "mymath.h"
 #include "raycaster.h"

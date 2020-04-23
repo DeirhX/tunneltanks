@@ -1,8 +1,4 @@
-#include "base.h"
-
-#include <gamelib.h>
 #include <level.h>
-#include <random.h>
 #include <screen.h>
 #include <tank.h>
 #include <tweak.h>
@@ -10,7 +6,6 @@
 #include <world.h>
 
 
-#include "game.h"
 #include "game_system.h"
 
 /* The constructor sets the video mode: */

@@ -1,13 +1,10 @@
 ﻿#pragma once
+#include "bitmaps.h"
+#include "font_renderer.h"
 #include "game_config.h"
 #include "render_surface.h"
 #include "types.h"
-#include <cstdint>
 #include <string_view>
-#include <vector>
-
-#include "bitmaps.h"
-#include "font_renderer.h"
 
 /*
  * Renderer: Takes care of rendering our RenderSurface to an actual device.

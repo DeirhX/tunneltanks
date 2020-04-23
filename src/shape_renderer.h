@@ -2,9 +2,6 @@
 
 #include <optional>
 
-#include "containers.h"
-#include "mymath.h"
-#include "random.h"
 #include "raycaster.h"
 #include "render_surface.h"
 #include "types.h"

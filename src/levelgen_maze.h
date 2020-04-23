@@ -2,6 +2,8 @@
 #include <level.h>
 #include <memory>
 
+#include "levelgen.h"
+
 namespace levelgen::maze
 {
 

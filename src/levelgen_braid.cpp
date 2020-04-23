@@ -1,8 +1,6 @@
-#include "base.h"
 #include <level.h>
 #include <levelgenutil.h>
 #include <memalloc.h>
-#include <queue>
 #include <random.h>
 #include "levelgen_braid.h"
 

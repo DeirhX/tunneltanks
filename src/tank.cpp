@@ -1,4 +1,3 @@
-#include "base.h"
 #include <algorithm>
 
 #include <level.h>
@@ -15,8 +14,6 @@
 
 
 #include "controller.h"
-#include "game.h"
-#include "raycaster.h"
 
 /*  /\
  * TANK

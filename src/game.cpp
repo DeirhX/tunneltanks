@@ -1,4 +1,3 @@
-#include "base.h"
 #include <cstdlib>
 
 #include "exceptions.h"
@@ -11,7 +10,6 @@
 #include <level.h>
 #include <levelgen.h>
 #include <projectile.h>
-#include <random.h>
 #include <screen.h>
 #include <tank_list.h>
 #include <tweak.h>

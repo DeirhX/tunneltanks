@@ -2,7 +2,6 @@
 #include <cassert>
 #include <memory>
 #include <types.h>
-
 #include "game_config.h"
 
 class TankList;

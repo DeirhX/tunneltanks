@@ -1,5 +1,4 @@
 #include <sdl2/include/SDL.h>
-#include <ctime>
 
 #include <gamelib.h>
 #include <tank.h>

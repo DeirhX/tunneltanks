@@ -1,5 +1,4 @@
 #include "color_palette.h"
-#include "base.h"
 
 #include <cassert>
 

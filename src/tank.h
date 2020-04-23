@@ -4,7 +4,6 @@
 
 #include <level.h>
 #include <level_view.h>
-#include <optional>
 #include <projectile_list.h>
 
 #include "controller.h"

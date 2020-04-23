@@ -1,4 +1,3 @@
-#include "base.h"
 #include <control.h>
 #ifdef _WIN32
 #include <crtdbg.h>
@@ -10,21 +9,19 @@
 #include <level.h>
 #include <levelgen.h>
 #include <memalloc.h>
-#include <projectile.h>
 #include <random.h>
-#include <stdio.h>
 #include <tweak.h>
 #include <types.h>
 
 /* Nothing in this file uses SDL, but we still have to include SDL.h for Macs,
  * since they do some extra magic in the file WRT the main() function: */
-#include <sdl2/include/SDL.h>
+// #include <sdl2/include/SDL.h>
 #include <iostream>
 
 #include "exceptions.h"
 #include "game_config.h"
-#include "gamelib/SDL/control.h"
-#include "gamelib/SDL/sdl_system.h"
+#include "gamelib/sdl/control.h"
+#include "gamelib/sdl/sdl_system.h"
 
 int GameMain(int argc, char * argv[]);
 

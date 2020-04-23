@@ -1,8 +1,5 @@
 #include "level_pixel_surface.h"
 
-#include "base.h"
-#include <memory>
-
 /* TODO: We're using color structures here because we started with Uint32 values
  *       and this was an easier transition. Eventually, all colors will be in a
  *       central array, and the pixel data will simply be 1-byte indexes. */

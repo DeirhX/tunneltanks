@@ -2,7 +2,6 @@
 
 #include <sdl2/include/SDL.h>
 
-#include <gamelib.h>
 #include <memory>
 #include <types.h>
 

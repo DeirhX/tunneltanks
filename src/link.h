@@ -2,7 +2,6 @@
 #include <optional>
 #include <vector>
 
-
 #include "containers.h"
 #include "duration.h"
 #include "tweak.h"
@@ -171,7 +170,7 @@ class Link : public Invalidable
 /* LinkMap: Manages all link point updates and links */
 class LinkMap
 {
-    [[maybe_unused]] Level * level;
+    [[maybe_unused]] class Level * level;
     ValueContainer<LinkPoint> link_points = {};
     ValueContainer<Link> links = {};
 
@@ -181,7 +180,7 @@ class LinkMap
     bool is_linkpoint_moved = false;
 
   public:
-    LinkMap(Level * level) : level(level) {}
+    LinkMap(class Level * level) : level(level) {}
 
     [[nodiscard]] ValueContainerView<LinkPoint> & GetLinkPoints() { return this->link_points; }
 

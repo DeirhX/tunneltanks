@@ -1,6 +1,5 @@
 ﻿#include "weapon.h"
 
-#include "game.h"
 #include "projectile.h"
 #include "world.h"
 

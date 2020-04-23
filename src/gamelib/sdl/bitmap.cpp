@@ -1,10 +1,7 @@
 #include "bitmap.h"
 #include <sdl2/include/SDL.h>
-#include <algorithm>
 #include <cassert>
 
-#include <gamelib.h>
-#include <memalloc.h>
 #include <types.h>
 #include <vector>
 

@@ -1,4 +1,3 @@
-#include "base.h"
 #include <cstdlib>
 
 #include <level.h>
@@ -6,7 +5,6 @@
 #include <tank.h>
 #include <tank_list.h>
 #include <tank_sprites.h>
-#include <tweak.h>
 #include <types.h>
 
 #include "exceptions.h"

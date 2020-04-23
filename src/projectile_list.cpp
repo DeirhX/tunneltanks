@@ -1,9 +1,5 @@
 #include "projectile_list.h"
-#include "base.h"
 #include "level.h"
-#include "projectile.h"
-#include "random.h"
-#include "tank.h"
 #include "tank_list.h"
 
 void ProjectileList::Advance(Level * level, TankList * tankList)

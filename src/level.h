@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <types.h>
 #include <vector>
 
 #include "containers.h"
@@ -9,6 +8,7 @@
 #include "parallelism.h"
 #include "render_surface.h"
 #include "tank_base.h"
+#include "types.h"
 
 class World;
 enum class LevelPixel : char;

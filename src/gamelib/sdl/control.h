@@ -1,8 +1,6 @@
 #pragma once
-#include <sdl2/include/SDL.h>
 
 #include "game_system.h"
-#include "sdldata.h"
 
 void smart_wait();
 
