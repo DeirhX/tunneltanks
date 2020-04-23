@@ -1,8 +1,8 @@
 #pragma once
+#include "types.h"
 #include <chrono>
 #include <cstdio>
 #include <memory>
-#include "types.h"
 class Level;
 
 namespace levelgen

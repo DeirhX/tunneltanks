@@ -1,12 +1,10 @@
 #pragma once
+#include "color.h"
+#include "types.h"
 #include <cassert>
 #include <cstddef>
 #include <initializer_list>
 #include <vector>
-
-
-#include "color.h"
-#include "types.h"
 
 class Screen;
 

@@ -1,14 +1,12 @@
 #pragma once
 
+#include "color_palette.h"
 #include "mymath.h"
+#include "random.h"
+#include "tweak.h"
 #include "types.h"
 #include <containers.h>
 #include <vector>
-
-
-#include "color_palette.h"
-#include "random.h"
-#include "tweak.h"
 
 namespace math
 {
@@ -38,11 +36,11 @@ struct Projectile : public Invalidable
         : pos(position), speed(speed.x, speed.y), is_alive(true), level(level)
     {
     }
+
   public:
     //virtual ProjectileType GetType() = 0;
     virtual void Advance(class TankList * tankList) = 0;
     virtual void Draw(class Surface * drawBuffer) = 0;
-
 };
 
 /*  
@@ -73,10 +71,7 @@ class ShrapnelBase : public Projectile
 class Shrapnel final : public ShrapnelBase
 {
   public:
-    Shrapnel(Position position, SpeedF speed, int life, Level * level)
-        : ShrapnelBase(position, speed, life, level)
-    {
-    }
+    Shrapnel(Position position, SpeedF speed, int life, Level * level) : ShrapnelBase(position, speed, life, level) {}
 };
 
 /*
@@ -87,7 +82,9 @@ class Shrapnel final : public ShrapnelBase
 class ConcreteFoam final : public ShrapnelBase
 {
   public:
-    ConcreteFoam(Position position, SpeedF speed, int life, Level * level) : ShrapnelBase(position, speed, life, level) {}
+    ConcreteFoam(Position position, SpeedF speed, int life, Level * level) : ShrapnelBase(position, speed, life, level)
+    {
+    }
     void Advance(class TankList * tankList) override;
     void Draw(class Surface * drawBuffer) override;
 };
@@ -123,7 +120,7 @@ class MotionBlurProjectile : public Projectile
  *
  * Basic cannot bullet shot by a tank
  */
-class Bullet final: public MotionBlurProjectile
+class Bullet final : public MotionBlurProjectile
 {
     using Base = MotionBlurProjectile;
 
@@ -149,11 +146,13 @@ class FlyingBarrel : public Projectile
     class Tank * tank;
     Color draw_color;
     int explode_distance;
+
   protected:
     FlyingBarrel(Position position, SpeedF speed, Level * level, Tank * tank, Color draw_color, int explode_distance)
         : Base(position, speed, level), tank(tank), draw_color(draw_color), explode_distance(explode_distance)
     {
     }
+
   public:
     template <typename ExplosionFuncType>
     void Advance(TankList * tankList, ExplosionFuncType explosionFunc);
@@ -166,22 +165,22 @@ class FlyingBarrel : public Projectile
  * Flying barrel exploding in a fan of concrete
  */
 
-class ConcreteBarrel final: public FlyingBarrel
+class ConcreteBarrel final : public FlyingBarrel
 {
-public:
+  public:
     ConcreteBarrel(Position position, SpeedF speed, Level * level, Tank * tank)
-    : FlyingBarrel(position, speed, level, tank, Palette.Get(Colors::ConcreteShot), tweak::weapon::ConcreteDetonationDistance)
-  {
-  }
-  void Advance(TankList * tankList) override;
-  
+        : FlyingBarrel(position, speed, level, tank, Palette.Get(Colors::ConcreteShot),
+                       tweak::weapon::ConcreteDetonationDistance)
+    {
+    }
+    void Advance(TankList * tankList) override;
 };
 
 /*
  * DirtBarrel
  * Flying barrel exploding in a fan of dirt
  */
-class DirtBarrel final: public FlyingBarrel
+class DirtBarrel final : public FlyingBarrel
 {
   public:
     DirtBarrel(Position position, SpeedF speed, Level * level, Tank * tank)

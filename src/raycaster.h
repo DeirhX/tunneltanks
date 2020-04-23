@@ -4,7 +4,7 @@
 
 class Raycaster
 {
-public:
+  public:
     enum class VisitFlags
     {
         PixelsMustTouchCorners = 0x0,
@@ -15,7 +15,10 @@ public:
      *                PixelsMustTouchSides  - include more pixels so that visited pixels must always side (exception: direct diagonal direction)
      */
     template <typename TVisit>
-    static bool Cast(PositionF from, PositionF to, TVisit visitor, VisitFlags flags = VisitFlags::PixelsMustTouchSides) /* Visitor(PositionF tested_pos, PositionF previous_pos) -> bool should continue? */
+    static bool
+    Cast(PositionF from, PositionF to, TVisit visitor,
+         VisitFlags flags = VisitFlags::
+             PixelsMustTouchSides) /* Visitor(PositionF tested_pos, PositionF previous_pos) -> bool should continue? */
     {
         if (from == to)
         {

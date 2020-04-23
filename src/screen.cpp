@@ -1,11 +1,9 @@
-#include <level.h>
-#include <screen.h>
-#include <tank.h>
-#include <tweak.h>
-#include <types.h>
-#include <world.h>
-
-
+#include "level.h"
+#include "screen.h"
+#include "tank.h"
+#include "tweak.h"
+#include "types.h"
+#include "world.h"
 #include "game_system.h"
 
 /* The constructor sets the video mode: */

@@ -4,6 +4,8 @@
 
 class Scene
 {
+public:
+    virtual ~Scene() = default;
     virtual void Advance() = 0;
 };
 

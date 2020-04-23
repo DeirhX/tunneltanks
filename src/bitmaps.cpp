@@ -1,6 +1,4 @@
 #include "bitmaps.h"
-
-
 #include "color.h"
 #include "color_palette.h"
 #include "screen.h"

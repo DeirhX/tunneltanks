@@ -1,8 +1,7 @@
+#include "level_view.h"
+#include "level.h"
+#include "tank.h"
 #include <cstdlib>
-
-#include <level.h>
-#include <level_view.h>
-#include <tank.h>
 
 LevelView::QueryResult LevelView::QueryPoint(Offset offset)
 {

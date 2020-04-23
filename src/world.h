@@ -2,9 +2,9 @@
 
 #include "collision_solver.h"
 #include "game.h"
-#include "machine_list.h"
 #include "level.h"
 #include "link.h"
+#include "machine_list.h"
 #include "projectile_list.h"
 #include "tank_list.h"
 
@@ -24,6 +24,7 @@ class World
 
     CollisionSolver collision_solver;
     RepetitiveTimer regrow_timer{tweak::world::DirtRecoverInterval};
+
   public:
     World(Game * game, std::unique_ptr<Level> && level);
     void Clear(); /* Clear the world of everything */

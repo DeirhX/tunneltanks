@@ -1,11 +1,10 @@
-#include <cstdlib>
-
-#include <controller.h>
-#include <tank.h>
-#include <random.h>
-#include <tweak.h>
-#include <level_view.h>
+#include "controller.h"
+#include "tank.h"
+#include "random.h"
+#include "tweak.h"
+#include "level_view.h"
 #include "aitwitch.h"
+#include <cstdlib>
 
 
 /* Used when seeking a base entrance: */

@@ -1,6 +1,6 @@
-#include <cstdio>
-#include <cstdarg>
 #include "require_sdl.h"
+#include <cstdarg>
+#include <cstdio>
 #ifdef _WIN32
 #include <debugapi.h>
 #endif

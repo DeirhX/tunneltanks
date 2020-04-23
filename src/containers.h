@@ -1,10 +1,10 @@
 #pragma once
 
+#include "trace.h"
 #include <deque>
 #include <queue>
-#include <trace.h>
-#include <vector>
 #include <type_traits>
+#include <vector>
 
 template <typename T, typename U>
 concept same_as = std::is_same_v<T, U> && std::is_same_v<U, T>;

@@ -1,9 +1,8 @@
 ﻿#pragma once
-#include <queue>
-#include <vector>
-
 #include "color.h"
 #include "types.h"
+#include <queue>
+#include <vector>
 
 /*
  * Surface: An array of raw (pixel) color information that can be effectively rendered

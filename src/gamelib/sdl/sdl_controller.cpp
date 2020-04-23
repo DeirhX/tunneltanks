@@ -1,13 +1,11 @@
-#include <sdl2/include/SDL.h>
-#include <cstdlib>
-
 #include "sdl_controller.h"
-#include <gamelib.h>
-#include <tank.h>
-
 #include "exceptions.h"
 #include "game_system.h"
+#include "gamelib.h"
 #include "require_sdl.h"
+#include "tank.h"
+#include <cstdlib>
+#include <sdl2/include/SDL.h>
 
 /* Any SDL-based controllers go in this file. */
 

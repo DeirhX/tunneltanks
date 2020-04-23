@@ -1,5 +1,4 @@
 ﻿#include "sdl_system.h"
-
 #include "game_config.h"
 
 SdlSystem::SdlSystem(VideoConfig video_config)

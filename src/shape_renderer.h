@@ -1,10 +1,9 @@
 ﻿#pragma once
 
-#include <optional>
-
 #include "raycaster.h"
 #include "render_surface.h"
 #include "types.h"
+#include <optional>
 
 struct Color;
 class Screen;

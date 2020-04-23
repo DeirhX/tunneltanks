@@ -1,6 +1,6 @@
-﻿#include "shape_renderer.h"
-#include "color.h"
+﻿#include "color.h"
 #include "screen.h"
+#include "shape_renderer.h"
 
 void ShapeRenderer::DrawLine(Surface * surface, Position from, Position to, Color color)
 {

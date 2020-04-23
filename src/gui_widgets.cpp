@@ -1,14 +1,11 @@
 #include "gui_widgets.h"
-
-#include <string>
-
 #include "game_system.h"
-#include "screen.h"
-
 #include "random.h"
+#include "screen.h"
 #include "shape_renderer.h"
 #include "tank.h"
 #include "tweak.h"
+#include <string>
 
 namespace widgets
 {

@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include "bitmap.h"
-#include "gamelib.h"
 #include "sdl_renderer.h"
 
 struct VideoConfig;

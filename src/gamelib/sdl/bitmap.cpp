@@ -1,12 +1,10 @@
 #include "bitmap.h"
-#include <sdl2/include/SDL.h>
-#include <cassert>
-
-#include <types.h>
-#include <vector>
-
 #include "exceptions.h"
 #include "require_sdl.h"
+#include "types.h"
+#include <cassert>
+#include <sdl2/include/SDL.h>
+#include <vector>
 
 ColorBitmap SdlBmpDecoder::LoadRGBA(std::string_view relative_image_path)
 {
@@ -58,15 +56,14 @@ template <typename BitmapType, typename RawDataType, typename RawDataDecodeFunc>
 BitmapType BmpFile::LoadFromFile(std::string_view file_name, RawDataDecodeFunc DecodeFunc)
 {
     /* zero size SDL_Deleted will give you sizeof(std::unique_ptr<T, Deleter>) == sizeof(void *) */
-    
-    struct SDL_Deleter {
-        void operator()(SDL_Surface * v) const noexcept {
-            SDL_FreeSurface(v);
-        }
+
+    struct SDL_Deleter
+    {
+        void operator()(SDL_Surface * v) const noexcept { SDL_FreeSurface(v); }
     };
-    
+
     const auto native_surface = std::unique_ptr<SDL_Surface, SDL_Deleter>(SDL_LoadBMP(file_name.data()));
-    
+
     if (!native_surface)
         throw GameException(SDL_GetError());
 
@@ -76,8 +73,7 @@ BitmapType BmpFile::LoadFromFile(std::string_view file_name, RawDataDecodeFunc D
     /* Go through every source pixel in native SDL format and convert it to our Color/monochrome pixel structure */
     for (int i = 0; i < native_surface->w * native_surface->h; ++i)
     {
-        DecodeFunc(static_cast<RawDataType *>(native_surface->pixels)[i],
-                   native_surface->format, &loaded_data[i]);
+        DecodeFunc(static_cast<RawDataType *>(native_surface->pixels)[i], native_surface->format, &loaded_data[i]);
     }
 
     /* Freed automatically */

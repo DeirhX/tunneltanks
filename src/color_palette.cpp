@@ -1,8 +1,6 @@
 #include "color_palette.h"
-
-#include <cassert>
-
 #include "types.h"
+#include <cassert>
 
 ColorPalette Palette;
 /* Various colors for use in the game: */

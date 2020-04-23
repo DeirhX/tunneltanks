@@ -1,19 +1,17 @@
 ﻿#include "sdl_renderer.h"
-
-#include <sdl2/include/SDL.h>
-
-#include <memory>
-#include <types.h>
-
 #include "exceptions.h"
 #include "require_sdl.h"
 #include "tweak.h"
+#include "types.h"
+#include <memory>
+#include <sdl2/include/SDL.h>
 
 /*
  *  SdlRenderer wrapper over SDL_Renderer, SDL_Texture and SDL_Surface
  */
 
-SdlRenderer::SdlRenderer(SdlWindow * owning_window, ScreenRenderSurface * render_surface) : render_surface(render_surface)
+SdlRenderer::SdlRenderer(SdlWindow * owning_window, ScreenRenderSurface * render_surface)
+    : render_surface(render_surface)
 {
     Recreate(owning_window);
 }
@@ -48,11 +46,13 @@ void SdlRenderer::Recreate(SdlWindow * new_owning_window)
     this->native_renderer.reset();
     this->native_texture.reset();
 
-    this->native_renderer = {SDL_CreateRenderer(owning_window->GetNativeWindow(), -1, SDL_RENDERER_ACCELERATED),
-                             [](SDL_Renderer * renderer) { /* SDL_DestroyRenderer(renderer);*/ /* Destroyed by window */ }};
+    this->native_renderer = {
+        SDL_CreateRenderer(owning_window->GetNativeWindow(), -1, SDL_RENDERER_ACCELERATED),
+        [](SDL_Renderer * renderer) { /* SDL_DestroyRenderer(renderer);*/ /* Destroyed by window */ }};
     if (!this->native_renderer)
         throw GameInitException("Failed to create game renderer.");
-    if (SDL_RenderSetLogicalSize(this->native_renderer.get(), this->render_surface->GetSize().x, this->render_surface->GetSize().y))
+    if (SDL_RenderSetLogicalSize(this->native_renderer.get(), this->render_surface->GetSize().x,
+                                 this->render_surface->GetSize().y))
         throw GameInitException("Failed to set logical size.");
 
     this->native_texture = {

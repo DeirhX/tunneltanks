@@ -1,8 +1,7 @@
 #pragma once
 #include "level.h"
-#include <memory>
-
 #include "levelgen.h"
+#include <memory>
 
 namespace levelgen::braid
 {

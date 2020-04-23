@@ -1,12 +1,11 @@
 #pragma once
 
+#include "bitmaps.h"
+#include "color.h"
+#include "gui_widgets.h"
 #include <level.h>
 #include <tank.h>
 #include <types.h>
-
-#include "color.h"
-#include "bitmaps.h"
-#include "gui_widgets.h"
 
 class World;
 
@@ -20,7 +19,6 @@ struct GUIController
 {
     Rect r;
 };
-
 
 class Screen
 {
@@ -36,12 +34,13 @@ class Screen
 
     LevelSurfaces * level_surfaces;
     ScreenRenderSurface * screen_surface;
+
   public:
     Screen(bool is_fullscreen, ScreenRenderSurface * render_surface);
 
     /* Resizing the screen: */
-    bool GetFullscreen() { return is_fullscreen; }
-    void SetFullscreen(bool is_fullscreen);
+    bool GetFullscreen() const { return is_fullscreen; }
+    void SetFullscreen(bool new_fullscreen);
     void Resize(Size size);
 
     /* Set the current drawing mode: */
@@ -49,7 +48,6 @@ class Screen
 
     LevelSurfaces * GetLevelSurfaces() { return this->level_surfaces; }
     ScreenRenderSurface * GetScreenSurface() { return this->screen_surface; }
-
 
     /* A few useful functions for external drawing: */
     void DrawPixel(ScreenPosition pos, Color color);
@@ -62,7 +60,7 @@ class Screen
     void DrawLevel();
 
   public:
-    void AddWidget(std::unique_ptr<widgets::GuiWidget> &&widget);
+    void AddWidget(std::unique_ptr<widgets::GuiWidget> && widget);
     void AddWindow(ScreenRect rect, class Tank * task);
     void AddStatus(ScreenRect r, class Tank * t, bool decreases_to_left);
     void AddBitmap(ScreenRect r, MonoBitmap * bitmap, Color color);
@@ -77,6 +75,6 @@ class Screen
 class Screens
 {
   public:
-    static void SinglePlayerScreenSetup(Screen *screen, World *world, Tank *player);
-    static void TwoPlayerScreenSetup(Screen *screen, World *world, Tank *player_one, Tank *player_two);
+    static void SinglePlayerScreenSetup(Screen * screen, World * world, Tank * player);
+    static void TwoPlayerScreenSetup(Screen * screen, World * world, Tank * player_one, Tank * player_two);
 };

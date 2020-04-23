@@ -1,7 +1,7 @@
 ﻿#pragma once
+#include "bitmaps.h"
 #include <array>
 #include <string_view>
-#include "bitmaps.h"
 
 class GameSystem;
 class ScreenRenderSurface;

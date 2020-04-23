@@ -1,12 +1,11 @@
 #pragma once
 
-#include <thread>
-#include <algorithm>
-#include <types.h>
-#include <chrono>
-
 #include "duration.h"
 #include "resources.h"
+#include "types.h"
+#include <algorithm>
+#include <chrono>
+#include <thread>
 
 #define _MEM_STATS
 

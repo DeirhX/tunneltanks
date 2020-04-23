@@ -1,14 +1,13 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-
 #include "containers.h"
 #include "level_adjacency.h"
 #include "parallelism.h"
 #include "render_surface.h"
 #include "tank_base.h"
 #include "types.h"
+#include <memory>
+#include <vector>
 
 class World;
 enum class LevelPixel : char;

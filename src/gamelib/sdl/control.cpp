@@ -1,13 +1,11 @@
-#include <sdl2/include/SDL.h>
-
-#include <gamelib.h>
-#include <tank.h>
-#include <tweak.h>
-
 #include "control.h"
 #include "exceptions.h"
+#include "gamelib.h"
 #include "require_sdl.h"
 #include "sdl_controller.h"
+#include "tank.h"
+#include "tweak.h"
+#include <sdl2/include/SDL.h>
 
 /* Set up SDL: */
 void gamelib_init()
@@ -19,10 +17,7 @@ void gamelib_init()
 }
 
 /* Frees stuff up: */
-void gamelib_exit()
-{
-    SDL_Quit();
-}
+void gamelib_exit() { SDL_Quit(); }
 
 /* Waits long enough to maintain a consistent FPS: */
 void smart_wait()
@@ -57,7 +52,6 @@ bool gamelib_get_can_resize() { return 1; }
 bool gamelib_get_can_fullscreen() { return 1; }
 bool gamelib_get_can_window() { return 1; }
 int gamelib_get_target_fps() { return tweak::perf::TargetFps; }
-
 
 /* TODO: Move to classes. ControllerAssigner? */
 static bool try_attach_gamepad(Tank * tank, int gamepad_num)

@@ -1,18 +1,14 @@
 #pragma once
-#include <memory>
-/* For the controllers/AIs: */
-
-#include <level.h>
-#include <level_view.h>
-#include <projectile_list.h>
-
 #include "controller.h"
 #include "gui_widgets.h"
+#include "level.h"
+#include "level_view.h"
 #include "machine_materializer.h"
-#include "tank_turret.h"
+#include "projectile_list.h"
 #include "tank_sprites.h"
+#include "tank_turret.h"
 #include "weapon.h"
-//#include <world.h>
+#include <memory>
 
 class TankBase;
 struct LevelView;
@@ -42,13 +38,13 @@ void ForEachTankPixel(PerPixelFunc per_pixel_func, Position position, Direction 
 
 class Tank : public Invalidable
 {
-    Position position; /* Current tank position */
-    Speed speed;  /* Velocity... ie: is it moving now? */
+    Position position;        /* Current tank position */
+    Speed speed;              /* Velocity... ie: is it moving now? */
     Direction direction = {}; /* Heading of the tank */
 
-    TankColor color;                          /* Unique id and also color of the tank */
-    TankBase * tank_base = nullptr;           /* Base owned by the tank  */
-    TankTurret turret;                        /* Turret of the tank */
+    TankColor color;                /* Unique id and also color of the tank */
+    TankBase * tank_base = nullptr; /* Base owned by the tank  */
+    TankTurret turret;              /* Turret of the tank */
     MachineMaterializer materializer;
     widgets::Crosshair * crosshair = nullptr; /* Crosshair used for aiming */
 
@@ -66,7 +62,7 @@ class Tank : public Invalidable
 
   public:
     Tank(TankColor color, Level * level, ProjectileList * projectile_list, TankBase * tank_base);
-    
+
     void SetController(std::shared_ptr<Controller> newController) { this->controller = newController; }
     void SetCrosshair(widgets::Crosshair * cross);
 
@@ -110,19 +106,19 @@ class Tank : public Invalidable
 
 namespace tank
 {
-    /* return false to stop enumeration */
-    template <typename PerPixelFunc>
-    void ForEachTankPixel(PerPixelFunc per_pixel_func, Position position, Direction direction)
-    {
-        Offset offset;
-        for (offset.y = -3; offset.y <= 3; offset.y++)
-            for (offset.x = -3; offset.x <= 3; offset.x++)
+/* return false to stop enumeration */
+template <typename PerPixelFunc>
+void ForEachTankPixel(PerPixelFunc per_pixel_func, Position position, Direction direction)
+{
+    Offset offset;
+    for (offset.y = -3; offset.y <= 3; offset.y++)
+        for (offset.x = -3; offset.x <= 3; offset.x++)
+        {
+            if (TANK_SPRITE[direction][3 + offset.y][3 + offset.x])
             {
-                if (TANK_SPRITE[direction][3 + offset.y][3 + offset.x])
-                {
-                    if (!per_pixel_func(position + offset))
-                        return;
-                }
+                if (!per_pixel_func(position + offset))
+                    return;
             }
-    }
+        }
+}
 } // namespace tank

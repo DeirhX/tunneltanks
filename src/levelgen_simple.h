@@ -1,16 +1,14 @@
 #pragma once
+#include "levelgen.h"
 #include <level.h>
 
-#include "levelgen.h"
+namespace levelgen::simple
+{
 
-namespace levelgen::simple {
-
-	class SimpleLevelGenerator : public GeneratorAlgorithm
+class SimpleLevelGenerator : public GeneratorAlgorithm
 {
   public:
     std::unique_ptr<Level> Generate(Size size) override;
 };
 
-}
-
-
+} // namespace levelgen::simple

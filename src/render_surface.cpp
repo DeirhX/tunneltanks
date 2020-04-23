@@ -1,5 +1,4 @@
 ﻿#include "render_surface.h"
-
 #include "shape_renderer.h"
 
 void Surface::Clear()

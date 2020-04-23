@@ -1,8 +1,7 @@
 #pragma once
-#include <vector>
-#include "types.h"
-
 #include "gamelib/sdl/sdl_renderer.h"
+#include "types.h"
+#include <vector>
 
 class LevelPixelSurface
 {

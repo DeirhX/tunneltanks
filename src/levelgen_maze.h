@@ -1,8 +1,7 @@
 #pragma once
+#include "levelgen.h"
 #include <level.h>
 #include <memory>
-
-#include "levelgen.h"
 
 namespace levelgen::maze
 {

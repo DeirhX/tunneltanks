@@ -1,9 +1,7 @@
-#include <sdl2/include/SDL.h>
-
-#include <gamelib.h>
-#include <types.h>
-
+#include "gamelib.h"
+#include "types.h"
 #include "require_sdl.h"
+#include <sdl2/include/SDL.h>
 
 
 #define FULLSCREEN_KEY   SDLK_F10
