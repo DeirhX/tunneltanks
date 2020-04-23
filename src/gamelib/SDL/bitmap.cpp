@@ -1,5 +1,5 @@
 #include "bitmap.h"
-#include <SDL.h>
+#include <sdl2/include/SDL.h>
 #include <algorithm>
 #include <cassert>
 

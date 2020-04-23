@@ -1,5 +1,5 @@
 #pragma once
-#include <SDL.h>
+#include <sdl2/include/SDL.h>
 #include <controller.h>
 
 class KeyboardController : public Controller

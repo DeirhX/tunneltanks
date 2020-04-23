@@ -3,7 +3,7 @@
 #include <types.h>
 #include <vector>
 
-#include "sdl_renderer.h"
+#include "gamelib/SDL/sdl_renderer.h"
 
 class LevelPixelSurface
 {

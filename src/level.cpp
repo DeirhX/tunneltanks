@@ -11,7 +11,7 @@
 #include "exceptions.h"
 #include <cassert>
 
-#include "bitmap.h"
+#include "gamelib/sdl/bitmap.h"
 #include "color_palette.h"
 #include "trace.h"
 #include "level_pixel.h"

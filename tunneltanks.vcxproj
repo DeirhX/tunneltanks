@@ -55,7 +55,7 @@
     <ClCompile Include="src\gamelib\SDL\sdl_system.cpp" />
     <ClCompile Include="src\gamelib\SDL\sdl_renderer.cpp" />
     <ClCompile Include="src\gui_widgets.cpp" />
-    <ClCompile Include="src\include\projectile_list.cpp" />
+    <ClCompile Include="src\projectile_list.cpp" />
     <ClCompile Include="src\level.cpp" />
     <ClCompile Include="src\levelgen.cpp" />
     <ClCompile Include="src\levelgen_braid.cpp" />
@@ -97,50 +97,50 @@
     <ClInclude Include="src\gamelib\SDL\sdldata.h" />
     <ClInclude Include="src\gamelib\SDL\sdl_system.h" />
     <ClInclude Include="src\gamelib\SDL\sdl_renderer.h" />
-    <ClInclude Include="src\include\level_algorithm.h" />
+    <ClInclude Include="src\level_algorithm.h" />
     <ClInclude Include="src\link.h" />
     <ClInclude Include="src\machine.h" />
     <ClInclude Include="src\machine_list.h" />
-    <ClInclude Include="src\include\aitwitch.h" />
-    <ClInclude Include="src\include\color_palette.h" />
-    <ClInclude Include="src\include\containers.h" />
-    <ClInclude Include="src\include\containers_queue.h" />
-    <ClInclude Include="src\include\controller.h" />
-    <ClInclude Include="src\include\duration.h" />
-    <ClInclude Include="src\include\level_pixel_surface.h" />
-    <ClInclude Include="src\include\game.h" />
-    <ClInclude Include="src\include\gamelib.h" />
-    <ClInclude Include="src\include\bitmaps.h" />
-    <ClInclude Include="src\include\game_config.h" />
-    <ClInclude Include="src\include\game_system.h" />
-    <ClInclude Include="src\include\gui_widgets.h" />
-    <ClInclude Include="src\include\iterators.h" />
-    <ClInclude Include="src\include\level.h" />
-    <ClInclude Include="src\include\levelgen.h" />
-    <ClInclude Include="src\include\levelgen_braid.h" />
-    <ClInclude Include="src\include\levelgen_maze.h" />
-    <ClInclude Include="src\include\levelgen_simple.h" />
-    <ClInclude Include="src\include\levelgen_toast.h" />
-    <ClInclude Include="src\include\levelgenutil.h" />
-    <ClInclude Include="src\include\level_pixel.h" />
-    <ClInclude Include="src\include\level_view.h" />
-    <ClInclude Include="src\include\mymath.h" />
-    <ClInclude Include="src\include\memalloc.h" />
-    <ClInclude Include="src\include\color.h" />
-    <ClInclude Include="src\include\parallelism.h" />
-    <ClInclude Include="src\include\projectile.h" />
-    <ClInclude Include="src\include\projectile_list.h" />
-    <ClInclude Include="src\include\random.h" />
-    <ClInclude Include="src\include\raycaster.h" />
-    <ClInclude Include="src\include\scene.h" />
-    <ClInclude Include="src\include\screen.h" />
-    <ClInclude Include="src\include\tank.h" />
-    <ClInclude Include="src\include\tank_list.h" />
-    <ClInclude Include="src\include\tank_sprites.h" />
-    <ClInclude Include="src\include\trace.h" />
-    <ClInclude Include="src\include\tweak.h" />
-    <ClInclude Include="src\include\types.h" />
-    <ClInclude Include="src\include\world.h" />
+    <ClInclude Include="src\aitwitch.h" />
+    <ClInclude Include="src\color_palette.h" />
+    <ClInclude Include="src\containers.h" />
+    <ClInclude Include="src\containers_queue.h" />
+    <ClInclude Include="src\controller.h" />
+    <ClInclude Include="src\duration.h" />
+    <ClInclude Include="src\level_pixel_surface.h" />
+    <ClInclude Include="src\game.h" />
+    <ClInclude Include="src\gamelib.h" />
+    <ClInclude Include="src\bitmaps.h" />
+    <ClInclude Include="src\game_config.h" />
+    <ClInclude Include="src\game_system.h" />
+    <ClInclude Include="src\gui_widgets.h" />
+    <ClInclude Include="src\iterators.h" />
+    <ClInclude Include="src\level.h" />
+    <ClInclude Include="src\levelgen.h" />
+    <ClInclude Include="src\levelgen_braid.h" />
+    <ClInclude Include="src\levelgen_maze.h" />
+    <ClInclude Include="src\levelgen_simple.h" />
+    <ClInclude Include="src\levelgen_toast.h" />
+    <ClInclude Include="src\levelgenutil.h" />
+    <ClInclude Include="src\level_pixel.h" />
+    <ClInclude Include="src\level_view.h" />
+    <ClInclude Include="src\mymath.h" />
+    <ClInclude Include="src\memalloc.h" />
+    <ClInclude Include="src\color.h" />
+    <ClInclude Include="src\parallelism.h" />
+    <ClInclude Include="src\projectile.h" />
+    <ClInclude Include="src\projectile_list.h" />
+    <ClInclude Include="src\random.h" />
+    <ClInclude Include="src\raycaster.h" />
+    <ClInclude Include="src\scene.h" />
+    <ClInclude Include="src\screen.h" />
+    <ClInclude Include="src\tank.h" />
+    <ClInclude Include="src\tank_list.h" />
+    <ClInclude Include="src\tank_sprites.h" />
+    <ClInclude Include="src\trace.h" />
+    <ClInclude Include="src\tweak.h" />
+    <ClInclude Include="src\types.h" />
+    <ClInclude Include="src\world.h" />
     <ClInclude Include="src\level_adjacency.h">
       <FileType>CppHeader</FileType>
     </ClInclude>
@@ -266,26 +266,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>Build\$(PlatformShortName)\$(Configuration)\</OutDir>
     <IntDir>obj\$(PlatformShortName)\$(Configuration)\</IntDir>
-    <IncludePath>sdl2\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);src\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>Build\$(PlatformShortName)\$(Configuration)\</OutDir>
     <IntDir>obj\$(PlatformShortName)\$(Configuration)\</IntDir>
-    <IncludePath>sdl2\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);src\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Static|Win32'">
     <OutDir>Build\$(PlatformShortName)\$(Configuration)\</OutDir>
     <IntDir>obj\$(PlatformShortName)\$(Configuration)\</IntDir>
-    <IncludePath>sdl2\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);src\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>sdl2\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);src\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>sdl2\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);src\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Static|x64'">
-    <IncludePath>sdl2\include;src\gamelib\SDL;src\;src\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);src\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

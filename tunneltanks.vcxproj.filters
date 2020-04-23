@@ -33,9 +33,6 @@
     <ClCompile Include="src\exceptions.cpp">
       <Filter>src\system</Filter>
     </ClCompile>
-    <ClCompile Include="src\include\projectile_list.cpp">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
     <ClCompile Include="src\scene.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
@@ -180,6 +177,7 @@
     <ClCompile Include="src\resources.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
+    <ClCompile Include="src\projectile_list.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\require_sdl.h">
@@ -191,98 +189,14 @@
     <ClInclude Include="src\gamelib\SDL\control.h">
       <Filter>sdl_interface</Filter>
     </ClInclude>
-    <ClInclude Include="src\include\levelgen.h">
-      <Filter>src\generators</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\levelgenutil.h">
-      <Filter>src\generators</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\screen.h">
-      <Filter>src\draw</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\iterators.h">
-      <Filter>src\system</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\containers.h">
-      <Filter>src\system</Filter>
-    </ClInclude>
     <ClInclude Include="src\exceptions.h">
       <Filter>src\system</Filter>
     </ClInclude>
-    <ClInclude Include="src\include\memalloc.h">
-      <Filter>src\system</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\parallelism.h">
-      <Filter>src\system</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\random.h">
-      <Filter>src\system</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\types.h">
-      <Filter>src\system</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\tweak.h">
-      <Filter>src\system</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\trace.h">
-      <Filter>src\system</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\gamelib.h">
-      <Filter>src\system</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\aitwitch.h">
-      <Filter>src\ai</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\level_view.h">
-      <Filter>src\ai</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\projectile.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\projectile_list.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\tank.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\scene.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\level.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\game.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\controller.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\gui_widgets.h">
-      <Filter>src\draw</Filter>
-    </ClInclude>
     <ClInclude Include="src\base.h" />
-    <ClInclude Include="src\include\bitmaps.h">
-      <Filter>src\draw</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\world.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
     <ClInclude Include="src\gamelib\SDL\bitmap.h">
       <Filter>sdl_interface</Filter>
     </ClInclude>
-    <ClInclude Include="src\include\containers_queue.h">
-      <Filter>src\system</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\raycaster.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\mymath.h">
-      <Filter>src\system</Filter>
-    </ClInclude>
     <ClInclude Include="src\level_adjacency.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\level_pixel.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\weapon.h">
@@ -293,21 +207,6 @@
     </ClInclude>
     <ClInclude Include="src\gamelib\SDL\sdl_system.h">
       <Filter>sdl_interface</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\game_config.h">
-      <Filter>src\system</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\game_system.h">
-      <Filter>src\system</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\level_pixel_surface.h">
-      <Filter>src\draw</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\color_palette.h">
-      <Filter>src\draw</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\color.h">
-      <Filter>src\system</Filter>
     </ClInclude>
     <ClInclude Include="src\font_renderer.h">
       <Filter>src\draw\fonts</Filter>
@@ -333,29 +232,11 @@
     <ClInclude Include="src\machine_materializer.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
-    <ClInclude Include="src\include\duration.h">
-      <Filter>src\system</Filter>
-    </ClInclude>
     <ClInclude Include="src\machine.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\machine_list.h">
       <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\level_algorithm.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\levelgen_braid.h">
-      <Filter>src\generators</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\levelgen_maze.h">
-      <Filter>src\generators</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\levelgen_simple.h">
-      <Filter>src\generators</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\levelgen_toast.h">
-      <Filter>src\generators</Filter>
     </ClInclude>
     <ClInclude Include="src\link.h">
       <Filter>src\game_entity</Filter>
@@ -363,15 +244,50 @@
     <ClInclude Include="src\tank_base.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
-    <ClInclude Include="src\include\tank_sprites.h">
-      <Filter>src\draw</Filter>
-    </ClInclude>
-    <ClInclude Include="src\include\tank_list.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
     <ClInclude Include="src\resources.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
+    <ClInclude Include="src\level_algorithm.h" />
+    <ClInclude Include="src\aitwitch.h" />
+    <ClInclude Include="src\color_palette.h" />
+    <ClInclude Include="src\containers.h" />
+    <ClInclude Include="src\containers_queue.h" />
+    <ClInclude Include="src\controller.h" />
+    <ClInclude Include="src\duration.h" />
+    <ClInclude Include="src\level_pixel_surface.h" />
+    <ClInclude Include="src\game.h" />
+    <ClInclude Include="src\gamelib.h" />
+    <ClInclude Include="src\bitmaps.h" />
+    <ClInclude Include="src\game_config.h" />
+    <ClInclude Include="src\game_system.h" />
+    <ClInclude Include="src\gui_widgets.h" />
+    <ClInclude Include="src\iterators.h" />
+    <ClInclude Include="src\level.h" />
+    <ClInclude Include="src\levelgen.h" />
+    <ClInclude Include="src\levelgen_braid.h" />
+    <ClInclude Include="src\levelgen_maze.h" />
+    <ClInclude Include="src\levelgen_simple.h" />
+    <ClInclude Include="src\levelgen_toast.h" />
+    <ClInclude Include="src\levelgenutil.h" />
+    <ClInclude Include="src\level_pixel.h" />
+    <ClInclude Include="src\level_view.h" />
+    <ClInclude Include="src\mymath.h" />
+    <ClInclude Include="src\memalloc.h" />
+    <ClInclude Include="src\color.h" />
+    <ClInclude Include="src\parallelism.h" />
+    <ClInclude Include="src\projectile.h" />
+    <ClInclude Include="src\projectile_list.h" />
+    <ClInclude Include="src\random.h" />
+    <ClInclude Include="src\raycaster.h" />
+    <ClInclude Include="src\scene.h" />
+    <ClInclude Include="src\screen.h" />
+    <ClInclude Include="src\tank.h" />
+    <ClInclude Include="src\tank_list.h" />
+    <ClInclude Include="src\tank_sprites.h" />
+    <ClInclude Include="src\trace.h" />
+    <ClInclude Include="src\tweak.h" />
+    <ClInclude Include="src\types.h" />
+    <ClInclude Include="src\world.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

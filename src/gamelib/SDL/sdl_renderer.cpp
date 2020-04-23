@@ -1,6 +1,6 @@
 ﻿#include "sdl_renderer.h"
 
-#include <SDL.h>
+#include <sdl2/include/SDL.h>
 
 #include <gamelib.h>
 #include <memory>

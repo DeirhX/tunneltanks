@@ -18,11 +18,12 @@
 
 /* Nothing in this file uses SDL, but we still have to include SDL.h for Macs,
  * since they do some extra magic in the file WRT the main() function: */
-#include <SDL.h>
+#include <sdl2/include/SDL.h>
 #include <iostream>
 
 #include "exceptions.h"
 #include "game_config.h"
+#include "gamelib/SDL/control.h"
 #include "gamelib/SDL/sdl_system.h"
 
 int GameMain(int argc, char * argv[]);

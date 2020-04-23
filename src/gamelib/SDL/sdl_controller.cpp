@@ -1,4 +1,4 @@
-#include <SDL.h>
+#include <sdl2/include/SDL.h>
 #include <cstdlib>
 
 #include "sdl_controller.h"
