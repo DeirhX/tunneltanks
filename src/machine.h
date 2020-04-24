@@ -41,7 +41,8 @@ class Machine : public Invalidable
     [[nodiscard]] MachineConstructState GetState() const { return this->construct_state; }
     Reactor & GetReactor() { return this->reactor; }
 
-    void SetState(MachineConstructState new_state) { this->construct_state = new_state; }
+    void SetState(MachineConstructState new_state);
+    void SetPosition(Position new_position) { this->position = new_position; }
 };
 
 enum class HarvesterType

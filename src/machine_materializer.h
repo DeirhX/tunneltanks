@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+class Machine;
 class MaterialContainer;
 class Tank;
 struct Position;
@@ -23,10 +24,14 @@ class MachineMaterializer
     bool is_building_secondary = false;
     bool is_building_tertiary = false;
 
-    Tank * owner_tank;
-    MaterialContainer * resource_bank;
+    Tank * owner_tank = nullptr;
+    Machine * transported_machine = nullptr;
+    MaterialContainer * resource_bank = nullptr;
   public:
     MachineMaterializer(Tank * owner_tank, MaterialContainer * resource_bank);
+
+    void PickUpMachine(Machine & machine);
+    void PlaceMachine();
 
     void ApplyControllerOutput(ControllerOutput controls);
     void Advance(Position tank_position);

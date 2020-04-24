@@ -11,6 +11,23 @@ MachineMaterializer::MachineMaterializer(Tank * tank, MaterialContainer * resour
 
 }
 
+void MachineMaterializer::PickUpMachine(Machine & machine)
+{ this->transported_machine = &machine; }
+
+void MachineMaterializer::PlaceMachine()
+{
+    assert(this->transported_machine);
+    if (this->transported_machine)
+    {
+        /* Finally set the position */
+        this->transported_machine->SetPosition(this->owner_tank->GetPosition());
+        this->transported_machine->SetState(MachineConstructState::Planted);
+        /* Stop transporting */
+        this->transported_machine = nullptr;
+    }
+    
+}
+
 void MachineMaterializer::ApplyControllerOutput(ControllerOutput controls)
 {
     this->is_building_primary = controls.build_primary;
@@ -21,11 +38,42 @@ void MachineMaterializer::ApplyControllerOutput(ControllerOutput controls)
 void MachineMaterializer::Advance(Position tank_position)
 {
     if (this->is_building_primary)
+    {
+        if (!this->transported_machine)
+        {
+            /* Pick up a machine if we're not holding it */
+            Machine * machine_overlap = nullptr;
+            this->owner_tank->ForEachTankPixel([&machine_overlap](Position world_position) {
+                machine_overlap = GetWorld()->GetCollisionSolver()->TestMachine(world_position);
+                return !machine_overlap;
+            });
+            if (machine_overlap)
+            {
+                this->transported_machine = machine_overlap;
+            }
+        }
+        else
+        {
+            /* Place a machine if we were - but not in any base */
+            if (!GetWorld()->GetLevel()->CheckBaseCollision(this->owner_tank->GetPosition()))
+            {
+
+            }
+        }
+    }
         TryBuildMachine(this->primary_construct);
+
+    /*
     else if (this->is_building_secondary)
         TryBuildMachine(this->secondary_construct);
     else if (this->is_building_tertiary)
         TryBuildMachine(this->tertiary_construct);
+        */
+
+    if (this->transported_machine)
+    {
+        this->transported_machine->SetPosition(this->owner_tank->GetPosition());
+    }
 }
 
 bool MachineMaterializer::TryBuildMachine(MachineType type)

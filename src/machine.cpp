@@ -23,6 +23,15 @@ bool Machine::CheckAlive(Level * level)
     return true;
 }
 
+void Machine::SetState(MachineConstructState new_state)
+{
+    this->construct_state = new_state;
+    if (new_state != MachineConstructState::Planted)
+    {
+        this->link_source.Disable();
+    }
+}
+
 void Harvester::Advance(Level * level)
 {
     if (!CheckAlive(level))
