@@ -24,7 +24,7 @@ Level::Level(Size size)
     std::fill(this->data.begin(), this->data.end(), LevelPixel::LevelGenRock);
 }
 
-void Level::OnConnectWorld(World * world)
+void Level::OnConnectWorld(World *)
 {
 }
 

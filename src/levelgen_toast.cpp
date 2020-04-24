@@ -405,7 +405,7 @@ static void randomly_expand(Level *lvl) {
 static int smooth_once(Level *lvl) {
 
 	/* Smooth surfaces. Require at least 3 neighbors to keep alive. Spawn new at 5 neighbors. */
-	auto smooth_step = [lvl](int from_y, int until_y, ThreadLocal* t) {
+	auto smooth_step = [lvl](int from_y, int until_y, ThreadLocal*) {
 		Stopwatch time_step;
 		int count = 0;
 		Size size = lvl->GetSize();

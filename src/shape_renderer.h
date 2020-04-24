@@ -49,7 +49,7 @@ std::optional<Position> ShapeInspector::FromRandomPointInCircleToCenter(Position
     /* If found not suitable, cast a ray to the center and find first pixel that does */
     if (Raycaster::Cast(
             PositionF{possible_pos}, PositionF{center},
-            [&possible_pos, inspect_func](PositionF tested_pos, PositionF previous_pos) {
+            [&possible_pos, inspect_func](PositionF tested_pos, PositionF) {
                 if (inspect_func(tested_pos.ToIntPosition()))
                 {
                     possible_pos = tested_pos.ToIntPosition();

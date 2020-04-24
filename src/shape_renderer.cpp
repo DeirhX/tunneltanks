@@ -158,7 +158,7 @@ void ShapeRenderer::DrawRectanglePart(Surface * surface, Rect screen_rect, int s
                  outline_color);
 }
 
-void ShapeRenderer::DrawCircle(Surface * surface, Position center, int radius, Color fill_color,
+void ShapeRenderer::DrawCircle(Surface * surface, Position center, int radius, Color,
                                Color outline_color)
 {
     /* Start on right side of circle and mirror every drawn pixel into 8 octants */

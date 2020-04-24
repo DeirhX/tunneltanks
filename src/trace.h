@@ -54,7 +54,7 @@ void DebugTrace(TPrintfArgs&&... args)
 	gamelib_debug(debug_buff);
 }
 template <TraceLevel debug_level, typename... TPrintfArgs, typename std::enable_if_t<(debug_level > DEBUG_TRACE_LEVEL), int> = 0 >
-void DebugTrace(TPrintfArgs&&... args)
+void DebugTrace(TPrintfArgs&&...)
 {
 }
 
@@ -68,7 +68,7 @@ template
 	typename Clock = std::chrono::high_resolution_clock,
 	typename = void
 >
-struct MeasureFunction { MeasureFunction(std::string_view name) { };  void Finish() {}  };
+struct MeasureFunction { MeasureFunction(std::string_view) { };  void Finish() {}  };
 
 template
 <

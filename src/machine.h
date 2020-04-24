@@ -120,5 +120,5 @@ public:
     void Advance(Level *) override { };
     void Draw(Surface * surface) const override;
     bool IsColliding(Position) const override { return false; };
-    void Die(Level * level) { };
+    void Die(Level *) override { };
 };

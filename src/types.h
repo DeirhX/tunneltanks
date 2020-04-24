@@ -340,5 +340,5 @@ class holder_with_deleter : public std::unique_ptr<Type, void (*)(Type *)>
 template <typename TEnum>
 bool HasFlag(TEnum value, TEnum flag)
 {
-    return (static_cast<std::underlying_type_t<TEnum>>(value) & static_cast<std::underlying_type_t<TEnum>>(value)) != 0;
+    return (static_cast<std::underlying_type_t<TEnum>>(value) & static_cast<std::underlying_type_t<TEnum>>(flag)) != 0;
 }

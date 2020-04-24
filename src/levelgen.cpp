@@ -100,7 +100,7 @@ static void put_chars(size_t i, char c)
         gamelib_print("%c", c);
 }
 
-void LevelGenerator::PrintAllGenerators(FILE * out)
+void LevelGenerator::PrintAllGenerators(FILE *)
 {
     size_t max_id = 7;
     size_t max_desc = strlen("Description:");

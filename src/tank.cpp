@@ -132,7 +132,7 @@ CollisionType Tank::GetCollision(Direction dir, Position position_, TankList * t
                     }
                     return false;
                 }, 
-                [&result](Machine & machine) {
+                [](Machine &) {
                     //result = CollisionType::Blocked;
                     //return true;
                     return false;

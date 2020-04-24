@@ -10,7 +10,7 @@
 #include "raycaster.h"
 #include "tank_list.h"
 
-void Bullet::Advance(TankList * tankList)
+void Bullet::Advance(TankList *)
 {
     auto IteratePositions = [this](PositionF tested_pos, PositionF prev_pos) {
         this->pos = tested_pos;
@@ -56,7 +56,7 @@ void Bullet::Draw(Surface * drawBuffer)
 }
 
 template <typename ExplosionFuncType>
-void FlyingBarrel::Advance(TankList * tankList, ExplosionFuncType explosionFunc)
+void FlyingBarrel::Advance(TankList *, ExplosionFuncType explosionFunc)
 {
     /* Projectile exploding {explode_dist} pixels before contact.
      *
@@ -69,14 +69,14 @@ void FlyingBarrel::Advance(TankList * tankList, ExplosionFuncType explosionFunc)
     int search_step = 0;
     const int search_step_count = this->explode_distance + int(std::round(this->speed.GetSize()));
 
-    auto IteratePositions = [this, &search_step, &prev_positions](PositionF tested_pos, PositionF prev_pos) {
+    auto IteratePositions = [this, &search_step, &prev_positions](PositionF tested_pos, PositionF) {
         prev_positions.push_back(tested_pos);
         ++search_step;
 
         bool is_collision = GetWorld()->GetCollisionSolver()->TestCollide(
             tested_pos.ToIntPosition(),
             [this](Tank & tank) { return tank.GetColor() != this->tank->GetColor(); },
-            [](Machine & machine) { return true; },
+            [](Machine &) { return true; },
             [](LevelPixel & pixel) { return Pixel::IsAnyCollision(pixel); });
 
         if (is_collision)
@@ -138,7 +138,7 @@ void DirtBarrel::Advance(TankList * tankList)
 
 void ShrapnelBase::Advance(TankList * tankList)
 {
-    auto AdvanceStepFunc = [this](PositionF tested_pos, PositionF prev_pos, TankList * tankList) {
+    auto AdvanceStepFunc = [this](PositionF, PositionF, TankList *) {
         /* Make sure we didn't hit a level detail: */
         LevelPixel c = level->GetPixel(this->pos.ToIntPosition());
         if (Pixel::IsBlockingCollision(c))
@@ -189,7 +189,7 @@ void ShrapnelBase::Draw(Surface * drawBuffer)
 
 void ConcreteFoam::Advance(TankList * tankList)
 {
-    auto AdvanceStepFunc = [this](PositionF tested_pos, PositionF prev_pos, TankList * tankList) {
+    auto AdvanceStepFunc = [this](PositionF, PositionF prev_pos, TankList *) {
 
         /* Make sure we didn't hit a level detail: */
         LevelPixel c = level->GetPixel(this->pos.ToIntPosition());
@@ -212,7 +212,7 @@ void ConcreteFoam::Draw(Surface * drawBuffer)
 
 void DirtFoam::Advance(TankList * tankList)
 {
-    auto AdvanceStepFunc = [this](PositionF tested_pos, PositionF prev_pos, TankList * tankList) {
+    auto AdvanceStepFunc = [this](PositionF, PositionF prev_pos, TankList *) {
         /* Make sure we didn't hit a level detail: */
         LevelPixel c = level->GetPixel(this->pos.ToIntPosition());
         if (Pixel::IsAnyCollision(c))

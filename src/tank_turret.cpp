@@ -44,7 +44,7 @@ void TankTurret::Advance(Position tank_position, widgets::Crosshair * crosshair)
     int turret_len = 0;
     this->TurretVoxels[turret_len++] = tank_position;
 
-    auto visitor = [this, &turret_len](PositionF current, PositionF previous) {
+    auto visitor = [this, &turret_len](PositionF current, PositionF) {
         if (turret_len >= tweak::tank::TurretLength)
             return false;
 
