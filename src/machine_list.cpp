@@ -1,6 +1,6 @@
 ﻿#include "machine_list.h"
 
-void MachineryList::Advance(Level * level, TankList * tank_list)
+void MachineryList::Advance(Level * level, TankList *)
 {
     /* Append everything that was created last tick */
     this->items.MoveFrom(this->newly_created_items);

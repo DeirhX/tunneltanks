@@ -72,7 +72,7 @@ bool Harvester::IsColliding(Position with_position) const
     return this->bounding_box.IsInside(with_position, this->position);
 }
 
-void Harvester::Die(Level * level)
+void Harvester::Die(Level *)
 {
     GetWorld()->GetProjectileList()->Add(
         ExplosionDesc::AllDirections(this->position, tweak::explosion::death::ShrapnelCount,
@@ -144,7 +144,7 @@ bool Charger::IsColliding(Position with_position) const
     return this->bounding_box.IsInside(with_position, this->position);
 }
 
-void Charger::Die(Level * level)
+void Charger::Die(Level *)
 {
     GetWorld()->GetProjectileList()->Add(
         ExplosionDesc::AllDirections(this->position, tweak::explosion::death::ShrapnelCount,

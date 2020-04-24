@@ -1,5 +1,5 @@
 #pragma once
-#include <sdl2/include/SDL.h>
+#include <SDL.h>
 
 #define SDL_OPTIONS    (SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_RESIZABLE)
 #define SDL_OPTIONS_FS (SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_FULLSCREEN)

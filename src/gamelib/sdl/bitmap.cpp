@@ -3,7 +3,7 @@
 #include "require_sdl.h"
 #include "types.h"
 #include <cassert>
-#include <sdl2/include/SDL.h>
+#include <SDL.h>
 #include <vector>
 
 ColorBitmap SdlBmpDecoder::LoadRGBA(std::string_view relative_image_path)
@@ -36,9 +36,9 @@ void BmpFile::SaveToFile(const ColorBitmap & data, std::string_view file_name)
 
     /* Get the address, and the mapped color: */
     assert(sizeof(Color) == native_surface->format->BytesPerPixel);
-    assert(native_surface->pitch * native_surface->h == data.GetLength() * sizeof(Color));
+    assert(static_cast<unsigned long>(native_surface->pitch * native_surface->h) == data.GetLength() * sizeof(Color));
 
-    for (int i = 0; i < data.GetLength(); ++i)
+    for (int i = 0; i < static_cast<int>(data.GetLength()); ++i)
     {
         std::uint32_t mapped_color = SDL_MapRGBA(native_surface->format, data[i].r, data[i].g, data[i].b, data[i].a);
         std::memcpy(((std::uint8_t *)native_surface->pixels) + sizeof(Color) * i, &mapped_color, sizeof(Color));
@@ -92,7 +92,7 @@ ColorBitmap BmpFile::LoadRGBAFromFile(std::string_view file_name)
 
 MonoBitmap BmpFile::LoadGrayscaleFromFile(std::string_view file_name)
 {
-    auto decode_func = [](std::uint8_t file_data, SDL_PixelFormat * file_data_format, std::uint8_t * target_data) {
+    auto decode_func = [](std::uint8_t file_data, SDL_PixelFormat *, std::uint8_t * target_data) {
         *target_data = file_data;
     };
     return BmpFile::LoadFromFile<MonoBitmap, std::uint8_t>(file_name, decode_func);

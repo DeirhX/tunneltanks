@@ -14,7 +14,7 @@ struct WorkerCount
     unsigned int worker_count;
     WorkerCount() : worker_count(tweak::perf::parallelism_degree) {}
     WorkerCount(int workers) : worker_count(std::max(1, workers)) {}
-    WorkerCount(PhysicalCores max) : WorkerCount() {}
+    WorkerCount(PhysicalCores) : WorkerCount() {}
     operator int() const { return worker_count; }
 };
 

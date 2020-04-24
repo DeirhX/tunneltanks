@@ -117,8 +117,9 @@ Game::Game(GameConfig config)
 #endif
     std::chrono::milliseconds time_taken = {};
     std::unique_ptr<Level> level;
-    for (int i = TestIterations; i-- > 0;)
+    for (int i = 0; i != TestIterations; ++i)
     {
+        gamelib_print("Generating level %d/%d...\n", i+1, TestIterations);
         auto generated_level = levelgen::LevelGenerator::Generate(this->config.level_generator, this->config.level_size);
         time_taken += generated_level.generation_time;
         level = std::move(generated_level.level);

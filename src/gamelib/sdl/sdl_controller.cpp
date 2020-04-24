@@ -5,7 +5,7 @@
 #include "require_sdl.h"
 #include "tank.h"
 #include <cstdlib>
-#include <sdl2/include/SDL.h>
+#include <SDL.h>
 
 /* Any SDL-based controllers go in this file. */
 
@@ -20,7 +20,7 @@ KeyboardController::KeyboardController(SDL_Scancode left, SDL_Scancode right, SD
     gamelib_print("Using Keyboard #0:\n");
 }
 
-ControllerOutput KeyboardController::ApplyControls(PublicTankInfo * tankPublic)
+ControllerOutput KeyboardController::ApplyControls(PublicTankInfo *)
 {
     int num_keys;
     const Uint8 * keys = SDL_GetKeyboardState(&num_keys);
@@ -121,7 +121,7 @@ GamePadController::GamePadController(int joy_index)
 
 GamePadController::~GamePadController() { SDL_JoystickClose(this->joystick); }
 
-ControllerOutput GamePadController::ApplyControls(PublicTankInfo * tankPublic)
+ControllerOutput GamePadController::ApplyControls(PublicTankInfo *)
 {
     /* Where is this joystick pointing? Corresponds to left analog stick. Value range is -32K to +32K */
     int lx = this->mapping.MoveHorizontalAxis.CurrentAxisValue(this->joystick);

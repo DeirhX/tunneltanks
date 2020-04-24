@@ -4,7 +4,7 @@
 #include "tweak.h"
 #include "types.h"
 #include <memory>
-#include <sdl2/include/SDL.h>
+#include <SDL.h>
 
 /*
  *  SdlRenderer wrapper over SDL_Renderer, SDL_Texture and SDL_Surface
@@ -22,7 +22,7 @@ void SdlRenderer::SetSurfaceResolution(Size size)
     Recreate(this->owning_window);
 }
 
-void SdlRenderer::RenderFrame(const ScreenRenderSurface * surface)
+void SdlRenderer::RenderFrame(const ScreenRenderSurface *)
 {
     if (SDL_UpdateTexture(this->native_texture.get(), nullptr, this->render_surface->GetRawData(),
                           this->render_surface->GetRowPitch()))
@@ -48,7 +48,7 @@ void SdlRenderer::Recreate(SdlWindow * new_owning_window)
 
     this->native_renderer = {
         SDL_CreateRenderer(owning_window->GetNativeWindow(), -1, SDL_RENDERER_ACCELERATED),
-        [](SDL_Renderer * renderer) { /* SDL_DestroyRenderer(renderer);*/ /* Destroyed by window */ }};
+        [](SDL_Renderer *) { /* SDL_DestroyRenderer(renderer);*/ /* Destroyed by window */ }};
     if (!this->native_renderer)
         throw GameInitException("Failed to create game renderer.");
     if (SDL_RenderSetLogicalSize(this->native_renderer.get(), this->render_surface->GetSize().x,
@@ -58,7 +58,7 @@ void SdlRenderer::Recreate(SdlWindow * new_owning_window)
     this->native_texture = {
         SDL_CreateTexture(this->native_renderer.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
                           this->render_surface->GetSize().x, this->render_surface->GetSize().y),
-        [](SDL_Texture * texture) { /* SDL_DestroyTexture(texture); */ /* Destroyed by the surface */ }};
+        [](SDL_Texture *) { /* SDL_DestroyTexture(texture); */ /* Destroyed by the surface */ }};
     if (!this->native_texture)
         throw GameInitException("Failed to create texture to render into.");
 

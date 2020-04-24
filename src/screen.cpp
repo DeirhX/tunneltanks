@@ -93,7 +93,7 @@ struct TwoPlayerLayout : public SinglePlayerLayout
         ScreenRect{{player_view_two.Right() - 19, player_view_two.Top()}, Size{20, 20}};
 };
 
-void Screens::SinglePlayerScreenSetup(Screen * screen, World * world, Tank * player)
+void Screens::SinglePlayerScreenSetup(Screen * screen, World *, Tank * player)
 {
     /* Tank view and status below it*/
     auto window = std::make_unique<widgets::TankView>(SinglePlayerLayout::player_view_rect, player);
@@ -119,7 +119,7 @@ void Screens::SinglePlayerScreenSetup(Screen * screen, World * world, Tank * pla
     GetSystem()->GetCursor()->Hide();
 }
 
-void Screens::TwoPlayerScreenSetup(Screen * screen, World * world, Tank * player_one, Tank * player_two)
+void Screens::TwoPlayerScreenSetup(Screen * screen, World *, Tank * player_one, Tank * player_two)
 {
     auto window = std::make_unique<widgets::TankView>(TwoPlayerLayout::player_view_one, player_one);
     auto crosshair =

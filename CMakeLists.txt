@@ -9,6 +9,8 @@ project(tunneltanks VERSION 2.0)
 find_package(SDL2 REQUIRED)
 find_package(Boost REQUIRED)
 
+message(STATUS "SDL2 Include path: ${SDL2_INCLUDE_DIRS}")
+
 # Support both 32 and 64 bit builds
 if (${CMAKE_SIZEOF_VOID_P} MATCHES 8)
   set(SDL_LIBRARY "${CMAKE_CURRENT_LIST_DIR}/sdl2/lib/x64/SDL2.lib;${CMAKE_CURRENT_LIST_DIR}/lib/x64/SDL2main.lib")
@@ -23,13 +25,15 @@ file(GLOB source_files "src/*.c" "src/*.cpp" "src/include/*.cpp" "src/gamelib/SD
 add_executable( tunneltanks ${source_files} )
 
 if (NOT WINDOWS)
-	target_compile_options(tunneltanks PUBLIC "-Wall")
+	target_compile_options(tunneltanks PUBLIC "-Wall" "-Wextra" "-pedantic" "-Werror")
 endif()
 
 target_compile_definitions(tunneltanks PUBLIC "USE_SDL_GAMELIB" "DEBUG_TRACE_LEVEL=3")
 target_compile_features(tunneltanks PUBLIC cxx_std_20)
 target_link_libraries(tunneltanks PUBLIC ${SDL2_LIBRARIES} Boost::boost)
 target_include_directories(tunneltanks PUBLIC ${SDL2_INCLUDE_DIRS} "src/include" "src" "src/gamelib" "src/gamelib/SDL")
+
+configure_file(${CMAKE_SOURCE_DIR}/resources/fonts/broddmin_5x10.bmp ${CMAKE_BINARY_DIR}/resources/fonts/broddmin_5x10.bmp COPYONLY)
 
 # Enable the make install:
 install(

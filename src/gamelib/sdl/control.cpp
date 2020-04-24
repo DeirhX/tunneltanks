@@ -5,7 +5,7 @@
 #include "sdl_controller.h"
 #include "tank.h"
 #include "tweak.h"
-#include <sdl2/include/SDL.h>
+#include <SDL.h>
 
 /* Set up SDL: */
 void gamelib_init()

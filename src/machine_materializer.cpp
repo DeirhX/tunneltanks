@@ -35,7 +35,7 @@ void MachineMaterializer::ApplyControllerOutput(ControllerOutput controls)
     this->is_building_tertiary = controls.build_tertiary;
 }
 
-void MachineMaterializer::Advance(Position tank_position)
+void MachineMaterializer::Advance(Position)
 {
     if (this->is_building_primary)
     {

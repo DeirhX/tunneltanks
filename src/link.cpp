@@ -46,7 +46,7 @@ std::optional<NeighborLinkPoint> LinkPoint::GetClosestOrphanedPoint(CompareFunc 
 
 std::optional<NeighborLinkPoint> LinkPoint::GetClosestOrphanedPoint() const
 {
-    return GetClosestOrphanedPoint([](const LinkPoint & from, const NeighborLinkPoint & candidate) { return true; });
+    return GetClosestOrphanedPoint([](const LinkPoint &, const NeighborLinkPoint &) { return true; });
 }
 
 bool LinkPoint::IsInRange(LinkPoint * other_link) const
@@ -248,7 +248,7 @@ void Link::Advance()
 
 bool Link::IsConnectionBlocked(Position from, Position to)
 {
-    return !Raycaster::Cast(PositionF{from}, PositionF{to}, [](PositionF tested_pos, PositionF previous_pos) {
+    return !Raycaster::Cast(PositionF{from}, PositionF{to}, [](PositionF tested_pos, PositionF) {
         auto pixel = GetWorld()->GetLevel()->GetPixel(tested_pos.ToIntPosition());
         return Pixel::IsAnyCollision(pixel) ? false : true;
     });
@@ -388,7 +388,7 @@ void LinkMap::SolveLinks()
                from.IsPowered() &&
                !Link::IsConnectionBlocked(from.GetPosition(), possible_link.point->GetPosition());
     };
-    auto connect_with_blocked_machines = [](const LinkPoint & from, const NeighborLinkPoint & possible_link) -> bool {
+    auto connect_with_blocked_machines = [](const LinkPoint &, const NeighborLinkPoint & possible_link) -> bool {
         return possible_link.point->GetType() == LinkPointType::Machine;
     };
     auto connect_with_live_tanks = [](const LinkPoint & from, const NeighborLinkPoint & possible_link) -> bool {
@@ -397,7 +397,7 @@ void LinkMap::SolveLinks()
                from.IsPowered() &&
                !Link::IsConnectionBlocked(from.GetPosition(), possible_link.point->GetPosition());
     };
-    auto connect_with_blocked_tanks = [](const LinkPoint & from, const NeighborLinkPoint & possible_link) -> bool {
+    auto connect_with_blocked_tanks = [](const LinkPoint &, const NeighborLinkPoint & possible_link) -> bool {
         return possible_link.point->GetType() == LinkPointType::Tank &&
                possible_link.distance <= tweak::tank::MaximumAbsorbEnergyDistance;
     };

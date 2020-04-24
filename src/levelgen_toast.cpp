@@ -213,7 +213,7 @@ ExpandResult expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, Rando
 				int ty = temp.y + (j / 3) - 1;
 				LevelPixel v = lvl->GetVoxelRaw({ tx, ty });
 				if(v == LevelPixel::LevelGenRock) {
-				   v  = LevelPixel::LevelGenMark;
+				   // v  = LevelPixel::LevelGenMark; // this is never read
 				   ++result.rocks_marked;
 					q.push({ tx, ty });
 				}
@@ -241,6 +241,9 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 	/* Split into one queue per worker. This is relatively cheap. */
 	int worker = 0;
 	auto measure_queue_expand = MeasureFunction<4>{ "expand_process: prepare per-worker queues" };
+	
+	assert( worker_count > 0 ); // to avoid division (modulo actually) by zero
+	
 	while (q.size()) {
 		Position pos;
 		q.pop(pos);
@@ -405,7 +408,7 @@ static void randomly_expand(Level *lvl) {
 static int smooth_once(Level *lvl) {
 
 	/* Smooth surfaces. Require at least 3 neighbors to keep alive. Spawn new at 5 neighbors. */
-	auto smooth_step = [lvl](int from_y, int until_y, ThreadLocal* t) {
+	auto smooth_step = [lvl](int from_y, int until_y, ThreadLocal*) {
 		Stopwatch time_step;
 		int count = 0;
 		Size size = lvl->GetSize();
