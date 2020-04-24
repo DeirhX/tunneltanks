@@ -26,8 +26,14 @@ Level::Level(Size size)
 
 void Level::OnConnectWorld(World * world)
 {
+}
+
+void Level::BeginGame()
+{
     for (TankBase & tank_base : this->tank_bases)
-        tank_base.RegisterLinkPoint(world);
+    {
+        tank_base.BeginGame();
+    }
 }
 
 void Level::SetLevelData(int i, LevelPixel value)

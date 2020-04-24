@@ -140,6 +140,7 @@ Game::Game(GameConfig config)
 
     /* Create the world */
     world = std::make_unique<World>(this, std::move(level));
+
 }
 
 /* Step the game simulation by handling events, and drawing: */
@@ -211,8 +212,8 @@ void Game::BeginGame()
         throw GameException("Don't know how to draw more than 2 players at once...");
     }
 
-    /* Copy all of our variables into the GameData struct: */
     this->is_active = true;
+    world->BeginGame();
 }
 
 void Game::GameOver() { assert(!"Implement game over!"); }

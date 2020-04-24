@@ -4,7 +4,7 @@
 
 class MachineryList
 {
-    using Container = MultiTypeContainer<Harvester, Charger>;
+    using Container = MultiTypeContainer<Harvester, Charger, HarvesterTemplate, ChargerTemplate>;
     /* Live items. Unmodified except for BEFORE Advance */
     Container items;
     /* Items here will be integrated into main vector on Advance */

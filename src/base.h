@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #ifdef _MSC_VER
 #include <crtdbg.h>

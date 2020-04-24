@@ -10,7 +10,7 @@ World::World(Game * game, std::unique_ptr<Level> && level)
       tank_list(this->level.get(), &this->projectile_list),
       collision_solver(this->level.get(), &this->tank_list, &this->harvester_list)
 {
-    this->level->OnConnectWorld(this);
+    //this->level->OnConnectWorld(this);
 }
 
 void World::Clear()
@@ -20,6 +20,8 @@ void World::Clear()
     this->harvester_list.RemoveAll();
     this->link_map.RemoveAll();
 }
+
+void World::BeginGame() { this->level->BeginGame(); }
 
 void World::Advance()
 {
@@ -62,7 +64,7 @@ void World::RegrowPass()
     int dirt_grown = 0;
     this->level->ForEachVoxelParallel(
         [this, &holes_decayed, &dirt_grown](LevelPixel pix, SafePixelAccessor pixel, ThreadLocal * local) {
-            if (pix == LevelPixel::Blank || Pixel::IsScorched(pix))
+            if (pix == LevelPixel::Blank || Pixel::IsScorched(pix) || this->GetLevel()->CheckBaseCollision(pixel.GetPosition()))
             {
                 int neighbors = //this->level->DirtPixelsAdjacent(pixel.GetPosition());
                     this->level->CountNeighborValues(pixel.GetPosition(), [](auto voxel) { return Pixel::IsDirt(voxel) ? 1 : 0; });

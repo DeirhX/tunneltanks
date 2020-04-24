@@ -3,8 +3,15 @@
 #include "shape_renderer.h"
 #include "world.h"
 
-TankBase::TankBase(Position position, TankColor color) : position(position), color(color) {
+TankBase::TankBase(Position position, TankColor color) : position(position), color(color)
+{
     
+}
+
+void TankBase::BeginGame()
+{
+    CreateMachineTemplates(GetWorld());
+    RegisterLinkPoint(GetWorld());
 }
 
 void TankBase::RegisterLinkPoint(World * world)
@@ -13,7 +20,18 @@ void TankBase::RegisterLinkPoint(World * world)
     this->link_point = world->GetLinkMap()->RegisterLinkPoint(this->position, LinkPointType::Base);
 }
 
-bool TankBase::IsInside(Position tested_position) const
+void TankBase::CreateMachineTemplates(World * world)
+{
+    Position left_center = (this->position - Size{TankBase::BaseSize.x / 2, 0});
+    this->base_charger_template = &world->GetHarvesterList()->Emplace<ChargerTemplate>(
+        left_center + Size{Charger::bounding_box.size.x / 2 + 2, 0});
+
+    Position right_center = (this->position + Size{TankBase::BaseSize.x / 2, 0});
+    this->base_harvester_template = &world->GetHarvesterList()->Emplace<HarvesterTemplate>(
+        right_center - Size{Charger::bounding_box.size.x / 2 + 2, 0});
+}
+
+    bool TankBase::IsInside(Position tested_position) const
 {
     return this->bounding_box.IsInside(tested_position, this->position);
 }
@@ -87,7 +105,7 @@ void TankBase::Draw(Surface * surface) const
                                      Palette.Get(Colors::EnergyShieldPassive));
 }
 
-void TankBase::Advance()
+    void TankBase::Advance()
 {
     this->reactor.Add(tweak::base::ReactorRecoveryRate);
 }

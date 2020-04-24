@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "link.h"
+#include "machine.h"
 #include "resources.h"
 #include "tweak.h"
 #include "types.h"
@@ -20,13 +21,21 @@ class TankBase
     LinkPoint * link_point{};
 
     Reactor reactor = tweak::base::Reactor;
+
+    ChargerTemplate * base_charger_template = nullptr;
+    HarvesterTemplate * base_harvester_template = nullptr;
     MaterialContainer materials = tweak::base::MaterialContainer;
   public:
     TankBase() = default;
     explicit TankBase(Position position, TankColor color);
+    void BeginGame();
 
+  private:
+    /* Initialization */
     void RegisterLinkPoint(World * world);
+    void CreateMachineTemplates(World * world);
 
+  public:
     [[nodiscard]] Position GetPosition() const { return this->position; }
 //    [[nodiscard]] LinkPoint * GetLinkPoint() const { return this->link_point; }
     [[nodiscard]] TankColor GetColor() const { return this->color; }
@@ -41,4 +50,5 @@ class TankBase
 
     void Draw(Surface * surface) const;
     void Advance();
+
 };

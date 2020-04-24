@@ -52,6 +52,7 @@ class Level
   public:
     Level(Size size);
     void OnConnectWorld(World * world);
+    void BeginGame();
 
     Size GetSize() const { return this->size; }
     LevelSurfaces * GetSurfaces() { return &this->surfaces; }

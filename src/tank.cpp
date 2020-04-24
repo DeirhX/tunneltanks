@@ -131,10 +131,11 @@ CollisionType Tank::GetCollision(Direction dir, Position position_, TankList * t
                         return true;
                     }
                     return false;
-                },
+                }, 
                 [&result](Machine & machine) {
-                    result = CollisionType::Blocked;
-                    return true;
+                    //result = CollisionType::Blocked;
+                    //return true;
+                    return false;
                 },
                 [&result](LevelPixel & pixel) {
                     if (Pixel::IsDirt(pixel))
@@ -157,13 +158,13 @@ CollisionType Tank::GetCollision(Direction dir, Position position_, TankList * t
     return result;
 }
 
-void Tank::HandleMove(TankList * tl)
+void Tank::HandleMove(TankList * tank_list)
 {
     /* Calculate the direction: */
     if (this->speed.x != 0 || this->speed.y != 0)
     {
         Direction dir = Direction::FromSpeed(this->speed);
-        CollisionType collision = this->GetCollision(dir, this->position + 1 * this->speed, tl);
+        CollisionType collision = this->GetCollision(dir, this->position + 1 * this->speed, tank_list);
         /* Now, is there room to move forward in that direction? */
         if (collision != CollisionType::None)
         {
@@ -180,7 +181,7 @@ void Tank::HandleMove(TankList * tl)
             }
 
             /* Now if we used a torch, test the collision again - we might have failed to dig some of the minerals */
-            collision = this->GetCollision(dir, this->position + 1 * this->speed, tl);
+            collision = this->GetCollision(dir, this->position + 1 * this->speed, tank_list);
             if (collision != CollisionType::None)
                 return;
         }

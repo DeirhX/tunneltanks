@@ -98,7 +98,7 @@ class Tank : public Invalidable
     void Draw(Surface * surface) const;
 
   private:
-    void HandleMove(class TankList * tl);
+    void HandleMove(class TankList * tank_list);
     void TryBaseHeal(TankBase * base);
     void TransferResourcesToBase(TankBase * base);
     void CollectItems();

@@ -40,6 +40,7 @@ ControllerOutput KeyboardWithMouseController::ApplyControls(PublicTankInfo * tan
     Size window_size = GetSystem()->GetWindow()->GetResolution();
     output.crosshair_screen_pos = {static_cast<float>(x) / float(window_size.x), static_cast<float>(y) / float(window_size.y)};
     output.is_shooting_primary = buttons & SDL_BUTTON(1);
+    output.build_primary = buttons & SDL_BUTTON(2);
     return output;
 }
 

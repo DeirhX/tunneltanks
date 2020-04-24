@@ -153,7 +153,7 @@ struct ReactorState : public TwoResourceAmount<EnergyAmount, HealthAmount>
     using Parent = TwoResourceAmount<EnergyAmount, HealthAmount>;
 
   public:
-    ReactorState() = default;
+    constexpr ReactorState() = default;
     constexpr ReactorState(EnergyAmount first_) : Parent(first_) {}
     constexpr ReactorState(HealthAmount second_) : Parent(second_) {}
     constexpr ReactorState(EnergyAmount first_, HealthAmount second_) : Parent(first_, second_) {}

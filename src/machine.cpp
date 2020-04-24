@@ -73,6 +73,15 @@ void Harvester::Die(Level * level)
     this->Invalidate();
 }
 
+void HarvesterTemplate::Draw(Surface * surface) const
+{
+    Color color = Palette.Get(Colors::HarvesterOutline);
+    color.a = 127;
+    ShapeRenderer::DrawCircle(surface, this->position, 2, Palette.Get(Colors::HarvesterInside), color);
+}
+
+
+
 
 /*
  * Charger (Dodge): Charges empty pixels with collectable energy to be picked later
@@ -118,8 +127,7 @@ void Charger::Advance(Level * level)
 
 void Charger::Draw(Surface * surface) const
 {
-    ShapeRenderer::DrawCircle(surface, this->position, 2, Palette.Get(Colors::HarvesterInside),
-                              Palette.Get(Colors::ChargerOutline));
+    ShapeRenderer::DrawCircle(surface, this->position, 2, Palette.Get(Colors::HarvesterInside), Palette.Get(Colors::ChargerOutline));
 }
 
 bool Charger::IsColliding(Position with_position) const
@@ -136,4 +144,13 @@ void Charger::Die(Level * level)
 
     this->Invalidate();
 }
+
+void ChargerTemplate::Draw(Surface * surface) const
+{
+    Color color = Palette.Get(Colors::ChargerOutline);
+    if (this->GetState() != MachineConstructState::Planted)
+        color.a = 127;
+    ShapeRenderer::DrawCircle(surface, this->position, 2, Palette.Get(Colors::HarvesterInside), color);
+}
+
 

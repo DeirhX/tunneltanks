@@ -29,6 +29,7 @@ class World
     World(Game * game, std::unique_ptr<Level> && level);
     void Clear(); /* Clear the world of everything */
 
+    void BeginGame();
     void Advance();
     void Draw(WorldRenderSurface * objects_surface);
 
