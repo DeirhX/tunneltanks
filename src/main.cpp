@@ -44,6 +44,8 @@ int main(int argc, char * argv[])
 
 int GameMain(int argc, char * argv[])
 {
+    assert(tweak::perf::parallelism_degree > 0);
+
     bool is_reading_level = false;
     bool is_reading_seed = false;
     bool is_reading_file = false;

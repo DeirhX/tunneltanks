@@ -242,8 +242,6 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 	int worker = 0;
 	auto measure_queue_expand = MeasureFunction<4>{ "expand_process: prepare per-worker queues" };
 	
-	assert( worker_count > 0 ); // to avoid division (modulo actually) by zero
-	
 	while (q.size()) {
 		Position pos;
 		q.pop(pos);

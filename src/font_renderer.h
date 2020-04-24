@@ -23,7 +23,7 @@ struct GlyphInfoTable
 
     const ImageRect & GetSourceRect(char glyph) const
     {
-        assert(glyph >= 0 && static_cast<ssize_t>(glyph) < static_cast<ssize_t>(glyphs.size()));
+        assert(glyph >= 0 && static_cast<size_t>(glyph) < glyphs.size());
         assert(glyphs[glyph] != ImageRect{});
         return glyphs[glyph];
     }
