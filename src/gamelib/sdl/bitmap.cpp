@@ -3,7 +3,7 @@
 #include "require_sdl.h"
 #include "types.h"
 #include <cassert>
-#include <sdl2/include/SDL.h>
+#include <SDL.h>
 #include <vector>
 
 ColorBitmap SdlBmpDecoder::LoadRGBA(std::string_view relative_image_path)

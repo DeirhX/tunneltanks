@@ -269,26 +269,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>Build\$(PlatformShortName)\$(Configuration)\</OutDir>
     <IntDir>obj\$(PlatformShortName)\$(Configuration)\</IntDir>
-    <IncludePath>$(ProjectDir);src\;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\sdl2\include\;src\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>Build\$(PlatformShortName)\$(Configuration)\</OutDir>
     <IntDir>obj\$(PlatformShortName)\$(Configuration)\</IntDir>
-    <IncludePath>$(ProjectDir);src\;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\sdl2\include\;src\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Static|Win32'">
     <OutDir>Build\$(PlatformShortName)\$(Configuration)\</OutDir>
     <IntDir>obj\$(PlatformShortName)\$(Configuration)\</IntDir>
-    <IncludePath>$(ProjectDir);src\;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\sdl2\include\;src\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir);src\;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\sdl2\include\;src\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProjectDir);src\;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\sdl2\include\;src\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Static|x64'">
-    <IncludePath>$(ProjectDir);src\;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\sdl2\include\;src\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

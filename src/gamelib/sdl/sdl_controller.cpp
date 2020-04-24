@@ -5,7 +5,7 @@
 #include "require_sdl.h"
 #include "tank.h"
 #include <cstdlib>
-#include <sdl2/include/SDL.h>
+#include <SDL.h>
 
 /* Any SDL-based controllers go in this file. */
 

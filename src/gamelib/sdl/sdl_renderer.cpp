@@ -4,7 +4,7 @@
 #include "tweak.h"
 #include "types.h"
 #include <memory>
-#include <sdl2/include/SDL.h>
+#include <SDL.h>
 
 /*
  *  SdlRenderer wrapper over SDL_Renderer, SDL_Texture and SDL_Surface

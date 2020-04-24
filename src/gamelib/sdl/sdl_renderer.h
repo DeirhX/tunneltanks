@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "game_system.h"
-#include <sdl2/include/SDL.h>
+#include <SDL.h>
 
 class SdlWindow;
 
