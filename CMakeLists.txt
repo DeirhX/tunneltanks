@@ -33,6 +33,8 @@ target_compile_features(tunneltanks PUBLIC cxx_std_20)
 target_link_libraries(tunneltanks PUBLIC ${SDL2_LIBRARIES} Boost::boost)
 target_include_directories(tunneltanks PUBLIC ${SDL2_INCLUDE_DIRS} "src/include" "src" "src/gamelib" "src/gamelib/SDL")
 
+configure_file(${CMAKE_SOURCE_DIR}/resources/fonts/broddmin_5x10.bmp ${CMAKE_BINARY_DIR}/resources/fonts/broddmin_5x10.bmp COPYONLY)
+
 # Enable the make install:
 install(
 	TARGETS tunneltanks
