@@ -13,6 +13,10 @@ enum class MachineConstructState
     Planted
 };
 
+/*
+ * Machine: base class of all machines, placeable structures that can modify the environment, produce or transfer resources.
+ *          usually owned by a player
+ */
 class Machine : public Invalidable
 {
   protected:
@@ -49,16 +53,10 @@ class Machine : public Invalidable
     void SetPosition(Position new_position);
 };
 
-class MachineTemplate : public Machine
-{
-    Position origin_position;
-  public:
-    MachineTemplate(Position position, BoundingBox bounding_box);
-    void Advance(Level *) override{}
-    void ResetToOrigin();
-    void Die(Level *) override{}
-    void SetIsTransported(bool new_value);
-};
+
+/*
+ * Harvester: machine that harvests resources directly from environment and offers them to players 
+ */
 
 enum class HarvesterType
 {
@@ -85,20 +83,14 @@ class Harvester final : public Machine
     }
     void Advance(Level * level) override;
     void Draw(Surface * surface) const override;
-
-private:
+  private:
     void Die(Level * level) override;
 };
 
-/* Visual template of Harvester without any game world interaction */
-class HarvesterTemplate final : public MachineTemplate
-{
-  public:
-    HarvesterTemplate(Position position);
-    void Draw(Surface * surface) const override;
-};
-
-
+/*
+ * Charger: power transmitter that is capable of linking into a power grid starting from base reactor
+ *           and distributing this power to any other machine or player
+ */
 class Charger final : public Machine
 {
     using Base = Machine;
@@ -118,10 +110,43 @@ class Charger final : public Machine
     void Die(Level * level) override;
 };
 
-/* Visual template of Charger without any game world interaction */
+/*
+ * MachineTemplate: template of a new machine that can construct it on BuildMachine() call. Usually part of base or
+ *                   other place capable of building machines.
+ */
+class MachineTemplate : public Machine
+{
+    Position origin_position;
+
+  public:
+    MachineTemplate(Position position, BoundingBox bounding_box);
+
+    void Advance(Level *) override {}
+    void ResetToOrigin();
+    void Die(Level *) override {}
+    void SetIsTransported(bool new_value);
+
+    virtual Machine & BuildMachine() const = 0;
+};
+
+
+/* HarvesterTemplate: blueprint of a Harvester machine */
+class HarvesterTemplate final : public MachineTemplate
+{
+    HarvesterType type = HarvesterType::Dirt;
+
+  public:
+    HarvesterTemplate(Position position);
+    void Draw(Surface * surface) const override;
+    Machine & BuildMachine() const override;
+};
+
+
+/* ChargerTemplate: blueprint of a Charger machine */
 class ChargerTemplate final : public MachineTemplate
 {
 public:
     ChargerTemplate(Position position);
     void Draw(Surface * surface) const override;
+    Machine & BuildMachine() const override;
 };

@@ -2,9 +2,9 @@
 
 #include "color_palette.h"
 #include "level.h"
+#include "level_algorithm.h"
 #include "projectile.h"
 #include "shape_renderer.h"
-#include "level_algorithm.h"
 #include "world.h"
 
 Machine::Machine(Position position, Tank * owner, Reactor reactor_, BoundingBox bounding_box)
@@ -123,6 +123,11 @@ void HarvesterTemplate::Draw(Surface * surface) const
     ShapeRenderer::DrawCircle(surface, this->position, 2, Palette.Get(Colors::HarvesterInside), color);
 }
 
+Machine & HarvesterTemplate::BuildMachine() const
+{
+    return GetWorld()->GetHarvesterList()->Emplace<Harvester>(this->position, this->type, this->owner);
+}
+
 
 /*
  * Charger (Dodge): Charges empty pixels with collectable energy to be picked later
@@ -195,4 +200,8 @@ void ChargerTemplate::Draw(Surface * surface) const
     ShapeRenderer::DrawCircle(surface, this->position, 2, Palette.Get(Colors::HarvesterInside), color);
 }
 
+Machine & ChargerTemplate::BuildMachine() const
+{
+    return GetWorld()->GetHarvesterList()->Emplace<Charger>(this->position, this->owner);
+}
 
