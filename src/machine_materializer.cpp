@@ -11,19 +11,21 @@ MachineMaterializer::MachineMaterializer(Tank * tank, MaterialContainer * resour
 
 }
 
-void MachineMaterializer::PickUpMachine(Machine & machine)
-{ this->transported_machine = &machine; }
+void MachineMaterializer::PickUpMachine(Machine & machine) { assert(!"Not implemented"); }
+
+void MachineMaterializer::PickUpMachine(MachineTemplate & machine) { this->transported_machine_template = &machine; }
 
 void MachineMaterializer::PlaceMachine()
 {
-    assert(this->transported_machine);
-    if (this->transported_machine)
+    assert(this->transported_machine_template);
+    if (this->transported_machine_template)
     {
         /* Finally set the position */
-        this->transported_machine->SetPosition(this->owner_tank->GetPosition());
-        this->transported_machine->SetState(MachineConstructState::Planted);
+        this->transported_machine_template->SetPosition(this->owner_tank->GetPosition());
+        this->transported_machine_template->SetState(MachineConstructState::Planted);
         /* Stop transporting */
-        this->transported_machine = nullptr;
+        this->transported_machine_template->ResetToOrigin();
+        this->transported_machine_template = nullptr;
     }
     
 }
@@ -39,17 +41,17 @@ void MachineMaterializer::Advance(Position)
 {
     if (this->is_building_primary)
     {
-        if (!this->transported_machine)
+        if (!this->transported_machine_template)
         {
             /* Pick up a machine if we're not holding it */
-            Machine * machine_overlap = nullptr;
-            this->owner_tank->ForEachTankPixel([&machine_overlap](Position world_position) {
-                machine_overlap = GetWorld()->GetCollisionSolver()->TestMachine(world_position);
-                return !machine_overlap;
+            MachineTemplate * machine_template_overlap = nullptr;
+            this->owner_tank->ForEachTankPixel([&machine_template_overlap](Position world_position) {
+                machine_template_overlap = GetWorld()->GetCollisionSolver()->TestMachineTemplate(world_position);
+                return !machine_template_overlap;
             });
-            if (machine_overlap)
+            if (machine_template_overlap)
             {
-                PickUpMachine(*machine_overlap);
+                PickUpMachine(*machine_template_overlap);
             }
         }
         else
@@ -64,16 +66,13 @@ void MachineMaterializer::Advance(Position)
                 /* Return a machine template to its place if we were holding it */
                 MachineTemplate * machine_template_overlap = nullptr;
                 this->owner_tank->ForEachTankPixel([&machine_template_overlap](Position world_position) {
-                    Machine * machine_overlap = GetWorld()->GetCollisionSolver()->TestMachine(world_position);
-                    auto * as_machine_template = dynamic_cast<MachineTemplate *>(machine_overlap);
-                    if (as_machine_template)
-                        machine_template_overlap = as_machine_template;
+                    machine_template_overlap = GetWorld()->GetCollisionSolver()->TestMachineTemplate(world_position);
                     return !machine_template_overlap;
                 });
-                if (machine_template_overlap == this->transported_machine)
+                if (machine_template_overlap == this->transported_machine_template)
                 {
-                    machine_template_overlap->ResetToOrigin(); 
-                    this->transported_machine = nullptr;
+                    this->transported_machine_template->ResetToOrigin(); 
+                    this->transported_machine_template = nullptr;
                 }
             }
         }
@@ -85,9 +84,9 @@ void MachineMaterializer::Advance(Position)
         TryBuildMachine(this->tertiary_construct);
         */
 
-    if (this->transported_machine)
+    if (this->transported_machine_template)
     {
-        this->transported_machine->SetPosition(this->owner_tank->GetPosition());
+        this->transported_machine_template->SetPosition(this->owner_tank->GetPosition());
     }
 }
 

@@ -5,6 +5,7 @@
 #include <queue>
 #include <type_traits>
 #include <vector>
+#include <concepts>
 
 template <typename T, typename U>
 concept same_as = std::is_same_v<T, U> && std::is_same_v<U, T>;
@@ -66,6 +67,7 @@ class ValueContainerView
 {
   public:
     using ItemType = TElement;
+    using value_type = TElement;
 
   protected:
     using Container = std::deque<TElement>; // As long we grow/shrink on start/end, element references are valid forever
@@ -287,7 +289,7 @@ class MultiTypeContainer
         std::apply([for_each_container](auto &... cont) { (..., for_each_container(cont)); }, items);
     }
 
-    /* Call visitor on every element contained, irrespective of its type */
+    /* Call visitor on every element contained, irrespective of its type. Iterates all containers. */
     template <typename TVisit>
     void ForEach(TVisit visitor)
     {
@@ -297,7 +299,7 @@ class MultiTypeContainer
         };
         std::apply([for_each_element](auto &... cont) { (..., for_each_element(cont)); }, items);
     }
-    /* Call visitor on all elements of a supplied type TValue */
+    /* Call visitor on all elements in one container of supplied type TValue. Iterates one container */
     template <typename TValue, typename TVisit>
     void ForEach(TVisit visitor)
     {
@@ -306,6 +308,19 @@ class MultiTypeContainer
                 visitor(el);
         };
         for_each_element(std::get<ValueContainer<TValue>>(items));
+    }
+    /* Call visitor on all elements that are convertible to TValue */
+    template <typename TargetType, typename TVisit>
+    constexpr void ForEachConvertibleTo(TVisit visitor)
+    {
+        auto for_each_element = [visitor](auto & container) {
+            if constexpr (std::is_convertible_v<std::add_lvalue_reference_t<std::remove_reference_t<decltype(container)>::value_type>, TargetType &>)
+            {
+                for (auto & el : container)
+                    visitor(el);
+            }
+        };
+        std::apply([for_each_element](auto &... cont) { (..., for_each_element(cont)); }, items);
     }
     /* Number of items in collection, irrespective on type */
     size_t Size()

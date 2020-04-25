@@ -27,14 +27,10 @@ Machine * MachineryList::GetMachineAtPoint(Position position)
 
 MachineTemplate * MachineryList::GetMachineTemplateAtPoint(Position position)
 {
-    /* TODO: implement correctly */
-    assert(!"Not implemented");
-    return nullptr;
-
-    /*MachineTemplate * result = nullptr;
-    this->items.ForEach<MachineTemplate>([position, &result](auto & harvester) {
+    MachineTemplate * result = nullptr;
+    this->items.ForEachConvertibleTo<MachineTemplate>([position, &result](auto & harvester) {
         if (harvester.TestCollide(position))
             result = &harvester;
     });
-    return result;*/
+    return result;
 }
