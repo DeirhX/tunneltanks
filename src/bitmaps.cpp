@@ -9,7 +9,7 @@ void Bitmap<DataType>::Draw(Screen *screen, ScreenPosition position, GetColorFun
 {
     int x = 0;
     int y = 0;
-    for (int i = x = y = 0; i < (this->GetSize().x * this->GetSize().y); i++)
+    for (int i = 0; i < (this->GetSize().x * this->GetSize().y); i++)
     {
         screen->DrawPixel({x + position.x, y + position.y}, GetPixelColor(i));
 

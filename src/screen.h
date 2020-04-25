@@ -32,8 +32,8 @@ class Screen
     GUIController controller;
     ScreenDrawMode mode = ScreenDrawMode::DrawLevel;
 
-    LevelSurfaces * level_surfaces;
-    ScreenRenderSurface * screen_surface;
+    LevelSurfaces * level_surfaces = nullptr;
+    ScreenRenderSurface * screen_surface = nullptr;
 
   public:
     Screen(bool is_fullscreen, ScreenRenderSurface * render_surface);

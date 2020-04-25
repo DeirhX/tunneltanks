@@ -371,6 +371,9 @@
     <ClInclude Include="src\tank_base.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
+    <ClInclude Include="src\core_concepts.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

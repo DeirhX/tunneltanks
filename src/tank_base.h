@@ -9,22 +9,27 @@ class Surface;
 class World;
 
 /*
- * Tank Base, part of the level
+ * Tank Base, part of the level, capable of building machines 
  */
 class TankBase
 {
+    /* All your base are belong...same size */
     static constexpr Size BaseSize = Size{tweak::base::BaseSize, tweak::base::BaseSize};
 
     Position position = {-1, -1};
     BoundingBox bounding_box = {BaseSize};
+    /* Owner tank */
     TankColor color = {-1};
+    /* Link to power grid */
     LinkPoint * link_point{};
 
+    /* Held energy and resources */
     Reactor reactor = tweak::base::Reactor;
+    MaterialContainer materials = tweak::base::MaterialContainer;
 
+    /* Machine templates it offers */
     ChargerTemplate * base_charger_template = nullptr;
     HarvesterTemplate * base_harvester_template = nullptr;
-    MaterialContainer materials = tweak::base::MaterialContainer;
 
   public:
     TankBase() = default;
@@ -38,11 +43,12 @@ class TankBase
 
   public:
     [[nodiscard]] Position GetPosition() const { return this->position; }
-    //    [[nodiscard]] LinkPoint * GetLinkPoint() const { return this->link_point; }
+    // [[nodiscard]] LinkPoint * GetLinkPoint() const { return this->link_point; }
     [[nodiscard]] TankColor GetColor() const { return this->color; }
     [[nodiscard]] const MaterialContainer & GetResources() const { return this->materials; }
     [[nodiscard]] bool IsInside(Position position) const;
 
+    /* Resource manipulation, charging and recharging */
     void AbsorbResources(MaterialContainer & other);
     void AbsorbResources(MaterialContainer & other, MaterialAmount rate);
     void GiveResources(MaterialContainer & other, MaterialAmount rate);

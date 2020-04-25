@@ -1,5 +1,5 @@
 ﻿#pragma once
-
+#include "core_concepts.h"
 #include "raycaster.h"
 #include "render_surface.h"
 #include "types.h"
@@ -29,6 +29,7 @@ class ShapeInspector
   public:
     static Position GetRandomPointInCircle(Position center, int radius);
     template <typename InspectFunc>
+    requires concepts::BasicVisitor<InspectFunc, Position>
     static std::optional<Position> FromRandomPointInCircleToCenter(Position center, int radius,
                                                                    InspectFunc inspect_func);
     template <typename SurfaceType, typename InspectFunc>
@@ -39,6 +40,7 @@ class ShapeInspector
 /* InspectFunc (Position position) -> bool
  *  Return false to continue inspection, true to terminate */
 template <typename InspectFunc>
+requires concepts::BasicVisitor<InspectFunc, Position>
 std::optional<Position> ShapeInspector::FromRandomPointInCircleToCenter(Position center, int radius,
                                                                         InspectFunc inspect_func)
 {

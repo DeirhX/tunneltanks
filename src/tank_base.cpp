@@ -78,7 +78,13 @@ void TankBase::RechargeTank(Tank * tank)
 
 void TankBase::Draw(Surface * surface) const
 {
-    /* Energy layer */
+    for (int row = 0; row < 3; ++row)
+        for (int col = 0; col < 3; ++col)
+        {
+            //auto cell_area = Rect { Position{col * this->BaseSize.x / 3, row * this->BaseSize.y / 3}, }
+        }
+
+    /* Display energy level  */
     Size materials_rect_size = BaseSize + Size{2, 2};
     Rect materials_rect = Rect{Position{this->position - materials_rect_size / 2}, materials_rect_size};
     int materials_drawn_pixels = 2 * materials_rect.size.x + 2 * materials_rect.size.y - 4;
@@ -88,7 +94,7 @@ void TankBase::Draw(Surface * surface) const
     ShapeRenderer::DrawRectanglePart(surface, materials_rect, materials_boundary, materials_drawn_pixels,
                                      Palette.Get(Colors::DirtShieldPassive));
 
-    /* Dirt layer */
+    /* Display build resource level */
     Size energy_rect_size = BaseSize + Size{4, 4};
     Rect energy_rect = Rect{Position{this->position - energy_rect_size / 2}, energy_rect_size};
     int energy_drawn_pixels = 2 * energy_rect.size.x + 2 * energy_rect.size.y - 4;

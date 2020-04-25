@@ -66,18 +66,18 @@ int GameMain(int argc, char * argv[])
         if (is_reading_level)
         {
             id = argv[i];
-            is_reading_level = 0;
+            is_reading_level = false;
         }
         else if (is_reading_seed)
         {
             seed = atoi(argv[i]);
             manual_seed = 1;
-            is_reading_seed = 0;
+            is_reading_seed = false;
         }
         else if (is_reading_file)
         {
             outfile_name = argv[i];
-            is_reading_file = 0;
+            is_reading_file = false;
         }
         else if (!strcmp("--help", argv[i]))
         {

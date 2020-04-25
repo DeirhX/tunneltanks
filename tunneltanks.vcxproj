@@ -87,6 +87,7 @@
   <ItemGroup>
     <ClInclude Include="src\bitmap_loader.h" />
     <ClInclude Include="src\collision_solver.h" />
+    <ClInclude Include="src\core_concepts.h" />
     <ClInclude Include="src\exceptions.h" />
     <ClInclude Include="src\font_renderer.h" />
     <ClInclude Include="src\gamelib\SDL\bitmap.h" />

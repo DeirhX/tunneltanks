@@ -20,3 +20,5 @@ tunneltanks
 /sdl2/test/**/*.bmp
 /debug_*.bmp
 /sdl2/**/*.bmp
+/cmake-build-debug/**
+/.idea/**

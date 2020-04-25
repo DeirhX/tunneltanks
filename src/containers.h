@@ -1,14 +1,13 @@
 #pragma once
 
 #include "trace.h"
+#include "core_concepts.h"
 #include <deque>
 #include <queue>
 #include <type_traits>
 #include <vector>
 #include <concepts>
 
-template <typename T, typename U>
-concept same_as = std::is_same_v<T, U> && std::is_same_v<U, T>;
 
 /*
  Effective container for storing in-place, cache-local objects - deleting does not shift, dead objects can be reused
@@ -236,7 +235,7 @@ class MultiTypeContainer
     template <typename TValue>
     TValue & Add(TValue && item)
     {
-        return std::get<ValueContainer<TValue>>(this->items).Add(std::move(item));
+        return std::get<ValueContainer<TValue>>(this->items).Add(std::forward<TValue>(item));
     }
 
     /* Merge two containers via copy */
@@ -283,7 +282,7 @@ class MultiTypeContainer
     }
     /* Call visitor on every collection contained */
     template <typename TVisit>
-    void ForEachContainer(TVisit visitor)
+    void ForEachContainer(const TVisit & visitor)
     {
         auto for_each_container = [visitor](auto & container) { visitor(container); };
         std::apply([for_each_container](auto &... cont) { (..., for_each_container(cont)); }, items);
@@ -291,7 +290,7 @@ class MultiTypeContainer
 
     /* Call visitor on every element contained, irrespective of its type. Iterates all containers. */
     template <typename TVisit>
-    void ForEach(TVisit visitor)
+    void ForEach(const TVisit & visitor)
     {
         auto for_each_element = [visitor](auto & container) {
             for (auto & el : container)
@@ -301,7 +300,7 @@ class MultiTypeContainer
     }
     /* Call visitor on all elements in one container of supplied type TValue. Iterates one container */
     template <typename TValue, typename TVisit>
-    void ForEach(TVisit visitor)
+    void ForEach(const TVisit & visitor)
     {
         auto for_each_element = [visitor](auto & container) {
             for (auto & el : container)

@@ -102,7 +102,7 @@ static void maze_populate(Maze *m) {
 		queue.push_back(v);
 		remove_wall(m, d, x, y);
 		move_dir(d, &x, &y);
-	} while(1);
+	} while(true);
 
 }
 

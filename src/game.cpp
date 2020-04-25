@@ -17,8 +17,6 @@
 
 #include "game_system.h"
 
-#define ERR_OUT(msg) gamelib_error("PROGRAMMING ERROR: " msg)
-
 /*----------------------------------------------------------------------------*
  * This bit is used to initialize various GUIs:                               *
  *----------------------------------------------------------------------------*/
@@ -89,7 +87,7 @@ Game::Game(GameConfig config)
 {
     /* Copy in all the default values: */
     this->config = config;
-    this->is_active = 0;
+    this->is_active = false;
     this->is_debug = config.is_debug;
 
     /* The hell was I thinking?

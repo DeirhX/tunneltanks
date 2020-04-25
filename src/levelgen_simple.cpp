@@ -25,7 +25,6 @@ enum Side : char
 
 static void add_rock_lines(Level *lvl, Side s)
 {
-    int xstep = 0, ystep = 0;
     Vector cur, prev;
     int is_rare, needs_flip = 0;
     int minx = 0, maxx = 0, miny = 0, maxy = 0;
@@ -64,6 +63,8 @@ static void add_rock_lines(Level *lvl, Side s)
 
     /* Let's get this party started: */
     prev = cur = Vector(minx, Random.Int(miny, maxy));
+    int xstep = 0, ystep = 0;
+
 
     do
     {

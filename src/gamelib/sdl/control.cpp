@@ -48,9 +48,9 @@ void gamelib_handle_fps() {
 
 /* All of this backend's capabilities: */
 int gamelib_get_max_players() { return 2; }
-bool gamelib_get_can_resize() { return 1; }
-bool gamelib_get_can_fullscreen() { return 1; }
-bool gamelib_get_can_window() { return 1; }
+bool gamelib_get_can_resize() { return true; }
+bool gamelib_get_can_fullscreen() { return true; }
+bool gamelib_get_can_window() { return true; }
 int gamelib_get_target_fps() { return tweak::perf::TargetFps; }
 
 /* TODO: Move to classes. ControllerAssigner? */

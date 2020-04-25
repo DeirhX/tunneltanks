@@ -14,8 +14,8 @@ struct GameConfig
     VideoConfig video_config;
     Size level_size;
     levelgen::LevelGeneratorType level_generator;
-    bool is_debug;
-    int player_count;
-    int rand_seed;
+    bool is_debug{};
+    int player_count{};
+    int rand_seed{};
     bool use_ai = true;
 };

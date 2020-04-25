@@ -41,7 +41,7 @@ void BmpFile::SaveToFile(const ColorBitmap & data, std::string_view file_name)
     for (int i = 0; i < static_cast<int>(data.GetLength()); ++i)
     {
         std::uint32_t mapped_color = SDL_MapRGBA(native_surface->format, data[i].r, data[i].g, data[i].b, data[i].a);
-        std::memcpy(((std::uint8_t *)native_surface->pixels) + sizeof(Color) * i, &mapped_color, sizeof(Color));
+        std::memcpy(static_cast<std::uint8_t *>(native_surface->pixels) + sizeof(Color) * i, &mapped_color, sizeof(Color));
     }
 
     /* ... and unlock, and we're good! :) */
@@ -101,7 +101,7 @@ MonoBitmap BmpFile::LoadGrayscaleFromFile(std::string_view file_name)
 MonoBitmap BmpFile::LoadGrayscaleFromRGBA(std::string_view file_name)
 {
     auto decode_func = [](std::uint32_t file_data, SDL_PixelFormat * file_data_format, std::uint8_t * target_data) {
-        std::uint8_t discard;
+        std::uint8_t discard;  // NOLINT(cppcoreguidelines-init-variables)
         /* I want only alpha which I know will be saved last. The rest can be thrown away.*/
         SDL_GetRGBA(file_data, file_data_format, &discard, &discard, &discard, target_data);
     };
