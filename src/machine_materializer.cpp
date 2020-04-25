@@ -13,18 +13,29 @@ MachineMaterializer::MachineMaterializer(Tank * tank, MaterialContainer * resour
 
 void MachineMaterializer::PickUpMachine(Machine & machine) { assert(!"Not implemented"); }
 
-void MachineMaterializer::PickUpMachine(MachineTemplate & machine) { this->transported_machine_template = &machine; }
+void MachineMaterializer::PickUpMachine(MachineTemplate & machine)
+{
+    this->transported_machine_template = &machine;
+    this->transported_machine_template->SetIsTransported(true);
+}
 
-void MachineMaterializer::PlaceMachine()
+void MachineMaterializer::PlaceMachine(bool materialize)
 {
     assert(this->transported_machine_template);
     if (this->transported_machine_template)
     {
-        /* Finally set the position */
-        this->transported_machine_template->SetPosition(this->owner_tank->GetPosition());
-        this->transported_machine_template->SetState(MachineConstructState::Planted);
-        /* Stop transporting */
-        this->transported_machine_template->ResetToOrigin();
+        if (materialize)
+        {
+            /* Finally set the position */
+            this->transported_machine_template->SetPosition(this->owner_tank->GetPosition());
+            this->transported_machine_template->SetState(MachineConstructState::Planted);
+        }
+        else
+        {
+            /* Stop transporting, return it to base */
+            this->transported_machine_template->ResetToOrigin();
+        }
+        this->transported_machine_template->SetIsTransported(false);
         this->transported_machine_template = nullptr;
     }
     
@@ -59,7 +70,7 @@ void MachineMaterializer::Advance(Position)
             /* We're holding a machine, Place a machine if we were - but not in any base */
             if (!GetWorld()->GetLevel()->CheckBaseCollision(this->owner_tank->GetPosition()))
             {
-                PlaceMachine();
+                PlaceMachine(true);
             }
             else
             {
@@ -71,18 +82,11 @@ void MachineMaterializer::Advance(Position)
                 });
                 if (machine_template_overlap == this->transported_machine_template)
                 {
-                    this->transported_machine_template->ResetToOrigin(); 
-                    this->transported_machine_template = nullptr;
+                    PlaceMachine(false);
                 }
             }
         }
     }
-    /*
-    else if (this->is_building_secondary)
-        TryBuildMachine(this->secondary_construct);
-    else if (this->is_building_tertiary)
-        TryBuildMachine(this->tertiary_construct);
-        */
 
     if (this->transported_machine_template)
     {

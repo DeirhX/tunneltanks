@@ -35,7 +35,7 @@ class MachineMaterializer
 
     void PickUpMachine(Machine & machine);
     void PickUpMachine(MachineTemplate & machine);
-    void PlaceMachine();
+    void PlaceMachine(bool materialize);
 
     void ApplyControllerOutput(ControllerOutput controls);
     void Advance(Position tank_position);

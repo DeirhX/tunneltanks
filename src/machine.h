@@ -17,6 +17,7 @@ class Machine : public Invalidable
 {
   protected:
     bool is_blocking_collidable = true;
+    bool is_transported = false;
     MachineConstructState construct_state = MachineConstructState::Materializing;
 
     Position position;
@@ -40,11 +41,12 @@ class Machine : public Invalidable
     [[nodiscard]] virtual bool TestCollide(Position position) const;
 
     [[nodiscard]] bool IsBlockingCollision() const { return this->is_blocking_collidable; }
+    [[nodiscard]] bool IsBeingTransported() const { return this->is_transported; }
     [[nodiscard]] MachineConstructState GetState() const { return this->construct_state; }
     Reactor & GetReactor() { return this->reactor; }
 
     void SetState(MachineConstructState new_state);
-    void SetPosition(Position new_position) { this->position = new_position; }
+    void SetPosition(Position new_position);
 };
 
 class MachineTemplate : public Machine
@@ -54,7 +56,8 @@ class MachineTemplate : public Machine
     MachineTemplate(Position position, BoundingBox bounding_box);
     void Advance(Level *) override{}
     void ResetToOrigin();
-    void Die(Level *) override{};
+    void Die(Level *) override{}
+    void SetIsTransported(bool new_value);
 };
 
 enum class HarvesterType

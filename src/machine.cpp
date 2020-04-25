@@ -32,6 +32,12 @@ void Machine::SetState(MachineConstructState new_state)
     }
 }
 
+void Machine::SetPosition(Position new_position)
+{
+    this->position = new_position;
+    this->link_source.UpdatePosition(new_position);
+}
+
 bool Machine::TestCollide(Position with_position) const
 {
     return this->bounding_box.IsInside(with_position, this->position);
@@ -92,6 +98,16 @@ MachineTemplate::MachineTemplate(Position position, BoundingBox bounding_box)
 void MachineTemplate::ResetToOrigin()
 {
     this->SetPosition(this->origin_position);
+}
+
+void MachineTemplate::SetIsTransported(bool new_value)
+{
+    this->is_transported = new_value;
+    if (new_value)
+        this->link_source.Enable();
+    else
+        this->link_source.Disable();
+
 }
 
 HarvesterTemplate::HarvesterTemplate(Position position)

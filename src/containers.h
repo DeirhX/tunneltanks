@@ -313,8 +313,9 @@ class MultiTypeContainer
     template <typename TargetType, typename TVisit>
     constexpr void ForEachConvertibleTo(TVisit visitor)
     {
-        auto for_each_element = [visitor](auto & container) {
-            if constexpr (std::is_convertible_v<std::add_lvalue_reference_t<std::remove_reference_t<decltype(container)>::value_type>, TargetType &>)
+        auto for_each_element = [visitor]<typename ValueType>(ValueContainer<ValueType> & container)
+        {
+            if constexpr (std::is_convertible_v<ValueType &, TargetType &>)
             {
                 for (auto & el : container)
                     visitor(el);
