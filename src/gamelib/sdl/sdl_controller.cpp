@@ -35,12 +35,14 @@ ControllerOutput KeyboardWithMouseController::ApplyControls(PublicTankInfo * tan
 {
     auto output = Base::ApplyControls(tankPublic);
     int x, y;
-    auto buttons = SDL_GetMouseState(&x, &y);
+    auto mouse_buttons = SDL_GetMouseState(&x, &y);
     output.is_crosshair_absolute = true;
     Size window_size = GetSystem()->GetWindow()->GetResolution();
     output.crosshair_screen_pos = {static_cast<float>(x) / float(window_size.x), static_cast<float>(y) / float(window_size.y)};
-    output.is_shooting_primary = buttons & SDL_BUTTON(1);
-    output.build_primary = buttons & SDL_BUTTON(2);
+    output.is_shooting_primary = mouse_buttons & SDL_BUTTON(1);
+    output.is_building_primary = mouse_buttons & SDL_BUTTON(3);
+    output.build_primary = output.is_building_primary && (mouse_buttons ^ this->last_mouse_state) & SDL_BUTTON(3);
+    this->last_mouse_state = mouse_buttons;
     return output;
 }
 
@@ -183,9 +185,10 @@ ControllerOutput GamePadController::ApplyControls(PublicTankInfo *)
     output.switch_secondary_weapon_prev = cycle_secondary_weapon_prev && !this->was_cycle_secondary_weapon_prev_down;
     this->was_cycle_secondary_weapon_prev_down = cycle_secondary_weapon_prev;
 
-    bool build_primary = this->mapping.BuildPrimary.IsPressed(this->joystick);
-    output.build_primary = build_primary && !this->was_build_primary_down;
-    this->was_build_primary_down = build_primary;
+    bool build_primary_down = this->mapping.BuildPrimary.IsPressed(this->joystick);
+    output.build_primary = build_primary_down && !this->was_build_primary_down;
+    output.is_building_primary = build_primary_down;
+    this->was_build_primary_down = build_primary_down;
 
     bool build_secondary = this->mapping.BuildSecondary.IsPressed(this->joystick);
     output.build_secondary = build_secondary && !this->was_build_secondary_down;

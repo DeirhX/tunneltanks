@@ -1,19 +1,16 @@
-#include <algorithm>
-
-#include <level.h>
-#include <level_view.h>
-#include <projectile.h>
-#include <random.h>
-#include <screen.h>
-#include <tank.h>
-#include <tank_base.h>
-#include <tank_list.h>
-#include <tank_sprites.h>
-#include <tweak.h>
-#include <world.h>
-
-
+#include "tank.h"
+#include "algorithm"
 #include "controller.h"
+#include "level.h"
+#include "level_view.h"
+#include "projectile.h"
+#include "random.h"
+#include "screen.h"
+#include "tank_base.h"
+#include "tank_list.h"
+#include "tank_sprites.h"
+#include "tweak.h"
+#include "world.h"
 
 /*  /\
  * TANK
@@ -132,9 +129,12 @@ CollisionType Tank::GetCollision(Direction dir, Position position_, TankList * t
                     }
                     return false;
                 }, 
-                [](Machine &) {
-                    //result = CollisionType::Blocked;
-                    //return true;
+                [&result](auto & machine) {
+                    if (machine.IsBlockingCollision())
+                    {
+                        result = CollisionType::Blocked;
+                        return true;
+                    }
                     return false;
                 },
                 [&result](LevelPixel & pixel) {

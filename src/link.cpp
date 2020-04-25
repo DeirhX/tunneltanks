@@ -33,7 +33,8 @@ std::optional<NeighborLinkPoint> LinkPoint::GetClosestOrphanedPoint(CompareFunc 
     const NeighborLinkPoint * closest_point = nullptr;
     for (const NeighborLinkPoint & neighbor : this->possible_links)
     {
-        if (neighbor.point->IsOrphaned() && (!closest_point || neighbor.distance < closest_point->distance) &&
+        if (neighbor.point->IsOrphaned() && neighbor.point->IsEnabled() &&
+            (!closest_point || neighbor.distance < closest_point->distance) &&
             compare_func(*this, neighbor))
         {
             closest_point = &neighbor;
@@ -52,8 +53,9 @@ std::optional<NeighborLinkPoint> LinkPoint::GetClosestOrphanedPoint() const
 bool LinkPoint::IsInRange(LinkPoint * other_link) const
 {
     float distance = (other_link->GetPosition() - this->GetPosition()).GetSize();
-    return distance <= tweak::world::MaximumLiveLinkDistance ||
-           (this->type == LinkPointType::Transit && distance <= tweak::world::MaximumTheoreticalLinkDistance);
+    return this->IsEnabled() &&
+           (distance <= tweak::world::MaximumLiveLinkDistance ||
+           (this->type == LinkPointType::Transit && distance <= tweak::world::MaximumTheoreticalLinkDistance));
 }
 
 void LinkPoint::SetPosition(Position position_)

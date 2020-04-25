@@ -20,6 +20,8 @@ class MachineMaterializer
     MachineType secondary_construct = MachineType::Miner;
     MachineType tertiary_construct = MachineType::Charger;
 
+    //bool build_primary = false;
+
     bool is_building_primary = false;
     bool is_building_secondary = false;
     bool is_building_tertiary = false;

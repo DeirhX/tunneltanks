@@ -1,12 +1,8 @@
 ﻿#include "tank_base.h"
-
 #include "shape_renderer.h"
 #include "world.h"
 
-TankBase::TankBase(Position position, TankColor color) : position(position), color(color)
-{
-    
-}
+TankBase::TankBase(Position position, TankColor color) : position(position), color(color) {}
 
 void TankBase::BeginGame()
 {
@@ -31,13 +27,11 @@ void TankBase::CreateMachineTemplates(World * world)
         right_center - Size{Charger::bounding_box.size.x / 2 + 2, 0});
 }
 
-    bool TankBase::IsInside(Position tested_position) const
+bool TankBase::IsInside(Position tested_position) const
 {
     return this->bounding_box.IsInside(tested_position, this->position);
 }
-void TankBase::AbsorbResources(MaterialContainer & other) {
-    this->materials.Absorb(other);
-}
+void TankBase::AbsorbResources(MaterialContainer & other) { this->materials.Absorb(other); }
 
 void TankBase::AbsorbResources(MaterialContainer & other, MaterialAmount rate)
 {
@@ -96,16 +90,12 @@ void TankBase::Draw(Surface * surface) const
 
     /* Dirt layer */
     Size energy_rect_size = BaseSize + Size{4, 4};
-    Rect energy_rect = Rect{Position{this->position - energy_rect_size / 2}, energy_rect_size}; 
+    Rect energy_rect = Rect{Position{this->position - energy_rect_size / 2}, energy_rect_size};
     int energy_drawn_pixels = 2 * energy_rect.size.x + 2 * energy_rect.size.y - 4;
     int energy_boundary = energy_drawn_pixels * this->reactor.GetEnergy() / this->reactor.GetEnergyCapacity();
-    ShapeRenderer::DrawRectanglePart(surface, energy_rect, 0, energy_boundary,
-                                     Palette.Get(Colors::EnergyShieldActive));
+    ShapeRenderer::DrawRectanglePart(surface, energy_rect, 0, energy_boundary, Palette.Get(Colors::EnergyShieldActive));
     ShapeRenderer::DrawRectanglePart(surface, energy_rect, energy_boundary, energy_drawn_pixels,
                                      Palette.Get(Colors::EnergyShieldPassive));
 }
 
-    void TankBase::Advance()
-{
-    this->reactor.Add(tweak::base::ReactorRecoveryRate);
-}
+void TankBase::Advance() { this->reactor.Add(tweak::base::ReactorRecoveryRate); }

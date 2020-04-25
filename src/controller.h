@@ -4,9 +4,12 @@
 struct ControllerOutput
 {
 	Speed speed = { };
+    /* Is shooting button pressed down */
 	bool is_shooting_primary = false;
     bool is_shooting_secondary = false;
     bool is_shooting_tertiary = false;
+    bool is_building_primary = false;
+    /* Did the button became signaled this frame */
     bool switch_primary_weapon_next = false;
     bool switch_primary_weapon_prev = false;
     bool switch_secondary_weapon_next = false;

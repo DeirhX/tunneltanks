@@ -49,20 +49,35 @@ void MachineMaterializer::Advance(Position)
             });
             if (machine_overlap)
             {
-                this->transported_machine = machine_overlap;
+                PickUpMachine(*machine_overlap);
             }
         }
         else
         {
-            /* Place a machine if we were - but not in any base */
+            /* We're holding a machine, Place a machine if we were - but not in any base */
             if (!GetWorld()->GetLevel()->CheckBaseCollision(this->owner_tank->GetPosition()))
             {
-
+                PlaceMachine();
+            }
+            else
+            {
+                /* Return a machine template to its place if we were holding it */
+                MachineTemplate * machine_template_overlap = nullptr;
+                this->owner_tank->ForEachTankPixel([&machine_template_overlap](Position world_position) {
+                    Machine * machine_overlap = GetWorld()->GetCollisionSolver()->TestMachine(world_position);
+                    auto * as_machine_template = dynamic_cast<MachineTemplate *>(machine_overlap);
+                    if (as_machine_template)
+                        machine_template_overlap = as_machine_template;
+                    return !machine_template_overlap;
+                });
+                if (machine_template_overlap == this->transported_machine)
+                {
+                    machine_template_overlap->ResetToOrigin(); 
+                    this->transported_machine = nullptr;
+                }
             }
         }
     }
-        TryBuildMachine(this->primary_construct);
-
     /*
     else if (this->is_building_secondary)
         TryBuildMachine(this->secondary_construct);

@@ -25,6 +25,7 @@ class TankBase
     ChargerTemplate * base_charger_template = nullptr;
     HarvesterTemplate * base_harvester_template = nullptr;
     MaterialContainer materials = tweak::base::MaterialContainer;
+
   public:
     TankBase() = default;
     explicit TankBase(Position position, TankColor color);
@@ -37,11 +38,11 @@ class TankBase
 
   public:
     [[nodiscard]] Position GetPosition() const { return this->position; }
-//    [[nodiscard]] LinkPoint * GetLinkPoint() const { return this->link_point; }
+    //    [[nodiscard]] LinkPoint * GetLinkPoint() const { return this->link_point; }
     [[nodiscard]] TankColor GetColor() const { return this->color; }
     [[nodiscard]] const MaterialContainer & GetResources() const { return this->materials; }
     [[nodiscard]] bool IsInside(Position position) const;
-    
+
     void AbsorbResources(MaterialContainer & other);
     void AbsorbResources(MaterialContainer & other, MaterialAmount rate);
     void GiveResources(MaterialContainer & other, MaterialAmount rate);
@@ -50,5 +51,4 @@ class TankBase
 
     void Draw(Surface * surface) const;
     void Advance();
-
 };

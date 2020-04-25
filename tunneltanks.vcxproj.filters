@@ -168,9 +168,6 @@
     <ClCompile Include="src\link.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
-    <ClCompile Include="src\tank_base.cpp">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
     <ClCompile Include="src\tank_sprites.cpp">
       <Filter>src\draw</Filter>
     </ClCompile>
@@ -178,6 +175,9 @@
       <Filter>src\game_entity</Filter>
     </ClCompile>
     <ClCompile Include="src\resources.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tank_base.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
   </ItemGroup>
@@ -359,9 +359,6 @@
     <ClInclude Include="src\link.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
-    <ClInclude Include="src\tank_base.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
     <ClInclude Include="src\tank_sprites.h">
       <Filter>src\draw</Filter>
     </ClInclude>
@@ -371,8 +368,8 @@
     <ClInclude Include="src\resources.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
-    <ClInclude Include="src\base.h">
-      <Filter>src\system</Filter>
+    <ClInclude Include="src\tank_base.h">
+      <Filter>src\game_entity</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

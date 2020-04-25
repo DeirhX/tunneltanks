@@ -32,4 +32,5 @@ class MachineryList
     void Draw(class Surface * surface);
 
     Machine * GetMachineAtPoint(Position position);
+    MachineTemplate * GetMachineTemplateAtPoint(Position position);
 };

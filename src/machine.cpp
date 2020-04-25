@@ -32,6 +32,12 @@ void Machine::SetState(MachineConstructState new_state)
     }
 }
 
+bool Machine::TestCollide(Position with_position) const
+{
+    return this->bounding_box.IsInside(with_position, this->position);
+}
+
+
 void Harvester::Advance(Level * level)
 {
     if (!CheckAlive(level))
@@ -67,11 +73,6 @@ void Harvester::Draw(Surface * surface) const
                               Palette.Get(Colors::HarvesterOutline));
 }
 
-bool Harvester::IsColliding(Position with_position) const
-{
-    return this->bounding_box.IsInside(with_position, this->position);
-}
-
 void Harvester::Die(Level *)
 {
     GetWorld()->GetProjectileList()->Add(
@@ -82,14 +83,29 @@ void Harvester::Die(Level *)
     this->Invalidate();
 }
 
+MachineTemplate::MachineTemplate(Position position, BoundingBox bounding_box)
+    : Machine{position, nullptr, Reactor{ReactorCapacity{}}, bounding_box}, origin_position{position}
+{
+    this->is_blocking_collidable = false;
+}
+
+void MachineTemplate::ResetToOrigin()
+{
+    this->SetPosition(this->origin_position);
+}
+
+HarvesterTemplate::HarvesterTemplate(Position position)
+    : MachineTemplate{position, Harvester::bounding_box}
+{
+    this->link_source.Disable();
+}
+
 void HarvesterTemplate::Draw(Surface * surface) const
 {
     Color color = Palette.Get(Colors::HarvesterOutline);
     color.a = 127;
     ShapeRenderer::DrawCircle(surface, this->position, 2, Palette.Get(Colors::HarvesterInside), color);
 }
-
-
 
 
 /*
@@ -139,11 +155,6 @@ void Charger::Draw(Surface * surface) const
     ShapeRenderer::DrawCircle(surface, this->position, 2, Palette.Get(Colors::HarvesterInside), Palette.Get(Colors::ChargerOutline));
 }
 
-bool Charger::IsColliding(Position with_position) const
-{
-    return this->bounding_box.IsInside(with_position, this->position);
-}
-
 void Charger::Die(Level *)
 {
     GetWorld()->GetProjectileList()->Add(
@@ -152,6 +163,12 @@ void Charger::Die(Level *)
             .Explode<Shrapnel>(GetWorld()->GetLevel()));
 
     this->Invalidate();
+}
+
+ChargerTemplate::ChargerTemplate(Position position)
+    : MachineTemplate{position, Charger::bounding_box}
+{
+    this->link_source.Disable();
 }
 
 void ChargerTemplate::Draw(Surface * surface) const

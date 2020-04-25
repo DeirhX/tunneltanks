@@ -1,32 +1,23 @@
-#include "base.h"
+#include "color_palette.h"
+#include "gamelib/sdl/bitmap.h"
+#include "level_pixel.h"
+#include "trace.h"
+#include "world.h"
+#include <cassert>
 #include <cstdlib>
-
-
 #include <level.h>
 #include <random.h>
 #include <tweak.h>
 #include <types.h>
 
-#include <cassert>
-
-#include "gamelib/sdl/bitmap.h"
-#include "color_palette.h"
-#include "trace.h"
-#include "level_pixel.h"
-#include "world.h"
-
-
-Level::Level(Size size)
-    : size(size), data(size), surfaces(size)
+Level::Level(Size size) : size(size), data(size), surfaces(size)
 {
     surfaces.terrain_surface.SetDefaultColor(static_cast<Color>(Palette.Get(Colors::Rock)));
     surfaces.objects_surface.SetDefaultColor({});
     std::fill(this->data.begin(), this->data.end(), LevelPixel::LevelGenRock);
 }
 
-void Level::OnConnectWorld(World *)
-{
-}
+void Level::OnConnectWorld(World *) {}
 
 void Level::BeginGame()
 {
@@ -146,10 +137,9 @@ void Level::CreateBases()
     {
         CreateBase({this->tank_bases[i].GetPosition().x, this->tank_bases[i].GetPosition().y}, i);
     }
-
 }
 
-TankBase * Level::GetSpawn(TankColor color) 
+TankBase * Level::GetSpawn(TankColor color)
 {
     assert(color >= 0 && color < (int)this->tank_bases.size());
     return &this->tank_bases[color];

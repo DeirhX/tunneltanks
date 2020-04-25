@@ -298,7 +298,7 @@ class MultiTypeContainer
         std::apply([for_each_element](auto &... cont) { (..., for_each_element(cont)); }, items);
     }
     /* Call visitor on all elements of a supplied type TValue */
-    template <typename TVisit, typename TValue>
+    template <typename TValue, typename TVisit>
     void ForEach(TVisit visitor)
     {
         auto for_each_element = [visitor](auto & container) {

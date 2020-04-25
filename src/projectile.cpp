@@ -24,8 +24,10 @@ void Bullet::Advance(TankList *)
                 tank.GetReactor().Exhaust(tweak::tank::ShotDamage);
                 return true;
         },
-        [](auto & machine)
+        [](Machine & machine)
         {
+            if (!machine.IsBlockingCollision())
+                return false;
             machine.GetReactor().Exhaust(tweak::tank::ShotDamage);
             return true;
         },

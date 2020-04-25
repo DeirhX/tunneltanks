@@ -16,7 +16,7 @@ class KeyboardController : public Controller
 class KeyboardWithMouseController : public KeyboardController
 {
     using Base = KeyboardController;
-
+    Uint32 last_mouse_state = 0;
   public:
     KeyboardWithMouseController(SDL_Scancode left, SDL_Scancode right, SDL_Scancode up, SDL_Scancode down,
                                 SDL_Scancode shoot)
