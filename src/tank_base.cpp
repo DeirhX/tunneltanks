@@ -27,6 +27,44 @@ void TankBase::CreateMachineTemplates(World * world)
         right_center - Size{Charger::bounding_box.size.x / 2 + 2, 0});
 }
 
+void TankBase::DrawMaterialStorage(Surface * surface) const
+{
+    constexpr int cells_x = 3;
+    constexpr int cells_y = 3;
+
+    auto paint_material_cell = [this, surface](const Rect & rect, Offset cell_num) {
+
+        int mat_current = this->materials.GetDirt();
+        int mat_capacity = this->materials.GetDirtCapacity();
+
+        int cell_ordinal = cell_num.x + cell_num.y * cells_x;
+        int cell_capacity_min = cell_ordinal * mat_capacity / (cells_x * cells_y);
+        int cell_capacity_max = (1 + cell_ordinal) * mat_capacity / (cells_x * cells_y);
+
+        float this_cell_full = std::clamp(float(mat_current - cell_capacity_min) / float(cell_capacity_max - cell_capacity_min), 0.f, 1.f);
+
+        /* Blend color alpha to match desired intensity */
+        Color fill_color = Palette.Get(Colors::MaterialStatusFill);
+        fill_color.a = static_cast<uint8_t>(fill_color.a * (this_cell_full));
+        Color outline_color = Palette.Get(Colors::MaterialStatusOutline);
+        outline_color.a = static_cast<uint8_t>(outline_color.a * (this_cell_full));
+
+        ShapeRenderer::DrawFilledRectangle(surface, rect, true, fill_color, outline_color);
+        // ShapeRenderer::FillRectangle(surface, rect, fill_color);
+    };
+
+    for (int row = 0; row < 3; ++row)
+        for (int col = 0; col < 3; ++col)
+        {
+            auto cell_area = Rect{this->bounding_box.GetTopLeft(this->GetPosition()) +
+                                      Offset{col * this->BaseSize.x / cells_x, row * this->BaseSize.y / cells_y} +
+                                      Offset{col ? 0 : 1, row ? 0 : 1},
+                                  Size{this->BaseSize.x / cells_x + (col == 1 ? this->BaseSize.x % cells_x : 0),
+                                       this->BaseSize.y / cells_y + (row == 1 ? this->BaseSize.y % cells_y : 0)}};
+            paint_material_cell(cell_area, Offset{col, row});
+        }
+}
+
 bool TankBase::IsInside(Position tested_position) const
 {
     return this->bounding_box.IsInside(tested_position, this->position);
@@ -78,31 +116,7 @@ void TankBase::RechargeTank(Tank * tank)
 
 void TankBase::Draw(Surface * surface) const
 {
-    constexpr int cells_x = 3;
-    constexpr int cells_y = 3;
-
-    auto paint_material_cell = [this, surface](const Rect & rect, Offset cell_num) {
-        int cell_ordinal = cell_num.x + cell_num.y * cells_x;
-        [[maybe_unused]] float ratio_full = float(this->materials.GetDirt()) / float(this->materials.GetDirtCapacity());
-
-        Color fill_color = Palette.Get(Colors::MaterialStatusFill);
-        fill_color.a = static_cast<uint8_t>(fill_color.a * (cell_ordinal / 9.f));
-        Color outline_color = Palette.Get(Colors::MaterialStatusOutline);
-        outline_color.a = static_cast<uint8_t>(outline_color.a * (cell_ordinal / 9.f));
-
-        ShapeRenderer::DrawFilledRectangle(surface, rect, true, fill_color, outline_color);
-    };
-
-    for (int row = 0; row < 3; ++row)
-        for (int col = 0; col < 3; ++col)
-        {
-            auto cell_area = Rect{this->bounding_box.GetTopLeft(this->GetPosition()) +
-                                      Offset{col * this->BaseSize.x / cells_x, row * this->BaseSize.y / cells_y} + Offset{col ? 0 : 1, row ?  0 : 1},
-                                  Size{this->BaseSize.x / cells_x + (col == 1 ? this->BaseSize.x % cells_x : 0),
-                                       this->BaseSize.y / cells_y + (row == 1 ? this->BaseSize.y % cells_y : 0)}};
-            paint_material_cell(cell_area, Offset{col, row});
-        }
-
+    DrawMaterialStorage(surface);
     /* Display energy level  */
     Size materials_rect_size = BaseSize + Size{2, 2};
     Rect materials_rect = Rect{Position{this->position - materials_rect_size / 2}, materials_rect_size};

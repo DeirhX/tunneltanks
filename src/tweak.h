@@ -54,7 +54,7 @@ namespace base
     constexpr int BaseSize = 35;
     constexpr int DoorSize = 7;
     constexpr Reactor Reactor = {15000_energy, 2000_health, {{30000_energy, 2000_health}}};
-    constexpr MaterialContainer MaterialContainer = {0_dirt, 0_minerals, {{20000_dirt, 20000_minerals}}};
+    constexpr MaterialContainer MaterialContainer = {0_dirt, 0_minerals, {{2000_dirt, 20000_minerals}}};
     constexpr ReactorState ReactorRecoveryRate = {100_energy, 10_health};
     constexpr MaterialAmount MaterialsAbsorbRate = {10_dirt, 10_minerals};
 }

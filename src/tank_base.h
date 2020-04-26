@@ -40,7 +40,7 @@ class TankBase
     /* Initialization */
     void RegisterLinkPoint(World * world);
     void CreateMachineTemplates(World * world);
-
+    void DrawMaterialStorage(Surface * surface) const;
   public:
     [[nodiscard]] Position GetPosition() const { return this->position; }
     // [[nodiscard]] LinkPoint * GetLinkPoint() const { return this->link_point; }
