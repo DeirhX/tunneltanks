@@ -20,11 +20,11 @@ void TankBase::CreateMachineTemplates(World * world)
 {
     Position left_center = (this->position - Size{TankBase::BaseSize.x / 2, 0});
     this->base_charger_template = &world->GetHarvesterList()->Emplace<ChargerTemplate>(
-        left_center + Size{Charger::bounding_box.size.x / 2 + 2, 0});
+        left_center + Size{Charger::bounding_box.size.x / 2 + 4, 0}, this->materials);
 
     Position right_center = (this->position + Size{TankBase::BaseSize.x / 2, 0});
     this->base_harvester_template = &world->GetHarvesterList()->Emplace<HarvesterTemplate>(
-        right_center - Size{Charger::bounding_box.size.x / 2 + 2, 0});
+        right_center - Size{Charger::bounding_box.size.x / 2 + 4, 0}, this->materials);
 }
 
 void TankBase::DrawMaterialStorage(Surface * surface) const
@@ -121,7 +121,7 @@ void TankBase::Draw(Surface * surface) const
     Size materials_rect_size = BaseSize + Size{2, 2};
     Rect materials_rect = Rect{Position{this->position - materials_rect_size / 2}, materials_rect_size};
     int materials_drawn_pixels = 2 * materials_rect.size.x + 2 * materials_rect.size.y - 4;
-    int materials_boundary = materials_drawn_pixels * this->materials.GetDirt() / this->materials.GetDirtCapacity();
+    int materials_boundary = materials_drawn_pixels * this->reactor.GetEnergy() / this->reactor.GetEnergyCapacity();
     ShapeRenderer::DrawRectanglePart(surface, materials_rect, 0, materials_boundary,
                                      Palette.Get(Colors::DirtShieldActive));
     ShapeRenderer::DrawRectanglePart(surface, materials_rect, materials_boundary, materials_drawn_pixels,

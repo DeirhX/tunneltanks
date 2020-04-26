@@ -22,6 +22,7 @@ class Machine : public Invalidable
   protected:
     bool is_blocking_collidable = true;
     bool is_transported = false;
+    bool is_template = false;
     MachineConstructState construct_state = MachineConstructState::Materializing;
 
     Position position;
@@ -42,15 +43,17 @@ class Machine : public Invalidable
     /* They will not be called via v-table, don't worry. Compile-time polymorphism only. Just so you don't   */
     virtual void Advance(Level * level) = 0;
     virtual void Draw(Surface * surface) const = 0;
+
     [[nodiscard]] virtual bool TestCollide(Position position) const;
 
-    [[nodiscard]] bool IsBlockingCollision() const { return this->is_blocking_collidable; }
+    [[nodiscard]] bool IsBlockingCollision() const { return this->GetState() == MachineConstructState::Planted; }
     [[nodiscard]] bool IsBeingTransported() const { return this->is_transported; }
     [[nodiscard]] MachineConstructState GetState() const { return this->construct_state; }
     Reactor & GetReactor() { return this->reactor; }
 
     void SetState(MachineConstructState new_state);
     void SetPosition(Position new_position);
+    void SetIsTransported(bool new_value);
 };
 
 
@@ -116,17 +119,21 @@ class Charger final : public Machine
  */
 class MachineTemplate : public Machine
 {
+    bool is_available = false;
+
+    MaterialAmount build_cost = {};
+    MaterialContainer * paying_container = nullptr;
     Position origin_position;
-
   public:
-    MachineTemplate(Position position, BoundingBox bounding_box);
+    MachineTemplate(Position position, BoundingBox bounding_box, MaterialAmount build_cost_, MaterialContainer & paying_host);
 
-    void Advance(Level *) override {}
+    void Advance(Level *) override;
     void ResetToOrigin();
     void Die(Level *) override {}
-    void SetIsTransported(bool new_value);
 
     virtual Machine & BuildMachine() const = 0;
+
+    [[nodiscard]] bool IsAvailable() const { return this->is_available; }
 };
 
 
@@ -136,7 +143,7 @@ class HarvesterTemplate final : public MachineTemplate
     HarvesterType type = HarvesterType::Dirt;
 
   public:
-    HarvesterTemplate(Position position);
+    HarvesterTemplate(Position position, MaterialContainer & paying_host);
     void Draw(Surface * surface) const override;
     Machine & BuildMachine() const override;
 };
@@ -146,7 +153,7 @@ class HarvesterTemplate final : public MachineTemplate
 class ChargerTemplate final : public MachineTemplate
 {
 public:
-    ChargerTemplate(Position position);
+    ChargerTemplate(Position position, MaterialContainer & paying_host);
     void Draw(Surface * surface) const override;
     Machine & BuildMachine() const override;
 };

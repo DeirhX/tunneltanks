@@ -33,6 +33,7 @@ enum class CollisionType
 namespace tank
 {
 template <typename PerPixelFunc>
+requires concepts::BasicVisitor<PerPixelFunc, Position>
 void ForEachTankPixel(PerPixelFunc per_pixel_func, Position position, Direction direction);
 } // namespace tank
 
@@ -90,6 +91,7 @@ class Tank : public Invalidable
 
     CollisionType GetCollision(Direction dir, Position pos, TankList * tank_list);
     template <typename PerPixelFunc> /* bool per_pixel_func(Position world_position). Return false to end iteration. */
+    requires concepts::BasicVisitor<PerPixelFunc, Position>
     void ForEachTankPixel(PerPixelFunc per_pixel_func)
     {
         tank::ForEachTankPixel(per_pixel_func, this->position, this->direction);
@@ -108,6 +110,7 @@ namespace tank
 {
 /* return false to stop enumeration */
 template <typename PerPixelFunc>
+requires concepts::BasicVisitor<PerPixelFunc, Position>
 void ForEachTankPixel(PerPixelFunc per_pixel_func, Position position, Direction direction)
 {
     Offset offset;

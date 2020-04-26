@@ -2,10 +2,6 @@
 
 void MachineryList::Advance(Level * level, TankList *)
 {
-    /* Append everything that was created last tick */
-    this->items.MoveFrom(this->newly_created_items);
-    Shrink();
-
     /* Advance everything */
     this->items.ForEach([level](auto & item) { item.Advance(level); });
 }

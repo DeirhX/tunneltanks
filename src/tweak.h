@@ -159,13 +159,14 @@ namespace rules
 {
     using namespace std::literals::chrono_literals;
 
-    constexpr MaterialAmount HarvesterCost = 100_dirt;
-    constexpr MaterialAmount MinerCost = {1000_dirt, 50_minerals};
+    constexpr MaterialAmount HarvesterCost = 1000_dirt;
     constexpr std::chrono::milliseconds HarvestTimer = 500ms;
     constexpr int HarvestMaxRange = 20;
-    constexpr MaterialAmount ChargerCost = 500_dirt;
     constexpr std::chrono::milliseconds ChargeTimer = 200ms;
     constexpr int ChargeMaxRange = 20;
+
+    constexpr MaterialAmount MinerCost = {1000_dirt, 50_minerals};
+    constexpr MaterialAmount ChargerCost = 500_dirt;
 
     constexpr Reactor DefaultMachineReactor = {0_energy, 1000_health, ReactorCapacity{{10000_energy, 1000_health}}};
     constexpr Reactor HarvesterReactor = {0_energy, 1000_health, ReactorCapacity{{10000_energy, 1000_health}}};

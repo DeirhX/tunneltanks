@@ -184,6 +184,7 @@ class ResourceContainer
         : current(amount_), capacity(capacity_)
     {
     }
+    bool CanPay(AmountType payment) const;
     /* true - paid the whole sum.  false - didn't have enough resources, state is unchanged */
     bool Pay(AmountType payment);
     /* true - added the whole sum.  false - didn't have enough space, added as much as possible */
@@ -199,9 +200,16 @@ class ResourceContainer
 };
 
 template <typename AmountType, typename CapacityType>
+bool ResourceContainer<AmountType, CapacityType>::CanPay(AmountType payment) const
+{
+    return !((this->current - payment).IsNegative());
+}
+
+
+template <typename AmountType, typename CapacityType>
 bool ResourceContainer<AmountType, CapacityType>::Pay(AmountType payment)
 {
-    if ((this->current - payment).IsNegative())
+    if (!CanPay(payment))
         return false;
     this->current -= payment;
     return true;

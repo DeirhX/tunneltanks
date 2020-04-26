@@ -28,14 +28,15 @@ class MachineMaterializer
     bool is_building_tertiary = false;
 
     Tank * owner_tank = nullptr;
-    MachineTemplate * transported_machine_template = nullptr;
+    Machine * transported_machine = nullptr;
+    //MachineTemplate * transported_machine_template = nullptr;
     MaterialContainer * resource_bank = nullptr;
   public:
     MachineMaterializer(Tank * owner_tank, MaterialContainer * resource_bank);
 
     void PickUpMachine(Machine & machine);
     void PickUpMachine(MachineTemplate & machine);
-    void PlaceMachine(bool materialize);
+    void PlaceMachine();
 
     void ApplyControllerOutput(ControllerOutput controls);
     void Advance(Position tank_position);

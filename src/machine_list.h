@@ -7,8 +7,6 @@ class MachineryList
     using Container = MultiTypeContainer<Harvester, Charger, HarvesterTemplate, ChargerTemplate>;
     /* Live items. Unmodified except for BEFORE Advance */
     Container items;
-    /* Items here will be integrated into main vector on Advance */
-    Container newly_created_items;
 
   public:
     MachineryList() = default;
@@ -17,12 +15,12 @@ class MachineryList
     template <typename TMachine>
     TMachine & Add(TMachine && projectile)
     {
-        return this->newly_created_items.Add(projectile);
+        return this->items.Add(projectile);
     }
     template <typename TMachine, typename... TConstructArgs>
-    TMachine & Emplace(TConstructArgs... args)
+    TMachine & Emplace(TConstructArgs &&... args)
     {
-        return this->newly_created_items.ConstructElement<TMachine>(std::forward<TConstructArgs>(args)...);
+        return this->items.ConstructElement<TMachine>(std::forward<TConstructArgs>(args)...);
     }
     void Remove(Machine & harvester) { harvester.Invalidate(); }
     void RemoveAll() { this->items.RemoveAll(); }

@@ -43,6 +43,21 @@ bool Machine::TestCollide(Position with_position) const
     return this->bounding_box.IsInside(with_position, this->position);
 }
 
+void Machine::SetIsTransported(bool new_value)
+{
+    this->is_transported = new_value;
+    if (new_value)
+    {
+        this->link_source.Enable();
+        this->SetState(MachineConstructState::Transporting);
+    }
+    else
+    {
+        this->link_source.Disable();
+        this->SetState(MachineConstructState::Planted);
+    }
+}
+
 
 void Harvester::Advance(Level * level)
 {
@@ -89,46 +104,6 @@ void Harvester::Die(Level *)
     this->Invalidate();
 }
 
-MachineTemplate::MachineTemplate(Position position, BoundingBox bounding_box)
-    : Machine{position, nullptr, Reactor{ReactorCapacity{}}, bounding_box}, origin_position{position}
-{
-    this->is_blocking_collidable = false;
-}
-
-void MachineTemplate::ResetToOrigin()
-{
-    this->SetPosition(this->origin_position);
-}
-
-void MachineTemplate::SetIsTransported(bool new_value)
-{
-    this->is_transported = new_value;
-    if (new_value)
-        this->link_source.Enable();
-    else
-        this->link_source.Disable();
-
-}
-
-HarvesterTemplate::HarvesterTemplate(Position position)
-    : MachineTemplate{position, Harvester::bounding_box}
-{
-    this->link_source.Disable();
-}
-
-void HarvesterTemplate::Draw(Surface * surface) const
-{
-    Color color = Palette.Get(Colors::HarvesterOutline);
-    color.a = 127;
-    ShapeRenderer::DrawCircle(surface, this->position, 2, Palette.Get(Colors::HarvesterInside), color);
-}
-
-Machine & HarvesterTemplate::BuildMachine() const
-{
-    return GetWorld()->GetHarvesterList()->Emplace<Harvester>(this->position, this->type, this->owner);
-}
-
-
 /*
  * Charger (Dodge): Charges empty pixels with collectable energy to be picked later
  */
@@ -137,7 +112,7 @@ void Charger::Advance(Level * level)
 {
     if (!CheckAlive(level))
         return;
-
+}
 
     //if (this->charge_timer.AdvanceAndCheckElapsed())
     //{
@@ -169,7 +144,7 @@ void Charger::Advance(Level * level)
     //        GetWorld()->GetLevel()->SetPixel(suitable_pos.value(), desired_pixel);
     //    }
     //}
-}
+
 
 void Charger::Draw(Surface * surface) const
 {
@@ -186,8 +161,46 @@ void Charger::Die(Level *)
     this->Invalidate();
 }
 
-ChargerTemplate::ChargerTemplate(Position position)
-    : MachineTemplate{position, Charger::bounding_box}
+/*
+ * MachineTemplate
+ */
+
+MachineTemplate::MachineTemplate(Position position, BoundingBox bounding_box, MaterialAmount build_cost_,
+                                 MaterialContainer & paying_host)
+    : Machine{position, nullptr, Reactor{ReactorCapacity{}}, bounding_box}, build_cost(build_cost_), paying_container(&paying_host), origin_position{position}
+{
+    this->is_template = true;
+    this->is_blocking_collidable = false;
+}
+
+void MachineTemplate::Advance(Level *) { this->is_available = this->paying_container->CanPay(this->build_cost); }
+
+void MachineTemplate::ResetToOrigin() { this->SetPosition(this->origin_position); }
+
+
+
+HarvesterTemplate::HarvesterTemplate(Position position, MaterialContainer & paying_host)
+    : MachineTemplate{position, Harvester::bounding_box, tweak::rules::HarvesterCost, paying_host}
+{
+    this->link_source.Disable();
+}
+
+void HarvesterTemplate::Draw(Surface * surface) const
+{
+    Color color = Palette.Get(Colors::HarvesterOutline);
+    color.a = (color.a * (this->IsAvailable() ? 128 : 32)) / 255;
+    ShapeRenderer::DrawCircle(surface, this->position, 2, Palette.Get(Colors::HarvesterInside), color);
+}
+
+Machine & HarvesterTemplate::BuildMachine() const
+{
+    Machine & machine = GetWorld()->GetHarvesterList()->Emplace<Harvester>(this->position, this->type, this->owner);
+    machine.SetState(MachineConstructState::Transporting);
+    return machine;
+}
+
+ChargerTemplate::ChargerTemplate(Position position, MaterialContainer & paying_host)
+    : MachineTemplate{position, Charger::bounding_box, tweak::rules::ChargerCost, paying_host}
 {
     this->link_source.Disable();
 }
@@ -195,13 +208,14 @@ ChargerTemplate::ChargerTemplate(Position position)
 void ChargerTemplate::Draw(Surface * surface) const
 {
     Color color = Palette.Get(Colors::ChargerOutline);
-    if (this->GetState() != MachineConstructState::Planted)
-        color.a = 127;
-    ShapeRenderer::DrawCircle(surface, this->position, 2, Palette.Get(Colors::HarvesterInside), color);
+    color.a = (color.a * (this->IsAvailable() ? 128 : 32)) / 255;
+    ShapeRenderer::DrawCircle(surface, this->position, 2, Palette.Get(Colors::ChargerInside), color);
 }
 
 Machine & ChargerTemplate::BuildMachine() const
 {
-    return GetWorld()->GetHarvesterList()->Emplace<Charger>(this->position, this->owner);
+    Machine & machine = GetWorld()->GetHarvesterList()->Emplace<Charger>(this->position, this->owner);
+    machine.SetState(MachineConstructState::Transporting);
+    return machine;
 }
 

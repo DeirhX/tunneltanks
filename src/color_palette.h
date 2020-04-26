@@ -31,6 +31,7 @@ enum class Colors
     RadarOutline,
     HarvesterInside,
     HarvesterOutline,
+    ChargerInside,
     ChargerOutline,
     EnergyFieldLow,
     EnergyFieldMedium,

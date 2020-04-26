@@ -11,32 +11,25 @@ MachineMaterializer::MachineMaterializer(Tank * tank, MaterialContainer * resour
 
 }
 
-void MachineMaterializer::PickUpMachine(Machine & machine) { assert(!"Not implemented"); }
-
-void MachineMaterializer::PickUpMachine(MachineTemplate & machine)
+void MachineMaterializer::PickUpMachine(Machine & machine)
 {
-    this->transported_machine_template = &machine;
-    this->transported_machine_template->SetIsTransported(true);
+    this->transported_machine = &machine;
 }
 
-void MachineMaterializer::PlaceMachine(bool materialize)
+void MachineMaterializer::PickUpMachine(MachineTemplate & machine_template)
 {
-    assert(this->transported_machine_template);
-    if (this->transported_machine_template)
+    this->transported_machine = &machine_template.BuildMachine();
+    this->transported_machine->SetIsTransported(true);
+}
+
+void MachineMaterializer::PlaceMachine()
+{
+    assert(this->transported_machine);
+    if (this->transported_machine)
     {
-        if (materialize)
-        {
-            /* Finally set the position */
-            this->transported_machine_template->SetPosition(this->owner_tank->GetPosition());
-            this->transported_machine_template->SetState(MachineConstructState::Planted);
-        }
-        else
-        {
-            /* Stop transporting, return it to base */
-            this->transported_machine_template->ResetToOrigin();
-        }
-        this->transported_machine_template->SetIsTransported(false);
-        this->transported_machine_template = nullptr;
+        this->transported_machine->SetIsTransported(false);
+        this->transported_machine->SetPosition(this->owner_tank->GetPosition());
+        this->transported_machine = nullptr;
     }
     
 }
@@ -52,7 +45,8 @@ void MachineMaterializer::Advance(Position)
 {
     if (this->is_building_primary)
     {
-        if (!this->transported_machine_template)
+        /* Not holding anything ? */
+        if (!this->transported_machine)
         {
             /* Pick up a machine if we're not holding it */
             MachineTemplate * machine_template_overlap = nullptr;
@@ -65,32 +59,26 @@ void MachineMaterializer::Advance(Position)
                 PickUpMachine(*machine_template_overlap);
             }
         }
+        /* Holding a machine */
         else
         {
-            /* We're holding a machine, Place a machine if we were - but not in any base */
-            if (!GetWorld()->GetLevel()->CheckBaseCollision(this->owner_tank->GetPosition()))
-            {
-                PlaceMachine(true);
-            }
-            else
-            {
-                /* Return a machine template to its place if we were holding it */
-                MachineTemplate * machine_template_overlap = nullptr;
-                this->owner_tank->ForEachTankPixel([&machine_template_overlap](Position world_position) {
-                    machine_template_overlap = GetWorld()->GetCollisionSolver()->TestMachineTemplate(world_position);
-                    return !machine_template_overlap;
-                });
-                if (machine_template_overlap == this->transported_machine_template)
-                {
-                    PlaceMachine(false);
-                }
+            /* Don't place it if it overlaps with any other machine */
+            Machine * machine_overlap = nullptr;
+            this->owner_tank->ForEachTankPixel([&machine_overlap](Position world_position) {
+                machine_overlap = GetWorld()->GetCollisionSolver()->TestMachine(world_position);
+                return !machine_overlap;
+            });
+
+            if (!machine_overlap)
+            {                
+                PlaceMachine();
             }
         }
     }
 
-    if (this->transported_machine_template)
+    if (this->transported_machine)
     {
-        this->transported_machine_template->SetPosition(this->owner_tank->GetPosition());
+        this->transported_machine->SetPosition(this->owner_tank->GetPosition());
     }
 }
 
