@@ -30,6 +30,9 @@
   <Type Name="Color">
     <DisplayString>{{ r={r}, g={g}, b={b}, a={a} }}</DisplayString>
   </Type>
+  <Type Name="Rect">
+    <DisplayString>{{ pos={pos}, size={size} }}</DisplayString>
+  </Type>
   <Type Name="MaterialAmount">
     <DisplayString>{{ dirt={first.amount}, minerals={second.amount} }}</DisplayString>
   </Type>

@@ -71,6 +71,7 @@ struct Offset : public Vector
     constexpr Offset(int dx, int dy) : Vector(dx, dy) {}
     explicit Offset(Position pos) : Vector(pos.x, pos.y) {}
 
+    //explicit operator Position() const { return Position{this->x, this->y}; }
     [[nodiscard]] float GetSize() const { return float(std::sqrt(x * x + y * y)); }
 };
 
@@ -298,6 +299,7 @@ struct BoundingBox : RectBase<Position>
     {
         assert(dimensions.x % 2 && dimensions.y % 2);
     }
+    Position GetTopLeft(Position tested_position) const { return tested_position + Offset{this->pos}; }
     bool IsInside(Position tested_position, Position entity_origin) const
     {
         return std::abs(tested_position.x - entity_origin.x) < this->size.x / 2 &&
