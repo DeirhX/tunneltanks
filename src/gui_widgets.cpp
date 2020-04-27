@@ -12,12 +12,12 @@ namespace widgets
 
 void widgets::TankView::DrawStatic(Screen *screen)
 {
-    int x, y;
     // int health = w->t->GetHealth();
-    int energy = this->tank->GetEnergy();
+    int tank_energy = this->tank->GetEnergy();
+    int tank_energy_threshold = static_cast<int>(float(this->tank->GetReactor().GetEnergyCapacity()) * tweak::screen::DrawStaticFuelThreshold);
 
     /* Don't do static if we have a lot of energy: */
-    if (energy > tweak::screen::DrawStaticFuelThreshold)
+    if (tank_energy > tank_energy_threshold)
     {
         this->counter = this->showing_static = 0;
         return;
@@ -25,7 +25,7 @@ void widgets::TankView::DrawStatic(Screen *screen)
 
     if (!this->counter)
     {
-        int intensity = 1000 * energy / tweak::screen::DrawStaticFuelThreshold;
+        int intensity = 1000 * tank_energy / tank_energy_threshold;
         this->showing_static = !Random.Bool(intensity);
         this->counter =
             Random.Int(tweak::perf::TargetFps / 16, tweak::perf::TargetFps / 8) * this->showing_static ? 1u : 4u;
@@ -45,12 +45,12 @@ void widgets::TankView::DrawStatic(Screen *screen)
     int drawing_black = black_counter && Random.Bool(tweak::screen::DrawStaticBlackBarOdds);
 
     /* Develop a static thing image for the window: */
-    for (y = 0; y < this->screen_rect.size.y; y++) {
-        for (x = 0; x < this->screen_rect.size.x; x++)
+    for (int y = 0; y < this->screen_rect.size.y; y++) {
+        for (int x = 0; x < this->screen_rect.size.x; x++)
         {
             Color color;
 
-            if (!energy)
+            if (!tank_energy)
             {
                 screen->DrawPixel({x + this->screen_rect.pos.x, y + this->screen_rect.pos.y},
                                   Palette.GetPrimary(TankColor(Random.Int(0, 7))));

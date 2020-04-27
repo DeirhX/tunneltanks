@@ -28,6 +28,20 @@ namespace perf
 	constexpr int TargetFps = 24;
 }
 
+namespace screen
+{
+	/* The default size of the window: */
+	constexpr Size WindowSize = 2 * Size{ 640, 400 };
+    /* The virtual resolution of the game. (IE: How many blocks tall/wide) */
+    constexpr Size RenderSurfaceSize = {160, 100};
+
+    /* Constants for drawing static: (The bottom 3 constants are out of 1000) */
+    constexpr float DrawStaticFuelThreshold = 0.2f;
+    constexpr int DrawStaticTransparency = 200;
+    constexpr int DrawStaticBlackBarOdds = 500;
+    constexpr int DrawStaticBlackBarSize = 500;
+ }
+
 namespace world
 {
     using namespace std::literals::chrono_literals;
@@ -56,7 +70,7 @@ namespace base
     constexpr Reactor Reactor = {15000_energy, 2000_health, {{30000_energy, 2000_health}}};
     constexpr MaterialContainer MaterialContainer = {0_dirt, 0_minerals, {{2000_dirt, 20000_minerals}}};
     constexpr ReactorState ReactorRecoveryRate = {100_energy, 10_health};
-    constexpr MaterialAmount MaterialsAbsorbRate = {10_dirt, 10_minerals};
+    constexpr MaterialAmount MaterialsAbsorbRate = {15_dirt, 15_minerals};
 }
 
 namespace tank {
@@ -92,20 +106,6 @@ namespace tank {
         ReactorCapacity{{StartingEnergy, StartingShield}}};
     constexpr int TurretLength = 4;
 }
-
-namespace screen
-{
-	/* The default size of the window: */
-	constexpr Size WindowSize = { 640, 400 };
-    /* The virtual resolution of the game. (IE: How many blocks tall/wide) */
-    constexpr Size RenderSurfaceSize = {160, 100};
-
-    /* Constants for drawing static: (The bottom 3 constants are out of 1000) */
-    constexpr int DrawStaticFuelThreshold = (tweak::tank::StartingEnergy.amount / 5);
-    constexpr int DrawStaticTransparency = 200;
-    constexpr int DrawStaticBlackBarOdds = 500;
-    constexpr int DrawStaticBlackBarSize = 500;
- }
 
 namespace control
 {
