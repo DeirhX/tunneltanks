@@ -6,9 +6,9 @@
 /*
  * List of sprites to render in the world.
  */
-class SpriteList : public ItemListAdaptor<Sprite>
+class SpriteList : public ItemListAdaptor<Sprite, FailedInteraction>
 {
   public:
     void Advance(class Level * level);
-    void Draw(class Surface * surface);
+    void Draw(class Surface & surface);
 };

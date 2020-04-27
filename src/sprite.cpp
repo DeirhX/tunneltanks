@@ -1,12 +1,9 @@
 ﻿#include "sprite.h"
 
-
 #include "color_palette.h"
 #include "shape_renderer.h"
 
-void Sprite::Draw(Surface * surface) const
-{
-}
+void Sprite::Draw(Surface & surface) const {}
 
 void FailedInteraction::Advance(Level * level)
 {
@@ -16,10 +13,11 @@ void FailedInteraction::Advance(Level * level)
     }
 }
 
-void FailedInteraction::Draw(Surface * surface) const
+void FailedInteraction::Draw(Surface & surface) const
 {
-    ShapeRenderer::DrawLine(surface, this->GetPosition() + Offset{-5, -5}, this->GetPosition() + Offset{5, 5},
-                            Palette.Get(Colors::FailedInteraction));
-    ShapeRenderer::DrawLine(surface, this->GetPosition() + Offset{+5, -5}, this->GetPosition() + Offset{-5, 5},
-                            Palette.Get(Colors::FailedInteraction));
+    constexpr int diam = 1;
+    ShapeRenderer::DrawLine(surface, this->GetPosition() + Offset{-diam, -diam},
+                            this->GetPosition() + Offset{diam, diam}, Palette.Get(Colors::FailedInteraction));
+    ShapeRenderer::DrawLine(surface, this->GetPosition() + Offset{+diam, -diam},
+                            this->GetPosition() + Offset{-diam, diam}, Palette.Get(Colors::FailedInteraction));
 }

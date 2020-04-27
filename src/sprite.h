@@ -15,7 +15,7 @@ class Sprite : public Invalidable
 
   public:
     Sprite(Position position_) : position(position_) {}
-    virtual void Draw(Surface * surface) const = 0;
+    virtual void Draw(Surface & surface) const = 0;
     virtual void Advance(Level * level) {};
 
     void SetPosition(Position new_position) { this->position = new_position; }
@@ -27,9 +27,11 @@ class Sprite : public Invalidable
  */
 class FailedInteraction : public Sprite
 {
-    ManualTimer destroy_timer{std::chrono::milliseconds{1000}};
+    AutoStartManualTimer destroy_timer{std::chrono::milliseconds{1000}};
 
   public:
+    FailedInteraction(Position position_) : Sprite(position_) {}
+
     void Advance(Level * level) override;
-    void Draw(Surface * surface) const override;
+    void Draw(Surface & surface) const override;
 };

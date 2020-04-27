@@ -11,7 +11,7 @@ class Screen;
 class ShapeRenderer
 {
   public:
-    static void DrawLine(Surface * surface, Position from, Position to, Color color);
+    static void DrawLine(Surface & surface, Position from, Position to, Color color);
     static void DrawLinePart(Surface * surface, Position from, Position to, int skip_pixels, int draw_pixels,
                              Color color);
     static void FillRectangle(Surface * surface, Rect screen_rect, Color color);

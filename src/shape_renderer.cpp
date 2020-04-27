@@ -2,7 +2,7 @@
 #include "screen.h"
 #include "shape_renderer.h"
 
-void ShapeRenderer::DrawLine(Surface * surface, Position from, Position to, Color color)
+void ShapeRenderer::DrawLine(Surface & surface, Position from, Position to, Color color)
 {
     Offset diff = to - from;
     if (diff.x == 0 || diff.y == 0)
@@ -11,7 +11,7 @@ void ShapeRenderer::DrawLine(Surface * surface, Position from, Position to, Colo
         Offset step = {std::clamp(diff.x, -1, +1), std::clamp(diff.y, -1, +1)};
         do
         {
-            surface->SetPixel(from, color);
+            surface.SetPixel(from, color);
             from += step;
         } while (from != to);
     }
@@ -26,9 +26,9 @@ void ShapeRenderer::DrawLine(Surface * surface, Position from, Position to, Colo
         int curr_step = 0;
         do
         {
-            surface->SetPixel(curr.ToIntPosition(), color);
+            surface.SetPixel(curr.ToIntPosition(), color);
             curr += one_step;
-        } while (++curr_step < steps);
+        } while (curr_step++ < steps);
     }
 }
 

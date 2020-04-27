@@ -25,7 +25,7 @@ void MachineMaterializer::PickUpMachine(MachineTemplate & machine_template)
     }
     else
     {
-        
+        GetWorld()->GetSpriteList()->Emplace<FailedInteraction>(this->owner_tank->GetPosition());
     }
 }
 

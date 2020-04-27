@@ -87,3 +87,10 @@ class ManualTimer : public Timer
   public:
     ManualTimer(duration_t timer_cooldown) : Timer(timer_cooldown, false) {}
 };
+
+class AutoStartManualTimer : public Timer
+{
+  public:
+    AutoStartManualTimer(duration_t timer_cooldown) : Timer(timer_cooldown, false)
+    { this->Start(); }
+};

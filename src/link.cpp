@@ -210,7 +210,7 @@ void Link::Draw(Surface * surface) const
         color = Palette.Get(Colors::LinkBlocked);
         break;
     }
-    ShapeRenderer::DrawLine(surface, this->from.GetPoint()->GetPosition(), this->to.GetPoint()->GetPosition(), color);
+    ShapeRenderer::DrawLine(*surface, this->from.GetPoint()->GetPosition(), this->to.GetPoint()->GetPosition(), color);
 }
 
 void Link::DisconnectPoint(LinkPoint * point)

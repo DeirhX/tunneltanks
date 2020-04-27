@@ -51,7 +51,7 @@ void World::Draw(WorldRenderSurface * objects_surface)
     for (const TankBase & base : this->level->GetSpawns())
         base.Draw(objects_surface);
     this->harvester_list.Draw(objects_surface);
-    this->sprite_list.Draw(objects_surface);
+    this->sprite_list.Draw(*objects_surface);
     this->link_map.Draw(objects_surface);
 }
 
