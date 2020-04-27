@@ -169,6 +169,7 @@ void Screens::TwoPlayerScreenSetup(Screen & screen, Tank & player_one, Tank & pl
 
 void Screens::AIViewSinglePlayerSetup(Screen & screen, Tank & player_one, Tank & player_two)
 {
+    Screens::TwoPlayerScreenSetup(screen, player_one, player_two);
 }
 
 void Screen::DrawPixel(ScreenPosition pos, Color color)

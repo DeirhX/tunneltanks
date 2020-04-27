@@ -42,27 +42,37 @@ class GameMode
     GameMode(Screen * screen, World * world) : screen(screen), world(world) {}
     virtual ~GameMode() { assert(!screen && !world || !"Didn't tear it down"); }
 
-    virtual void TearDown() = 0;
+    virtual void TearDown();
 
-    static void AssumeAIControl(TankList * tank_list, Level * level, TankColor starting_id);
+    static void SpawnAIOpponents(TankList * tank_list, Level * level, TankColor starting_id, int spawn_amount);
+    static void AssumeAIControl(class Tank * tank);
 };
 
 class SinglePlayerMode : public GameMode
 {
-  private:
+  public:
     SinglePlayerMode(Screen * screen, World * world) : GameMode(screen, world) {}
 
   public:
     static std::unique_ptr<SinglePlayerMode> Setup(Screen * screen, World * world, bool use_ai);
-    void TearDown() override;
 };
+
+class FollowAISinglePlayerMode : public GameMode
+{
+  public:
+    FollowAISinglePlayerMode(Screen * screen, World * world) : GameMode(screen, world) {}
+
+  public:
+    static std::unique_ptr<FollowAISinglePlayerMode> Setup(Screen * screen, World * world);
+};
+
 
 class LocalTwoPlayerMode : public GameMode
 {
-  private:
+  public:
     LocalTwoPlayerMode(Screen * screen, World * world) : GameMode(screen, world) {}
 
   public:
     static std::unique_ptr<LocalTwoPlayerMode> Setup(Screen * screen, World * world, bool use_ai);
-    void TearDown() override;
 };
+

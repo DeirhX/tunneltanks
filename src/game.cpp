@@ -21,14 +21,25 @@
  * This bit is used to initialize various GUIs:                               *
  *----------------------------------------------------------------------------*/
 
-void GameMode::AssumeAIControl(TankList * tank_list, Level * level, TankColor starting_id)
+void GameMode::SpawnAIOpponents(TankList * tank_list, Level * level, TankColor starting_id, int spawn_amount)
 {
-
-    for (TankColor i = starting_id; i < tweak::world::MaxPlayers; i++)
+    for (TankColor i = starting_id; (i < tweak::world::MaxPlayers) && (i - starting_id < spawn_amount); i++)
     {
         Tank * tank = tank_list->AddTank(i, level->GetSpawn(i));
         tank->SetController(std::make_shared<TwitchController>());
     }
+}
+
+void GameMode::AssumeAIControl(Tank * tank)
+{
+    tank->SetController(std::make_shared<TwitchController>());
+}
+
+void GameMode::TearDown()
+{
+    this->screen->ClearGuiElements();
+    this->screen = nullptr;
+    this->world = nullptr;
 }
 
 std::unique_ptr<SinglePlayerMode> SinglePlayerMode::Setup(Screen * screen, World * world, bool use_ai)
@@ -38,21 +49,31 @@ std::unique_ptr<SinglePlayerMode> SinglePlayerMode::Setup(Screen * screen, World
     Tank * player = world->GetTankList()->AddTank(0, world->GetLevel()->GetSpawn(0));
     gamelib_tank_attach(player, 0, 1);
 
-    Screens::SinglePlayerScreenSetup(*screen,*player);
+    Screens::SinglePlayerScreenSetup(*screen, *player);
 
     /* Fill up the rest of the slots with Twitches: */
     if (use_ai)
-        GameMode::AssumeAIControl(world->GetTankList(), world->GetLevel(), 1);
+        GameMode::SpawnAIOpponents(world->GetTankList(), world->GetLevel(), 1, tweak::world::MaxPlayers - 1);
 
-    return std::unique_ptr<SinglePlayerMode>{
-        new SinglePlayerMode(screen, world)}; // Can't make unique, private constructor
+    return std::make_unique<SinglePlayerMode>(screen, world);
 }
 
-void SinglePlayerMode::TearDown()
+
+std::unique_ptr<FollowAISinglePlayerMode> FollowAISinglePlayerMode::Setup(Screen * screen, World * world)
 {
-    this->screen->ClearGuiElements();
-    this->screen = nullptr;
-    this->world = nullptr;
+    /* Ready the tanks! */
+    Tank * player_one = world->GetTankList()->AddTank(0, world->GetLevel()->GetSpawn(0));
+    gamelib_tank_attach(player_one, 0, 2);
+
+    /* Load up two controllable tanks: */
+    Tank * player_two = world->GetTankList()->AddTank(1, world->GetLevel()->GetSpawn(1));
+    /*controller_twitch_attach(t);  << Attach a twitch to a camera tank, so we can see if they're getting smarter... */
+    GameMode::AssumeAIControl(player_two);
+
+    Screens::AIViewSinglePlayerSetup(*screen, *player_one, *player_two);
+    /* Fill up the rest of the slots with Twitches: */
+
+    return std::make_unique<FollowAISinglePlayerMode>(screen, world);
 }
 
 std::unique_ptr<LocalTwoPlayerMode> LocalTwoPlayerMode::Setup(Screen * screen, World * world, bool use_ai)
@@ -69,17 +90,9 @@ std::unique_ptr<LocalTwoPlayerMode> LocalTwoPlayerMode::Setup(Screen * screen, W
     Screens::TwoPlayerScreenSetup(*screen,*player_one, *player_two);
     /* Fill up the rest of the slots with Twitches: */
     if (use_ai)
-        GameMode::AssumeAIControl(world->GetTankList(), world->GetLevel(), 2);
+        GameMode::SpawnAIOpponents(world->GetTankList(), world->GetLevel(), 2, tweak::world::MaxPlayers - 2);
 
-    return std::unique_ptr<LocalTwoPlayerMode>{
-        new LocalTwoPlayerMode(screen, world)}; // Can't make unique, private constructor
-}
-
-void LocalTwoPlayerMode::TearDown()
-{
-    this->screen->ClearGuiElements();
-    this->screen = nullptr;
-    this->world = nullptr;
+    return std::make_unique<LocalTwoPlayerMode>(screen, world); 
 }
 
 /* Create a default game structure: */
@@ -198,7 +211,9 @@ void Game::BeginGame()
     if (this->config.player_count > gamelib_get_max_players())
         throw GameException("Tried to use more players than the platform can support.");
 
-    if (this->config.player_count == 1)
+    if (this->config.follow_ai)
+        this->mode = FollowAISinglePlayerMode::Setup(this->screen.get(), this->world.get());
+    else if (this->config.player_count == 1)
         this->mode = SinglePlayerMode::Setup(this->screen.get(), this->world.get(), this->config.use_ai);
     else if (this->config.player_count == 2)
         this->mode = LocalTwoPlayerMode::Setup(this->screen.get(), this->world.get(), this->config.use_ai);

@@ -69,9 +69,6 @@
     <ClCompile Include="src\screen.cpp">
       <Filter>src\draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\game.cpp">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
     <ClCompile Include="src\level.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
@@ -187,6 +184,9 @@
       <Filter>src\game_entity</Filter>
     </ClCompile>
     <ClCompile Include="src\item_list_adaptor.cpp" />
+    <ClCompile Include="src\game.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\require_sdl.h">
@@ -256,9 +256,6 @@
       <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\level.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\game.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\controller.h">
@@ -388,6 +385,9 @@
       <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\item_list_adaptor.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game.h">
       <Filter>src\system</Filter>
     </ClInclude>
   </ItemGroup>

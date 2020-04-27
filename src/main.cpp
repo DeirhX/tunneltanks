@@ -91,7 +91,7 @@ int GameMain(int argc, char * argv[])
 
             gamelib_print("--single           Only have one user-controlled tank.\n");
             gamelib_print("--double           Have two user-controlled tanks. (Default)\n");
-            gamelib_print("--debug-ai         Have view of AI opponents \n");
+            gamelib_print("--follow-ai         Have view of AI opponents \n");
             gamelib_print("--no-ai            No AI-controlled players.\n\n");
 
             gamelib_print("--show-levels      List all available level generators.\n");
@@ -121,9 +121,10 @@ int GameMain(int argc, char * argv[])
         {
             is_ai = false;
         }
-        else if (!strcmp("--debug-ai", argv[i]))
+        else if (!strcmp("--follow-ai", argv[i]))
         {
             follow_ai = true;
+            player_count = 1;
         }
         else if (!strcmp("--show-levels", argv[i]))
         {

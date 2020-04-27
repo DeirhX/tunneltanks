@@ -7,8 +7,8 @@ World::World(Game * game, std::unique_ptr<Level> && level)
       link_map(this->level.get()),
       projectile_list(),
       harvester_list(),
-      sprite_list(),
       tank_list(this->level.get(), &this->projectile_list),
+      sprite_list(),
       collision_solver(this->level.get(), &this->tank_list, &this->harvester_list)
 {
     //this->level->OnConnectWorld(this);
