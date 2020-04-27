@@ -130,6 +130,8 @@ CollisionType Tank::GetCollision(Direction dir, Position position_, TankList * t
                     return false;
                 }, 
                 [&result](auto & machine) {
+                    /* Collisions with machines disabled */
+                    return false;
                     if (machine.IsBlockingCollision())
                     {
                         result = CollisionType::Blocked;

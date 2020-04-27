@@ -47,13 +47,13 @@ void Machine::SetIsTransported(bool new_value)
 {
     this->is_transported = new_value;
     if (new_value)
-    {
-        this->link_source.Enable();
+    {   /* Transport */
+        this->link_source.Disable();
         this->SetState(MachineConstructState::Transporting);
     }
     else
-    {
-        this->link_source.Disable();
+    {   /* Plant */
+        this->link_source.Enable();
         this->SetState(MachineConstructState::Planted);
     }
 }
@@ -81,7 +81,8 @@ void Harvester::Advance(Level * level)
         if (suitable_pos.has_value() && suitable_pos.value() != this->position)
         {
             GetWorld()->GetLevel()->SetPixel(suitable_pos.value(), LevelPixel::DirtGrow);
-            this->owner->GetResources().Add(1_dirt);
+            if (this->owner)
+                this->owner->GetResources().Add(1_dirt);
         }
     }
 
@@ -165,6 +166,11 @@ void Charger::Die(Level *)
  * MachineTemplate
  */
 
+bool MachineTemplate::PayCost() const
+{
+    return this->paying_container->Pay(this->build_cost);
+}
+
 MachineTemplate::MachineTemplate(Position position, BoundingBox bounding_box, MaterialAmount build_cost_,
                                  MaterialContainer & paying_host)
     : Machine{position, nullptr, Reactor{ReactorCapacity{}}, bounding_box}, build_cost(build_cost_), paying_container(&paying_host), origin_position{position}
@@ -187,16 +193,22 @@ HarvesterTemplate::HarvesterTemplate(Position position, MaterialContainer & payi
 
 void HarvesterTemplate::Draw(Surface * surface) const
 {
-    Color color = Palette.Get(Colors::HarvesterOutline);
-    color.a = (color.a * (this->IsAvailable() ? 128 : 32)) / 255;
-    ShapeRenderer::DrawCircle(surface, this->position, 2, Palette.Get(Colors::HarvesterInside), color);
+    Color outline_color = Palette.Get(Colors::HarvesterOutline);
+    //outline_color.a = (outline_color.a * (this->IsAvailable() ? 128 : 32)) / 255;
+    Color inside_color = Palette.Get(Colors::HarvesterInside);
+    inside_color.a = (inside_color.a * (this->IsAvailable() ? 255 : 64)) / 255;
+    ShapeRenderer::DrawFilledRectangle(surface, Rect{this->GetPosition() - Size{2, 2}, Size{5, 5}},
+                                 true, inside_color, outline_color);
 }
 
-Machine & HarvesterTemplate::BuildMachine() const
+Machine * HarvesterTemplate::PayAndBuildMachine() const
 {
+    if (!this->PayCost())
+        return nullptr;
+
     Machine & machine = GetWorld()->GetHarvesterList()->Emplace<Harvester>(this->position, this->type, this->owner);
     machine.SetState(MachineConstructState::Transporting);
-    return machine;
+    return &machine;
 }
 
 ChargerTemplate::ChargerTemplate(Position position, MaterialContainer & paying_host)
@@ -207,15 +219,21 @@ ChargerTemplate::ChargerTemplate(Position position, MaterialContainer & paying_h
 
 void ChargerTemplate::Draw(Surface * surface) const
 {
-    Color color = Palette.Get(Colors::ChargerOutline);
-    color.a = (color.a * (this->IsAvailable() ? 128 : 32)) / 255;
-    ShapeRenderer::DrawCircle(surface, this->position, 2, Palette.Get(Colors::ChargerInside), color);
+    Color outline_color = Palette.Get(Colors::ChargerOutline);
+    //outline_color.a = (outline_color.a * (this->IsAvailable() ? 128 : 32)) / 255;
+    Color inside_color = Palette.Get(Colors::ChargerInside);
+    inside_color.a = (inside_color.a * (this->IsAvailable() ? 255 : 64)) / 255;
+    ShapeRenderer::DrawFilledRectangle(surface, Rect{this->GetPosition() - Size{2, 2}, Size{5, 5}}, true, inside_color,
+                                       outline_color);
 }
 
-Machine & ChargerTemplate::BuildMachine() const
+Machine * ChargerTemplate::PayAndBuildMachine() const
 {
+    if (!this->PayCost())
+        return nullptr;
+
     Machine & machine = GetWorld()->GetHarvesterList()->Emplace<Charger>(this->position, this->owner);
     machine.SetState(MachineConstructState::Transporting);
-    return machine;
+    return &machine;
 }
 

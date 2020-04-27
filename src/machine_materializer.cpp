@@ -20,7 +20,7 @@ void MachineMaterializer::PickUpMachine(MachineTemplate & machine_template)
 {
     if (machine_template.IsAvailable())
     {
-        this->transported_machine = &machine_template.BuildMachine();
+        this->transported_machine = machine_template.PayAndBuildMachine();
         this->transported_machine->SetIsTransported(true);
     }
     else
@@ -71,8 +71,10 @@ void MachineMaterializer::Advance(Position)
         {
             /* Don't place it if it overlaps with any other machine */
             Machine * machine_overlap = nullptr;
-            this->owner_tank->ForEachTankPixel([&machine_overlap](Position world_position) {
+            this->owner_tank->ForEachTankPixel([this, &machine_overlap](Position world_position) {
                 machine_overlap = GetWorld()->GetCollisionSolver()->TestMachine(world_position);
+                /* Ignore collision with this transported machine template */
+                machine_overlap = machine_overlap == this->transported_machine ? nullptr : machine_overlap;
                 return !machine_overlap;
             });
 

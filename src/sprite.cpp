@@ -15,7 +15,7 @@ void FailedInteraction::Advance(Level * level)
 
 void FailedInteraction::Draw(Surface & surface) const
 {
-    constexpr int diam = 1;
+    constexpr int diam = 3;
     ShapeRenderer::DrawLine(surface, this->GetPosition() + Offset{-diam, -diam},
                             this->GetPosition() + Offset{diam, diam}, Palette.Get(Colors::FailedInteraction));
     ShapeRenderer::DrawLine(surface, this->GetPosition() + Offset{+diam, -diam},

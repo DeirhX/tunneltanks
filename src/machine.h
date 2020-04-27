@@ -124,6 +124,8 @@ class MachineTemplate : public Machine
     MaterialAmount build_cost = {};
     MaterialContainer * paying_container = nullptr;
     Position origin_position;
+  protected:
+    bool PayCost() const;
   public:
     MachineTemplate(Position position, BoundingBox bounding_box, MaterialAmount build_cost_, MaterialContainer & paying_host);
 
@@ -131,7 +133,7 @@ class MachineTemplate : public Machine
     void ResetToOrigin();
     void Die(Level *) override {}
 
-    virtual Machine & BuildMachine() const = 0;
+    virtual Machine * PayAndBuildMachine() const = 0;
 
     [[nodiscard]] bool IsAvailable() const { return this->is_available; }
 };
@@ -145,7 +147,7 @@ class HarvesterTemplate final : public MachineTemplate
   public:
     HarvesterTemplate(Position position, MaterialContainer & paying_host);
     void Draw(Surface * surface) const override;
-    Machine & BuildMachine() const override;
+    Machine * PayAndBuildMachine() const override;
 };
 
 
@@ -155,5 +157,5 @@ class ChargerTemplate final : public MachineTemplate
 public:
     ChargerTemplate(Position position, MaterialContainer & paying_host);
     void Draw(Surface * surface) const override;
-    Machine & BuildMachine() const override;
+    Machine * PayAndBuildMachine() const override;
 };
