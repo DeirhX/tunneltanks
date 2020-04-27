@@ -35,7 +35,7 @@ Tank * TankList::GetTankAtPoint(Position query_pos, TankColor ignored)
 {
     for (Tank & tank : *this)
     {
-        if (tank.GetColor() == ignored || tank.IsDead())
+        if (tank.GetColor() == ignored || tank.HealthOrEnergyEmpty())
             continue;
 
         Position pos = tank.GetPosition();
@@ -55,7 +55,7 @@ bool TankList::CheckForCollision(Tank & tank, Position testPos, int testDirectio
 {
     for (Tank & otherTank : *this)
     {
-        if (otherTank.GetColor() == tank.GetColor() || otherTank.IsDead())
+        if (otherTank.GetColor() == tank.GetColor() || otherTank.HealthOrEnergyEmpty())
             continue;
 
         /* Let's see if these two tanks are ANYWHERE near each other: */

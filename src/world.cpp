@@ -33,7 +33,7 @@ void World::Advance()
 
     /* Move everything: */
     this->projectile_list.Advance(this->level.get(), this->GetTankList());
-    this->tank_list.for_each([=](Tank * t) { t->Advance(this); });
+    this->tank_list.for_each([=](Tank * t) { t->Advance(*this); });
     this->harvester_list.Advance(this->level.get(), this->GetTankList());
     this->sprite_list.Advance(this->level.get());
     /* TODO: get out of level? */
@@ -47,7 +47,7 @@ void World::Draw(WorldRenderSurface * objects_surface)
 {
     /* Draw everything: */
     this->projectile_list.Draw(objects_surface);
-    this->tank_list.for_each([=](Tank * t) { t->Draw(objects_surface); });
+    this->tank_list.for_each([=](Tank * t) { t->Draw(*objects_surface); });
     for (const TankBase & base : this->level->GetSpawns())
         base.Draw(objects_surface);
     this->harvester_list.Draw(objects_surface);

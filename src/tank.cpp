@@ -42,9 +42,9 @@ void Tank::SetCrosshair(widgets::Crosshair * cross)
 }
 
 /* The advance step, once per frame. Do everything. */
-void Tank::Advance(World * world)
+void Tank::Advance(World & world)
 {
-    if (!this->IsDead())
+    if (!this->HealthOrEnergyEmpty())
     {
         /* Recharge and discharge */
         this->GetReactor().Exhaust(tweak::tank::IdleCost);
@@ -52,8 +52,8 @@ void Tank::Advance(World * world)
         TankBase * base = this->level->CheckBaseCollision(this->position);
         if (base)
         {
-            this->TryBaseHeal(base);
-            this->TransferResourcesToBase(base);
+            this->TryBaseHeal(*base);
+            this->TransferResourcesToBase(*base);
         }
 
         /* Get input from controller and figure what we *want* to do and do it: rotate turret, set desired direction and speed  */
@@ -78,7 +78,7 @@ void Tank::Advance(World * world)
         this->materializer.Advance(this->GetPosition());
 
         /* Move, dig and solve collisions with other tanks */
-        this->HandleMove(world->GetTankList());
+        this->HandleMove(*world.GetTankList());
         this->link_source.UpdatePosition(this->GetPosition());
         this->CollectItems();
 
@@ -87,26 +87,31 @@ void Tank::Advance(World * world)
     }
     else
     {
-        /* DEaD. Handle respawning. */
-        if (!this->respawn_timer.IsRunning())
-        {
-            Die();
-        }
+        AdvanceDeath(world);
+    }
+}
 
-        if (this->respawn_timer.AdvanceAndCheckElapsed())
+void Tank::AdvanceDeath(World & world)
+{
+    /* DEaD. Handle respawning. */
+    if (!this->respawn_timer.IsRunning())
+    {
+        Die();
+    }
+
+    if (this->respawn_timer.AdvanceAndCheckElapsed())
+    {
+        if (--this->lives_left)
         {
-            if (--this->lives_left)
-            {
-                Spawn();
-            }
-            else
-            {
-                bool players_remaining =
-                    std::any_of(world->GetTankList()->begin(), world->GetTankList()->end(),
-                                [](Tank & tank) { return tank.controller->IsPlayer() && !tank.IsDead(); });
-                if (!players_remaining)
-                    world->SetGameOver();
-            }
+            Spawn();
+        }
+        else
+        {
+            bool players_remaining =
+                std::any_of(world.GetTankList()->begin(), world.GetTankList()->end(),
+                            [](Tank & tank) { return tank.controller->IsPlayer() && !tank.HealthOrEnergyEmpty(); });
+            if (!players_remaining)
+                world.SetGameOver();
         }
     }
 }
@@ -160,13 +165,13 @@ CollisionType Tank::GetCollision(Direction dir, Position position_, TankList * t
     return result;
 }
 
-void Tank::HandleMove(TankList * tank_list)
+void Tank::HandleMove(TankList & tank_list)
 {
     /* Calculate the direction: */
     if (this->speed.x != 0 || this->speed.y != 0)
     {
         Direction dir = Direction::FromSpeed(this->speed);
-        CollisionType collision = this->GetCollision(dir, this->position + 1 * this->speed, tank_list);
+        CollisionType collision = this->GetCollision(dir, this->position + 1 * this->speed, &tank_list);
         /* Now, is there room to move forward in that direction? */
         if (collision != CollisionType::None)
         {
@@ -183,7 +188,7 @@ void Tank::HandleMove(TankList * tank_list)
             }
 
             /* Now if we used a torch, test the collision again - we might have failed to dig some of the minerals */
-            collision = this->GetCollision(dir, this->position + 1 * this->speed, tank_list);
+            collision = this->GetCollision(dir, this->position + 1 * this->speed, &tank_list);
             if (collision != CollisionType::None)
                 return;
         }
@@ -199,13 +204,13 @@ void Tank::HandleMove(TankList * tank_list)
 }
 
 /* Check to see if we're in any bases, and heal based on that: */
-void Tank::TryBaseHeal(TankBase * base) { base->RechargeTank(this); }
+void Tank::TryBaseHeal(TankBase & base) { base.RechargeTank(this); }
 
-void Tank::TransferResourcesToBase(TankBase * base)
+void Tank::TransferResourcesToBase(TankBase & base)
 {
-    if (base->GetColor() == this->GetColor())
+    if (base.GetColor() == this->GetColor())
     {
-        base->AbsorbResources(this->resources, tweak::base::MaterialsAbsorbRate);
+        base.AbsorbResources(this->resources, tweak::base::MaterialsAbsorbRate);
     }
 }
 
@@ -227,7 +232,7 @@ void Tank::CollectItems()
     });
 }
 
-void Tank::Draw(Surface * surface) const
+void Tank::Draw(Surface & surface) const
 {
     if (!this->reactor.GetHealth())
         return;
@@ -237,11 +242,11 @@ void Tank::Draw(Surface * surface) const
         {
             char val = TANK_SPRITE[this->direction][y][x];
             if (val)
-                surface->SetPixel(Position{this->position.x + x - 3, this->position.y + y - 3},
+                surface.SetPixel(Position{this->position.x + x - 3, this->position.y + y - 3},
                                    Palette.GetTank(this->color)[val - 1]);
         }
 
-    this->turret.Draw(surface);
+    this->turret.Draw(&surface);
 }
 
 void Tank::Spawn()
@@ -284,7 +289,7 @@ void Tank::ApplyControllerOutput(ControllerOutput controls)
     }
 }
 
-bool Tank::IsDead() const
+bool Tank::HealthOrEnergyEmpty() const
 {
     return this->reactor.GetHealth() <= 0 || this->reactor.GetEnergy() <= 0;
 }

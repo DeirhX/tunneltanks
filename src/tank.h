@@ -77,12 +77,12 @@ class Tank : public Invalidable
     [[nodiscard]] Reactor & GetReactor() { return this->reactor; }
     [[nodiscard]] Level * GetLevel() const { return this->level; };
 
-    [[nodiscard]] bool IsDead() const;
+    [[nodiscard]] bool HealthOrEnergyEmpty() const;
     [[nodiscard]] int GetEnergy() const { return this->reactor.GetEnergy(); }
     [[nodiscard]] int GetHealth() const { return this->reactor.GetHealth(); }
     [[nodiscard]] int GetLives() const { return this->lives_left; }
 
-    void Advance(World * world); /* Advance world-step */
+    void Advance(World & world); /* Advance world-step */
 
     void Spawn();
     void Die();
@@ -97,12 +97,14 @@ class Tank : public Invalidable
         tank::ForEachTankPixel(per_pixel_func, this->position, this->direction);
     }
 
-    void Draw(Surface * surface) const;
+    void Draw(Surface & surface) const;
 
   private:
-    void HandleMove(class TankList * tank_list);
-    void TryBaseHeal(TankBase * base);
-    void TransferResourcesToBase(TankBase * base);
+    void HandleMove(class TankList & tank_list);
+    void TryBaseHeal(TankBase & base);
+
+    void AdvanceDeath(World & world);
+    void TransferResourcesToBase(TankBase & base);
     void CollectItems();
 };
 
