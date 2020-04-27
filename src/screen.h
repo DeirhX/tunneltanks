@@ -61,9 +61,9 @@ class Screen
 
   public:
     void AddWidget(std::unique_ptr<widgets::GuiWidget> && widget);
-    void AddWindow(ScreenRect rect, class Tank * task);
-    void AddStatus(ScreenRect r, class Tank * t, bool decreases_to_left);
-    void AddBitmap(ScreenRect r, MonoBitmap * bitmap, Color color);
+    void AddWindow(ScreenRect rect, class Tank & tank);
+    void AddStatus(ScreenRect r, class Tank & tank, bool decreases_to_left);
+    void AddBitmap(ScreenRect r, MonoBitmap & bitmap, Color color);
     /* Call to remove all windows, statuses and bitmaps */
     void ClearGuiElements();
 
@@ -75,6 +75,7 @@ class Screen
 class Screens
 {
   public:
-    static void SinglePlayerScreenSetup(Screen * screen, World * world, Tank * player);
-    static void TwoPlayerScreenSetup(Screen * screen, World * world, Tank * player_one, Tank * player_two);
+    static void SinglePlayerScreenSetup(Screen & screen, Tank & player);
+    static void TwoPlayerScreenSetup(Screen & screen, Tank & player_one, Tank & player_two);
+    static void AIViewSinglePlayerSetup(Screen & screen, Tank & player_one, Tank & player_two);
 };

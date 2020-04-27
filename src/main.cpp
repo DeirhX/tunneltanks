@@ -46,6 +46,7 @@ int GameMain(int argc, char * argv[])
 {
     assert(tweak::perf::parallelism_degree > 0);
 
+    /* Game defaults that can be overridden via command-line */
     bool is_reading_level = false;
     bool is_reading_seed = false;
     bool is_reading_file = false;
@@ -53,11 +54,13 @@ int GameMain(int argc, char * argv[])
     bool is_fullscreen = false;
     bool is_debug = false;
     bool is_ai = true;
+    bool follow_ai = false;
 
     int player_count = 2;
-    Size size{1000, 500};
-    char * id = NULL;
-    char * outfile_name = NULL;
+    Size level_size{1000, 500};
+    char * level_generator_id = nullptr;
+    char * level_bitmap_filename = nullptr;
+
     int seed = 0, manual_seed = 0;
 
     /* Apply command-line  */
@@ -65,18 +68,18 @@ int GameMain(int argc, char * argv[])
     {
         if (is_reading_level)
         {
-            id = argv[i];
+            level_generator_id = argv[i];
             is_reading_level = false;
         }
         else if (is_reading_seed)
         {
-            seed = atoi(argv[i]);
+            seed = std::atoi(argv[i]);
             manual_seed = 1;
             is_reading_seed = false;
         }
         else if (is_reading_file)
         {
-            outfile_name = argv[i];
+            level_bitmap_filename = argv[i];
             is_reading_file = false;
         }
         else if (!strcmp("--help", argv[i]))
@@ -88,6 +91,7 @@ int GameMain(int argc, char * argv[])
 
             gamelib_print("--single           Only have one user-controlled tank.\n");
             gamelib_print("--double           Have two user-controlled tanks. (Default)\n");
+            gamelib_print("--debug-ai         Have view of AI opponents \n");
             gamelib_print("--no-ai            No AI-controlled players.\n\n");
 
             gamelib_print("--show-levels      List all available level generators.\n");
@@ -117,6 +121,10 @@ int GameMain(int argc, char * argv[])
         {
             is_ai = false;
         }
+        else if (!strcmp("--debug-ai", argv[i]))
+        {
+            follow_ai = true;
+        }
         else if (!strcmp("--show-levels", argv[i]))
         {
             levelgen::LevelGenerator::PrintAllGenerators(stdout);
@@ -132,8 +140,8 @@ int GameMain(int argc, char * argv[])
         }
         else if (!strcmp("--large", argv[i]))
         {
-            size.x = 1500;
-            size.y = 750;
+            level_size.x = 1500;
+            level_size.y = 750;
         }
         else if (!strcmp("--fullscreen", argv[i]))
         {
@@ -163,14 +171,14 @@ int GameMain(int argc, char * argv[])
     try
     {
         /* If we're only writing the generated level to file, then just do that: */
-        if (outfile_name)
+        if (level_bitmap_filename)
         {
             /* Generate our random level: */
-            levelgen::GeneratedLevel generated_level = levelgen::LevelGenerator::Generate(levelgen::LevelGenerator::FromName(id), size );
+            levelgen::GeneratedLevel generated_level = levelgen::LevelGenerator::Generate(levelgen::LevelGenerator::FromName(level_generator_id), level_size );
             generated_level.level->MaterializeLevelTerrainAndBases();
 
             /* Dump it out, and exit: */
-            generated_level.level->DumpBitmap(outfile_name);
+            generated_level.level->DumpBitmap(level_bitmap_filename);
 
             gamelib_exit();
             return 0;
@@ -193,11 +201,12 @@ int GameMain(int argc, char * argv[])
                     .is_fullscreen = is_fullscreen,
                     .render_surface_size = tweak::screen::RenderSurfaceSize,
                 },
-            .level_size = size,
-            .level_generator = levelgen::LevelGenerator::FromName(id),
+            .level_size = level_size,
+            .level_generator = levelgen::LevelGenerator::FromName(level_generator_id),
             .is_debug = is_debug,
             .player_count = player_count,
             .use_ai = is_ai,
+            .follow_ai = follow_ai,
         };
 
         /* TODO: Unify this global mess */

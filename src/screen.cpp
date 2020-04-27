@@ -93,70 +93,82 @@ struct TwoPlayerLayout : public SinglePlayerLayout
         ScreenRect{{player_view_two.Right() - 19, player_view_two.Top()}, Size{20, 20}};
 };
 
-void Screens::SinglePlayerScreenSetup(Screen * screen, World *, Tank * player)
+struct AIViewOnePlayerLayout : public TwoPlayerLayout
+{
+    /* Player world view */
+    constexpr static ScreenRect player_view_one = TwoPlayerLayout::player_view_one;
+    constexpr static ScreenRect player_view_two = TwoPlayerLayout::player_view_two;
+
+};
+
+void Screens::SinglePlayerScreenSetup(Screen & screen, Tank & player)
 {
     /* Tank view and status below it*/
     auto window = std::make_unique<widgets::TankView>(SinglePlayerLayout::player_view_rect, player);
-    auto crosshair = std::make_unique<widgets::Crosshair>(ScreenPosition{0, 0}, screen, window.get());
-    player->SetCrosshair(crosshair.get());
+    auto crosshair = std::make_unique<widgets::Crosshair>(ScreenPosition{0, 0}, screen, *window.get());
+    player.SetCrosshair(crosshair.get());
 
-    screen->AddWidget(std::move(window));
-    screen->AddWidget(std::move(crosshair));
-    screen->AddStatus(SinglePlayerLayout::tank_health_bars_rect, player, true);
-    screen->AddWidget(
+    screen.AddWidget(std::move(window));
+    screen.AddWidget(std::move(crosshair));
+    screen.AddStatus(SinglePlayerLayout::tank_health_bars_rect, player, true);
+    screen.AddWidget(
         std::make_unique<widgets::LivesLeft>(SinglePlayerLayout::lives_left_rect, Orientation::Vertical, player));
 
     /* Add the letters E and H bitmaps: */
-    screen->AddBitmap(SinglePlayerLayout::energy_letter_rect, &bitmaps::GuiEnergy,
+    screen.AddBitmap(SinglePlayerLayout::energy_letter_rect, bitmaps::GuiEnergy,
                       static_cast<Color>(Palette.Get(Colors::StatusEnergy)));
-    screen->AddBitmap(SinglePlayerLayout::health_letter_rect, &bitmaps::GuiHealth,
+    screen.AddBitmap(SinglePlayerLayout::health_letter_rect, bitmaps::GuiHealth,
                       static_cast<Color>(Palette.Get(Colors::StatusHealth)));
 
     /* Add resources owned overlay */
-    screen->AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(SinglePlayerLayout::resource_overlay,
+    screen.AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(SinglePlayerLayout::resource_overlay,
                                                                        HorizontalAlign::Left, player));
 
     GetSystem()->GetCursor()->Hide();
 }
 
-void Screens::TwoPlayerScreenSetup(Screen * screen, World *, Tank * player_one, Tank * player_two)
+void Screens::TwoPlayerScreenSetup(Screen & screen, Tank & player_one, Tank & player_two)
 {
     auto window = std::make_unique<widgets::TankView>(TwoPlayerLayout::player_view_one, player_one);
     auto crosshair =
-        std::make_unique<widgets::Crosshair>(TwoPlayerLayout::player_view_one.Center(), screen, window.get());
-    player_one->SetCrosshair(crosshair.get());
+        std::make_unique<widgets::Crosshair>(TwoPlayerLayout::player_view_one.Center(), screen, *window.get());
+    player_one.SetCrosshair(crosshair.get());
 
-    screen->AddWidget(std::move(window));
-    screen->AddWidget(std::move(crosshair));
+    screen.AddWidget(std::move(window));
+    screen.AddWidget(std::move(crosshair));
 
-    screen->AddStatus(TwoPlayerLayout::health_energy_one, player_one, false);
-    screen->AddWidget(
+    screen.AddStatus(TwoPlayerLayout::health_energy_one, player_one, false);
+    screen.AddWidget(
         std::make_unique<widgets::LivesLeft>(TwoPlayerLayout::lives_left_rect_one, Orientation::Vertical, player_one));
 
     window = std::make_unique<widgets::TankView>(TwoPlayerLayout::player_view_two, player_two);
-    crosshair = std::make_unique<widgets::Crosshair>(TwoPlayerLayout::player_view_two.Center(), screen, window.get());
-    player_two->SetCrosshair(crosshair.get());
+    crosshair = std::make_unique<widgets::Crosshair>(TwoPlayerLayout::player_view_two.Center(), screen, *window.get());
+    player_two.SetCrosshair(crosshair.get());
 
-    screen->AddWidget(std::move(window));
-    screen->AddWidget(std::move(crosshair));
+    screen.AddWidget(std::move(window));
+    screen.AddWidget(std::move(crosshair));
 
-    screen->AddStatus(TwoPlayerLayout::health_energy_two, player_two, true);
-    screen->AddWidget(
+    screen.AddStatus(TwoPlayerLayout::health_energy_two, player_two, true);
+    screen.AddWidget(
         std::make_unique<widgets::LivesLeft>(TwoPlayerLayout::lives_left_rect_two, Orientation::Vertical, player_two));
 
     /* Add the letters E and H bitmaps: */
-    screen->AddBitmap(TwoPlayerLayout::energy_letter_rect, &bitmaps::GuiEnergy,
+    screen.AddBitmap(TwoPlayerLayout::energy_letter_rect, bitmaps::GuiEnergy,
                       static_cast<Color>(Palette.Get(Colors::StatusEnergy)));
-    screen->AddBitmap(TwoPlayerLayout::health_letter_rect, &bitmaps::GuiHealth,
+    screen.AddBitmap(TwoPlayerLayout::health_letter_rect, bitmaps::GuiHealth,
                       static_cast<Color>(Palette.Get(Colors::StatusHealth)));
 
     /* Add resources owned overlays */
-    screen->AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(TwoPlayerLayout::resource_overlay_one,
+    screen.AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(TwoPlayerLayout::resource_overlay_one,
                                                                        HorizontalAlign::Left, player_one));
-    screen->AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(TwoPlayerLayout::resource_overlay_two,
+    screen.AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(TwoPlayerLayout::resource_overlay_two,
                                                                        HorizontalAlign::Right, player_two));
 
     GetSystem()->GetCursor()->Show();
+}
+
+void Screens::AIViewSinglePlayerSetup(Screen & screen, Tank & player_one, Tank & player_two)
+{
 }
 
 void Screen::DrawPixel(ScreenPosition pos, Color color)
@@ -178,7 +190,7 @@ void Screen::DrawLevel()
     GetSystem()->GetSurface()->Clear();
     GetLevelSurfaces()->terrain_surface.OverlaySurface(&GetLevelSurfaces()->objects_surface);
     /* Draw everything */
-    std::for_each(this->widgets.begin(), this->widgets.end(), [this](auto & item) { item->Draw(this); });
+    std::for_each(this->widgets.begin(), this->widgets.end(), [this](auto & item) { item->Draw(*this); });
 
     GetWorld()->GetLevel()->CommitPixels(GetLevelSurfaces()->objects_surface.GetChangeList());
     GetLevelSurfaces()->objects_surface.Clear();
@@ -252,13 +264,13 @@ void Screen::AddWidget(std::unique_ptr<widgets::GuiWidget> && widget)
 }
 
 /* Window creation should only happen in Level-drawing mode: */
-void Screen::AddWindow(ScreenRect rect, Tank * task)
+void Screen::AddWindow(ScreenRect rect, Tank & tank)
 {
-    this->widgets.emplace_back(std::make_unique<widgets::TankView>(rect, task));
+    this->widgets.emplace_back(std::make_unique<widgets::TankView>(rect, tank));
 }
 
 /* We can add the health/energy status bars here: */
-void Screen::AddStatus(ScreenRect rect, Tank * tank, bool decreases_to_left)
+void Screen::AddStatus(ScreenRect rect, Tank & tank, bool decreases_to_left)
 {
     /* Make sure that this status bar isn't too small: */
     if (rect.size.x <= 2 || rect.size.y <= 4)
@@ -266,10 +278,8 @@ void Screen::AddStatus(ScreenRect rect, Tank * tank, bool decreases_to_left)
     this->widgets.emplace_back(std::make_unique<widgets::StatusBar>(rect, tank, decreases_to_left));
 }
 
-void Screen::AddBitmap(ScreenRect rect, MonoBitmap * new_bitmap, Color color)
+void Screen::AddBitmap(ScreenRect rect, MonoBitmap & new_bitmap, Color color)
 {
-    if (!new_bitmap)
-        return;
     this->widgets.emplace_back(std::make_unique<widgets::BitmapRender>(rect, new_bitmap, color));
 }
 

@@ -25,7 +25,7 @@ class GuiWidget
     virtual ~GuiWidget() = default;
     ScreenRect GetRect() const { return screen_rect; }
 
-    virtual void Draw(class Screen * screen) = 0;
+    virtual void Draw(class Screen & screen) = 0;
 };
 
 /* Will draw a window using the level's drawbuffer: */
@@ -37,14 +37,14 @@ class TankView : public GuiWidget
     int showing_static = 0;
 
   public:
-    TankView(ScreenRect screen_rect, class Tank * tank) : GuiWidget(screen_rect), tank(tank) {}
-    void Draw(Screen * screen) override;
+    TankView(ScreenRect screen_rect, class Tank & tank) : GuiWidget(screen_rect), tank(&tank) {}
+    void Draw(Screen & screen) override;
     Position TranslatePosition(ScreenPosition screen_position) const;
     ScreenPosition TranslatePosition(Position screen_position) const;
 
   private:
     /* Will randomly draw static to a window, based on a tank's health.  */
-    void DrawStatic(Screen * screen);
+    void DrawStatic(Screen & screen);
 };
 
 /* Will draw two bars indicating the charge/health of a tank: */
@@ -54,11 +54,11 @@ class StatusBar : public GuiWidget
     bool decreases_to_left;
 
   public:
-    StatusBar(ScreenRect screen_rect, class Tank * tank, bool decrease_to_left)
-        : GuiWidget(screen_rect), tank(tank), decreases_to_left(decrease_to_left)
+    StatusBar(ScreenRect screen_rect, class Tank & tank, bool decrease_to_left)
+        : GuiWidget(screen_rect), tank(&tank), decreases_to_left(decrease_to_left)
     {
     }
-    void Draw(Screen * screen) override;
+    void Draw(Screen & screen) override;
 };
 
 /* Will draw an arbitrary, static bitmap to screen*/
@@ -68,8 +68,8 @@ struct BitmapRender : public GuiWidget
     Color color;
 
   public:
-    BitmapRender(ScreenRect screen_rect, MonoBitmap * bitmap_data, Color color) : GuiWidget(screen_rect), data(bitmap_data), color(color) {}
-    void Draw(Screen * screen) override;
+    BitmapRender(ScreenRect screen_rect, MonoBitmap & bitmap_data, Color color) : GuiWidget(screen_rect), data(&bitmap_data), color(color) {}
+    void Draw(Screen & screen) override;
 };
 
 struct LivesLeft : public BitmapRender
@@ -78,13 +78,13 @@ struct LivesLeft : public BitmapRender
     Tank * tank;
 
   public:
-    LivesLeft(ScreenRect rect, Orientation direction, Tank * tank)
-        : BitmapRender(rect, &bitmaps::LifeDot, Palette.Get(Colors::LifeDot)), direction(direction), tank(tank)
+    LivesLeft(ScreenRect rect, Orientation direction, Tank & tank)
+        : BitmapRender(rect, bitmaps::LifeDot, Palette.Get(Colors::LifeDot)), direction(direction), tank(&tank)
     {
         assert(direction == Orientation::Vertical && rect.size.x == this->data->GetSize().x ||
                direction == Orientation::Horizontal && rect.size.y == this->data->GetSize().y);
     }
-    void Draw(Screen * screen) override;
+    void Draw(Screen & screen) override;
 };
 
 class Crosshair : public BitmapRender
@@ -97,9 +97,9 @@ class Crosshair : public BitmapRender
     bool is_hidden = true;
 
   public:
-    Crosshair(ScreenPosition pos, Screen * screen, TankView * parent_view)
-        : BitmapRender(ScreenRect{pos.x - 1, pos.y - 1, 3, 3}, &bitmaps::Crosshair, Palette.Get(Colors::FireCold)),
-          screen(screen), parent_view(parent_view)
+    Crosshair(ScreenPosition pos, Screen & screen, TankView & parent_view)
+        : BitmapRender(ScreenRect{pos.x - 1, pos.y - 1, 3, 3}, bitmaps::Crosshair, Palette.Get(Colors::FireCold)),
+          screen(&screen), parent_view(&parent_view)
     {
     }
 
@@ -110,7 +110,7 @@ class Crosshair : public BitmapRender
     [[nodiscard]] ScreenPosition GetScreenPosition() const { return this->center; }
     Position GetWorldPosition() const { return parent_view->TranslatePosition(GetScreenPosition()); }
     void SetWorldPosition(Position position);
-    void Draw(Screen * screen) override;
+    void Draw(Screen & screen) override;
 };
 
 class ResourcesMinedDisplay : public GuiWidget
@@ -118,8 +118,8 @@ class ResourcesMinedDisplay : public GuiWidget
     Tank * tank;
     [[maybe_unused]] HorizontalAlign alignment;
   public:
-    ResourcesMinedDisplay(ScreenRect screen_rect, HorizontalAlign alignment, Tank * tank) : GuiWidget(screen_rect), tank(tank), alignment(alignment) {}
-    void Draw(Screen * screen) override;
+    ResourcesMinedDisplay(ScreenRect screen_rect, HorizontalAlign alignment, Tank & tank) : GuiWidget(screen_rect), tank(&tank), alignment(alignment) {}
+    void Draw(Screen & screen) override;
 };
 
 } // namespace widgets

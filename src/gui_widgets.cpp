@@ -10,7 +10,7 @@
 namespace widgets
 {
 
-void widgets::TankView::DrawStatic(Screen *screen)
+void widgets::TankView::DrawStatic(Screen & screen)
 {
     // int health = w->t->GetHealth();
     int tank_energy = this->tank->GetEnergy();
@@ -52,7 +52,7 @@ void widgets::TankView::DrawStatic(Screen *screen)
 
             if (!tank_energy)
             {
-                screen->DrawPixel({x + this->screen_rect.pos.x, y + this->screen_rect.pos.y},
+                screen.DrawPixel({x + this->screen_rect.pos.x, y + this->screen_rect.pos.y},
                                   Palette.GetPrimary(TankColor(Random.Int(0, 7))));
                 continue;
             }
@@ -74,13 +74,13 @@ void widgets::TankView::DrawStatic(Screen *screen)
 
             /* Finally, select a color (either black or random) and draw: */
             color = drawing_black ? Palette.Get(Colors::Blank) : Palette.GetPrimary(TankColor(Random.Int(0, 7)));
-            screen->DrawPixel({x + this->screen_rect.pos.x, y + this->screen_rect.pos.y}, color);
+            screen.DrawPixel({x + this->screen_rect.pos.x, y + this->screen_rect.pos.y}, color);
         }
     }
 }
 
 /* Will draw a window using the level's drawbuffer: */
-void TankView::Draw(Screen *screen)
+void TankView::Draw(Screen & screen)
 {
     Position tank_pos = this->tank->GetPosition();
 
@@ -89,9 +89,9 @@ void TankView::Draw(Screen *screen)
         {
             int screen_x = x + this->screen_rect.pos.x, screen_y = y + this->screen_rect.pos.y;
 
-            RenderedPixel color = screen->GetLevelSurfaces()->terrain_surface.GetPixel(
+            RenderedPixel color = screen.GetLevelSurfaces()->terrain_surface.GetPixel(
                 Position{x + tank_pos.x - this->screen_rect.size.x / 2, y + tank_pos.y - this->screen_rect.size.y / 2});
-            screen->DrawPixel({screen_x, screen_y}, color);
+            screen.DrawPixel({screen_x, screen_y}, color);
         }
     }
 
@@ -122,7 +122,7 @@ ScreenPosition TankView::TranslatePosition(Position world_pos) const
 /* TODO: This currently draws every frame. Can we make a dirty flag, and only
  *       redraw when it's needed? Also, can we put some of these calculations in
  *       the StatusBar structure, so they don't have to be done every frame? */
-void StatusBar::Draw(Screen *screen)
+void StatusBar::Draw(Screen & screen)
 {
     /* At what y value does the median divider start: */
     int mid_y = (this->screen_rect.size.y - 1) / 2;
@@ -194,18 +194,18 @@ void StatusBar::Draw(Screen *screen)
             else
                 c = Palette.Get(Colors::Blank);
 
-            screen->DrawPixel({x + this->screen_rect.pos.x, y + this->screen_rect.pos.y}, c);
+            screen.DrawPixel({x + this->screen_rect.pos.x, y + this->screen_rect.pos.y}, c);
         }
     }
 }
 
-void BitmapRender::Draw(Screen *screen)
+void BitmapRender::Draw(Screen & screen)
 {
-    this->data->Draw(screen, this->screen_rect.pos,
+    this->data->Draw(&screen, this->screen_rect.pos,
                      ImageRect{{0, 0}, {this->data->GetSize().x, this->data->GetSize().y}}, this->color);
 }
 
-void LivesLeft::Draw(Screen *screen)
+void LivesLeft::Draw(Screen & screen)
 {
     assert(direction == Orientation::Vertical); // Implemennt horizontal when we need it
     if (direction == Orientation::Vertical)
@@ -214,7 +214,7 @@ void LivesLeft::Draw(Screen *screen)
         for (int life = 0; y_pos + 2 <= this->screen_rect.size.y; ++life)
         {
             Color such_color = (life < tank->GetLives()) ? this->color : Palette.Get(Colors::Blank);
-            this->data->Draw(screen, ScreenPosition{this->screen_rect.pos} + Offset{0, y_pos}, such_color);
+            this->data->Draw(&screen, ScreenPosition{this->screen_rect.pos} + Offset{0, y_pos}, such_color);
             y_pos += 1 + this->data->GetSize().y;
         }
     }
@@ -254,27 +254,27 @@ void Crosshair::SetWorldPosition(Position position)
     is_hidden = false;
 }
 
-void Crosshair::Draw(Screen *)
+void Crosshair::Draw(Screen &)
 {
     if (!is_hidden)
-        Parent::Draw(this->screen);
+        Parent::Draw(*this->screen);
 }
 
-void ResourcesMinedDisplay::Draw(Screen * screen)
+void ResourcesMinedDisplay::Draw(Screen & screen)
 {
     /* Draw outline and background */
-    ShapeRenderer::DrawFilledRectangle(screen->GetScreenSurface(), Rect{this->screen_rect}, true,
+    ShapeRenderer::DrawFilledRectangle(screen.GetScreenSurface(), Rect{this->screen_rect}, true,
                                  Palette.Get(Colors::ResourceInfoBackground),
                                  Palette.Get(Colors::ResourceInfoOutline)); 
 
     ScreenRect text_rect = {this->screen_rect.Left() + 2, this->screen_rect.Top() + 2, this->screen_rect.size.x - 4,
                             this->screen_rect.size.y - 4};
-    GetSystem()->GetFontRenderer()->Render(FontFace::Brodmin, screen, text_rect, 
+    GetSystem()->GetFontRenderer()->Render(FontFace::Brodmin, &screen, text_rect, 
                                            std::to_string(this->tank->GetResources().GetDirt() / 10),
                                            Palette.Get(Colors::StatusEnergy), HorizontalAlign::Right);
     text_rect.pos.y += 9;
     text_rect.size.y -= 9;
-    GetSystem()->GetFontRenderer()->Render(FontFace::Brodmin, screen, text_rect,
+    GetSystem()->GetFontRenderer()->Render(FontFace::Brodmin, &screen, text_rect,
                                            std::to_string(this->tank->GetBase()->GetResources().GetDirt() / 10),
                                            Palette.Get(Colors::StatusHealth), HorizontalAlign::Right);
 }

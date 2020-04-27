@@ -9,7 +9,6 @@ class TankList;
 class Game
 {
     bool is_active = false;
-    bool is_debug = false;
 
     GameConfig config = {};
 

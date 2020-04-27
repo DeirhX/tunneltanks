@@ -35,10 +35,10 @@ std::unique_ptr<SinglePlayerMode> SinglePlayerMode::Setup(Screen * screen, World
 {
 
     /* Ready the tank! */
-    Tank * t = world->GetTankList()->AddTank(0, world->GetLevel()->GetSpawn(0));
-    gamelib_tank_attach(t, 0, 1);
+    Tank * player = world->GetTankList()->AddTank(0, world->GetLevel()->GetSpawn(0));
+    gamelib_tank_attach(player, 0, 1);
 
-    Screens::SinglePlayerScreenSetup(screen, world, t);
+    Screens::SinglePlayerScreenSetup(*screen,*player);
 
     /* Fill up the rest of the slots with Twitches: */
     if (use_ai)
@@ -66,7 +66,7 @@ std::unique_ptr<LocalTwoPlayerMode> LocalTwoPlayerMode::Setup(Screen * screen, W
     /*controller_twitch_attach(t);  << Attach a twitch to a camera tank, so we can see if they're getting smarter... */
     gamelib_tank_attach(player_two, 1, 2);
 
-    Screens::TwoPlayerScreenSetup(screen, world, player_one, player_two);
+    Screens::TwoPlayerScreenSetup(*screen,*player_one, *player_two);
     /* Fill up the rest of the slots with Twitches: */
     if (use_ai)
         GameMode::AssumeAIControl(world->GetTankList(), world->GetLevel(), 2);
@@ -88,32 +88,28 @@ Game::Game(GameConfig config)
     /* Copy in all the default values: */
     this->config = config;
     this->is_active = false;
-    this->is_debug = config.is_debug;
 
-    /* The hell was I thinking?
-	out->data.config.w = tweak::GameSize.x;
-	out->data.config.h = tweak::GameSize.y;
-	*/
     if (gamelib_get_can_window())
         this->config.video_config.is_fullscreen = false;
     else if (gamelib_get_can_fullscreen())
         this->config.video_config.is_fullscreen = true;
     else
     {
-        /* The hell!? */
         throw GameException("gamelib can't run fullscreen or in a window.");
     }
 
-    /* Initialize most of the structures: */
+    /* Initialize screen */
     this->screen =
         std::make_unique<Screen>(this->config.video_config.is_fullscreen, GetSystem()->GetSurface());
 
-    /* Generate our random level: */
+    /* Benchmark level generation */
     int TestIterations = 20;
-#ifdef _DEBUG
-    TestIterations = 1;
-#endif
+    #ifdef _DEBUG
+        TestIterations = 1;
+    #endif
     std::chrono::milliseconds time_taken = {};
+
+    /* Generate our random level: */
     std::unique_ptr<Level> level;
     for (int i = 0; i != TestIterations; ++i)
     {
@@ -130,7 +126,7 @@ Game::Game(GameConfig config)
     level->MaterializeLevelTerrainAndBases();
 
     /* Debug the starting data, if we're debugging: */
-    if (this->is_debug)
+    if (this->config.is_debug)
         level->DumpBitmap("debug_start.bmp");
 
     /* Push the level to the draw buffer */
@@ -190,7 +186,7 @@ Game::~Game()
     if (this->is_active)
     {
         /* Debug if we need to: */
-        if (this->is_debug)
+        if (this->config.is_debug)
             world->GetLevel()->DumpBitmap("debug_end.bmp");
         this->mode->TearDown();
     }

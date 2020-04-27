@@ -18,4 +18,5 @@ struct GameConfig
     int player_count{};
     int rand_seed{};
     bool use_ai = true;
+    bool follow_ai = false;
 };
