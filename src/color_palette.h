@@ -45,6 +45,7 @@ enum class Colors
     LinkActive,
     LinkTheoretical,
     LinkBlocked,
+    FailedInteraction,
     Size,
 };
 

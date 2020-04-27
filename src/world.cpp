@@ -7,6 +7,7 @@ World::World(Game * game, std::unique_ptr<Level> && level)
       link_map(this->level.get()),
       projectile_list(),
       harvester_list(),
+      sprite_list(),
       tank_list(this->level.get(), &this->projectile_list),
       collision_solver(this->level.get(), &this->tank_list, &this->harvester_list)
 {
@@ -18,6 +19,7 @@ void World::Clear()
     this->projectile_list.RemoveAll();
     this->tank_list.RemoveAll();
     this->harvester_list.RemoveAll();
+    this->sprite_list.RemoveAll();
     this->link_map.RemoveAll();
 }
 
@@ -33,6 +35,7 @@ void World::Advance()
     this->projectile_list.Advance(this->level.get(), this->GetTankList());
     this->tank_list.for_each([=](Tank * t) { t->Advance(this); });
     this->harvester_list.Advance(this->level.get(), this->GetTankList());
+    this->sprite_list.Advance(this->level.get());
     /* TODO: get out of level? */
     for (TankBase & base : this->level->GetSpawns())
         base.Advance();
@@ -44,10 +47,11 @@ void World::Draw(WorldRenderSurface * objects_surface)
 {
     /* Draw everything: */
     this->projectile_list.Draw(objects_surface);
-    this->harvester_list.Draw(objects_surface);
     this->tank_list.for_each([=](Tank * t) { t->Draw(objects_surface); });
     for (const TankBase & base : this->level->GetSpawns())
         base.Draw(objects_surface);
+    this->harvester_list.Draw(objects_surface);
+    this->sprite_list.Draw(objects_surface);
     this->link_map.Draw(objects_surface);
 }
 

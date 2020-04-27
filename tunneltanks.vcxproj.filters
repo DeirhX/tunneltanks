@@ -180,6 +180,13 @@
     <ClCompile Include="src\tank_base.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
+    <ClCompile Include="src\sprite.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sprite_list.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\item_list_adaptor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\require_sdl.h">
@@ -372,6 +379,15 @@
       <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\core_concepts.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sprite_list.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sprite.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\item_list_adaptor.h">
       <Filter>src\system</Filter>
     </ClInclude>
   </ItemGroup>

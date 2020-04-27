@@ -6,6 +6,7 @@
 #include "link.h"
 #include "machine_list.h"
 #include "projectile_list.h"
+#include "sprite_list.h"
 #include "tank_list.h"
 
 class WorldRenderSurface;
@@ -18,9 +19,11 @@ class World
 
     std::unique_ptr<Level> level;
     LinkMap link_map;
+
     ProjectileList projectile_list;
     MachineryList harvester_list;
     TankList tank_list;
+    SpriteList sprite_list;
 
     CollisionSolver collision_solver;
     RepetitiveTimer regrow_timer{tweak::world::DirtRecoverInterval};
@@ -37,6 +40,7 @@ class World
     [[nodiscard]] ProjectileList * GetProjectileList() { return &this->projectile_list; }
     [[nodiscard]] MachineryList * GetHarvesterList() { return &this->harvester_list; }
     [[nodiscard]] TankList * GetTankList() { return &this->tank_list; }
+    [[nodiscard]] SpriteList * GetSpriteList() { return &this->sprite_list; }
     [[nodiscard]] LinkMap * GetLinkMap() { return &this->link_map; }
     [[nodiscard]] const CollisionSolver * GetCollisionSolver() const { return &this->collision_solver; }
     [[nodiscard]] std::chrono::microseconds GetElapsedTime() const { return this->time_elapsed; }

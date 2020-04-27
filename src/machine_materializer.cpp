@@ -18,8 +18,15 @@ void MachineMaterializer::PickUpMachine(Machine & machine)
 
 void MachineMaterializer::PickUpMachine(MachineTemplate & machine_template)
 {
-    this->transported_machine = &machine_template.BuildMachine();
-    this->transported_machine->SetIsTransported(true);
+    if (machine_template.IsAvailable())
+    {
+        this->transported_machine = &machine_template.BuildMachine();
+        this->transported_machine->SetIsTransported(true);
+    }
+    else
+    {
+        
+    }
 }
 
 void MachineMaterializer::PlaceMachine()
