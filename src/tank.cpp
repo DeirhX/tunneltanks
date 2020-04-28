@@ -75,7 +75,10 @@ void Tank::Advance(World & world)
         this->materializer.Advance(this->GetPosition());
 
         /* Move, dig and solve collisions with other tanks */
-        this->HandleMove();
+        if (this->HandleMove(this->GetDirection(), this->turret.IsShooting()))
+        {   /* Well, we moved, so let's charge ourselves: */
+            this->GetReactor().Exhaust(tweak::tank::MoveCost);
+        }
         this->link_source.UpdatePosition(this->GetPosition());
         this->CollectItems();
 
@@ -115,7 +118,7 @@ void Tank::AdvanceDeath(World & world)
 
 /* We don't use the Tank structure in this function, since we are checking the
  * tank's hypothetical position... ie: IF we were here, would we collide? */
-CollisionType Tank::GetCollision(Direction dir, Position position_)
+CollisionType Tank::TryCollide(Direction rotation, Position position_)
 {
     CollisionType result = CollisionType::None;
 
@@ -154,51 +157,14 @@ CollisionType Tank::GetCollision(Direction dir, Position position_)
                 });
 
             return !is_blocking_collision;
-    }, position_, dir);
+    }, position_, rotation);
 
-    if (result == CollisionType::Blocked || GetWorld()->GetTankList()->CheckForCollision(*this, position, dir))
-        return CollisionType::Blocked;
+    //if (result == CollisionType::Blocked || GetWorld()->GetTankList()->CheckForCollision(*this, position, rotation))
+    //    return CollisionType::Blocked;
 
     return result;
 }
 
-void Tank::HandleMove()
-{
-    /* Calculate the direction: */
-    if (this->speed.x != 0 || this->speed.y != 0)
-    {
-        Direction dir = Direction::FromSpeed(this->speed);
-        CollisionType collision = this->GetCollision(dir, this->position + 1 * this->speed);
-        /* Now, is there room to move forward in that direction? */
-        if (collision != CollisionType::None)
-        {
-            /* Attempt to dig and see the results */
-            DigResult dug = this->level->DigTankTunnel(this->position + (1 * this->speed), this->turret.IsShooting());
-            this->resources.Add({dug.dirt, dug.minerals});
-
-            /* If we didn't use a torch pointing roughly in the right way, we don't move in the frame of digging*/
-            if (!(this->turret.IsShooting() &&
-                  Direction::FromSpeed(Speed{int(std::round(this->turret.GetDirection().x)),
-                                             int(std::round(this->turret.GetDirection().y))}) == dir))
-            {
-                return;
-            }
-
-            /* Now if we used a torch, test the collision again - we might have failed to dig some of the minerals */
-            collision = this->GetCollision(dir, this->position + 1 * this->speed);
-            if (collision != CollisionType::None)
-                return;
-        }
-
-        /* We're free to move, do it*/
-        this->direction = Direction{dir};
-        this->position.x += this->speed.x;
-        this->position.y += this->speed.y;
-
-        /* Well, we moved, so let's charge ourselves: */
-        this->GetReactor().Exhaust(tweak::tank::MoveCost);
-    }
-}
 
 /* Check to see if we're in any bases, and heal based on that: */
 void Tank::TryBaseHeal(TankBase & base) { base.RechargeTank(this); }

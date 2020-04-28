@@ -3,6 +3,25 @@
 #include "link.h"
 #include "types.h"
 
+
+enum class CollisionType
+{
+    None,   /* All's clear! */
+    Dirt,   /* We hit dirt, but that's it. */
+    Blocked /* Hit a rock/base/tank/something we can't drive over. */
+};
+
+template <typename TCollisionFunc>
+concept CollisionEvaluator = requires(TCollisionFunc compute_collision, Direction theoretical_direction,
+                                        Position theoretical_position)
+{
+    {
+        compute_collision(theoretical_direction, theoretical_position)
+    }
+    ->same_as<CollisionType>;
+};
+
+
 class Controllable : public Invalidable
 {
  protected:
@@ -21,6 +40,7 @@ class Controllable : public Invalidable
   public:
     Controllable(Position position_, const Reactor & starting_reactor_state, MaterialCapacity material_capacity,
                  Level * level_);
+    void SetController(std::shared_ptr<Controller> newController) { this->controller = newController; }
 
     [[nodiscard]] Position GetPosition() const { return this->position; }
     [[nodiscard]] DirectionF GetDirection() const { return this->direction; }
@@ -32,9 +52,12 @@ class Controllable : public Invalidable
 
     [[nodiscard]] bool HealthOrEnergyEmpty() const;
 
-    void SetController(std::shared_ptr<Controller> newController) { this->controller = newController; }
+    virtual CollisionType TryCollide(Direction rotation, Position position) = 0;
+    virtual void ApplyControllerOutput(ControllerOutput controls) = 0;
 
+    bool HandleMove(DirectionF torch_heading, bool torch_use);
   protected:
   /*  void SetPosition(const Position & new_position) { this->position = new_position; }
     void SetDirection(const Direction & new_direction) { this->direction = new_direction; }*/
 };
+

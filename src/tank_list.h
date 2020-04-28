@@ -21,7 +21,7 @@ class TankList
     void RemoveTank(TankColor id);
     void RemoveAll();
     Tank * GetTankAtPoint(Position query_pos, TankColor ignored = -1);
-    bool CheckForCollision(Tank & tank, Position testPos, int testDirection);
+    bool CheckForCollision(Position position, Direction rotation, Tank & ignored_tank);
 
     // iterable
     decltype(list)::iterator begin() { return list.begin(); }

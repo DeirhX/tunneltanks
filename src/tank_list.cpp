@@ -50,17 +50,16 @@ Tank * TankList::GetTankAtPoint(Position query_pos, TankColor ignored)
     return nullptr;
 }
 
-/* Note: change that vector to two int's eventually... */
-bool TankList::CheckForCollision(Tank & tank, Position testPos, int testDirection)
+bool TankList::CheckForCollision(Position position, Direction rotation, Tank & ignored_tank)
 {
     for (Tank & otherTank : *this)
     {
-        if (otherTank.GetColor() == tank.GetColor() || otherTank.HealthOrEnergyEmpty())
+        if (otherTank.GetColor() == ignored_tank.GetColor() || otherTank.HealthOrEnergyEmpty())
             continue;
 
-        /* Let's see if these two tanks are ANYWHERE near each other: */
+        /* Let's see if we're ANYWHERE near this tank (bounding box basically) : */
         Position pos = otherTank.GetPosition();
-        if (abs(testPos.x - pos.x) > 6 || abs(testPos.y - pos.y) > 6)
+        if (abs(position.x - pos.x) > 6 || abs(position.y - pos.y) > 6)
             continue;
 
         /* Ok, if we're here, the two tanks are real close. Now it's time for
@@ -69,16 +68,16 @@ bool TankList::CheckForCollision(Tank & tank, Position testPos, int testDirectio
 
         /* Find the bounds of the two sprite's overlap: */
         int lx, ly, ux, uy;
-        if(pos.x< testPos.x) { lx= testPos.x-3; ux= pos.x+3;   }
-        else                 { lx= pos.x-3;     ux= testPos.x+3; }
-        if(pos.y< testPos.y) { ly= testPos.y-3; uy= pos.y+3;   }
-        else                 { ly= pos.y-3;     uy= testPos.y+3; }
+        if(pos.x< position.x) { lx= position.x-3; ux= pos.x+3;   }
+        else                 { lx= pos.x-3;     ux= position.x+3; }
+        if(pos.y< position.y) { ly= position.y-3; uy= pos.y+3;   }
+        else                 { ly= pos.y-3;     uy= position.y+3; }
 
         /* Check the overlap for collisions: */
         for (int ty = ly; ty <= uy; ty++)
             for (int tx = lx; tx <= ux; tx++)
                 if (TANK_SPRITE[dir][ty - pos.y + 3][tx - pos.x + 3] &&
-                    TANK_SPRITE[testDirection][ty - testPos.y + 3][tx - testPos.x + 3])
+                    TANK_SPRITE[rotation][ty - position.y + 3][tx - position.x + 3])
                     return true;
     }
 

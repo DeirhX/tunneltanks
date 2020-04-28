@@ -10,4 +10,5 @@ namespace concepts  {
 template<typename TVisitorFunc, typename TParam>
 concept BasicVisitor = requires(TVisitorFunc visitor, TParam visited) { { visitor(visited) } -> same_as<bool>; };
 
+
 }

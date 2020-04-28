@@ -24,13 +24,6 @@ struct PublicTankInfo
     LevelView level_view;
 };
 
-enum class CollisionType
-{
-    None,   /* All's clear! */
-    Dirt,   /* We hit dirt, but that's it. */
-    Blocked /* Hit a rock/base/tank/something we can't drive over. */
-};
-
 namespace tank
 {
 template <typename PerPixelFunc>
@@ -69,9 +62,10 @@ class Tank : public Controllable
     void Spawn();
     void Die();
 
-    void ApplyControllerOutput(ControllerOutput controls);
+    void ApplyControllerOutput(ControllerOutput controls) override;
 
-    CollisionType GetCollision(Direction dir, Position pos);
+    CollisionType TryCollide(Direction rotation, Position position) override;
+
     template <typename PerPixelFunc> /* bool per_pixel_func(Position world_position). Return false to end iteration. */
     requires concepts::BasicVisitor<PerPixelFunc, Position>
     void ForEachTankPixel(PerPixelFunc per_pixel_func)
@@ -82,7 +76,6 @@ class Tank : public Controllable
     void Draw(Surface & surface) const;
 
   private:
-    void HandleMove();
     void TryBaseHeal(TankBase & base);
 
     void AdvanceDeath(World & world);
