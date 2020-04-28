@@ -11,7 +11,7 @@ class TankList
   private:
     ValueContainer<Tank> list;
     Level * level;
-    ProjectileList * projectile_list;
+    //ProjectileList * projectile_list;
 
   public:
     TankList(Level * level, ProjectileList * projectile_list);

@@ -31,6 +31,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\controllable.cpp" />
+    <ClCompile Include="src\swarmer_creature.cpp" />
     <ClCompile Include="src\twitch_ai.cpp" />
     <ClCompile Include="src\bitmaps.cpp" />
     <ClCompile Include="src\bitmap_loader.cpp" />
@@ -109,6 +110,7 @@
     <ClInclude Include="src\machine.h" />
     <ClInclude Include="src\machine_list.h" />
     <ClInclude Include="src\controllable.h" />
+    <ClInclude Include="src\swarmer_creature.h" />
     <ClInclude Include="src\twitch_ai.h" />
     <ClInclude Include="src\color_palette.h" />
     <ClInclude Include="src\containers.h" />

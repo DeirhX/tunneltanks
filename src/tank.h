@@ -44,10 +44,10 @@ class Tank : public Controllable
     ManualTimer respawn_timer = {tweak::tank::RespawnDelay};
     int lives_left = tweak::tank::MaxLives;
 
-    ProjectileList * projectile_list;
+    //ProjectileList * projectile_list;
 
   public:
-    Tank(TankColor color, Level * level, ProjectileList * projectile_list, TankBase * tank_base);
+    Tank(TankColor color, Level * level, TankBase * tank_base);
 
     void SetCrosshair(widgets::Crosshair * cross);
 

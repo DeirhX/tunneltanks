@@ -11,7 +11,7 @@
 #include "projectile_list.h"
 #include <algorithm>
 
-TankList::TankList(Level * level, ProjectileList * projectile_list) : level(level), projectile_list(projectile_list) {}
+TankList::TankList(Level * level, ProjectileList * projectile_list) : level(level) {}
 
 Tank * TankList::AddTank(TankColor color, TankBase * tank_base)
 {
@@ -19,7 +19,7 @@ Tank * TankList::AddTank(TankColor color, TankBase * tank_base)
     if (found != list.end())
         throw GameException("already exists");
 
-    return &this->list.ConstructElement(color, this->level, this->projectile_list, tank_base);
+    return &this->list.ConstructElement(color, this->level, tank_base);
 }
 
 void TankList::RemoveTank(TankColor color)

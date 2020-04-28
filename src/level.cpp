@@ -43,7 +43,7 @@ void Level::SetLevelData(Position pos, LevelPixel value)
 
 void Level::SetPixel(Position pos, LevelPixel voxel)
 {
-    assert(IsInBounds(pos));
+    assert(IsInside(pos));
 
     SetLevelData(pos.y * this->size.x + pos.x, voxel);
     CommitPixel(pos);
@@ -80,7 +80,7 @@ void Level::MaterializeLevelTerrainAndBases()
 
 LevelPixel Level::GetPixel(Position pos) const
 {
-    if (!IsInBounds(pos))
+    if (!IsInside(pos))
         return LevelPixel::Rock;
     return this->data[pos.y * this->size.x + pos.x];
 }
@@ -199,7 +199,7 @@ void Level::CommitAll()
     }
 }
 
-bool Level::IsInBounds(Position pos) const
+bool Level::IsInside(Position pos) const
 {
     return !(pos.x < 0 || pos.y < 0 || pos.x >= this->size.x || pos.y >= this->size.y);
 }

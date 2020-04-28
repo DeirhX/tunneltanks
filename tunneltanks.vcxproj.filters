@@ -195,6 +195,9 @@
     <ClCompile Include="src\controllable.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
+    <ClCompile Include="src\swarmer_creature.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\require_sdl.h">
@@ -405,6 +408,9 @@
       <Filter>src\ai</Filter>
     </ClInclude>
     <ClInclude Include="src\controllable.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\swarmer_creature.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
   </ItemGroup>

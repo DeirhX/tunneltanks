@@ -16,7 +16,7 @@
  * TANK
  */
 
-Tank::Tank(TankColor color, Level * level, ProjectileList * projectile_list, TankBase * tank_base)
+Tank::Tank(TankColor color, Level * level, TankBase * tank_base)
     : Base(tank_base->GetPosition(), tweak::tank::DefaultTankReactor, tweak::tank::ResourcesMax, level), color(color), tank_base(tank_base),
       turret(this, Palette.GetTank(color)[2]), materializer(this, &this->GetResources())
 {
@@ -27,7 +27,6 @@ Tank::Tank(TankColor color, Level * level, ProjectileList * projectile_list, Tan
     if (dir >= 4)
         dir.Get()++;
     this->direction = dir; // DirectionF{ dir };
-    this->projectile_list = projectile_list;
 
     Spawn();
 }
@@ -228,10 +227,10 @@ void Tank::Die()
     this->respawn_timer.Restart();
     this->link_source.Disable();
 
-    this->projectile_list->Add(ExplosionDesc::AllDirections(this->position, tweak::explosion::death::ShrapnelCount,
-                                                            tweak::explosion::death::Speed,
-                                                            tweak::explosion::death::Frames)
-                                   .Explode<Shrapnel>(this->level));
+    GetWorld()->GetProjectileList()->Add(
+        ExplosionDesc::AllDirections(this->position, tweak::explosion::death::ShrapnelCount,
+                                     tweak::explosion::death::Speed, tweak::explosion::death::Frames)
+            .Explode<Shrapnel>(this->level));
 }
 
 void Tank::ApplyControllerOutput(ControllerOutput controls)

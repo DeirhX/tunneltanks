@@ -98,12 +98,12 @@ class Level
     DigResult DigTankTunnel(Position pos, bool dig_with_torch);
     TankBase * CheckBaseCollision(Position pos);
 
+    bool IsInside(Position position) const;
   private:
     /* Level generation */
     void GenerateDirtAndRocks();
     void CreateBases();
 
-    bool IsInBounds(Position pos) const;
     void CreateBase(Position pos, TankColor color);
 };
 
