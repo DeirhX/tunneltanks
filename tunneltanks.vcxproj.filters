@@ -60,9 +60,6 @@
     <ClCompile Include="src\gamelib\SDL\sdldata.cpp">
       <Filter>sdl_interface</Filter>
     </ClCompile>
-    <ClCompile Include="src\aitwitch.cpp">
-      <Filter>src\ai</Filter>
-    </ClCompile>
     <ClCompile Include="src\level_view.cpp">
       <Filter>src\ai</Filter>
     </ClCompile>
@@ -187,6 +184,12 @@
     <ClCompile Include="src\game.cpp">
       <Filter>src\system</Filter>
     </ClCompile>
+    <ClCompile Include="src\swarm_ai.cpp">
+      <Filter>src\ai</Filter>
+    </ClCompile>
+    <ClCompile Include="src\twitch_ai.cpp">
+      <Filter>src\ai</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\require_sdl.h">
@@ -236,9 +239,6 @@
     </ClInclude>
     <ClInclude Include="src\gamelib.h">
       <Filter>src\system</Filter>
-    </ClInclude>
-    <ClInclude Include="src\aitwitch.h">
-      <Filter>src\ai</Filter>
     </ClInclude>
     <ClInclude Include="src\level_view.h">
       <Filter>src\ai</Filter>
@@ -389,6 +389,12 @@
     </ClInclude>
     <ClInclude Include="src\game.h">
       <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\swarm_ai.h">
+      <Filter>src\ai</Filter>
+    </ClInclude>
+    <ClInclude Include="src\twitch_ai.h">
+      <Filter>src\ai</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

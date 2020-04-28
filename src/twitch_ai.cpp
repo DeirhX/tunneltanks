@@ -1,14 +1,16 @@
+#include "twitch_ai.h"
+
 #include "controller.h"
 #include "tank.h"
 #include "random.h"
 #include "tweak.h"
 #include "level_view.h"
-#include "aitwitch.h"
+
 #include <cstdlib>
 
 
 /* Used when seeking a base entrance: */
-constexpr int Outside = (tweak::base::BaseSize / 2 + 5);
+constexpr int OutsideBase = (tweak::base::BaseSize / 2 + 5);
 
 
 ControllerOutput TwitchAI::AdvanceStep(PublicTankInfo * tank_info)
@@ -28,14 +30,15 @@ ControllerOutput TwitchAI::AdvanceStep(PublicTankInfo * tank_info)
     case TwitchMode::Recharge:
         return this->Recharge(tank_info);
     default:
+        assert(!"Unknown state");
         return {};
     }
 }
 
 ControllerOutput TwitchAI::Start(PublicTankInfo * tank_info)
 {
-    bool no_up = tank_info->level_view.QueryCircle(Offset{0, -Outside + 1}) == LevelView::QueryResult::Collide;
-    bool no_down = tank_info->level_view.QueryCircle(Offset{0, Outside - 1}) == LevelView::QueryResult::Collide;
+    bool no_up = tank_info->level_view.QueryCircle(Offset{0, -OutsideBase + 1}) == LevelView::QueryResult::Collide;
+    bool no_down = tank_info->level_view.QueryCircle(Offset{0, OutsideBase - 1}) == LevelView::QueryResult::Collide;
 
     if (no_up && no_down)
     {
@@ -57,7 +60,7 @@ ControllerOutput TwitchAI::Start(PublicTankInfo * tank_info)
 
 ControllerOutput TwitchAI::ExitUp(PublicTankInfo * tank_info)
 {
-    if (tank_info->y < -Outside)
+    if (tank_info->y < -OutsideBase)
     { /* Some point outside the base. */
         this->time_to_change = 0;
         this->mode = TwitchMode::Twitch;
@@ -69,7 +72,7 @@ ControllerOutput TwitchAI::ExitUp(PublicTankInfo * tank_info)
 
 ControllerOutput TwitchAI::ExitDown(PublicTankInfo * tank_info)
 {
-    if (tank_info->y > Outside)
+    if (tank_info->y > OutsideBase)
     {
         this->time_to_change = 0;
         this->mode = TwitchMode::Twitch;
@@ -104,7 +107,7 @@ ControllerOutput TwitchAI::Twitch(PublicTankInfo * tank_info)
 ControllerOutput TwitchAI::Return(PublicTankInfo * tank_info)
 {
     /* Seek to the closest entrance: */
-    int targety = (tank_info->y < 0) ? -Outside : Outside;
+    int targety = (tank_info->y < 0) ? -OutsideBase : OutsideBase;
 
     /* Check to see if we've gotten there: */
     if ((tank_info->x == 0 && tank_info->y == targety) ||
@@ -115,7 +118,7 @@ ControllerOutput TwitchAI::Return(PublicTankInfo * tank_info)
     }
 
     /* If we are close to the base, we need to navigate around the walls: */
-    if (abs(tank_info->x) <= Outside && abs(tank_info->y) < Outside)
+    if (abs(tank_info->x) <= OutsideBase && abs(tank_info->y) < OutsideBase)
     {
         return {Speed{0, (tank_info->y < targety) * 2 - 1}};
     }

@@ -1,21 +1,16 @@
-#include <cstdlib>
-
+#include "game.h"
+#include "bitmaps.h"
 #include "exceptions.h"
-#include <aitwitch.h>
-#include <bitmaps.h>
-#include <chrono>
-
-#include <game.h>
-#include <gamelib.h>
-#include <level.h>
-#include <levelgen.h>
-#include <projectile.h>
-#include <screen.h>
-#include <tank_list.h>
-#include <tweak.h>
-#include <world.h>
-
 #include "game_system.h"
+#include "gamelib.h"
+#include "level.h"
+#include "levelgen.h"
+#include "screen.h"
+#include "tank_list.h"
+#include "tweak.h"
+#include "twitch_ai.h"
+#include "world.h"
+#include <chrono>
 
 /*----------------------------------------------------------------------------*
  * This bit is used to initialize various GUIs:                               *

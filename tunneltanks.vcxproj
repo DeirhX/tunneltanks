@@ -30,7 +30,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\aitwitch.cpp" />
+    <ClCompile Include="src\twitch_ai.cpp" />
     <ClCompile Include="src\bitmaps.cpp" />
     <ClCompile Include="src\bitmap_loader.cpp" />
     <ClCompile Include="src\collision_solver.cpp" />
@@ -78,6 +78,7 @@
     <ClCompile Include="src\shape_renderer.cpp" />
     <ClCompile Include="src\sprite.cpp" />
     <ClCompile Include="src\sprite_list.cpp" />
+    <ClCompile Include="src\swarm_ai.cpp" />
     <ClCompile Include="src\tank.cpp" />
     <ClCompile Include="src\tank_list.cpp" />
     <ClCompile Include="src\tank_sprites.cpp" />
@@ -105,7 +106,7 @@
     <ClInclude Include="src\link.h" />
     <ClInclude Include="src\machine.h" />
     <ClInclude Include="src\machine_list.h" />
-    <ClInclude Include="src\aitwitch.h" />
+    <ClInclude Include="src\twitch_ai.h" />
     <ClInclude Include="src\color_palette.h" />
     <ClInclude Include="src\containers.h" />
     <ClInclude Include="src\containers_queue.h" />
@@ -140,6 +141,7 @@
     <ClInclude Include="src\screen.h" />
     <ClInclude Include="src\sprite.h" />
     <ClInclude Include="src\sprite_list.h" />
+    <ClInclude Include="src\swarm_ai.h" />
     <ClInclude Include="src\tank.h" />
     <ClInclude Include="src\tank_list.h" />
     <ClInclude Include="src\tank_sprites.h" />

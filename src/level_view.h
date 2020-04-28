@@ -1,29 +1,28 @@
 #pragma once
 #include "types.h"
 
-
 struct LevelView
 {
-	constexpr static int Width = 159;
-	constexpr static int Height = 99;
+    constexpr static int Width = 159;
+    constexpr static int Height = 99;
 
-	class Tank* tank;
-	class Level* lvl;
-public:
-	enum class QueryResult {
-		Open,
-		Collide,
-		OutOfBounds,
-	};
+    class Tank * tank;
+    class Level * lvl;
 
-public:
-	LevelView(Tank* tank, Level* lvl) : tank(tank), lvl(lvl) {}
+  public:
+    enum class QueryResult
+    {
+        Open,
+        Collide,
+        OutOfBounds,
+    };
 
-	/* Some quick queries for use in AIs: */
-	QueryResult QueryPoint(Offset offset);
-	QueryResult QueryCircle( Offset offset);
+  public:
+    LevelView(Tank * tank, Level * lvl) : tank(tank), lvl(lvl) {}
+
+    /* Some quick queries for use in AIs: */
+    QueryResult QueryPoint(Offset offset);
+    QueryResult QueryCircle(Offset offset);
 };
 
 //#define LSP_LOOKUP(lsp,x,y) ((lsp).data[(y)*LS_WIDTH+(x)])
-
-
