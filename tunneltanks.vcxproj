@@ -30,6 +30,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\controllable.cpp" />
     <ClCompile Include="src\twitch_ai.cpp" />
     <ClCompile Include="src\bitmaps.cpp" />
     <ClCompile Include="src\bitmap_loader.cpp" />
@@ -89,6 +90,7 @@
     <ClCompile Include="src\mymath.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ai_controller.h" />
     <ClInclude Include="src\bitmap_loader.h" />
     <ClInclude Include="src\collision_solver.h" />
     <ClInclude Include="src\core_concepts.h" />
@@ -106,6 +108,7 @@
     <ClInclude Include="src\link.h" />
     <ClInclude Include="src\machine.h" />
     <ClInclude Include="src\machine_list.h" />
+    <ClInclude Include="src\controllable.h" />
     <ClInclude Include="src\twitch_ai.h" />
     <ClInclude Include="src\color_palette.h" />
     <ClInclude Include="src\containers.h" />

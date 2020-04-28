@@ -17,9 +17,8 @@
  */
 
 Tank::Tank(TankColor color, Level * level, ProjectileList * projectile_list, TankBase * tank_base)
-    : position(tank_base->GetPosition()), color(color), tank_base(tank_base),
-      turret(this, Palette.GetTank(color)[2]), materializer(this, &this->resources),
-      link_source(GetWorld(), position, LinkPointType::Tank)
+    : Base(tank_base->GetPosition(), tweak::tank::DefaultTankReactor, tweak::tank::ResourcesMax, level), color(color), tank_base(tank_base),
+      turret(this, Palette.GetTank(color)[2]), materializer(this, &this->GetResources())
 {
     // this->cached_slice = std::make_shared<LevelView>(this, lvl);
 
@@ -27,9 +26,7 @@ Tank::Tank(TankColor color, Level * level, ProjectileList * projectile_list, Tan
     auto dir = Direction{Random.Int(0, 7)};
     if (dir >= 4)
         dir.Get()++;
-
     this->direction = dir; // DirectionF{ dir };
-    this->level = level;
     this->projectile_list = projectile_list;
 
     Spawn();
@@ -78,7 +75,7 @@ void Tank::Advance(World & world)
         this->materializer.Advance(this->GetPosition());
 
         /* Move, dig and solve collisions with other tanks */
-        this->HandleMove(*world.GetTankList());
+        this->HandleMove();
         this->link_source.UpdatePosition(this->GetPosition());
         this->CollectItems();
 
@@ -118,7 +115,7 @@ void Tank::AdvanceDeath(World & world)
 
 /* We don't use the Tank structure in this function, since we are checking the
  * tank's hypothetical position... ie: IF we were here, would we collide? */
-CollisionType Tank::GetCollision(Direction dir, Position position_, TankList * tank_list)
+CollisionType Tank::GetCollision(Direction dir, Position position_)
 {
     CollisionType result = CollisionType::None;
 
@@ -159,19 +156,19 @@ CollisionType Tank::GetCollision(Direction dir, Position position_, TankList * t
             return !is_blocking_collision;
     }, position_, dir);
 
-    if (result == CollisionType::Blocked || tank_list->CheckForCollision(*this, position, dir))
+    if (result == CollisionType::Blocked || GetWorld()->GetTankList()->CheckForCollision(*this, position, dir))
         return CollisionType::Blocked;
 
     return result;
 }
 
-void Tank::HandleMove(TankList & tank_list)
+void Tank::HandleMove()
 {
     /* Calculate the direction: */
     if (this->speed.x != 0 || this->speed.y != 0)
     {
         Direction dir = Direction::FromSpeed(this->speed);
-        CollisionType collision = this->GetCollision(dir, this->position + 1 * this->speed, &tank_list);
+        CollisionType collision = this->GetCollision(dir, this->position + 1 * this->speed);
         /* Now, is there room to move forward in that direction? */
         if (collision != CollisionType::None)
         {
@@ -188,7 +185,7 @@ void Tank::HandleMove(TankList & tank_list)
             }
 
             /* Now if we used a torch, test the collision again - we might have failed to dig some of the minerals */
-            collision = this->GetCollision(dir, this->position + 1 * this->speed, &tank_list);
+            collision = this->GetCollision(dir, this->position + 1 * this->speed);
             if (collision != CollisionType::None)
                 return;
         }
@@ -287,9 +284,4 @@ void Tank::ApplyControllerOutput(ControllerOutput controls)
             this->crosshair->SetRelativeDirection(this, controls.crosshair_direction);
         }
     }
-}
-
-bool Tank::HealthOrEnergyEmpty() const
-{
-    return this->reactor.GetHealth() <= 0 || this->reactor.GetEnergy() <= 0;
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ai_controller.h"
 #include "controller.h"
 
 /* Our first AI: Twitch! (note: the 'I' in 'AI' is being used VERY loosely) */
@@ -15,9 +16,9 @@ enum class TwitchMode
     Recharge      /* Seek to middle of base, and wait til fully healed. */
 };
 
-class TwitchAI
+class TwitchAI final : public AiAlgorithm
 {
-    class TwitchController * controller;
+    class AiController<TwitchAI> * controller;
 
     /* The "ai" state */
     Speed spd = {};
@@ -26,9 +27,10 @@ class TwitchAI
     TwitchMode mode = TwitchMode::Start;
 
   public:
-    TwitchAI(TwitchController & controller_) : controller(&controller_) {}
+    TwitchAI(AiController<TwitchAI> & controller_) : controller(&controller_) {}
 
-    ControllerOutput AdvanceStep(PublicTankInfo * info);
+
+    ControllerOutput AdvanceStep(PublicTankInfo * info) override;
 
   private:
     ControllerOutput Return(PublicTankInfo * info);
@@ -39,14 +41,3 @@ class TwitchAI
     ControllerOutput Start(PublicTankInfo * info);
 };
 
-class TwitchController : public Controller
-{
-  private:
-    TwitchAI the_ai;
-
-  public:
-    TwitchController() : the_ai(*this) {}
-    ControllerOutput ApplyControls(struct PublicTankInfo * tank_info) override;
-
-    bool IsPlayer() override { return false; }
-};

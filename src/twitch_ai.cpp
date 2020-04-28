@@ -144,8 +144,3 @@ ControllerOutput TwitchAI::Recharge(PublicTankInfo * tank_info)
         tank_info->x ? ((tank_info->x < 0) * 2 - 1) : 0,
         tank_info->y ? ((tank_info->y < 0) * 2 - 1) : 0}};
 }
-
-ControllerOutput TwitchController::ApplyControls(struct PublicTankInfo * tank_info)
-{
-    return this->the_ai.AdvanceStep(tank_info);
-}

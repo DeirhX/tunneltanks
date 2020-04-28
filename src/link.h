@@ -14,7 +14,7 @@ enum class LinkPointType
     Base,
     Machine, /* Placed machine */
     Transit, /* Not yet placed */
-    Tank,    /* Tank being charged */
+    Controllable, /* Tank being charged */
 };
 
 struct NeighborLinkPoint

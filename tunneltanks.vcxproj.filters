@@ -180,7 +180,6 @@
     <ClCompile Include="src\sprite_list.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
-    <ClCompile Include="src\item_list_adaptor.cpp" />
     <ClCompile Include="src\game.cpp">
       <Filter>src\system</Filter>
     </ClCompile>
@@ -189,6 +188,12 @@
     </ClCompile>
     <ClCompile Include="src\twitch_ai.cpp">
       <Filter>src\ai</Filter>
+    </ClCompile>
+    <ClCompile Include="src\item_list_adaptor.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
+    <ClCompile Include="src\controllable.cpp">
+      <Filter>src\game_entity</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -395,6 +400,12 @@
     </ClInclude>
     <ClInclude Include="src\twitch_ai.h">
       <Filter>src\ai</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ai_controller.h">
+      <Filter>src\ai</Filter>
+    </ClInclude>
+    <ClInclude Include="src\controllable.h">
+      <Filter>src\game_entity</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

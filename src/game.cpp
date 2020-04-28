@@ -1,4 +1,5 @@
 #include "game.h"
+#include "ai_controller.h"
 #include "bitmaps.h"
 #include "exceptions.h"
 #include "game_system.h"
@@ -21,14 +22,12 @@ void GameMode::SpawnAIOpponents(TankList * tank_list, Level * level, TankColor s
     for (TankColor i = starting_id; (i < tweak::world::MaxPlayers) && (i - starting_id < spawn_amount); i++)
     {
         Tank * tank = tank_list->AddTank(i, level->GetSpawn(i));
-        tank->SetController(std::make_shared<TwitchController>());
+        tank->SetController(std::make_shared<AiController<TwitchAI>>());
     }
 }
 
 void GameMode::AssumeAIControl(Tank * tank)
-{
-    tank->SetController(std::make_shared<TwitchController>());
-}
+{ tank->SetController(std::make_shared<AiController<TwitchAI>>()); }
 
 void GameMode::TearDown()
 {

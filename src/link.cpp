@@ -394,13 +394,13 @@ void LinkMap::SolveLinks()
         return possible_link.point->GetType() == LinkPointType::Machine;
     };
     auto connect_with_live_tanks = [](const LinkPoint & from, const NeighborLinkPoint & possible_link) -> bool {
-        return possible_link.point->GetType() == LinkPointType::Tank &&
+        return possible_link.point->GetType() == LinkPointType::Controllable &&
                possible_link.distance <= tweak::tank::MaximumAbsorbEnergyDistance && 
                from.IsPowered() &&
                !Link::IsConnectionBlocked(from.GetPosition(), possible_link.point->GetPosition());
     };
     auto connect_with_blocked_tanks = [](const LinkPoint &, const NeighborLinkPoint & possible_link) -> bool {
-        return possible_link.point->GetType() == LinkPointType::Tank &&
+        return possible_link.point->GetType() == LinkPointType::Controllable &&
                possible_link.distance <= tweak::tank::MaximumAbsorbEnergyDistance;
     };
 

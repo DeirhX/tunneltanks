@@ -1,7 +1,9 @@
 ﻿#pragma once
 
-class SwarmAI
+#include "ai_controller.h"
+
+class SwarmAI : public AiAlgorithm
 {
 public:
-    
+    ControllerOutput AdvanceStep(PublicTankInfo * info) override;
 };
