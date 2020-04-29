@@ -3,9 +3,9 @@
 #include "tank.h"
 #include <cstdlib>
 
-LevelView::QueryResult LevelView::QueryPoint(Offset offset)
+LevelView::QueryResult LevelView::QueryPoint(Offset offset) const
 {
-    Position pos = tank->GetPosition();
+    Position pos = movable->GetPosition();
 
     if (abs(offset.x) >= Width / 2 || abs(offset.y) >= Height / 2)
         return QueryResult::OutOfBounds;
@@ -16,7 +16,7 @@ LevelView::QueryResult LevelView::QueryPoint(Offset offset)
     return QueryResult::Open;
 }
 
-LevelView::QueryResult LevelView::QueryCircle(Offset offset)
+LevelView::QueryResult LevelView::QueryCircle(Offset offset) const
 {
     for (int dy = offset.y - 3; dy <= offset.y + 3; dy++)
         for (int dx = offset.x - 3; dx <= offset.x + 3; dx++)

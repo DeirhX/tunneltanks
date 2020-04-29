@@ -20,7 +20,7 @@ KeyboardController::KeyboardController(SDL_Scancode left, SDL_Scancode right, SD
     gamelib_print("Using Keyboard #0:\n");
 }
 
-ControllerOutput KeyboardController::ApplyControls(PublicTankInfo *)
+ControllerOutput KeyboardController::ApplyControls(const PublicTankInfo &)
 {
     int num_keys;
     const Uint8 * keys = SDL_GetKeyboardState(&num_keys);
@@ -31,7 +31,7 @@ ControllerOutput KeyboardController::ApplyControls(PublicTankInfo *)
                             .is_shooting_primary = keys[this->shoot] != 0};
 }
 
-ControllerOutput KeyboardWithMouseController::ApplyControls(PublicTankInfo * tankPublic)
+ControllerOutput KeyboardWithMouseController::ApplyControls(const PublicTankInfo & tankPublic)
 {
     auto output = Base::ApplyControls(tankPublic);
     int x, y;
@@ -123,7 +123,7 @@ GamePadController::GamePadController(int joy_index)
 
 GamePadController::~GamePadController() { SDL_JoystickClose(this->joystick); }
 
-ControllerOutput GamePadController::ApplyControls(PublicTankInfo *)
+ControllerOutput GamePadController::ApplyControls(const PublicTankInfo &)
 {
     /* Where is this joystick pointing? Corresponds to left analog stick. Value range is -32K to +32K */
     int lx = this->mapping.MoveHorizontalAxis.CurrentAxisValue(this->joystick);

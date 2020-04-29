@@ -5,5 +5,5 @@
 class SwarmAI : public AiAlgorithm
 {
 public:
-    ControllerOutput AdvanceStep(PublicTankInfo * info) override;
+    ControllerOutput AdvanceStep(const PublicTankInfo & info) override;
 };

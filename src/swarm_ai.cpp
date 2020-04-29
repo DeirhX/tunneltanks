@@ -1,4 +1,3 @@
 ﻿#include "swarm_ai.h"
 
-ControllerOutput SwarmAI::AdvanceStep(PublicTankInfo * info)
-{ return {}; }
+ControllerOutput SwarmAI::AdvanceStep(const PublicTankInfo & info) { return {}; }

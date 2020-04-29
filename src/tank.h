@@ -20,8 +20,10 @@ struct PublicTankInfo
 {
     HealthAmount health;
     EnergyAmount energy;
-    int x, y; /* relative from home base */
+    Offset relative_pos; /* relative from home base */
     LevelView level_view;
+
+    PublicTankInfo(const Controllable & controllable, Position position_relative_to);
 };
 
 namespace tank

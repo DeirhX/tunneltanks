@@ -1,4 +1,5 @@
 #pragma once
+#include "controllable.h"
 #include "types.h"
 
 struct LevelView
@@ -6,8 +7,8 @@ struct LevelView
     constexpr static int Width = 159;
     constexpr static int Height = 99;
 
-    class Tank * tank;
-    class Level * lvl;
+    const class Controllable * movable;
+    const class Level * lvl;
 
   public:
     enum class QueryResult
@@ -18,11 +19,11 @@ struct LevelView
     };
 
   public:
-    LevelView(Tank * tank, Level * lvl) : tank(tank), lvl(lvl) {}
+    LevelView(const Controllable * movable, const Level * lvl) : movable(movable), lvl(lvl) {}
 
     /* Some quick queries for use in AIs: */
-    QueryResult QueryPoint(Offset offset);
-    QueryResult QueryCircle(Offset offset);
+    QueryResult QueryPoint(Offset offset) const;
+    QueryResult QueryCircle(Offset offset) const;
 };
 
 //#define LSP_LOOKUP(lsp,x,y) ((lsp).data[(y)*LS_WIDTH+(x)])

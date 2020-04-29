@@ -1,6 +1,5 @@
 ﻿#include "swarmer_creature.h"
 
-
 #include "shape_renderer.h"
 #include "world.h"
 
@@ -8,6 +7,21 @@ Swarmer::Swarmer(Position position_, Level * level)
     : Base(position_, tweak::tank::DefaultTankReactor, tweak::tank::ResourcesMax, level)
 {
     
+}
+
+void Swarmer::Advance(World & world)
+{
+    if (this->HealthOrEnergyEmpty())
+    {
+        if (!this->died)
+            Die();
+        return;
+    }
+
+    if (this->controller)
+    {
+        this->ApplyControllerOutput(this->controller->ApplyControls(PublicTankInfo{*this, {}}));
+    }
 }
 
 CollisionType Swarmer::TryCollide(Direction at_rotation, Position at_position)
@@ -50,7 +64,7 @@ CollisionType Swarmer::TryCollide(Direction at_rotation, Position at_position)
 
 void Swarmer::ApplyControllerOutput(ControllerOutput controls)
 {
-
+    this->speed = controls.speed;
 }
 
 void Swarmer::Die()
@@ -59,4 +73,7 @@ void Swarmer::Die()
         ExplosionDesc::AllDirections(this->position, tweak::explosion::death::ShrapnelCount,
                                      tweak::explosion::death::Speed, tweak::explosion::death::Frames)
             .Explode<Shrapnel>(this->level));
+    this->died = true;
+
+    Invalidate();
 }

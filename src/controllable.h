@@ -52,6 +52,7 @@ class Controllable : public Invalidable
 
     [[nodiscard]] bool HealthOrEnergyEmpty() const;
 
+    virtual void Advance(World & world) = 0;
     virtual CollisionType TryCollide(Direction rotation, Position position) = 0;
     virtual void ApplyControllerOutput(ControllerOutput controls) = 0;
     virtual void Die() = 0;

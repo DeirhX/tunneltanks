@@ -1,12 +1,14 @@
 ﻿#pragma once
 #include "controller.h"
 
+struct PublicTankInfo;
+
 class AiAlgorithm
 {
 public:
     ~AiAlgorithm() = default;
 
-    virtual ControllerOutput AdvanceStep(PublicTankInfo * info) = 0;
+    virtual ControllerOutput AdvanceStep(const PublicTankInfo & info) = 0;
 };
 
 
@@ -18,7 +20,7 @@ class AiController : public Controller
 
   public:
     AiController() : ai_engine(*this) {}
-    ControllerOutput ApplyControls(struct PublicTankInfo * tank_info) override
+    ControllerOutput ApplyControls(const PublicTankInfo & tank_info) override
     {
         return this->ai_engine.AdvanceStep(tank_info);
     }

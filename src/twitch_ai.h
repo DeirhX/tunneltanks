@@ -30,14 +30,14 @@ class TwitchAI final : public AiAlgorithm
     TwitchAI(AiController<TwitchAI> & controller_) : controller(&controller_) {}
 
 
-    ControllerOutput AdvanceStep(PublicTankInfo * info) override;
+    ControllerOutput AdvanceStep(const PublicTankInfo & info) override;
 
   private:
-    ControllerOutput Return(PublicTankInfo * info);
-    ControllerOutput Recharge(PublicTankInfo * info);
-    ControllerOutput Twitch(PublicTankInfo * info);
-    ControllerOutput ExitDown(PublicTankInfo * info);
-    ControllerOutput ExitUp(PublicTankInfo * info);
-    ControllerOutput Start(PublicTankInfo * info);
+    ControllerOutput Return(const PublicTankInfo & info);
+    ControllerOutput Recharge(const PublicTankInfo & info);
+    ControllerOutput Twitch(const PublicTankInfo & info);
+    ControllerOutput ExitDown(const PublicTankInfo & info);
+    ControllerOutput ExitUp(const PublicTankInfo & info);
+    ControllerOutput Start(const PublicTankInfo & info);
 };
 

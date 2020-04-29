@@ -2,13 +2,15 @@
 #include "controller.h"
 #include <SDL.h>
 
+struct PublicTankInfo;
+
 class KeyboardController : public Controller
 {
     SDL_Scancode left, right, up, down, shoot;
 
   public:
     KeyboardController(SDL_Scancode left, SDL_Scancode right, SDL_Scancode up, SDL_Scancode down, SDL_Scancode shoot);
-    ControllerOutput ApplyControls(PublicTankInfo * tankPublic) override;
+    ControllerOutput ApplyControls(const PublicTankInfo & tankPublic) override;
 
     bool IsPlayer() override { return true; }
 };
@@ -22,7 +24,7 @@ class KeyboardWithMouseController : public KeyboardController
                                 SDL_Scancode shoot)
         : KeyboardController(left, right, up, down, shoot){};
 
-    ControllerOutput ApplyControls(PublicTankInfo * tankPublic) override;
+    ControllerOutput ApplyControls(const PublicTankInfo & tankPublic) override;
 };
 
 /* The SDL-based keyboard controller: */
@@ -116,7 +118,7 @@ class GamePadController : public Controller
   public:
     GamePadController(int joy_index);
     ~GamePadController();
-    ControllerOutput ApplyControls(PublicTankInfo * tankPublic) override;
+    ControllerOutput ApplyControls(const PublicTankInfo & tankPublic) override;
 
     bool IsPlayer() override { return true; }
 };

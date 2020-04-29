@@ -16,6 +16,14 @@
  * TANK
  */
 
+PublicTankInfo::PublicTankInfo(const Controllable & controllable, Position position_relative_to)
+    : health(controllable.GetHealth()), energy(controllable.GetEnergy()),
+      relative_pos{static_cast<int>(controllable.GetPosition().x - position_relative_to.x),
+                   static_cast<int>(controllable.GetPosition().y - position_relative_to.y)},
+      level_view(LevelView{&controllable, controllable.GetLevel()})
+{
+}
+
 Tank::Tank(TankColor color, Level * level, TankBase * tank_base)
     : Base(tank_base->GetPosition(), tweak::tank::DefaultTankReactor, tweak::tank::ResourcesMax, level), color(color), tank_base(tank_base),
       turret(this, Palette.GetTank(color)[2]), materializer(this, &this->GetResources())
@@ -55,13 +63,9 @@ void Tank::Advance(World & world)
         /* Get input from controller and figure what we *want* to do and do it: rotate turret, set desired direction and speed  */
         if (this->controller)
         {
-            Vector spawn_pos = this->level->GetSpawn(this->color)->GetPosition();
-            PublicTankInfo controls = {.health = this->GetHealth(),
-                                       .energy = this->GetEnergy(),
-                                       .x = static_cast<int>(this->position.x - spawn_pos.x),
-                                       .y = static_cast<int>(this->position.y - spawn_pos.y),
-                                       .level_view = LevelView(this, this->level)};
-            this->ApplyControllerOutput(this->controller->ApplyControls(&controls));
+            Position spawn_pos = this->level->GetSpawn(this->color)->GetPosition();
+            auto controls = PublicTankInfo{*this, spawn_pos};
+            this->ApplyControllerOutput(this->controller->ApplyControls(controls));
         }
 
         /* Rotate the turret temporarily back directly to match our heading direction */
