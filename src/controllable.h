@@ -54,6 +54,7 @@ class Controllable : public Invalidable
 
     virtual CollisionType TryCollide(Direction rotation, Position position) = 0;
     virtual void ApplyControllerOutput(ControllerOutput controls) = 0;
+    virtual void Die() = 0;
 
     bool HandleMove(DirectionF torch_heading, bool torch_use);
   protected:

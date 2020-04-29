@@ -310,6 +310,7 @@ struct BoundingBox : RectBase<Position>
         //       tested_position.y >= this->Top() + entity_origin.y &&
         //       tested_position.y <= this->Bottom() + entity_origin.y;
     }
+    Rect GetRect(Position tested_center) const { return Rect{GetTopLeft(tested_center), this->size}; }
 };
 
 //constexpr bool operator==(const NativeRect & left, const NativeRect & right) { return static_cast<Rect>(left) == static_cast<Rect>(right); }

@@ -28,19 +28,20 @@ class ShapeInspector
 {
   public:
     static Position GetRandomPointInCircle(Position center, int radius);
-    template <typename InspectFunc>
-    requires concepts::BasicVisitor<InspectFunc, Position>
+    template <BasicVisitor<Position> InspectFunc>
     static std::optional<Position> FromRandomPointInCircleToCenter(Position center, int radius,
                                                                    InspectFunc inspect_func);
-    template <typename SurfaceType, typename InspectFunc>
+    template <typename SurfaceType, BasicVisitor<Position> InspectFunc>
     static bool InspectRectangle(const SurfaceType & container, Rect rect, InspectFunc inspect_func);
+    template <BasicVisitor<Position> InspectFunc>
+    static bool InspectRectangle(Rect rect, InspectFunc inspect_func);
 
 };
 
 /* InspectFunc (Position position) -> bool
  *  Return false to continue inspection, true to terminate */
-template <typename InspectFunc>
-requires concepts::BasicVisitor<InspectFunc, Position>
+template <BasicVisitor<Position> InspectFunc>
+//requires concepts::BasicVisitor<InspectFunc, Position>
 std::optional<Position> ShapeInspector::FromRandomPointInCircleToCenter(Position center, int radius,
                                                                         InspectFunc inspect_func)
 {
@@ -70,7 +71,7 @@ std::optional<Position> ShapeInspector::FromRandomPointInCircleToCenter(Position
  *   stops on first failed inspection.
  * SurfaceType - a 2D container indexed by Position
  * InspectFunc - return true to continue inspection, false to terminate */
-template <typename SurfaceType, typename InspectFunc>
+template <typename SurfaceType, BasicVisitor<Position> InspectFunc>
 bool ShapeInspector::InspectRectangle(const SurfaceType & container, Rect rect, InspectFunc inspect_func)
 {
     for (int x = rect.Left(); x <= rect.Right(); ++x)
@@ -86,3 +87,18 @@ bool ShapeInspector::InspectRectangle(const SurfaceType & container, Rect rect, 
     return true;
 }
 
+template <BasicVisitor<Position> InspectFunc>
+bool ShapeInspector::InspectRectangle(Rect rect, InspectFunc inspect_func)
+{
+    for (int x = rect.Left(); x <= rect.Right(); ++x)
+        for (int y = rect.Top(); y <= rect.Bottom(); ++y)
+        {
+            /* Are we inside edges?  */
+            if (x != rect.Left() && x != rect.Right() && y != rect.Top() && y != rect.Bottom())
+                continue;
+            Position pos = {x, y};
+            if (!inspect_func(pos))
+                return false;
+        }
+    return true;
+}

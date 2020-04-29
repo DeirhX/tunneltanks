@@ -26,8 +26,7 @@ struct PublicTankInfo
 
 namespace tank
 {
-template <typename PerPixelFunc>
-requires concepts::BasicVisitor<PerPixelFunc, Position>
+template <BasicVisitor<Position> PerPixelFunc>
 void ForEachTankPixel(PerPixelFunc per_pixel_func, Position position, Direction direction);
 } // namespace tank
 
@@ -60,14 +59,13 @@ class Tank : public Controllable
     void Advance(World & world); /* Advance world-step */
 
     void Spawn();
-    void Die();
+    void Die() override;
 
     void ApplyControllerOutput(ControllerOutput controls) override;
 
     CollisionType TryCollide(Direction rotation, Position position) override;
 
-    template <typename PerPixelFunc> /* bool per_pixel_func(Position world_position). Return false to end iteration. */
-    requires concepts::BasicVisitor<PerPixelFunc, Position>
+    template <BasicVisitor<Position> PerPixelFunc> /* bool per_pixel_func(Position world_position). Return false to end iteration. */
     void ForEachTankPixel(PerPixelFunc per_pixel_func)
     {
         tank::ForEachTankPixel(per_pixel_func, this->GetPosition(), this->direction);
@@ -86,8 +84,7 @@ class Tank : public Controllable
 namespace tank
 {
 /* return false to stop enumeration */
-template <typename PerPixelFunc>
-requires concepts::BasicVisitor<PerPixelFunc, Position>
+template <BasicVisitor<Position> PerPixelFunc>
 void ForEachTankPixel(PerPixelFunc per_pixel_func, Position position, Direction direction)
 {
     Offset offset;

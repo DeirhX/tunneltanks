@@ -22,19 +22,17 @@ class CollisionSolver
     MachineTemplate * TestMachineTemplate(Position world_position) const;
 
 
-    template <typename TankCollideFunc, typename MachineCollideFunc, typename TerrainCollideFunc>
-    requires concepts::BasicVisitor<TankCollideFunc, Tank &> &&
-             concepts::BasicVisitor<MachineCollideFunc, Machine &> &&
-             concepts::BasicVisitor<TerrainCollideFunc, LevelPixel &>
+    template <BasicVisitor<Tank &> TankCollideFunc,
+              BasicVisitor<Machine &> MachineCollideFunc,
+              BasicVisitor<LevelPixel &> TerrainCollideFunc>
     bool TestCollide(Position world_position, TankCollideFunc tank_collide, MachineCollideFunc machine_collide,
                  TerrainCollideFunc terrain_collide) const;
 };
 
 /* Return true from collision functions if you registered the collision */
-template <typename TankCollideFunc, typename MachineCollideFunc, typename TerrainCollideFunc>
-    requires concepts::BasicVisitor<TankCollideFunc, Tank &> && 
-             concepts::BasicVisitor<MachineCollideFunc, Machine &> &&
-             concepts::BasicVisitor<TerrainCollideFunc, LevelPixel &>
+template <BasicVisitor<Tank &> TankCollideFunc,
+          BasicVisitor<Machine &> MachineCollideFunc,
+          BasicVisitor<LevelPixel &> TerrainCollideFunc>
 bool CollisionSolver::TestCollide(Position world_position, TankCollideFunc tank_collide,
                               MachineCollideFunc machine_collide, TerrainCollideFunc terrain_collide) const
 {
