@@ -5,6 +5,8 @@ class Swarmer : Controllable
 {
     using Base = Controllable;
 
+    float speed_mult = 1.0;
+
     bool died = false;
     BoundingBox bounding_box = {Size{5, 5}};
 

@@ -110,6 +110,13 @@ constexpr Position & operator+=(Position & p, const Offset & o)
     p.y += o.y;
     return p;
 }
+constexpr Position & operator+=(Position & p, const Speed & o)
+{
+    p.x += o.x;
+    p.y += o.y;
+    return p;
+}
+
 constexpr ScreenPosition & operator+=(ScreenPosition & p, Offset o) noexcept
 {
     p.x += o.x;

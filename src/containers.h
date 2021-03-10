@@ -235,7 +235,8 @@ class MultiTypeContainer
     template <typename TValue>
     TValue & Add(TValue && item)
     {
-        return std::get<ValueContainer<TValue>>(this->items).Add(std::forward<TValue>(item));
+        //return item;
+        return std::get<ValueContainer<std::remove_reference_t<TValue>>>(this->items).Add(std::forward<TValue>(item));
     }
 
     /* Merge two containers via copy */

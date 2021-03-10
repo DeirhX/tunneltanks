@@ -16,13 +16,13 @@ class ProjectileList
     template <typename TProjectile>
     TProjectile & Add(TProjectile && projectile)
     {
-        return this->newly_created_items.Add(std::move(projectile));
+        return this->newly_created_items.Add(std::forward<TProjectile>(projectile));
     }
     template <typename TProjectile>
     void Add(std::vector<TProjectile> && array)
     {
-        for (auto & projectile : array)
-            this->Add(projectile);
+        for (auto && projectile : array)
+            this->Add(std::move(projectile)); /* We're evicting this temporary array */
     }
 
     void Remove(Projectile & projectile) { projectile.Invalidate(); }

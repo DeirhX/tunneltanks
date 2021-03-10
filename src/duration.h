@@ -32,6 +32,7 @@ class Timer
     duration_t interval;
     bool auto_reset = false;
     bool is_running = false;
+
   public:
     Timer(duration_t timer_cooldown, bool auto_reset) : cooldown(timer_cooldown), interval(timer_cooldown), auto_reset(auto_reset), is_running(auto_reset) {}
 

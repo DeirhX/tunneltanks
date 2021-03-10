@@ -168,7 +168,6 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include=".clang-format" />
-    <None Include="src\tweak.clang-format" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Debugging.natvis" />
@@ -188,7 +187,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9DD4DF14-B88C-370B-8C6A-BF39F7125DBF}</ProjectGuid>
-    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
     <Keyword>Win32Proj</Keyword>
     <Platform>x64</Platform>
     <ProjectName>tunneltanks</ProjectName>
@@ -201,7 +200,7 @@
     <PlatformToolset>v142</PlatformToolset>
     <UseDebugLibraries>true</UseDebugLibraries>
     <SpectreMitigation>false</SpectreMitigation>
-    <EnableUnitySupport>true</EnableUnitySupport>
+    <EnableUnitySupport>false</EnableUnitySupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>

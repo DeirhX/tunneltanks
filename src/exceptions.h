@@ -10,7 +10,7 @@ class GameException : public std::runtime_error
 class GameInitException : public GameException
 {
   public:
-    const char* error_string;
+    const char * error_string;
 
     GameInitException(const char * message, const char * error_string = nullptr)
         : GameException(message), error_string(error_string)

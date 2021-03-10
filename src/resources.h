@@ -89,7 +89,7 @@ struct TwoResourceAmount
     FirstResourceType first = {};
     SecondResourceType second = {};
 
-    TwoResourceAmount() = default;
+    constexpr TwoResourceAmount() = default;
     constexpr TwoResourceAmount(FirstResourceType first_) : first(first_) {}
     constexpr TwoResourceAmount(SecondResourceType second_) : second(second_) {}
     constexpr TwoResourceAmount(FirstResourceType first_, SecondResourceType second_) : first(first_), second(second_) {}

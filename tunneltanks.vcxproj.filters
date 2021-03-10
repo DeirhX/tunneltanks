@@ -417,7 +417,6 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include=".clang-format" />
-    <None Include="src\tweak.clang-format" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Debugging.natvis" />

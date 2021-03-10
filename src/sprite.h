@@ -20,6 +20,8 @@ class Sprite : public Invalidable
 
     void SetPosition(Position new_position) { this->position = new_position; }
     [[nodiscard]] Position GetPosition() const { return this->position; }
+
+    //void Visit(auto visitor){ }
 };
 
 /*

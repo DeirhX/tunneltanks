@@ -91,6 +91,7 @@ static const unsigned char default_cdata[] = {
     0x00, 0x00
 };
 
+
 static const unsigned char default_cmask[] = {
     0x40, 0x00,
     0xE0, 0x00,

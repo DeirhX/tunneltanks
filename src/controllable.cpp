@@ -44,7 +44,6 @@ bool Controllable::HandleMove(DirectionF torch_heading, bool torch_use)
 
     /* We're free to move, do it*/
     this->direction = Direction{dir};
-    this->position.x += this->speed.x;
-    this->position.y += this->speed.y;
+    this->position += this->speed;
     return true;
 }

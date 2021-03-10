@@ -64,15 +64,21 @@ CollisionType Swarmer::TryCollide(Direction at_rotation, Position at_position)
 
 void Swarmer::ApplyControllerOutput(ControllerOutput controls)
 {
-    this->speed = controls.speed;
+    Offset offset = static_cast<int>(speed_mult) * controls.speed;
+    Position desired_pos = this->position + offset;
+
+    if (this->TryCollide(Direction::FromSpeed(controls.speed), desired_pos) != CollisionType::Blocked)
+        this->position = desired_pos;
 }
 
 void Swarmer::Die()
 {
+    /*
     GetWorld()->GetProjectileList()->Add(
         ExplosionDesc::AllDirections(this->position, tweak::explosion::death::ShrapnelCount,
                                      tweak::explosion::death::Speed, tweak::explosion::death::Frames)
             .Explode<Shrapnel>(this->level));
+            */
     this->died = true;
 
     Invalidate();
