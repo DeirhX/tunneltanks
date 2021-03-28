@@ -9,6 +9,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDL2", "libs\sdl2\VisualC\S
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDL2main", "libs\sdl2\VisualC\SDLmain\SDLmain.vcxproj", "{DA956FD3-E142-46F2-9DD5-C78BEBB56B7A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nanogui-sdl", "libs\nanogui-sdl\nanogui-sdl.vcxproj", "{4F6C6A44-9847-45E8-9A52-A36797A0DEA9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{FA57757A-D2AA-4063-9E45-BE8D67FE9778}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -55,9 +59,26 @@ Global
 		{DA956FD3-E142-46F2-9DD5-C78BEBB56B7A}.Release|Win32.Build.0 = Release|Win32
 		{DA956FD3-E142-46F2-9DD5-C78BEBB56B7A}.Release|x64.ActiveCfg = Release|x64
 		{DA956FD3-E142-46F2-9DD5-C78BEBB56B7A}.Release|x64.Build.0 = Release|x64
+		{4F6C6A44-9847-45E8-9A52-A36797A0DEA9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4F6C6A44-9847-45E8-9A52-A36797A0DEA9}.Debug|Win32.Build.0 = Debug|Win32
+		{4F6C6A44-9847-45E8-9A52-A36797A0DEA9}.Debug|x64.ActiveCfg = Debug|x64
+		{4F6C6A44-9847-45E8-9A52-A36797A0DEA9}.Debug|x64.Build.0 = Debug|x64
+		{4F6C6A44-9847-45E8-9A52-A36797A0DEA9}.Release Static|Win32.ActiveCfg = Release|Win32
+		{4F6C6A44-9847-45E8-9A52-A36797A0DEA9}.Release Static|Win32.Build.0 = Release|Win32
+		{4F6C6A44-9847-45E8-9A52-A36797A0DEA9}.Release Static|x64.ActiveCfg = Release|x64
+		{4F6C6A44-9847-45E8-9A52-A36797A0DEA9}.Release Static|x64.Build.0 = Release|x64
+		{4F6C6A44-9847-45E8-9A52-A36797A0DEA9}.Release|Win32.ActiveCfg = Release|Win32
+		{4F6C6A44-9847-45E8-9A52-A36797A0DEA9}.Release|Win32.Build.0 = Release|Win32
+		{4F6C6A44-9847-45E8-9A52-A36797A0DEA9}.Release|x64.ActiveCfg = Release|x64
+		{4F6C6A44-9847-45E8-9A52-A36797A0DEA9}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68} = {FA57757A-D2AA-4063-9E45-BE8D67FE9778}
+		{DA956FD3-E142-46F2-9DD5-C78BEBB56B7A} = {FA57757A-D2AA-4063-9E45-BE8D67FE9778}
+		{4F6C6A44-9847-45E8-9A52-A36797A0DEA9} = {FA57757A-D2AA-4063-9E45-BE8D67FE9778}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B7B740AC-4B17-3AFA-873A-6988B36E8A73}

@@ -8,5 +8,6 @@
     <OutDir Condition="'$(ConfigurationType)' != 'StaticLibrary'">$(RootDirectory)build\bin\$(PlatformShortName)\$(Configuration)\</OutDir>
     <IntDir>$(RootDirectory)build\obj\$(PlatformShortName)\$(Configuration)\$(ProjectName)_$(ProjectHash)\</IntDir>
     <ConfigDir>$(RootDirectory)\config\</ConfigDir>
+    <LibraryDir>$(RootDirectory)\libs\</LibraryDir>
   </PropertyGroup>
 </Project>
