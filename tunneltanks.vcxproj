@@ -244,11 +244,27 @@
   <ImportGroup Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="config\Build.Defaults.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release Static|Win32'">
+    <Import Project="config\Build.Defaults.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release Static|x64'">
+    <Import Project="config\Build.Defaults.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="config\Build.Defaults.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="config\Build.Defaults.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="config\Build.Defaults.props" />
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">build\bin\$(PlatformShortName)\$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">build\obj\$(PlatformShortName)\$(Configuration)\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">tunneltanks</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">tunneltanks</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
@@ -257,10 +273,6 @@
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</GenerateManifest>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">build\bin\$(PlatformShortName)\$(Configuration)\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release Static|x64'">build\bin\$(PlatformShortName)\$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">build\obj\$(PlatformShortName)\$(Configuration)\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release Static|x64'">build\obj\$(PlatformShortName)\$(Configuration)\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">tunneltanks</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release Static|x64'">tunneltanks</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">tunneltanks</TargetName>
@@ -279,18 +291,12 @@
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release Static|Win32'">true</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>build\bin\$(PlatformShortName)\$(Configuration)\</OutDir>
-    <IntDir>build\obj\$(PlatformShortName)\$(Configuration)\</IntDir>
     <IncludePath>$(ProjectDir)\libs\sdl2\include\;src\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>build\bin\$(PlatformShortName)\$(Configuration)\</OutDir>
-    <IntDir>build\obj\$(PlatformShortName)\$(Configuration)\</IntDir>
     <IncludePath>$(ProjectDir)\libs\sdl2\include\;src\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Static|Win32'">
-    <OutDir>build\bin\$(PlatformShortName)\$(Configuration)\</OutDir>
-    <IntDir>build\obj\$(PlatformShortName)\$(Configuration)\</IntDir>
     <IncludePath>$(ProjectDir)\libs\sdl2\include\;src\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

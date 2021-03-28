@@ -1,0 +1,9 @@
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Set up Nuget restore path and expected structure -->
+  <PropertyGroup>
+    <SpectreMitigation>false</SpectreMitigation>
+    <Driver_SpectreMitigation>false</Driver_SpectreMitigation>
+    <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
+  </PropertyGroup>
+  <!-- <Import Condition="!$(IncludedModules.Contains(';internal.build_defaults'))" Project="config\Build.Defaults.props" /> -->
+</Project>
