@@ -1,0 +1,4 @@
+[submodule "libs/nanogui"]
+	path = libs/nanogui
+	url = https://github.com/DeirhX/nanogui-sdl2.git
+	branch = master
