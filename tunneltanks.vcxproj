@@ -30,6 +30,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="gui.cpp" />
     <ClCompile Include="src\controllable.cpp" />
     <ClCompile Include="src\swarmer_creature.cpp" />
     <ClCompile Include="src\twitch_ai.cpp" />
@@ -71,7 +72,7 @@
     <ClCompile Include="src\machine_materializer.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\memalloc.cpp" />
-    <ClCompile Include="src\projectile.cpp" />
+    <ClCompile Include="src\projectiles.cpp" />
     <ClCompile Include="src\random.cpp" />
     <ClCompile Include="src\render_surface.cpp" />
     <ClCompile Include="src\resources.cpp" />
@@ -91,6 +92,7 @@
     <ClCompile Include="src\mymath.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="gui.h" />
     <ClInclude Include="src\ai_controller.h" />
     <ClInclude Include="src\bitmap_loader.h" />
     <ClInclude Include="src\collision_solver.h" />
@@ -138,7 +140,7 @@
     <ClInclude Include="src\memalloc.h" />
     <ClInclude Include="src\color.h" />
     <ClInclude Include="src\parallelism.h" />
-    <ClInclude Include="src\projectile.h" />
+    <ClInclude Include="src\projectiles.h" />
     <ClInclude Include="src\projectile_list.h" />
     <ClInclude Include="src\random.h" />
     <ClInclude Include="src\raycaster.h" />

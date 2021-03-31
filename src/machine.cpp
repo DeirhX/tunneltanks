@@ -3,7 +3,7 @@
 #include "color_palette.h"
 #include "level.h"
 #include "level_algorithm.h"
-#include "projectile.h"
+#include "projectiles.h"
 #include "shape_renderer.h"
 #include "world.h"
 

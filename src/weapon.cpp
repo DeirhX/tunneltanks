@@ -1,6 +1,6 @@
 ﻿#include "weapon.h"
 
-#include "projectile.h"
+#include "projectiles.h"
 #include "world.h"
 
 #include <cassert>

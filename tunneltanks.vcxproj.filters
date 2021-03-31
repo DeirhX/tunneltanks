@@ -4,9 +4,6 @@
     <Filter Include="src">
       <UniqueIdentifier>{2bec0e26-c4c7-4941-abaf-a7a2598710dd}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\generators">
-      <UniqueIdentifier>{a902ab77-261a-4b60-979e-8934b705060d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\draw">
       <UniqueIdentifier>{dc449966-8eec-4ca1-9645-b36d258feb90}</UniqueIdentifier>
     </Filter>
@@ -27,6 +24,24 @@
     </Filter>
     <Filter Include="src\draw\shapes">
       <UniqueIdentifier>{00147b0f-82eb-4495-a394-9ed3cfc6f956}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\draw\gui">
+      <UniqueIdentifier>{1ad5f5d5-d9a1-49b8-bad6-5e697d05464c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\terrain">
+      <UniqueIdentifier>{684fc746-a32c-4590-97fe-45bd00fc7ff2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\terrain\generators">
+      <UniqueIdentifier>{a902ab77-261a-4b60-979e-8934b705060d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\machinery">
+      <UniqueIdentifier>{d6045a99-e0a1-4e2b-bd5b-060e474c782f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\phys">
+      <UniqueIdentifier>{c40f99e2-ca32-4a21-91fd-de98a72478d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\draw\sprites">
+      <UniqueIdentifier>{6a4601b7-be3f-4e73-84fd-91c854b0edbe}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -66,12 +81,6 @@
     <ClCompile Include="src\screen.cpp">
       <Filter>src\draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\level.cpp">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
-    <ClCompile Include="src\projectile.cpp">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
     <ClCompile Include="src\tank.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
@@ -85,16 +94,13 @@
       <Filter>src\system</Filter>
     </ClCompile>
     <ClCompile Include="src\levelgenutil.cpp">
-      <Filter>src\generators</Filter>
+      <Filter>src\terrain\generators</Filter>
     </ClCompile>
     <ClCompile Include="src\levelgen.cpp">
-      <Filter>src\generators</Filter>
+      <Filter>src\terrain\generators</Filter>
     </ClCompile>
     <ClCompile Include="src\bitmaps.cpp">
       <Filter>src\draw</Filter>
-    </ClCompile>
-    <ClCompile Include="src\level_adjacency.cpp">
-      <Filter>src\game_entity</Filter>
     </ClCompile>
     <ClCompile Include="src\weapon.cpp">
       <Filter>src\game_entity</Filter>
@@ -104,9 +110,6 @@
     </ClCompile>
     <ClCompile Include="src\gamelib\SDL\sdl_system.cpp">
       <Filter>sdl_interface</Filter>
-    </ClCompile>
-    <ClCompile Include="src\level_pixel_surface.cpp">
-      <Filter>src\draw</Filter>
     </ClCompile>
     <ClCompile Include="src\color_palette.cpp">
       <Filter>src\draw</Filter>
@@ -129,41 +132,23 @@
     <ClCompile Include="src\gamelib\SDL\sdl_controller.cpp">
       <Filter>sdl_interface</Filter>
     </ClCompile>
-    <ClCompile Include="src\collision_solver.cpp">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
     <ClCompile Include="src\tank_turret.cpp">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
-    <ClCompile Include="src\machine_materializer.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
     <ClCompile Include="src\duration.cpp">
       <Filter>src\system</Filter>
     </ClCompile>
-    <ClCompile Include="src\machine.cpp">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
-    <ClCompile Include="src\machine_list.cpp">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
     <ClCompile Include="src\levelgen_braid.cpp">
-      <Filter>src\generators</Filter>
+      <Filter>src\terrain\generators</Filter>
     </ClCompile>
     <ClCompile Include="src\levelgen_maze.cpp">
-      <Filter>src\generators</Filter>
+      <Filter>src\terrain\generators</Filter>
     </ClCompile>
     <ClCompile Include="src\levelgen_simple.cpp">
-      <Filter>src\generators</Filter>
+      <Filter>src\terrain\generators</Filter>
     </ClCompile>
     <ClCompile Include="src\levelgen_toast.cpp">
-      <Filter>src\generators</Filter>
-    </ClCompile>
-    <ClCompile Include="src\link.cpp">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
-    <ClCompile Include="src\tank_sprites.cpp">
-      <Filter>src\draw</Filter>
+      <Filter>src\terrain\generators</Filter>
     </ClCompile>
     <ClCompile Include="src\tank_list.cpp">
       <Filter>src\game_entity</Filter>
@@ -198,6 +183,39 @@
     <ClCompile Include="src\swarmer_creature.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
+    <ClCompile Include="gui.cpp">
+      <Filter>src\draw\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\level.cpp">
+      <Filter>src\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="src\level_adjacency.cpp">
+      <Filter>src\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="src\level_pixel_surface.cpp">
+      <Filter>src\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="src\machine.cpp">
+      <Filter>src\machinery</Filter>
+    </ClCompile>
+    <ClCompile Include="src\machine_list.cpp">
+      <Filter>src\machinery</Filter>
+    </ClCompile>
+    <ClCompile Include="src\machine_materializer.cpp">
+      <Filter>src\machinery</Filter>
+    </ClCompile>
+    <ClCompile Include="src\link.cpp">
+      <Filter>src\machinery</Filter>
+    </ClCompile>
+    <ClCompile Include="src\collision_solver.cpp">
+      <Filter>src\phys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tank_sprites.cpp">
+      <Filter>src\draw\sprites</Filter>
+    </ClCompile>
+    <ClCompile Include="src\projectiles.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\require_sdl.h">
@@ -210,10 +228,10 @@
       <Filter>sdl_interface</Filter>
     </ClInclude>
     <ClInclude Include="src\levelgen.h">
-      <Filter>src\generators</Filter>
+      <Filter>src\terrain\generators</Filter>
     </ClInclude>
     <ClInclude Include="src\levelgenutil.h">
-      <Filter>src\generators</Filter>
+      <Filter>src\terrain\generators</Filter>
     </ClInclude>
     <ClInclude Include="src\screen.h">
       <Filter>src\draw</Filter>
@@ -251,9 +269,6 @@
     <ClInclude Include="src\level_view.h">
       <Filter>src\ai</Filter>
     </ClInclude>
-    <ClInclude Include="src\projectile.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
     <ClInclude Include="src\projectile_list.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
@@ -261,9 +276,6 @@
       <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\scene.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\level.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\controller.h">
@@ -284,17 +296,8 @@
     <ClInclude Include="src\containers_queue.h">
       <Filter>src\system</Filter>
     </ClInclude>
-    <ClInclude Include="src\raycaster.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
     <ClInclude Include="src\mymath.h">
       <Filter>src\system</Filter>
-    </ClInclude>
-    <ClInclude Include="src\level_adjacency.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\level_pixel.h">
-      <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\weapon.h">
       <Filter>src\game_entity</Filter>
@@ -310,9 +313,6 @@
     </ClInclude>
     <ClInclude Include="src\game_system.h">
       <Filter>src\system</Filter>
-    </ClInclude>
-    <ClInclude Include="src\level_pixel_surface.h">
-      <Filter>src\draw</Filter>
     </ClInclude>
     <ClInclude Include="src\color_palette.h">
       <Filter>src\draw</Filter>
@@ -335,44 +335,23 @@
     <ClInclude Include="src\gamelib\SDL\sdl_controller.h">
       <Filter>sdl_interface</Filter>
     </ClInclude>
-    <ClInclude Include="src\collision_solver.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
     <ClInclude Include="src\tank_turret.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\machine_materializer.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\duration.h">
       <Filter>src\system</Filter>
     </ClInclude>
-    <ClInclude Include="src\machine.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\machine_list.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\level_algorithm.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
     <ClInclude Include="src\levelgen_braid.h">
-      <Filter>src\generators</Filter>
+      <Filter>src\terrain\generators</Filter>
     </ClInclude>
     <ClInclude Include="src\levelgen_maze.h">
-      <Filter>src\generators</Filter>
+      <Filter>src\terrain\generators</Filter>
     </ClInclude>
     <ClInclude Include="src\levelgen_simple.h">
-      <Filter>src\generators</Filter>
+      <Filter>src\terrain\generators</Filter>
     </ClInclude>
     <ClInclude Include="src\levelgen_toast.h">
-      <Filter>src\generators</Filter>
-    </ClInclude>
-    <ClInclude Include="src\link.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
-    <ClInclude Include="src\tank_sprites.h">
-      <Filter>src\draw</Filter>
+      <Filter>src\terrain\generators</Filter>
     </ClInclude>
     <ClInclude Include="src\tank_list.h">
       <Filter>src\game_entity</Filter>
@@ -411,6 +390,48 @@
       <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\swarmer_creature.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="gui.h">
+      <Filter>src\draw\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\level_pixel.h">
+      <Filter>src\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="src\level.h">
+      <Filter>src\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="src\level_adjacency.h">
+      <Filter>src\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="src\level_algorithm.h">
+      <Filter>src\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="src\level_pixel_surface.h">
+      <Filter>src\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="src\machine.h">
+      <Filter>src\machinery</Filter>
+    </ClInclude>
+    <ClInclude Include="src\machine_list.h">
+      <Filter>src\machinery</Filter>
+    </ClInclude>
+    <ClInclude Include="src\machine_materializer.h">
+      <Filter>src\machinery</Filter>
+    </ClInclude>
+    <ClInclude Include="src\link.h">
+      <Filter>src\machinery</Filter>
+    </ClInclude>
+    <ClInclude Include="src\collision_solver.h">
+      <Filter>src\phys</Filter>
+    </ClInclude>
+    <ClInclude Include="src\raycaster.h">
+      <Filter>src\phys</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tank_sprites.h">
+      <Filter>src\draw\sprites</Filter>
+    </ClInclude>
+    <ClInclude Include="src\projectiles.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
   </ItemGroup>
