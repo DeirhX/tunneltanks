@@ -1,5 +1,5 @@
 #include "level_view.h"
-#include "level.h"
+#include "Terrain.h"
 #include "tank.h"
 #include <cstdlib>
 
@@ -10,7 +10,7 @@ LevelView::QueryResult LevelView::QueryPoint(Offset offset) const
     if (abs(offset.x) >= Width / 2 || abs(offset.y) >= Height / 2)
         return QueryResult::OutOfBounds;
 
-    LevelPixel c = this->lvl->GetPixel(pos + offset);
+    TerrainPixel c = this->lvl->GetPixel(pos + offset);
     if (Pixel::IsBlockingCollision(c))
         return QueryResult::Collide;
     return QueryResult::Open;

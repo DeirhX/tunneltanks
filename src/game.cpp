@@ -4,7 +4,7 @@
 #include "exceptions.h"
 #include "game_system.h"
 #include "gamelib.h"
-#include "level.h"
+#include "Terrain.h"
 #include "levelgen.h"
 #include "screen.h"
 #include "tank_list.h"
@@ -17,7 +17,7 @@
  * This bit is used to initialize various GUIs:                               *
  *----------------------------------------------------------------------------*/
 
-void GameMode::SpawnAIOpponents(TankList * tank_list, Level * level, TankColor starting_id, int spawn_amount)
+void GameMode::SpawnAIOpponents(TankList * tank_list, Terrain * level, TankColor starting_id, int spawn_amount)
 {
     for (TankColor i = starting_id; (i < tweak::world::MaxPlayers) && (i - starting_id < spawn_amount); i++)
     {
@@ -40,14 +40,14 @@ std::unique_ptr<SinglePlayerMode> SinglePlayerMode::Setup(Screen * screen, World
 {
 
     /* Ready the tank! */
-    Tank * player = world->GetTankList()->AddTank(0, world->GetLevel()->GetSpawn(0));
+    Tank * player = world->GetTankList()->AddTank(0, world->GetTerrain()->GetSpawn(0));
     gamelib_tank_attach(player, 0, 1);
 
     Screens::SinglePlayerScreenSetup(*screen, *player);
 
     /* Fill up the rest of the slots with Twitches: */
     if (use_ai)
-        GameMode::SpawnAIOpponents(world->GetTankList(), world->GetLevel(), 1, tweak::world::MaxPlayers - 1);
+        GameMode::SpawnAIOpponents(world->GetTankList(), world->GetTerrain(), 1, tweak::world::MaxPlayers - 1);
 
     return std::make_unique<SinglePlayerMode>(screen, world);
 }
@@ -56,11 +56,11 @@ std::unique_ptr<SinglePlayerMode> SinglePlayerMode::Setup(Screen * screen, World
 std::unique_ptr<FollowAISinglePlayerMode> FollowAISinglePlayerMode::Setup(Screen * screen, World * world)
 {
     /* Ready the tanks! */
-    Tank * player_one = world->GetTankList()->AddTank(0, world->GetLevel()->GetSpawn(0));
+    Tank * player_one = world->GetTankList()->AddTank(0, world->GetTerrain()->GetSpawn(0));
     gamelib_tank_attach(player_one, 0, 2);
 
     /* Load up two controllable tanks: */
-    Tank * player_two = world->GetTankList()->AddTank(1, world->GetLevel()->GetSpawn(1));
+    Tank * player_two = world->GetTankList()->AddTank(1, world->GetTerrain()->GetSpawn(1));
     /*controller_twitch_attach(t);  << Attach a twitch to a camera tank, so we can see if they're getting smarter... */
     GameMode::AssumeAIControl(player_two);
 
@@ -73,18 +73,18 @@ std::unique_ptr<FollowAISinglePlayerMode> FollowAISinglePlayerMode::Setup(Screen
 std::unique_ptr<LocalTwoPlayerMode> LocalTwoPlayerMode::Setup(Screen * screen, World * world, bool use_ai)
 {
     /* Ready the tanks! */
-    Tank * player_one = world->GetTankList()->AddTank(0, world->GetLevel()->GetSpawn(0));
+    Tank * player_one = world->GetTankList()->AddTank(0, world->GetTerrain()->GetSpawn(0));
     gamelib_tank_attach(player_one, 0, 2);
 
     /* Load up two controllable tanks: */
-    Tank * player_two = world->GetTankList()->AddTank(1, world->GetLevel()->GetSpawn(1));
+    Tank * player_two = world->GetTankList()->AddTank(1, world->GetTerrain()->GetSpawn(1));
     /*controller_twitch_attach(t);  << Attach a twitch to a camera tank, so we can see if they're getting smarter... */
     gamelib_tank_attach(player_two, 1, 2);
 
     Screens::TwoPlayerScreenSetup(*screen,*player_one, *player_two);
     /* Fill up the rest of the slots with Twitches: */
     if (use_ai)
-        GameMode::SpawnAIOpponents(world->GetTankList(), world->GetLevel(), 2, tweak::world::MaxPlayers - 2);
+        GameMode::SpawnAIOpponents(world->GetTankList(), world->GetTerrain(), 2, tweak::world::MaxPlayers - 2);
 
     return std::make_unique<LocalTwoPlayerMode>(screen, world); 
 }
@@ -117,7 +117,7 @@ Game::Game(GameConfig config)
     std::chrono::milliseconds time_taken = {};
 
     /* Generate our random level: */
-    std::unique_ptr<Level> level;
+    std::unique_ptr<Terrain> level;
     for (int i = 0; i != TestIterations; ++i)
     {
         gamelib_print("Generating level %d/%d...\n", i+1, TestIterations);
@@ -180,7 +180,7 @@ bool Game::AdvanceStep()
     /* Do the world advance - apply controller input, move stuff, commit level bitmap to DrawBuffer */
     /* TODO: Don't get the surface this stupid way */
     world->Advance();
-    world->Draw(&this->world->GetLevel()->GetSurfaces()->objects_surface);
+    world->Draw(&this->world->GetTerrain()->GetSurfaces()->objects_surface);
     /* Draw our current state */
     this->screen->DrawCurrentMode();
 
@@ -194,7 +194,7 @@ Game::~Game()
     {
         /* Debug if we need to: */
         if (this->config.is_debug)
-            world->GetLevel()->DumpBitmap("debug_end.bmp");
+            world->GetTerrain()->DumpBitmap("debug_end.bmp");
         this->mode->TearDown();
     }
 }

@@ -22,3 +22,4 @@ tunneltanks
 /sdl2/**/*.bmp
 /cmake-build-debug/**
 /.idea/**
+*.user

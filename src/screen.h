@@ -3,7 +3,7 @@
 #include "bitmaps.h"
 #include "color.h"
 #include "gui_widgets.h"
-#include <level.h>
+#include <Terrain.h>
 #include <tank.h>
 #include <types.h>
 

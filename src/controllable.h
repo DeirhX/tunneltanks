@@ -35,11 +35,11 @@ class Controllable : public Invalidable
 
     std::shared_ptr<Controller> controller = nullptr;
 
-    Level * level = nullptr;
+    Terrain * level = nullptr;
 
   public:
     Controllable(Position position_, const Reactor & starting_reactor_state, MaterialCapacity material_capacity,
-                 Level * level_);
+                 Terrain * level_);
     void SetController(std::shared_ptr<Controller> newController) { this->controller = newController; }
 
     [[nodiscard]] Position GetPosition() const { return this->position; }
@@ -48,7 +48,7 @@ class Controllable : public Invalidable
     [[nodiscard]] Reactor & GetReactor() { return this->reactor; }
     [[nodiscard]] int GetEnergy() const { return this->reactor.GetEnergy(); }
     [[nodiscard]] int GetHealth() const { return this->reactor.GetHealth(); }
-    [[nodiscard]] Level * GetLevel() const { return this->level; };
+    [[nodiscard]] Terrain * GetLevel() const { return this->level; };
 
     [[nodiscard]] bool HealthOrEnergyEmpty() const;
 

@@ -2,7 +2,7 @@
 
 #include "collision_solver.h"
 #include "game.h"
-#include "level.h"
+#include "Terrain.h"
 #include "link.h"
 #include "machine_list.h"
 #include "projectile_list.h"
@@ -17,7 +17,7 @@ class World
     int advance_count = 0;
     std::chrono::microseconds time_elapsed = {};
 
-    std::unique_ptr<Level> level;
+    std::unique_ptr<Terrain> terrain;
     LinkMap link_map;
 
     ProjectileList projectile_list;
@@ -29,14 +29,14 @@ class World
     RepetitiveTimer regrow_timer{tweak::world::DirtRecoverInterval};
 
   public:
-    World(Game * game, std::unique_ptr<Level> && level);
+    World(Game * game, std::unique_ptr<Terrain> && level);
     void Clear(); /* Clear the world of everything */
 
     void BeginGame();
     void Advance();
     void Draw(WorldRenderSurface * objects_surface);
 
-    [[nodiscard]] Level * GetLevel() { return this->level.get(); }
+    [[nodiscard]] Terrain * GetTerrain() { return this->terrain.get(); }
     [[nodiscard]] ProjectileList * GetProjectileList() { return &this->projectile_list; }
     [[nodiscard]] MachineryList * GetHarvesterList() { return &this->harvester_list; }
     [[nodiscard]] TankList * GetTankList() { return &this->tank_list; }

@@ -8,7 +8,7 @@ struct LevelView
     constexpr static int Height = 99;
 
     const class Controllable * movable;
-    const class Level * lvl;
+    const class Terrain * lvl;
 
   public:
     enum class QueryResult
@@ -19,7 +19,7 @@ struct LevelView
     };
 
   public:
-    LevelView(const Controllable * movable, const Level * lvl) : movable(movable), lvl(lvl) {}
+    LevelView(const Controllable * movable, const Terrain * lvl) : movable(movable), lvl(lvl) {}
 
     /* Some quick queries for use in AIs: */
     QueryResult QueryPoint(Offset offset) const;

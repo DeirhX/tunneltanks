@@ -3,7 +3,7 @@
 #include "shape_renderer.h"
 #include "world.h"
 
-Swarmer::Swarmer(Position position_, Level * level)
+Swarmer::Swarmer(Position position_, Terrain * level)
     : Base(position_, tweak::tank::DefaultTankReactor, tweak::tank::ResourcesMax, level)
 {
     
@@ -45,7 +45,7 @@ CollisionType Swarmer::TryCollide(Direction at_rotation, Position at_position)
                     }
                     return false;
                 },
-                [&result](LevelPixel & pixel) {
+                [&result](TerrainPixel & pixel) {
                     if (Pixel::IsDirt(pixel))
                         result = CollisionType::Dirt;
 

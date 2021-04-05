@@ -29,10 +29,10 @@ struct Projectile : public Invalidable
     PositionF pos;
     SpeedF speed;
     bool is_alive = false;
-    class Level * level{};
+    class Terrain * level{};
 
   protected:
-    Projectile(Position position, SpeedF speed, Level * level)
+    Projectile(Position position, SpeedF speed, Terrain * level)
         : pos(position), speed(speed.x, speed.y), is_alive(true), level(level)
     {
     }
@@ -54,7 +54,7 @@ class ShrapnelBase : public Projectile
     int life = 0;
 
   protected:
-    ShrapnelBase(Position position, SpeedF speed, int life, Level * level)
+    ShrapnelBase(Position position, SpeedF speed, int life, Terrain * level)
         : Projectile(position, speed, level), life(life)
     {
     }
@@ -71,7 +71,7 @@ class ShrapnelBase : public Projectile
 class Shrapnel final : public ShrapnelBase
 {
   public:
-    Shrapnel(Position position, SpeedF speed, int life, Level * level) : ShrapnelBase(position, speed, life, level) {}
+    Shrapnel(Position position, SpeedF speed, int life, Terrain * level) : ShrapnelBase(position, speed, life, level) {}
 };
 
 /*
@@ -82,7 +82,7 @@ class Shrapnel final : public ShrapnelBase
 class ConcreteFoam final : public ShrapnelBase
 {
   public:
-    ConcreteFoam(Position position, SpeedF speed, int life, Level * level) : ShrapnelBase(position, speed, life, level)
+    ConcreteFoam(Position position, SpeedF speed, int life, Terrain * level) : ShrapnelBase(position, speed, life, level)
     {
     }
     void Advance(class TankList * tankList) override;
@@ -97,7 +97,7 @@ class ConcreteFoam final : public ShrapnelBase
 class DirtFoam final : public ShrapnelBase
 {
   public:
-    DirtFoam(Position position, SpeedF speed, int life, Level * level) : ShrapnelBase(position, speed, life, level) {}
+    DirtFoam(Position position, SpeedF speed, int life, Terrain * level) : ShrapnelBase(position, speed, life, level) {}
     void Advance(class TankList * tankList) override;
     void Draw(class Surface * drawBuffer) override;
 };
@@ -112,7 +112,7 @@ class MotionBlurProjectile : public Projectile
   public:
     PositionF pos_blur_from; /* The x,y of the 'cold' portion. (#ba0000) */
   protected:
-    MotionBlurProjectile(Position position, SpeedF speed, Level * level) : Projectile(position, speed, level) {}
+    MotionBlurProjectile(Position position, SpeedF speed, Terrain * level) : Projectile(position, speed, level) {}
 };
 
 /*
@@ -128,7 +128,7 @@ class Bullet final : public MotionBlurProjectile
     class Tank * tank;
 
   public:
-    Bullet(Position position, SpeedF speed, Level * level, Tank * tank) : Base(position, speed, level), tank(tank) {}
+    Bullet(Position position, SpeedF speed, Terrain * level, Tank * tank) : Base(position, speed, level), tank(tank) {}
     //ProjectileType GetType() override { return ProjectileType::Bullet; }
 
     void Advance(class TankList * tankList) override;
@@ -148,7 +148,7 @@ class FlyingBarrel : public Projectile
     int explode_distance;
 
   protected:
-    FlyingBarrel(Position position, SpeedF speed, Level * level, Tank * tank, Color draw_color, int explode_distance)
+    FlyingBarrel(Position position, SpeedF speed, Terrain * level, Tank * tank, Color draw_color, int explode_distance)
         : Base(position, speed, level), tank(tank), draw_color(draw_color), explode_distance(explode_distance)
     {
     }
@@ -168,7 +168,7 @@ class FlyingBarrel : public Projectile
 class ConcreteBarrel final : public FlyingBarrel
 {
   public:
-    ConcreteBarrel(Position position, SpeedF speed, Level * level, Tank * tank)
+    ConcreteBarrel(Position position, SpeedF speed, Terrain * level, Tank * tank)
         : FlyingBarrel(position, speed, level, tank, Palette.Get(Colors::ConcreteShot),
                        tweak::weapon::ConcreteDetonationDistance)
     {
@@ -183,7 +183,7 @@ class ConcreteBarrel final : public FlyingBarrel
 class DirtBarrel final : public FlyingBarrel
 {
   public:
-    DirtBarrel(Position position, SpeedF speed, Level * level, Tank * tank)
+    DirtBarrel(Position position, SpeedF speed, Terrain * level, Tank * tank)
         : FlyingBarrel(position, speed, level, tank, Palette.Get(Colors::DirtContainerShot),
                        tweak::weapon::DirtDetonationDistance)
     {
@@ -207,7 +207,7 @@ struct ExplosionDesc
     int frames_length_max = 0;
 
     template <typename ShrapnelType>
-    std::vector<ShrapnelType> Explode(class Level * level) const;
+    std::vector<ShrapnelType> Explode(class Terrain * level) const;
 
     static ExplosionDesc AllDirections(Position pos, int shrapnel_count, float speed, int frames_length)
     {
@@ -236,7 +236,7 @@ struct ExplosionDesc
 };
 
 template <typename ShrapnelType>
-std::vector<ShrapnelType> ExplosionDesc::Explode(Level * level) const
+std::vector<ShrapnelType> ExplosionDesc::Explode(Terrain * level) const
 {
     auto items = std::vector<ShrapnelType>{};
     items.reserve(this->shrapnel_count);

@@ -6,7 +6,7 @@
 #include <cstring>
 #include <game.h>
 #include <gamelib.h>
-#include <level.h>
+#include <Terrain.h>
 #include <levelgen.h>
 #include <memalloc.h>
 #include <random.h>

@@ -3,20 +3,22 @@
 #include "machine_list.h"
 #include "tank_list.h"
 
+
+// TODO: koko
 class CollisionSolver
 {
-    Level * level;
+    Terrain * level;
     TankList * tank_list;
     MachineryList * machine_list;
   public:
-    CollisionSolver(Level * level, TankList * tank_list, MachineryList * harvester_list)
+    CollisionSolver(Terrain * level, TankList * tank_list, MachineryList * harvester_list)
         : level(level), tank_list(tank_list), machine_list(harvester_list)
     { }
 
     /* Root types */
     Tank * TestTank(Position world_position) const;
     Machine * TestMachine(Position world_position) const;
-    LevelPixel TestTerrain(Position world_position) const;
+    TerrainPixel TestTerrain(Position world_position) const;
 
     /* Specialized types, included in root types*/
     MachineTemplate * TestMachineTemplate(Position world_position) const;
@@ -24,7 +26,7 @@ class CollisionSolver
 
     template <BasicVisitor<Tank &> TankCollideFunc,
               BasicVisitor<Machine &> MachineCollideFunc,
-              BasicVisitor<LevelPixel &> TerrainCollideFunc>
+              BasicVisitor<TerrainPixel &> TerrainCollideFunc>
     bool TestCollide(Position world_position, TankCollideFunc tank_collide, MachineCollideFunc machine_collide,
                  TerrainCollideFunc terrain_collide) const;
 };
@@ -32,7 +34,7 @@ class CollisionSolver
 /* Return true from collision functions if you registered the collision */
 template <BasicVisitor<Tank &> TankCollideFunc,
           BasicVisitor<Machine &> MachineCollideFunc,
-          BasicVisitor<LevelPixel &> TerrainCollideFunc>
+          BasicVisitor<TerrainPixel &> TerrainCollideFunc>
 bool CollisionSolver::TestCollide(Position world_position, TankCollideFunc tank_collide,
                               MachineCollideFunc machine_collide, TerrainCollideFunc terrain_collide) const
 {
@@ -44,7 +46,7 @@ bool CollisionSolver::TestCollide(Position world_position, TankCollideFunc tank_
     if (machine_result)
         collided = collided || machine_collide(*machine_result);
     auto terrain_result = TestTerrain(world_position);
-    if (terrain_result != LevelPixel::Blank)
+    if (terrain_result != TerrainPixel::Blank)
         collided = collided || terrain_collide(terrain_result);
     return collided;
 }

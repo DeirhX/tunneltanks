@@ -1,4 +1,4 @@
-#include "level.h"
+#include "Terrain.h"
 #include "screen.h"
 #include "tank.h"
 #include "tweak.h"
@@ -193,7 +193,7 @@ void Screen::DrawLevel()
     /* Draw everything */
     std::ranges::for_each(this->widgets, [this](auto & item) { item->Draw(*this); });
 
-    GetWorld()->GetLevel()->CommitPixels(GetLevelSurfaces()->objects_surface.GetChangeList());
+    GetWorld()->GetTerrain()->CommitPixels(GetLevelSurfaces()->objects_surface.GetChangeList());
     GetLevelSurfaces()->objects_surface.Clear();
 }
 

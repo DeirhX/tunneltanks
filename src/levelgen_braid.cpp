@@ -1,4 +1,4 @@
-#include <level.h>
+#include <Terrain.h>
 #include <levelgenutil.h>
 #include <memalloc.h>
 #include <random.h>
@@ -222,9 +222,9 @@ static void braid_free(Braid * b)
     free_mem(b);
 }
 
-std::unique_ptr<Level> BraidLevelGenerator::Generate(Size size)
+std::unique_ptr<Terrain> BraidLevelGenerator::Generate(Size size)
 {
-    std::unique_ptr<Level> lvl = std::make_unique<Level>(size);
+    std::unique_ptr<Terrain> lvl = std::make_unique<Terrain>(size);
 	Braid *b = braid_new(lvl->GetSize() / CELL_SIZE);
 	
 	/* Reset all of the 'used' flags back to zero: */
@@ -238,30 +238,30 @@ std::unique_ptr<Level> BraidLevelGenerator::Generate(Size size)
 			if(c.up)
 				draw_line(lvl.get(),
 					Vector(x*CELL_SIZE,     y*CELL_SIZE), 
-					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), LevelPixel::LevelGenDirt, 1);
+					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), TerrainPixel::LevelGenDirt, 1);
 			
 			if(c.right)
                 draw_line(lvl.get(),
 					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), 
-					Vector((x+1)*CELL_SIZE, (y+1)*CELL_SIZE), LevelPixel::LevelGenDirt, 1);
+					Vector((x+1)*CELL_SIZE, (y+1)*CELL_SIZE), TerrainPixel::LevelGenDirt, 1);
 			
 			if(!c.up && !c.right)
-                set_circle(lvl.get(), (x + 1) * CELL_SIZE, y * CELL_SIZE, LevelPixel::LevelGenDirt);
+                set_circle(lvl.get(), (x + 1) * CELL_SIZE, y * CELL_SIZE, TerrainPixel::LevelGenDirt);
 		}
 	}
 	
 	/* Draw a line up the left, so you can see the texture there too: */
-    draw_line(lvl.get(), Vector(0, 0), Vector(0, b->size.y * CELL_SIZE), LevelPixel::LevelGenDirt, 1);
+    draw_line(lvl.get(), Vector(0, 0), Vector(0, b->size.y * CELL_SIZE), TerrainPixel::LevelGenDirt, 1);
 	
 	/* Fill in the unused space left behind on the right/bottom: */
 	/* TODO: Have a fill_box() in levelgenutil.c? */
 	for(int y=0; y<lvl->GetSize().y; y++)
 		for(int x=b->size.x*CELL_SIZE; x<lvl->GetSize().x; x++)
-			lvl->SetVoxelRaw({x, y}, LevelPixel::LevelGenDirt);
+			lvl->SetVoxelRaw({x, y}, TerrainPixel::LevelGenDirt);
 	
 	for(int y=b->size.y*CELL_SIZE; y<lvl->GetSize().y; y++)
 		for(int x=0; x<b->size.x*CELL_SIZE; x++)
-			lvl->SetVoxelRaw({x, y}, LevelPixel::LevelGenDirt);
+			lvl->SetVoxelRaw({x, y}, TerrainPixel::LevelGenDirt);
 	
 	/* Rough it up a little, and invert: */
     rough_up(lvl.get());

@@ -2,7 +2,7 @@
 #include "controllable.h"
 #include "controller.h"
 #include "gui_widgets.h"
-#include "level.h"
+#include "Terrain.h"
 #include "level_view.h"
 #include "machine_materializer.h"
 #include "projectile_list.h"
@@ -48,7 +48,7 @@ class Tank : public Controllable
     //ProjectileList * projectile_list;
 
   public:
-    Tank(TankColor color, Level * level, TankBase * tank_base);
+    Tank(TankColor color, Terrain * level, TankBase * tank_base);
 
     void SetCrosshair(widgets::Crosshair * cross);
 

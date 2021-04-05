@@ -1,6 +1,6 @@
 ﻿#include "machine_list.h"
 
-void MachineryList::Advance(Level * level, TankList *)
+void MachineryList::Advance(Terrain * level, TankList *)
 {
     /* Advance everything */
     this->items.ForEach([level](auto & item) { item.Advance(level); });

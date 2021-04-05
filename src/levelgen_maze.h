@@ -1,6 +1,6 @@
 #pragma once
 #include "levelgen.h"
-#include <level.h>
+#include <Terrain.h>
 #include <memory>
 
 namespace levelgen::maze
@@ -9,7 +9,7 @@ namespace levelgen::maze
 class MazeLevelGenerator : public GeneratorAlgorithm
 {
   public:
-    std::unique_ptr<Level> Generate(Size size) override;
+    std::unique_ptr<Terrain> Generate(Size size) override;
 };
 
 } // namespace levelgen::maze

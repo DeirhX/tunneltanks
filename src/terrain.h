@@ -1,7 +1,7 @@
 #pragma once
 
 #include "containers.h"
-#include "level_adjacency.h"
+#include "terrain_adjacency.h"
 #include "parallelism.h"
 #include "render_surface.h"
 #include "tank_base.h"
@@ -10,7 +10,7 @@
 #include <vector>
 
 class World;
-enum class LevelPixel : char;
+enum class TerrainPixel : char;
 
 enum class BaseCollision
 {
@@ -28,17 +28,17 @@ struct DigResult
 struct LevelSurfaces
 {
     LevelSurfaces(Size size) : terrain_surface(size, false), objects_surface(size, true) {}
-    /* Holds rendered texture of the terrain, materializing each LevelPixel into color */
+    /* Holds rendered texture of the terrain, materializing each TerrainPixel into color */
     WorldRenderSurface terrain_surface; 
     /* Holds a layer of frequently changed objects that will be drawn on top of terrain*/
     WorldRenderSurface objects_surface; 
 };
 
-class Level
+class Terrain
 {
   private:
     Size size;
-    Container2D<LevelPixel> data; /* Holds logical terrain pixels - enum LevelPixel : char */
+    Container2D<TerrainPixel> data; /* Holds logical terrain pixels - enum TerrainPixel : char */
     LevelSurfaces surfaces; /* Holds terrain and object surfaces for drawing */
 
     //DirtAdjacencyData dirt_adjacency_data;
@@ -46,26 +46,26 @@ class Level
     bool is_ready = false;
 
   private:
-    void SetLevelData(int i, LevelPixel value);
-    void SetLevelData(Position pos, LevelPixel value);
+    void SetLevelData(int i, TerrainPixel value);
+    void SetLevelData(Position pos, TerrainPixel value);
 
   public:
-    Level(Size size);
+    Terrain(Size size);
     void OnConnectWorld(World * world);
     void BeginGame();
 
-    Size GetSize() const { return this->size; }
+    [[nodiscard]] Size GetSize() const { return this->size; }
     LevelSurfaces * GetSurfaces() { return &this->surfaces; }
-    const Container2D<LevelPixel> & GetLevelData() const { return this->data; }
+    const Container2D<TerrainPixel> & GetLevelData() const { return this->data; }
 
     /* Voxel get-set-reference operations */
-    void SetPixel(Position pos, LevelPixel voxel);
-    LevelPixel GetPixel(Position pos) const;
+    void SetPixel(Position pos, TerrainPixel voxel);
+    TerrainPixel GetPixel(Position pos) const;
 
-    void SetVoxelRaw(Position pos, LevelPixel voxel);
-    void SetVoxelRaw(int offset, LevelPixel voxel) { SetLevelData(offset, voxel); }
-    LevelPixel GetVoxelRaw(Position pos) const;
-    LevelPixel GetVoxelRaw(int offset) const { return this->data[offset]; }
+    void SetVoxelRaw(Position pos, TerrainPixel voxel);
+    void SetVoxelRaw(int offset, TerrainPixel voxel) { SetLevelData(offset, voxel); }
+    TerrainPixel GetVoxelRaw(Position pos) const;
+    TerrainPixel GetVoxelRaw(int offset) const { return this->data[offset]; }
 
     /* Terrain surface interaction */
     void CommitPixel(Position pos);
@@ -74,10 +74,10 @@ class Level
     void DumpBitmap(const char * filename) const;
 
     /* Color lookup. Can be somewhere else. */
-    static Color GetVoxelColor(LevelPixel voxel);
+    static Color GetVoxelColor(TerrainPixel voxel);
 
     /* Count neighbors is used when level building and for ad-hoc queries (e.g. dirt regeneration) */
-    int CountNeighbors(Position pos, LevelPixel neighbor_value);
+    int CountNeighbors(Position pos, TerrainPixel neighbor_value);
     template <typename CountFunc>
     int CountNeighborValues(Position pos, CountFunc count_func);
     //uint8_t DirtPixelsAdjacent(Position pos) { return this->dirt_adjacency_data.Get(pos); }
@@ -109,22 +109,22 @@ class Level
 
 class SafePixelAccessor
 {
-    Level * level;
+    Terrain * level;
     Position position;
     int index;
 
   public:
-    SafePixelAccessor(Level * level, Position pos, Size size)
+    SafePixelAccessor(Terrain * level, Position pos, Size size)
         : level(level), position(pos), index(pos.x + pos.y * size.x)
     {
     }
     Position GetPosition() const { return this->position; }
-    LevelPixel Get() const { return level->GetVoxelRaw(this->index); }
-    void Set(LevelPixel pix) { level->SetVoxelRaw(this->index, pix); }
+    TerrainPixel Get() const { return level->GetVoxelRaw(this->index); }
+    void Set(TerrainPixel pix) { level->SetVoxelRaw(this->index, pix); }
 };
 
 template <typename VoxelFunc> // requires{ voxelFunc(Position, SafePixelAccessor&) -> void; }
-void Level::ForEachVoxel(VoxelFunc voxelFunc)
+void Terrain::ForEachVoxel(VoxelFunc voxelFunc)
 {
     Position pos;
     for (pos.x = 0; pos.x < this->GetSize().x; ++pos.x)
@@ -134,7 +134,7 @@ void Level::ForEachVoxel(VoxelFunc voxelFunc)
         }
 }
 template <typename VoxelFunc> // requires{ voxelFunc(Position, LevelVoxel&) -> void; }
-void Level::ForEachVoxelParallel(VoxelFunc voxelFunc, WorkerCount worker_count)
+void Terrain::ForEachVoxelParallel(VoxelFunc voxelFunc, WorkerCount worker_count)
 {
     auto parallel_slice = [this, voxelFunc](int min, int max, ThreadLocal * threadLocal) {
         Position pos;
@@ -150,7 +150,7 @@ void Level::ForEachVoxelParallel(VoxelFunc voxelFunc, WorkerCount worker_count)
 }
 
 template <typename CountFunc>
-int Level::CountNeighborValues(Position pos, CountFunc count_func)
+int Terrain::CountNeighborValues(Position pos, CountFunc count_func)
 {
     return count_func(GetVoxelRaw((pos.x - 1 + GetSize().x * (pos.y - 1)))) +
            count_func(GetVoxelRaw((pos.x + GetSize().x * (pos.y - 1)))) +

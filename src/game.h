@@ -44,7 +44,7 @@ class GameMode
 
     virtual void TearDown();
 
-    static void SpawnAIOpponents(TankList * tank_list, Level * level, TankColor starting_id, int spawn_amount);
+    static void SpawnAIOpponents(TankList * tank_list, Terrain * level, TankColor starting_id, int spawn_amount);
     static void AssumeAIControl(class Tank * tank);
 };
 

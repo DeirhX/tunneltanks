@@ -11,7 +11,7 @@ class Swarmer : Controllable
     BoundingBox bounding_box = {Size{5, 5}};
 
   public:
-    Swarmer(Position position, class Level * level);
+    Swarmer(Position position, class Terrain * level);
 
     void Advance(World & world) override;
     CollisionType TryCollide(Direction at_rotation, Position at_position) override;

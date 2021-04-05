@@ -4,7 +4,7 @@
 
 
 #include "containers.h"
-#include "level_pixel.h"
+#include "terrain_pixel.h"
 #include "types.h"
 
 /*
@@ -14,7 +14,7 @@
  * -1 is a reserved value for marking invalid / needing refresh
  */
 template <typename ValueType>
-class LevelAdjacencyData
+class TerrainAdjacencyData
 {
   protected:
     using Container = std::vector<ValueType>;
@@ -25,7 +25,7 @@ class LevelAdjacencyData
     constexpr static ValueType Invalid = std::numeric_limits<ValueType>::max();
 
   protected:
-    LevelAdjacencyData(Size size) : size(size)
+    TerrainAdjacencyData(Size size) : size(size)
     {
         array.resize(size.x * size.y, Invalid);
     }
@@ -42,19 +42,19 @@ class LevelAdjacencyData
     static ValueType AccumulateFromNeighbors(Position pos, Size size, AccumulationFuncType accumulation_func);
 };
 
-class DirtAdjacencyData : public LevelAdjacencyData<uint8_t>
+class DirtAdjacencyData : public TerrainAdjacencyData<uint8_t>
 {
-    using Parent = LevelAdjacencyData<uint8_t>;
-    Container2D<LevelPixel> * level_data;
+    using Parent = TerrainAdjacencyData<uint8_t>;
+    Container2D<TerrainPixel> * level_data;
 
   public:
-    DirtAdjacencyData(Size size, Container2D<LevelPixel> * level_data);
+    DirtAdjacencyData(Size size, Container2D<TerrainPixel> * level_data);
     uint8_t Get(Position pos);
 };
 
 template <typename ValueType>
 template <typename AccumulationFuncType>
-ValueType LevelAdjacencyData<ValueType>::Get(Position pos, AccumulationFuncType neighbor_accum_func)
+ValueType TerrainAdjacencyData<ValueType>::Get(Position pos, AccumulationFuncType neighbor_accum_func)
 {
     uint8_t & ret_val = this->array[pos.x + pos.y * this->size.x];
     if (ret_val == Invalid)
@@ -65,7 +65,7 @@ ValueType LevelAdjacencyData<ValueType>::Get(Position pos, AccumulationFuncType 
 }
 
 template <typename ValueType>
-void LevelAdjacencyData<ValueType>::Invalidate(Position pos)
+void TerrainAdjacencyData<ValueType>::Invalidate(Position pos)
 {
     /* This might invalidate even pixels not really touching. But I think it's better to have as few conditional statements as possible. */
     Set(std::max(0, pos.x - 1 + this->size.x * (pos.y - 1)), Invalid);
@@ -81,7 +81,7 @@ void LevelAdjacencyData<ValueType>::Invalidate(Position pos)
 
 template <typename ValueType>
 template <typename AccumulationFuncType>
-ValueType LevelAdjacencyData<ValueType>::AccumulateFromNeighbors(Position pos, Size size,
+ValueType TerrainAdjacencyData<ValueType>::AccumulateFromNeighbors(Position pos, Size size,
                                                                  AccumulationFuncType accumulation_func)
 {
     ValueType value_sum = {};

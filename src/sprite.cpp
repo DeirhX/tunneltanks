@@ -5,7 +5,7 @@
 
 void Sprite::Draw(Surface & surface) const {}
 
-void FailedInteraction::Advance(Level * level)
+void FailedInteraction::Advance(Terrain * level)
 {
     if (this->destroy_timer.AdvanceAndCheckElapsed())
     {

@@ -9,6 +9,6 @@
 class SpriteList : public ItemListAdaptor<Sprite, FailedInteraction>
 {
   public:
-    void Advance(class Level * level);
+    void Advance(class Terrain * level);
     void Draw(class Surface & surface);
 };

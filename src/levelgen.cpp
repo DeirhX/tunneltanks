@@ -83,7 +83,7 @@ GeneratedLevel LevelGenerator::Generate(LevelGeneratorType generator, Size size)
         Stopwatch<std::chrono::milliseconds> s;
 
         /* Ok, now generate the level: */
-        std::unique_ptr<Level> level =  found->generator->Generate(size);
+        std::unique_ptr<Terrain> level =  found->generator->Generate(size);
 
         gamelib_print("Level generated in: ");
         auto msecs = s.GetElapsed();
@@ -130,7 +130,7 @@ void LevelGenerator::PrintAllGenerators(FILE *)
 }
 
 
-int Queries::CountNeighborValues(Position pos, Level * level)
+int Queries::CountNeighborValues(Position pos, Terrain * level)
 {
     return (char)level->GetVoxelRaw((pos.x - 1 + level->GetSize().x * (pos.y - 1))) +
            (char)level->GetVoxelRaw((pos.x + level->GetSize().x * (pos.y - 1))) +

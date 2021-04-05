@@ -1,5 +1,5 @@
 #pragma once
-#include <level.h>
+#include <Terrain.h>
 
 namespace levelgen::toast
 {
@@ -13,13 +13,13 @@ struct ToastParams
     constexpr static int TreeSize = 150;
     constexpr static int SmoothingSteps = -1; /* How many iterations of smoothing edges. -1 = smooth completely.  */
 
-    static int TargetDirtAmount(Level * lvl) { return lvl->GetSize().x * lvl->GetSize().y * DirtTargetPercent / 100; };
+    static int TargetDirtAmount(Terrain * lvl) { return lvl->GetSize().x * lvl->GetSize().y * DirtTargetPercent / 100; };
 };
 
 class ToastLevelGenerator : public GeneratorAlgorithm
 {
   public:
-    std::unique_ptr<Level> Generate(Size size) override;
+    std::unique_ptr<Terrain> Generate(Size size) override;
 };
 
 } // namespace levelgen::toast

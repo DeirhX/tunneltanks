@@ -1,6 +1,6 @@
 #include <cstdlib>
 
-#include <level.h>
+#include <Terrain.h>
 #include <projectiles.h>
 #include <tank.h>
 #include <tank_list.h>
@@ -11,7 +11,7 @@
 #include "projectile_list.h"
 #include <algorithm>
 
-TankList::TankList(Level * level, ProjectileList * projectile_list) : level(level) {}
+TankList::TankList(Terrain * level, ProjectileList * projectile_list) : level(level) {}
 
 Tank * TankList::AddTank(TankColor color, TankBase * tank_base)
 {

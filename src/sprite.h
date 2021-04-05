@@ -2,7 +2,7 @@
 #include "containers.h"
 #include "duration.h"
 
-class Level;
+class Terrain;
 class Surface;
 
 /*
@@ -16,7 +16,7 @@ class Sprite : public Invalidable
   public:
     Sprite(Position position_) : position(position_) {}
     virtual void Draw(Surface & surface) const = 0;
-    virtual void Advance(Level * level) {};
+    virtual void Advance(Terrain * level) {};
 
     void SetPosition(Position new_position) { this->position = new_position; }
     [[nodiscard]] Position GetPosition() const { return this->position; }
@@ -34,6 +34,6 @@ class FailedInteraction : public Sprite
   public:
     FailedInteraction(Position position_) : Sprite(position_) {}
 
-    void Advance(Level * level) override;
+    void Advance(Terrain * level) override;
     void Draw(Surface & surface) const override;
 };

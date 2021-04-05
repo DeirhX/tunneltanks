@@ -10,11 +10,11 @@ class TankList
 {
   private:
     ValueContainer<Tank> list;
-    Level * level;
+    Terrain * level;
     //ProjectileList * projectile_list;
 
   public:
-    TankList(Level * level, ProjectileList * projectile_list);
+    TankList(Terrain * level, ProjectileList * projectile_list);
     //~TankList();
 
     Tank * AddTank(TankColor id, TankBase * tank_base);

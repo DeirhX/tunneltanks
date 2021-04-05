@@ -4,7 +4,7 @@
 #include <levelgen.h>
 #include <levelgen_toast.h>
 #include <levelgenutil.h>
-#include <level.h>
+#include <Terrain.h>
 #include <memalloc.h>
 #include <random.h>
 #include <trace.h>
@@ -46,7 +46,7 @@ static int pairing_cmp(const void *a, const void *b) {
 	return ((Pairing *)a)->dist - ((Pairing *)b)->dist;
 }
 
-static void generate_tree(Level *lvl) {
+static void generate_tree(Terrain *lvl) {
 	auto perf = MeasureFunction<2>{ __FUNCTION__ };
 
 	int *dsets, paircount;
@@ -109,7 +109,7 @@ static void generate_tree(Level *lvl) {
 		for(k=0; k< ToastParams::TreeSize; k++)
 			if(dsets[k] == bset) 
 				dsets[k] = aset;
-		draw_line(lvl, points[pairs[i].a], points[pairs[i].b], LevelPixel::LevelGenDirt, 0);
+		draw_line(lvl, points[pairs[i].a], points[pairs[i].b], TerrainPixel::LevelGenDirt, 0);
 	}
 	
 	/* We don't need this data anymore: */
@@ -138,20 +138,20 @@ static void generate_tree(Level *lvl) {
 //
 //
 // Much less instructions. Optimizer cannot see it through and fold it :(
-static int has_neighbor(Level* lvl, int x, int y) {
-	if (lvl->GetVoxelRaw(( x - 1 + lvl->GetSize().x * (y - 1) )) == LevelPixel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw(( x     + lvl->GetSize().x * (y - 1) )) == LevelPixel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw(( x + 1 + lvl->GetSize().x * (y - 1) )) == LevelPixel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw(( x - 1 + lvl->GetSize().x * (y    ) )) == LevelPixel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw(( x + 1 + lvl->GetSize().x * (y    ) )) == LevelPixel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw(( x - 1 + lvl->GetSize().x * (y + 1) )) == LevelPixel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw(( x     + lvl->GetSize().x * (y + 1) )) == LevelPixel::LevelGenDirt) return 1;
-	if (lvl->GetVoxelRaw(( x + 1 + lvl->GetSize().x * (y + 1) )) == LevelPixel::LevelGenDirt) return 1;
+static int has_neighbor(Terrain* lvl, int x, int y) {
+	if (lvl->GetVoxelRaw(( x - 1 + lvl->GetSize().x * (y - 1) )) == TerrainPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw(( x     + lvl->GetSize().x * (y - 1) )) == TerrainPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw(( x + 1 + lvl->GetSize().x * (y - 1) )) == TerrainPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw(( x - 1 + lvl->GetSize().x * (y    ) )) == TerrainPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw(( x + 1 + lvl->GetSize().x * (y    ) )) == TerrainPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw(( x - 1 + lvl->GetSize().x * (y + 1) )) == TerrainPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw(( x     + lvl->GetSize().x * (y + 1) )) == TerrainPixel::LevelGenDirt) return 1;
+	if (lvl->GetVoxelRaw(( x + 1 + lvl->GetSize().x * (y + 1) )) == TerrainPixel::LevelGenDirt) return 1;
 	return 0;
 }
 
 
-static void set_outside(Level *lvl, LevelPixel val) {
+static void set_outside(Terrain *lvl, TerrainPixel val) {
 	int i;
 	Size size = lvl->GetSize();
 	
@@ -161,13 +161,13 @@ static void set_outside(Level *lvl, LevelPixel val) {
 	for (i = 1; i < size.y-1; i++) lvl->SetVoxelRaw({ size.x - 1, i }, val);
 }
 
-static void expand_init(Level *lvl, PositionQueue& q) {
+static void expand_init(Terrain *lvl, PositionQueue& q) {
 	auto perf = MeasureFunction<3>{ __FUNCTION__ };
 	for(int y = 1; y<lvl->GetSize().y-1; y++)
 		for (int x = 1; x < lvl->GetSize().x - 1; x++) {
 			int offset = x + y * lvl->GetSize().x;
-			if (lvl->GetVoxelRaw(offset) != LevelPixel::LevelGenDirt  && has_neighbor(lvl, x, y)) {
-				lvl->SetVoxelRaw(offset, LevelPixel::LevelGenMark);
+			if (lvl->GetVoxelRaw(offset) != TerrainPixel::LevelGenDirt  && has_neighbor(lvl, x, y)) {
+				lvl->SetVoxelRaw(offset, TerrainPixel::LevelGenMark);
 				q.push({ x, y });
 			}
 		}
@@ -180,7 +180,7 @@ struct ExpandResult {
 };
 	
 
-ExpandResult expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, RandomGenerator random) {
+ExpandResult expand_once(Terrain *lvl, circular_buffer_adaptor<Position>& q, RandomGenerator random) {
 
 	//for (int i = 0; i < q.size() * 1000; ++i) {
 	//	if (i % 10000 == 1)
@@ -202,7 +202,7 @@ ExpandResult expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, Rando
 		odds  = std::min(std::min(xodds, yodds), ToastParams::MaxDirtSpawnOdds);
 		
 		if(random.Bool(odds)) {
-			lvl->SetVoxelRaw(temp, LevelPixel::LevelGenDirt);
+			lvl->SetVoxelRaw(temp, TerrainPixel::LevelGenDirt);
 			++result.dirt_generated;
 			
 			/* Now, queue up any neighbors that qualify: */
@@ -211,9 +211,9 @@ ExpandResult expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, Rando
 				
 				int tx = temp.x + (j % 3) - 1;
 				int ty = temp.y + (j / 3) - 1;
-				LevelPixel v = lvl->GetVoxelRaw({ tx, ty });
-				if(v == LevelPixel::LevelGenRock) {
-				   // v  = LevelPixel::LevelGenMark; // this is never read
+				TerrainPixel v = lvl->GetVoxelRaw({ tx, ty });
+				if(v == TerrainPixel::LevelGenRock) {
+				   // v  = TerrainPixel::LevelGenMark; // this is never read
 				   ++result.rocks_marked;
 					q.push({ tx, ty });
 				}
@@ -224,7 +224,7 @@ ExpandResult expand_once(Level *lvl, circular_buffer_adaptor<Position>& q, Rando
 	return result;
 }
 
-static void expand_process(Level* lvl, PositionQueue& q) {
+static void expand_process(Terrain* lvl, PositionQueue& q) {
 	auto measure_function = MeasureFunction<3>{ __FUNCTION__ };
 	/* Want to generate at least goal_generated */
 	const int goal_generated = ToastParams::TargetDirtAmount(lvl);
@@ -381,12 +381,12 @@ static void expand_process(Level* lvl, PositionQueue& q) {
 	DebugTrace<4>("waits_continue: %d waits_main: %d threads_notify: %d \r\n", waits_continue.load(), waits_main.load(), threads_notify.load());
 }
 
-static void expand_cleanup(Level *lvl) {
+static void expand_cleanup(Terrain *lvl) {
 	auto perf = MeasureFunction<3>{ __FUNCTION__ };
 	unmark_all(lvl);
 }
 
-static void randomly_expand(Level *lvl) {
+static void randomly_expand(Terrain *lvl) {
 	auto perf = MeasureFunction<2>{ __FUNCTION__ };
 	/* Experimentally, the queue never grew to larger than 3/50ths of the level
 	 * size, so we can use that to save quite a bit of memory: */
@@ -403,7 +403,7 @@ static void randomly_expand(Level *lvl) {
  * STAGE 3: Smooth out the graph with a cellular automaton                    *
  *----------------------------------------------------------------------------*/
 	
-static int smooth_once(Level *lvl) {
+static int smooth_once(Terrain *lvl) {
 
 	/* Smooth surfaces. Require at least 3 neighbors to keep alive. Spawn new at 5 neighbors. */
 	auto smooth_step = [lvl](int from_y, int until_y, ThreadLocal*) {
@@ -412,11 +412,11 @@ static int smooth_once(Level *lvl) {
 		Size size = lvl->GetSize();
 		for (int y = from_y; y <= until_y; y++)
 			for (int x = 1; x < size.x - 1; x++) {
-                LevelPixel oldbit = lvl->GetVoxelRaw({ x, y });
+                TerrainPixel oldbit = lvl->GetVoxelRaw({ x, y });
 
 				int n = Queries::CountNeighborValues({x, y}, lvl);
-				bool paintRock = (oldbit != LevelPixel::LevelGenDirt) ? (n >= 3) : (n > 4);
-				lvl->SetVoxelRaw({ x, y }, paintRock ? LevelPixel::LevelGenRock : LevelPixel::LevelGenDirt);
+				bool paintRock = (oldbit != TerrainPixel::LevelGenDirt) ? (n >= 3) : (n > 4);
+				lvl->SetVoxelRaw({ x, y }, paintRock ? TerrainPixel::LevelGenRock : TerrainPixel::LevelGenDirt);
 
 				count += lvl->GetVoxelRaw({ x, y }) != oldbit;
 			}
@@ -437,13 +437,13 @@ static int smooth_once(Level *lvl) {
 	return count;
 }
 
-static void smooth_cavern(Level *lvl) {
+static void smooth_cavern(Terrain *lvl) {
 	auto perf = MeasureFunction<2>{ __FUNCTION__ };
 
-	set_outside(lvl, LevelPixel::LevelGenDirt);
+	set_outside(lvl, TerrainPixel::LevelGenDirt);
 	auto steps_remain = ToastParams::SmoothingSteps;
 	while(smooth_once(lvl) && --steps_remain != 0);
-	set_outside(lvl, LevelPixel::LevelGenRock);
+	set_outside(lvl, TerrainPixel::LevelGenRock);
 }
 
 
@@ -451,10 +451,10 @@ static void smooth_cavern(Level *lvl) {
  * MAIN FUNCTIONS:                                                            *
  *----------------------------------------------------------------------------*/
 
-std::unique_ptr<Level> ToastLevelGenerator::Generate(Size size)
+std::unique_ptr<Terrain> ToastLevelGenerator::Generate(Size size)
 {
-    std::unique_ptr<Level> level = std::make_unique<Level>(size);
-    Level * lvl = level.get();
+    std::unique_ptr<Terrain> level = std::make_unique<Terrain>(size);
+    Terrain * lvl = level.get();
 
 	auto perf = MeasureFunction<1>{ __FUNCTION__ };
 

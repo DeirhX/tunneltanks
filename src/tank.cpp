@@ -1,7 +1,7 @@
 #include "tank.h"
 #include "algorithm"
 #include "controller.h"
-#include "level.h"
+#include "Terrain.h"
 #include "level_view.h"
 #include "projectiles.h"
 #include "random.h"
@@ -24,7 +24,7 @@ PublicTankInfo::PublicTankInfo(const Controllable & controllable, Position posit
 {
 }
 
-Tank::Tank(TankColor color, Level * level, TankBase * tank_base)
+Tank::Tank(TankColor color, Terrain * level, TankBase * tank_base)
     : Base(tank_base->GetPosition(), tweak::tank::DefaultTankReactor, tweak::tank::ResourcesMax, level), color(color), tank_base(tank_base),
       turret(this, Palette.GetTank(color)[2]), materializer(this, &this->GetResources())
 {
@@ -147,7 +147,7 @@ CollisionType Tank::TryCollide(Direction rotation, Position position_)
                     }
                     return false;
                 },
-                [&result](LevelPixel & pixel) {
+                [&result](TerrainPixel & pixel) {
                     if (Pixel::IsDirt(pixel))
                         result = CollisionType::Dirt;
 
@@ -183,14 +183,14 @@ void Tank::TransferResourcesToBase(TankBase & base)
 void Tank::CollectItems()
 {
     this->ForEachTankPixel([this](Position world_position) {
-        LevelPixel pixel = this->level->GetPixel(world_position);
+        TerrainPixel pixel = this->level->GetPixel(world_position);
         if (Pixel::IsEnergy(pixel))
         {
-            this->level->SetPixel(world_position, LevelPixel::Blank);
+            this->level->SetPixel(world_position, TerrainPixel::Blank);
             EnergyAmount energy_collected = 100_energy;
-            if (pixel == LevelPixel::EnergyMedium)
+            if (pixel == TerrainPixel::EnergyMedium)
                 energy_collected.amount *= 2;
-            else if (pixel == LevelPixel::EnergyHigh)
+            else if (pixel == TerrainPixel::EnergyHigh)
                 energy_collected.amount *= 4;
             this->GetReactor().Add(energy_collected);
         }

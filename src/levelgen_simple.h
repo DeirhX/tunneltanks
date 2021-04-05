@@ -1,6 +1,6 @@
 #pragma once
 #include "levelgen.h"
-#include <level.h>
+#include <Terrain.h>
 
 namespace levelgen::simple
 {
@@ -8,7 +8,7 @@ namespace levelgen::simple
 class SimpleLevelGenerator : public GeneratorAlgorithm
 {
   public:
-    std::unique_ptr<Level> Generate(Size size) override;
+    std::unique_ptr<Terrain> Generate(Size size) override;
 };
 
 } // namespace levelgen::simple

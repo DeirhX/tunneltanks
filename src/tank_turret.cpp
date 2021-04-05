@@ -1,7 +1,7 @@
 ﻿#include "tank_turret.h"
 #include "controller.h"
 #include "duration.h"
-#include "level.h"
+#include "Terrain.h"
 #include "raycaster.h"
 #include "render_surface.h"
 #include "tank.h"
@@ -66,7 +66,7 @@ void TankTurret::Draw(Surface * surface) const
     }
 }
 
-void TankTurret::Erase(Level * level) const
+void TankTurret::Erase(Terrain * level) const
 {
     for (const Position & pos : this->TurretVoxels)
     {

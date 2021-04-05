@@ -6,7 +6,7 @@
 class MachineryList : public ItemListAdaptor<Harvester, Charger, HarvesterTemplate, ChargerTemplate>
 {
 public:
-    void Advance(class Level * level, class TankList * tank_list);
+    void Advance(class Terrain * level, class TankList * tank_list);
     void Draw(class Surface * surface);
 
     Machine * GetMachineAtPoint(Position position);

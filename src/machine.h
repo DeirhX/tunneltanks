@@ -4,7 +4,7 @@
 #include "tweak.h"
 #include "types.h"
 
-class Level;
+class Terrain;
 
 enum class MachineConstructState
 {
@@ -38,10 +38,10 @@ class Machine : public Invalidable
   public:
     const Position & GetPosition() const { return this->position; }
 
-    bool CheckAlive(Level * level);
-    virtual void Die(Level * level) = 0;
+    bool CheckAlive(Terrain * level);
+    virtual void Die(Terrain * level) = 0;
     /* They will not be called via v-table, don't worry. Compile-time polymorphism only. Just so you don't   */
-    virtual void Advance(Level * level) = 0;
+    virtual void Advance(Terrain * level) = 0;
     virtual void Draw(Surface * surface) const = 0;
 
     [[nodiscard]] virtual bool TestCollide(Position position) const;
@@ -84,10 +84,10 @@ class Harvester final : public Machine
         type(type)
     {
     }
-    void Advance(Level * level) override;
+    void Advance(Terrain * level) override;
     void Draw(Surface * surface) const override;
   private:
-    void Die(Level * level) override;
+    void Die(Terrain * level) override;
 };
 
 /*
@@ -106,11 +106,11 @@ class Charger final : public Machine
     {
     }
 
-    void Advance(Level * level) override;
+    void Advance(Terrain * level) override;
     void Draw(Surface * surface) const override;
 
   private:
-    void Die(Level * level) override;
+    void Die(Terrain * level) override;
 };
 
 /*
@@ -129,9 +129,9 @@ class MachineTemplate : public Machine
   public:
     MachineTemplate(Position position, BoundingBox bounding_box, MaterialAmount build_cost_, MaterialContainer & paying_host);
 
-    void Advance(Level *) override;
+    void Advance(Terrain *) override;
     void ResetToOrigin();
-    void Die(Level *) override {}
+    void Die(Terrain *) override {}
 
     virtual Machine * PayAndBuildMachine() const = 0;
 

@@ -1,6 +1,6 @@
 #include "projectiles.h"
 #include <boost/circular_buffer.hpp>
-#include <level.h>
+#include <Terrain.h>
 #include <random.h>
 #include <tank.h>
 #include <tweak.h>
@@ -31,7 +31,7 @@ void Bullet::Advance(TankList *)
             machine.GetReactor().Exhaust(tweak::tank::ShotDamage);
             return true;
         },
-        [](LevelPixel level_pixel) { return Pixel::IsAnyCollision(level_pixel); }))
+        [](TerrainPixel level_pixel) { return Pixel::IsAnyCollision(level_pixel); }))
 
         {
             GetWorld()->GetProjectileList()->Add(ExplosionDesc::AllDirections(
@@ -76,7 +76,7 @@ void FlyingBarrel::Advance(TankList *, ExplosionFuncType explosionFunc)
             tested_pos.ToIntPosition(),
             [this](Tank & tank) { return tank.GetColor() != this->tank->GetColor(); },
             [](Machine &) { return true; },
-            [](LevelPixel & pixel) { return Pixel::IsAnyCollision(pixel); });
+            [](TerrainPixel & pixel) { return Pixel::IsAnyCollision(pixel); });
 
         if (is_collision)
         {
@@ -107,7 +107,7 @@ void FlyingBarrel::Draw(Surface * drawBuffer)
 
 void ConcreteBarrel::Advance(TankList * tankList)
 {
-    auto ExplosionFunc = [](PositionF proj_position, SpeedF proj_speed, Level * proj_level, ProjectileList * projectile_list) {
+    auto ExplosionFunc = [](PositionF proj_position, SpeedF proj_speed, Terrain * proj_level, ProjectileList * projectile_list) {
         projectile_list->Add(ExplosionDesc::Fan(proj_position.ToIntPosition(), proj_speed, math::Radians{math::half_pi},
                                                 tweak::explosion::dirt::ShrapnelCount, tweak::explosion::dirt::Speed,
                                                 tweak::explosion::dirt::Frames)
@@ -118,7 +118,7 @@ void ConcreteBarrel::Advance(TankList * tankList)
 
 void DirtBarrel::Advance(TankList * tankList)
 {
-    auto ExplosionFunc = [](PositionF proj_position, SpeedF proj_speed, Level * proj_level, ProjectileList * projectile_list) {
+    auto ExplosionFunc = [](PositionF proj_position, SpeedF proj_speed, Terrain * proj_level, ProjectileList * projectile_list) {
         projectile_list->Add(ExplosionDesc::Fan(proj_position.ToIntPosition(), proj_speed, math::Radians{math::half_pi},
                                                 tweak::explosion::dirt::ShrapnelCount, tweak::explosion::dirt::Speed,
                                                 tweak::explosion::dirt::Frames)
@@ -133,20 +133,20 @@ void ShrapnelBase::Advance(TankList * tankList)
 {
     auto AdvanceStepFunc = [this](PositionF, PositionF, TankList *) {
         /* Make sure we didn't hit a level detail: */
-        LevelPixel c = level->GetPixel(this->pos.ToIntPosition());
+        TerrainPixel c = level->GetPixel(this->pos.ToIntPosition());
         if (Pixel::IsBlockingCollision(c))
         {
             if ((Pixel::IsConcrete(c) && Random.Bool(tweak::explosion::ChanceToDestroyConcrete))
                 || (Pixel::IsRock(c) && Random.Bool(tweak::explosion::ChanceToDestroyRock)))
             {
                 level->SetPixel(this->pos.ToIntPosition(),
-                                Random.Bool(500) ? LevelPixel::DecalHigh : LevelPixel::DecalLow);
+                                Random.Bool(500) ? TerrainPixel::DecalHigh : TerrainPixel::DecalLow);
             }
             this->Invalidate();
             return false;
         }
         /* Effects blank everything out in their paths: */
-        level->SetPixel(this->pos.ToIntPosition(), Random.Bool(500) ? LevelPixel::DecalHigh : LevelPixel::DecalLow);
+        level->SetPixel(this->pos.ToIntPosition(), Random.Bool(500) ? TerrainPixel::DecalHigh : TerrainPixel::DecalLow);
         return true;
     };
 
@@ -185,10 +185,10 @@ void ConcreteFoam::Advance(TankList * tankList)
     auto AdvanceStepFunc = [this](PositionF, PositionF prev_pos, TankList *) {
 
         /* Make sure we didn't hit a level detail: */
-        LevelPixel c = level->GetPixel(this->pos.ToIntPosition());
+        TerrainPixel c = level->GetPixel(this->pos.ToIntPosition());
         if (Pixel::IsAnyCollision(c) && !Pixel::IsConcrete(c))
         {
-            level->SetPixel(prev_pos.ToIntPosition(), Random.Bool(500) ? LevelPixel::ConcreteHigh : LevelPixel::ConcreteLow);
+            level->SetPixel(prev_pos.ToIntPosition(), Random.Bool(500) ? TerrainPixel::ConcreteHigh : TerrainPixel::ConcreteLow);
             this->Invalidate();
             return false;
         }
@@ -207,11 +207,11 @@ void DirtFoam::Advance(TankList * tankList)
 {
     auto AdvanceStepFunc = [this](PositionF, PositionF prev_pos, TankList *) {
         /* Make sure we didn't hit a level detail: */
-        LevelPixel c = level->GetPixel(this->pos.ToIntPosition());
+        TerrainPixel c = level->GetPixel(this->pos.ToIntPosition());
         if (Pixel::IsAnyCollision(c))
         {
             level->SetPixel(prev_pos.ToIntPosition(),
-                            Random.Bool(500) ? LevelPixel::DirtHigh : LevelPixel::DirtLow);
+                            Random.Bool(500) ? TerrainPixel::DirtHigh : TerrainPixel::DirtLow);
             this->Invalidate();
             return false;
         }

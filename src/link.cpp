@@ -1,7 +1,7 @@
 ﻿#include "link.h"
 
 #include "color_palette.h"
-#include "level.h"
+#include "Terrain.h"
 #include "render_surface.h"
 #include "shape_renderer.h"
 #include "world.h"
@@ -251,7 +251,7 @@ void Link::Advance()
 bool Link::IsConnectionBlocked(Position from, Position to)
 {
     return !Raycaster::Cast(PositionF{from}, PositionF{to}, [](PositionF tested_pos, PositionF) {
-        auto pixel = GetWorld()->GetLevel()->GetPixel(tested_pos.ToIntPosition());
+        auto pixel = GetWorld()->GetTerrain()->GetPixel(tested_pos.ToIntPosition());
         return Pixel::IsAnyCollision(pixel) ? false : true;
     });
 }

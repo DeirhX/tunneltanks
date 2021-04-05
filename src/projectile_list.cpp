@@ -1,8 +1,8 @@
 #include "projectile_list.h"
-#include "level.h"
+#include "Terrain.h"
 #include "tank_list.h"
 
-void ProjectileList::Advance(Level *, TankList * tankList)
+void ProjectileList::Advance(Terrain *, TankList * tankList)
 {
     /* Append everything that was created last tick */
     this->items.MoveFrom(this->newly_created_items);

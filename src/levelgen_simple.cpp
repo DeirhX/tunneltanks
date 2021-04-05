@@ -1,4 +1,4 @@
-#include <level.h>
+#include <Terrain.h>
 #include <levelgen_simple.h>
 #include <levelgenutil.h>
 #include <random.h>
@@ -23,7 +23,7 @@ enum Side : char
     SIDE_LEFT = 5
 };
 
-static void add_rock_lines(Level *lvl, Side s)
+static void add_rock_lines(Terrain *lvl, Side s)
 {
     Vector cur, prev;
     int is_rare, needs_flip = 0;
@@ -89,9 +89,9 @@ static void add_rock_lines(Level *lvl, Side s)
 
         /* Draw this in whatever way is needed: */
         if (needs_flip)
-            draw_line(lvl, Vector(cur.y, cur.x), Vector(prev.y, prev.x), static_cast<LevelPixel>(s), 0);
+            draw_line(lvl, Vector(cur.y, cur.x), Vector(prev.y, prev.x), static_cast<TerrainPixel>(s), 0);
         else
-            draw_line(lvl, cur, prev, static_cast<LevelPixel>(s), 0);
+            draw_line(lvl, cur, prev, static_cast<TerrainPixel>(s), 0);
 
         prev = cur;
 
@@ -102,26 +102,26 @@ static void add_rock_lines(Level *lvl, Side s)
     Position p;
     if (s == SIDE_TOP)
         for (p.x = 0; p.x < lvl->GetSize().x; p.x++)
-            for (p.y = 0; lvl->GetPixel(p) != static_cast<LevelPixel>(s); p.y++)
-                lvl->SetVoxelRaw(p, LevelPixel::LevelGenRock);
+            for (p.y = 0; lvl->GetPixel(p) != static_cast<TerrainPixel>(s); p.y++)
+                lvl->SetVoxelRaw(p, TerrainPixel::LevelGenRock);
 
     else if (s == SIDE_RIGHT)
         for (p.y = 0; p.y < lvl->GetSize().y; p.y++)
-            for (p.x = lvl->GetSize().x - 1; lvl->GetPixel(p) != static_cast<LevelPixel>(s); p.x--)
-                lvl->SetVoxelRaw(p, LevelPixel::LevelGenRock);
+            for (p.x = lvl->GetSize().x - 1; lvl->GetPixel(p) != static_cast<TerrainPixel>(s); p.x--)
+                lvl->SetVoxelRaw(p, TerrainPixel::LevelGenRock);
 
     else if (s == SIDE_BOTTOM)
         for (p.x = 0; p.x < lvl->GetSize().x; p.x++)
-            for (p.y = lvl->GetSize().y - 1; lvl->GetPixel(p) != static_cast<LevelPixel>(s); p.y--)
-                lvl->SetVoxelRaw(p, LevelPixel::LevelGenRock);
+            for (p.y = lvl->GetSize().y - 1; lvl->GetPixel(p) != static_cast<TerrainPixel>(s); p.y--)
+                lvl->SetVoxelRaw(p, TerrainPixel::LevelGenRock);
 
     else if (s == SIDE_LEFT)
         for (p.y = 0; p.y < lvl->GetSize().y; p.y++)
-            for (p.x = 0; lvl->GetPixel(p) != static_cast<LevelPixel>(s); p.x++)
-                lvl->SetVoxelRaw(p,  LevelPixel::LevelGenRock);
+            for (p.x = 0; lvl->GetPixel(p) != static_cast<TerrainPixel>(s); p.x++)
+                lvl->SetVoxelRaw(p,  TerrainPixel::LevelGenRock);
 }
 
-static void add_spawns(Level *lvl)
+static void add_spawns(Terrain *lvl)
 {
 
     lvl->SetSpawn(0, generate_inside(lvl->GetSize(), BORDER));
@@ -149,12 +149,12 @@ static void add_spawns(Level *lvl)
     }
 }
 
-std::unique_ptr<Level> SimpleLevelGenerator::Generate(Size size)
+std::unique_ptr<Terrain> SimpleLevelGenerator::Generate(Size size)
 {
-    std::unique_ptr<Level> level = std::make_unique<Level>(size);
-    Level * lvl = level.get();
+    std::unique_ptr<Terrain> level = std::make_unique<Terrain>(size);
+    Terrain * lvl = level.get();
     /* Levels default to all rock. Set this to all dirt: */
-    fill_all(lvl, LevelPixel::LevelGenDirt);
+    fill_all(lvl, TerrainPixel::LevelGenDirt);
 
     /* Add rock walls on all sides: */
     add_rock_lines(lvl, SIDE_TOP);

@@ -1,6 +1,6 @@
 ﻿#include "sprite_list.h"
 
-void SpriteList::Advance(Level * level)
+void SpriteList::Advance(Terrain * level)
 {
     this->items.ForEach([level](Sprite & sprite) { sprite.Advance(level); });
 }

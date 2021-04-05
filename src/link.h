@@ -170,7 +170,7 @@ class Link : public Invalidable
 /* LinkMap: Manages all link point updates and links */
 class LinkMap
 {
-    [[maybe_unused]] class Level * level;
+    [[maybe_unused]] class Terrain * level;
     ValueContainer<LinkPoint> link_points = {};
     ValueContainer<Link> links = {};
 
@@ -180,7 +180,7 @@ class LinkMap
     bool is_linkpoint_moved = false;
 
   public:
-    LinkMap(class Level * level) : level(level) {}
+    LinkMap(class Terrain * level) : level(level) {}
 
     [[nodiscard]] ValueContainerView<LinkPoint> & GetLinkPoints() { return this->link_points; }
 

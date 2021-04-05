@@ -1,4 +1,4 @@
-#include <level.h>
+#include <Terrain.h>
 #include <levelgenutil.h>
 #include <memalloc.h>
 #include <random.h>
@@ -144,10 +144,10 @@ static void maze_free(Maze *m) {
 }
 
 
-std::unique_ptr<Level> MazeLevelGenerator::Generate(Size size)
+std::unique_ptr<Terrain> MazeLevelGenerator::Generate(Size size)
 {
-    std::unique_ptr<Level> level = std::make_unique<Level>(size);
-    Level * lvl = level.get();
+    std::unique_ptr<Terrain> level = std::make_unique<Terrain>(size);
+    Terrain * lvl = level.get();
 	int x, y;
 	Maze *m = maze_new(lvl->GetSize()/CELL_SIZE);
 	
@@ -162,27 +162,27 @@ std::unique_ptr<Level> MazeLevelGenerator::Generate(Size size)
 			if(c.up)
 				draw_line(lvl,
 					Vector(x*CELL_SIZE,     y*CELL_SIZE), 
-					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), LevelPixel::LevelGenDirt, 1);
+					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), TerrainPixel::LevelGenDirt, 1);
 			
 			if(c.right)
 				draw_line(lvl,
 					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), 
-					Vector((x+1)*CELL_SIZE, (y+1)*CELL_SIZE), LevelPixel::LevelGenDirt, 1);
+					Vector((x+1)*CELL_SIZE, (y+1)*CELL_SIZE), TerrainPixel::LevelGenDirt, 1);
 		}
 	}
 	
 	/* Draw a line up the left, so you can see the texture there too: */
-	draw_line(lvl, Vector(0,0), Vector(0,m->h*CELL_SIZE), LevelPixel::LevelGenDirt, 1);
+	draw_line(lvl, Vector(0,0), Vector(0,m->h*CELL_SIZE), TerrainPixel::LevelGenDirt, 1);
 	
 	/* Fill in the unused space left behind on the right/bottom: */
 	/* TODO: Have a fill_box() in levelgenutil.c? */
 	for(y=0; y<lvl->GetSize().y; y++)
 		for(x=m->w*CELL_SIZE; x<lvl->GetSize().x; x++)
-			lvl->SetPixel({ x, y }, LevelPixel::LevelGenDirt);
+			lvl->SetPixel({ x, y }, TerrainPixel::LevelGenDirt);
 	
 	for(y=m->h*CELL_SIZE; y<lvl->GetSize().y; y++)
 		for(x=0; x<m->w*CELL_SIZE; x++)
-			lvl->SetPixel({ x, y }, LevelPixel::LevelGenDirt);
+			lvl->SetPixel({ x, y }, TerrainPixel::LevelGenDirt);
 	
 	/* Rough it up a little, and invert: */
 	rough_up(lvl);

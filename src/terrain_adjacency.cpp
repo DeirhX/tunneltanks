@@ -1,8 +1,8 @@
-#include "level_adjacency.h"
-#include "level.h"
+#include "terrain_adjacency.h"
+#include "terrain.h"
 
-DirtAdjacencyData::DirtAdjacencyData(Size size, Container2D<LevelPixel> * level_data)
-    : LevelAdjacencyData<uint8_t>(size), level_data(level_data)
+DirtAdjacencyData::DirtAdjacencyData(Size size, Container2D<TerrainPixel> * level_data)
+    : TerrainAdjacencyData<uint8_t>(size), level_data(level_data)
 {
 }
 

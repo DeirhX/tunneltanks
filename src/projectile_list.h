@@ -29,6 +29,6 @@ class ProjectileList
     void RemoveAll() { items.RemoveAll(); };
     void Shrink() { this->items.Shrink(); }
 
-    void Advance(class Level * level, class TankList * tankList);
+    void Advance(class Terrain * level, class TankList * tankList);
     void Draw(class Surface * drawBuffer);
 };
