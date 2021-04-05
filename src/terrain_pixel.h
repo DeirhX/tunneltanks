@@ -1,10 +1,10 @@
 ﻿#pragma once
 
 /*
- * LevelPixel
+ * TerrainPixel
  * Core pixel state of the level. Terrain, bases, rock and every other pixel kind there is.
  */
-enum class LevelPixel : char
+enum class TerrainPixel : char
 {
     Blank = ' ',     /* Nothing. The void of the space. */
     DirtHigh = 'D',  /* Standard dirt */
@@ -32,30 +32,30 @@ enum class LevelPixel : char
 class Pixel
 {
   public:
-    static bool IsDirt(LevelPixel pixel) { return pixel == LevelPixel::DirtHigh || pixel == LevelPixel::DirtLow; }
-    static bool IsDiggable(LevelPixel pixel)
+    static bool IsDirt(TerrainPixel pixel) { return pixel == TerrainPixel::DirtHigh || pixel == TerrainPixel::DirtLow; }
+    static bool IsDiggable(TerrainPixel pixel)
     {
-        return pixel == LevelPixel::DirtHigh || pixel == LevelPixel::DirtLow || pixel == LevelPixel::DirtGrow;
+        return pixel == TerrainPixel::DirtHigh || pixel == TerrainPixel::DirtLow || pixel == TerrainPixel::DirtGrow;
     }
-    static bool IsTorchable(LevelPixel pixel) { return IsDiggable(pixel) || IsMineral(pixel); }
-    static bool IsSoftCollision(LevelPixel pixel) { return IsDirt(pixel); }
-    static bool IsBlockingCollision(LevelPixel pixel)
+    static bool IsTorchable(TerrainPixel pixel) { return IsDiggable(pixel) || IsMineral(pixel); }
+    static bool IsSoftCollision(TerrainPixel pixel) { return IsDirt(pixel); }
+    static bool IsBlockingCollision(TerrainPixel pixel)
     {
-        return pixel == LevelPixel::Rock || IsConcrete(pixel) ||
-               (pixel >= LevelPixel::BaseMin && pixel <= LevelPixel::BaseMax);
+        return pixel == TerrainPixel::Rock || IsConcrete(pixel) ||
+               (pixel >= TerrainPixel::BaseMin && pixel <= TerrainPixel::BaseMax);
     }
-    static bool IsAnyCollision(LevelPixel pixel) { return IsSoftCollision(pixel) || IsBlockingCollision(pixel); }
-    static bool IsBase(LevelPixel pixel) { return (pixel >= LevelPixel::BaseMin && pixel <= LevelPixel::BaseMax); }
-    static bool IsScorched(LevelPixel pixel) { return pixel == LevelPixel::DecalHigh || pixel == LevelPixel::DecalLow; }
-    static bool IsConcrete(LevelPixel pixel)
+    static bool IsAnyCollision(TerrainPixel pixel) { return IsSoftCollision(pixel) || IsBlockingCollision(pixel); }
+    static bool IsBase(TerrainPixel pixel) { return (pixel >= TerrainPixel::BaseMin && pixel <= TerrainPixel::BaseMax); }
+    static bool IsScorched(TerrainPixel pixel) { return pixel == TerrainPixel::DecalHigh || pixel == TerrainPixel::DecalLow; }
+    static bool IsConcrete(TerrainPixel pixel)
     {
-        return pixel == LevelPixel::ConcreteHigh || pixel == LevelPixel::ConcreteLow;
+        return pixel == TerrainPixel::ConcreteHigh || pixel == TerrainPixel::ConcreteLow;
     }
-    static bool IsRock(LevelPixel pixel) { return pixel == LevelPixel::Rock;  }
-    static bool IsMineral(LevelPixel pixel) { return IsConcrete(pixel) || IsRock(pixel); }
-    static bool IsEnergy(LevelPixel pixel)
+    static bool IsRock(TerrainPixel pixel) { return pixel == TerrainPixel::Rock;  }
+    static bool IsMineral(TerrainPixel pixel) { return IsConcrete(pixel) || IsRock(pixel); }
+    static bool IsEnergy(TerrainPixel pixel)
     {
-        return pixel == LevelPixel::EnergyLow || pixel == LevelPixel::EnergyMedium || pixel == LevelPixel::EnergyHigh;
+        return pixel == TerrainPixel::EnergyLow || pixel == TerrainPixel::EnergyMedium || pixel == TerrainPixel::EnergyHigh;
     }
-    static bool IsEmpty(LevelPixel pixel) { return pixel == LevelPixel::Blank; }
+    static bool IsEmpty(TerrainPixel pixel) { return pixel == TerrainPixel::Blank; }
 };
