@@ -31,9 +31,9 @@ namespace perf
 namespace screen
 {
 	/* The default size of the window: */
-	constexpr Size WindowSize = 2 * Size{ 640, 400 };
+	constexpr Size WindowSize = 3 * Size{ 640, 400 };
     /* The virtual resolution of the game. (IE: How many blocks tall/wide) */
-    constexpr Size RenderSurfaceSize = {160, 100};
+    constexpr Size RenderSurfaceSize = {320, 200};
 
     /* Constants for drawing static: (The bottom 3 constants are out of 1000) */
     constexpr float DrawStaticFuelThreshold = 0.2f;
