@@ -15,7 +15,7 @@ Screen::Screen(bool is_fullscreen, ScreenRenderSurface * render_surface) : is_fu
 /* Fills a surface with a blue/black pattern: */
 void Screen::FillBackground()
 {
-    Size dim = GetSystem()->GetRenderer()->GetSurfaceResolution();
+    const Size dim = GetSystem()->GetRenderer()->GetSurfaceResolution();
 
     GetSystem()->GetSurface()->FillRectangle({{0, 0}, dim}, Palette.Get(Colors::Background));
     ScreenPosition o;
@@ -191,7 +191,7 @@ void Screen::DrawLevel()
     GetSystem()->GetSurface()->Clear();
     GetLevelSurfaces()->terrain_surface.OverlaySurface(&GetLevelSurfaces()->objects_surface);
     /* Draw everything */
-    std::for_each(this->widgets.begin(), this->widgets.end(), [this](auto & item) { item->Draw(*this); });
+    std::ranges::for_each(this->widgets, [this](auto & item) { item->Draw(*this); });
 
     GetWorld()->GetLevel()->CommitPixels(GetLevelSurfaces()->objects_surface.GetChangeList());
     GetLevelSurfaces()->objects_surface.Clear();

@@ -22,10 +22,10 @@ class ItemListAdaptor
         return this->items.Add(std::forward<TItem>(item));
     }
     template <typename TItem>
-    void Add(std::vector<TItem> && array)
+    void Add(std::vector<TItem> && other_array)
     {
-        for (auto & projectile : array)
-            this->Add(projectile);
+        for (auto & item : other_array)
+            this->Add(item);
     }
 
     template <typename TItem>

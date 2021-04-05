@@ -17,7 +17,7 @@ RenderedPixel Surface::GetPixel(const Position & position) const
 {
     if (this->use_default_color && (position.x < 0 || position.y < 0 || position.x >= size.x || position.y >= size.y))
         return this->default_color;
-    return this->surface[position.x + position.y * size.x];
+    return this->surface[position.x + size.x * position.y];
 }
 
 void Surface::SetPixel(Position position, Color color)
@@ -26,7 +26,7 @@ void Surface::SetPixel(Position position, Color color)
     if (color.a == 0)
         return;
     else
-        surface[position.x + position.y * size.x] = color.BlendWith(surface[position.x + position.y * size.x]);
+        surface[position.x + size.x * position.y] = color.BlendWith(surface[position.y * size.x + position.x]);
 
     if (this->use_change_list)
         this->change_list.emplace_back(position);
