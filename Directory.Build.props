@@ -5,5 +5,5 @@
     <Driver_SpectreMitigation>false</Driver_SpectreMitigation>
     <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
   </PropertyGroup>
-  <!-- <Import Condition="!$(IncludedModules.Contains(';internal.build_defaults'))" Project="config\Build.Defaults.props" /> -->
+  <Import Condition="!$(IncludedModules.Contains(';internal.build_defaults'))" Project="config\Build.Defaults.props" />
 </Project>

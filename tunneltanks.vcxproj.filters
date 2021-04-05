@@ -43,18 +43,18 @@
     <Filter Include="src\draw\sprites">
       <UniqueIdentifier>{6a4601b7-be3f-4e73-84fd-91c854b0edbe}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\world">
+      <UniqueIdentifier>{81e037a0-95f0-4b1a-b4b2-e27ef3256469}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\system\containers">
+      <UniqueIdentifier>{0ac64f55-bac4-44ec-af62-11e86873b1ea}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\exceptions.cpp">
       <Filter>src\system</Filter>
     </ClCompile>
     <ClCompile Include="src\projectile_list.cpp">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
-    <ClCompile Include="src\scene.cpp">
-      <Filter>src\game_entity</Filter>
-    </ClCompile>
-    <ClCompile Include="src\world.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
     <ClCompile Include="src\gui_widgets.cpp">
@@ -216,6 +216,15 @@
     <ClCompile Include="src\projectiles.cpp">
       <Filter>src\game_entity</Filter>
     </ClCompile>
+    <ClCompile Include="src\world.cpp">
+      <Filter>src\world</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scene.cpp">
+      <Filter>src\world</Filter>
+    </ClCompile>
+    <ClCompile Include="src\entity.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\require_sdl.h">
@@ -275,9 +284,6 @@
     <ClInclude Include="src\tank.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
-    <ClInclude Include="src\scene.h">
-      <Filter>src\game_entity</Filter>
-    </ClInclude>
     <ClInclude Include="src\controller.h">
       <Filter>src\game_entity</Filter>
     </ClInclude>
@@ -286,9 +292,6 @@
     </ClInclude>
     <ClInclude Include="src\bitmaps.h">
       <Filter>src\draw</Filter>
-    </ClInclude>
-    <ClInclude Include="src\world.h">
-      <Filter>src\game_entity</Filter>
     </ClInclude>
     <ClInclude Include="src\gamelib\SDL\bitmap.h">
       <Filter>sdl_interface</Filter>
@@ -433,6 +436,18 @@
     </ClInclude>
     <ClInclude Include="src\projectiles.h">
       <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world.h">
+      <Filter>src\world</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scene.h">
+      <Filter>src\world</Filter>
+    </ClInclude>
+    <ClInclude Include="src\entity.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\flat_set_map.h">
+      <Filter>src\system\containers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
