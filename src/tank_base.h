@@ -58,3 +58,22 @@ class TankBase
     void Draw(Surface * surface) const;
     void Advance();
 };
+
+class TankBases
+{
+    std::vector<TankBase> tank_bases;
+
+  public:
+    TankBases() = default;
+    TankBases(const std::vector<TankBase> & existing_bases) : tank_bases(existing_bases) {}
+    void BeginGame();
+  public:
+    TankBase * GetSpawn(TankColor color);
+    std::vector<TankBase> & GetSpawns() { return this->tank_bases; }
+    void SetSpawn(TankColor color, std::unique_ptr<TankBase> && tank_base);
+    void SetSpawn(TankColor color, Position position);
+    TankBase * CheckBaseCollision(Position pos);
+
+    void CreateBasesInTerrain(Terrain & terrain);
+    void CreateBaseInTerrain(Position pos, TankColor color, Terrain & terrain);
+};

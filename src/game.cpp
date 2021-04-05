@@ -4,8 +4,9 @@
 #include "exceptions.h"
 #include "game_system.h"
 #include "gamelib.h"
-#include "Terrain.h"
 #include "levelgen.h"
+#include "terrain.h"
+
 #include "screen.h"
 #include "tank_list.h"
 #include "tweak.h"
@@ -17,11 +18,11 @@
  * This bit is used to initialize various GUIs:                               *
  *----------------------------------------------------------------------------*/
 
-void GameMode::SpawnAIOpponents(TankList * tank_list, Terrain * level, TankColor starting_id, int spawn_amount)
+void GameMode::SpawnAIOpponents(TankList * tank_list, TankBases * bases, TankColor starting_id, int spawn_amount)
 {
     for (TankColor i = starting_id; (i < tweak::world::MaxPlayers) && (i - starting_id < spawn_amount); i++)
     {
-        Tank * tank = tank_list->AddTank(i, level->GetSpawn(i));
+        Tank * tank = tank_list->AddTank(i, bases->GetSpawn(i));
         tank->SetController(std::make_shared<AiController<TwitchAI>>());
     }
 }
@@ -40,14 +41,14 @@ std::unique_ptr<SinglePlayerMode> SinglePlayerMode::Setup(Screen * screen, World
 {
 
     /* Ready the tank! */
-    Tank * player = world->GetTankList()->AddTank(0, world->GetTerrain()->GetSpawn(0));
+    Tank * player = world->GetTankList()->AddTank(0, world->GetTankBases()->GetSpawn(0));
     gamelib_tank_attach(player, 0, 1);
 
     Screens::SinglePlayerScreenSetup(*screen, *player);
 
     /* Fill up the rest of the slots with Twitches: */
     if (use_ai)
-        GameMode::SpawnAIOpponents(world->GetTankList(), world->GetTerrain(), 1, tweak::world::MaxPlayers - 1);
+        GameMode::SpawnAIOpponents(world->GetTankList(), world->GetTankBases(), 1, tweak::world::MaxPlayers - 1);
 
     return std::make_unique<SinglePlayerMode>(screen, world);
 }
@@ -56,11 +57,11 @@ std::unique_ptr<SinglePlayerMode> SinglePlayerMode::Setup(Screen * screen, World
 std::unique_ptr<FollowAISinglePlayerMode> FollowAISinglePlayerMode::Setup(Screen * screen, World * world)
 {
     /* Ready the tanks! */
-    Tank * player_one = world->GetTankList()->AddTank(0, world->GetTerrain()->GetSpawn(0));
+    Tank * player_one = world->GetTankList()->AddTank(0, world->GetTankBases()->GetSpawn(0));
     gamelib_tank_attach(player_one, 0, 2);
 
     /* Load up two controllable tanks: */
-    Tank * player_two = world->GetTankList()->AddTank(1, world->GetTerrain()->GetSpawn(1));
+    Tank * player_two = world->GetTankList()->AddTank(1, world->GetTankBases()->GetSpawn(1));
     /*controller_twitch_attach(t);  << Attach a twitch to a camera tank, so we can see if they're getting smarter... */
     GameMode::AssumeAIControl(player_two);
 
@@ -73,18 +74,18 @@ std::unique_ptr<FollowAISinglePlayerMode> FollowAISinglePlayerMode::Setup(Screen
 std::unique_ptr<LocalTwoPlayerMode> LocalTwoPlayerMode::Setup(Screen * screen, World * world, bool use_ai)
 {
     /* Ready the tanks! */
-    Tank * player_one = world->GetTankList()->AddTank(0, world->GetTerrain()->GetSpawn(0));
+    Tank * player_one = world->GetTankList()->AddTank(0, world->GetTankBases()->GetSpawn(0));
     gamelib_tank_attach(player_one, 0, 2);
 
     /* Load up two controllable tanks: */
-    Tank * player_two = world->GetTankList()->AddTank(1, world->GetTerrain()->GetSpawn(1));
+    Tank * player_two = world->GetTankList()->AddTank(1, world->GetTankBases()->GetSpawn(1));
     /*controller_twitch_attach(t);  << Attach a twitch to a camera tank, so we can see if they're getting smarter... */
     gamelib_tank_attach(player_two, 1, 2);
 
     Screens::TwoPlayerScreenSetup(*screen,*player_one, *player_two);
     /* Fill up the rest of the slots with Twitches: */
     if (use_ai)
-        GameMode::SpawnAIOpponents(world->GetTankList(), world->GetTerrain(), 2, tweak::world::MaxPlayers - 2);
+        GameMode::SpawnAIOpponents(world->GetTankList(), world->GetTankBases(), 2, tweak::world::MaxPlayers - 2);
 
     return std::make_unique<LocalTwoPlayerMode>(screen, world); 
 }
@@ -117,32 +118,28 @@ Game::Game(GameConfig config)
     std::chrono::milliseconds time_taken = {};
 
     /* Generate our random level: */
-    std::unique_ptr<Terrain> level;
     for (int i = 0; i != TestIterations; ++i)
     {
         gamelib_print("Generating level %d/%d...\n", i+1, TestIterations);
         auto generated_level = levelgen::LevelGenerator::Generate(this->config.level_generator, this->config.level_size);
         time_taken += generated_level.generation_time;
-        level = std::move(generated_level.level);
+        world = std::move(generated_level.world);
     }
     auto average_time = time_taken / TestIterations;
     gamelib_print("***\r\nAverage level time: %lld.%03lld sec\n", average_time.count() / 1000,
                   average_time.count() % 1000);
 
     /* Create projectile list, tank list and materialize the level voxels */
-    level->MaterializeLevelTerrainAndBases();
+    world->GetTerrain()->MaterializeLevelTerrain();
+    world->GetTankBases()->CreateBasesInTerrain(*world->GetTerrain());
 
     /* Debug the starting data, if we're debugging: */
     if (this->config.is_debug)
-        level->DumpBitmap("debug_start.bmp");
+        world->GetTerrain()->DumpBitmap("debug_start.bmp");
 
     /* Push the level to the draw buffer */
-    level->CommitAll();
-    this->screen->SetDrawLevelSurfaces(level->GetSurfaces());
-
-    /* Create the world */
-    world = std::make_unique<World>(this, std::move(level));
-
+    world->GetTerrain()->CommitAll();
+    this->screen->SetDrawLevelSurfaces(world->GetTerrain()->GetSurfaces());
 }
 
 /* Step the game simulation by handling events, and drawing: */
@@ -217,7 +214,7 @@ void Game::BeginGame()
     }
 
     this->is_active = true;
-    world->BeginGame();
+    world->BeginGame(this);
 }
 
 void Game::GameOver() { assert(!"Implement game over!"); }

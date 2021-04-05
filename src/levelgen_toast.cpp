@@ -4,7 +4,8 @@
 #include <levelgen.h>
 #include <levelgen_toast.h>
 #include <levelgenutil.h>
-#include <Terrain.h>
+#include <terrain.h>
+#include <world.h>
 #include <memalloc.h>
 #include <random.h>
 #include <trace.h>
@@ -43,10 +44,10 @@ static void level_draw_ascii(Level *lvl) {
  *----------------------------------------------------------------------------*/
 
 static int pairing_cmp(const void *a, const void *b) {
-	return ((Pairing *)a)->dist - ((Pairing *)b)->dist;
+	return static_cast<const Pairing *>(a)->dist - ((Pairing *)b)->dist;
 }
 
-static void generate_tree(Terrain *lvl) {
+static void generate_tree(World *lvl) {
 	auto perf = MeasureFunction<2>{ __FUNCTION__ };
 
 	int *dsets, paircount;
@@ -63,19 +64,19 @@ static void generate_tree(Terrain *lvl) {
 	/* Randomly generate all points: */
 	points = static_cast<Position*>(get_mem( sizeof(Position) * ToastParams::TreeSize ));
 	for(i=0; i< ToastParams::TreeSize; i++)
-		points[i] = generate_inside(lvl->GetSize(), ToastParams::BorderWidth);
+		points[i] = generate_inside(lvl->GetTerrain()->GetSize(), ToastParams::BorderWidth);
 	
 	/* While we're here, copy in some of those points: */
-	lvl->SetSpawn(0, points[0]);
+	lvl->GetTankBases()->SetSpawn(0, points[0]);
 	for(i=1,j=1; i< ToastParams::TreeSize && j< tweak::world::MaxPlayers; i++) {
 		for(k=0; k<j; k++) {
-            if (pt_dist(points[i], lvl->GetSpawn(TankColor(k))->GetPosition()) <
+            if (pt_dist(points[i], lvl->GetTankBases()->GetSpawn(TankColor(k))->GetPosition()) <
                 tweak::base::MinDistance * tweak::base::MinDistance)
 				break;
 		}
 		
 		if(k!=j) continue;
-		lvl->SetSpawn(TankColor(j++), points[i]);
+        lvl->GetTankBases()->SetSpawn(TankColor(j++), points[i]);
 	}
 	if(j!= tweak::world::MaxPlayers) {
 		/* TODO: More robust error handling. */
@@ -109,7 +110,7 @@ static void generate_tree(Terrain *lvl) {
 		for(k=0; k< ToastParams::TreeSize; k++)
 			if(dsets[k] == bset) 
 				dsets[k] = aset;
-		draw_line(lvl, points[pairs[i].a], points[pairs[i].b], TerrainPixel::LevelGenDirt, 0);
+		draw_line(lvl->GetTerrain(), points[pairs[i].a], points[pairs[i].b], TerrainPixel::LevelGenDirt, 0);
 	}
 	
 	/* We don't need this data anymore: */
@@ -451,18 +452,17 @@ static void smooth_cavern(Terrain *lvl) {
  * MAIN FUNCTIONS:                                                            *
  *----------------------------------------------------------------------------*/
 
-std::unique_ptr<Terrain> ToastLevelGenerator::Generate(Size size)
+std::unique_ptr<World> ToastLevelGenerator::Generate(Size size)
 {
-    std::unique_ptr<Terrain> level = std::make_unique<Terrain>(size);
-    Terrain * lvl = level.get();
+    auto world = std::make_unique<World>(size);
 
 	auto perf = MeasureFunction<1>{ __FUNCTION__ };
 
-	generate_tree(lvl);
-	randomly_expand(lvl);
-	smooth_cavern(lvl);
+	generate_tree(world.get());
+    randomly_expand(world->GetTerrain());
+    smooth_cavern(world->GetTerrain());
 
-	return level;
+	return world;
 }
 
 #ifdef _TESTING

@@ -138,3 +138,83 @@ void TankBase::Draw(Surface * surface) const
 }
 
 void TankBase::Advance() { this->reactor.Add(tweak::base::ReactorRecoveryRate); }
+
+
+
+/* TODO: This needs to be done in a different way, as this approach will take 
+ * MAX_TANKS^2 time to do all collision checks for all tanks. It should only
+ * take MAX_TANKS time. */
+TankBase * TankBases::CheckBaseCollision(Position pos)
+{
+    for (TankColor id = 0; id < tweak::world::MaxPlayers; id++)
+    {
+        if (this->tank_bases[id].IsInside(pos))
+        {
+            return &this->tank_bases[id];
+        }
+    }
+
+    return nullptr;
+}
+
+TankBase * TankBases::GetSpawn(TankColor color)
+{
+    assert(color >= 0 && color < (int)this->tank_bases.size());
+    return &this->tank_bases[color];
+}
+
+void TankBases::SetSpawn(TankColor color, std::unique_ptr<TankBase> && tank_base)
+{
+    assert(color >= 0 && color < tweak::world::MaxPlayers);
+    if (TankColor(this->tank_bases.size()) <= color)
+        this->tank_bases.resize(color + 1);
+    this->tank_bases[color] = *tank_base;
+}
+
+void TankBases::SetSpawn(TankColor color, Position position)
+{
+    this->SetSpawn(color, std::make_unique<TankBase>(position, color));
+}
+
+
+/* TODO: Rethink the method for adding bases, as the current method DEMANDS that
+ *       you use MAX_TANKS tanks. */
+void TankBases::CreateBasesInTerrain(Terrain & terrain)
+{
+    for (TankColor i = 0; i < tweak::world::MaxPlayers; i++)
+    {
+        CreateBaseInTerrain({this->tank_bases[i].GetPosition().x, this->tank_bases[i].GetPosition().y}, i, terrain);
+    }
+}
+
+
+void TankBases::CreateBaseInTerrain(Position pos, TankColor color, Terrain & terrain)
+{
+    if (color >= tweak::world::MaxPlayers)
+        return;
+
+    for (int y = -tweak::base::BaseSize / 2; y <= tweak::base::BaseSize / 2; y++)
+    {
+        for (int x = -tweak::base::BaseSize / 2; x <= tweak::base::BaseSize / 2; x++)
+        {
+            Position pix = pos + Offset{x, y};
+            if (abs(x) == tweak::base::BaseSize / 2 || abs(y) == tweak::base::BaseSize / 2)
+            { // Outline
+                if (x >= -tweak::base::DoorSize / 2 && x <= tweak::base::DoorSize / 2)
+                    terrain.SetPixel(pix, TerrainPixel::BaseBarrier);
+                else
+                    terrain.SetPixel(pix, static_cast<TerrainPixel>(static_cast<char>(TerrainPixel::BaseMin) + color));
+            }
+            else
+                terrain.SetPixel(pix, TerrainPixel::Blank);
+        }
+    }
+}
+
+void TankBases::BeginGame()
+{
+    for (TankBase & tank_base : this->tank_bases)
+    {
+        tank_base.BeginGame();
+    }
+}

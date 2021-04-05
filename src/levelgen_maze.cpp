@@ -5,6 +5,8 @@
 #include <queue>
 #include "levelgen_maze.h"
 
+#include "world.h"
+
 namespace levelgen::maze {
 
 /* REMEMBER: The bases are centered in cells, so these cells need to larger: */
@@ -144,10 +146,10 @@ static void maze_free(Maze *m) {
 }
 
 
-std::unique_ptr<Terrain> MazeLevelGenerator::Generate(Size size)
+std::unique_ptr<World> MazeLevelGenerator::Generate(Size size)
 {
-    std::unique_ptr<Terrain> level = std::make_unique<Terrain>(size);
-    Terrain * lvl = level.get();
+    auto world = std::make_unique<World>(size);
+    Terrain * lvl = world->GetTerrain();
 	int x, y;
 	Maze *m = maze_new(lvl->GetSize()/CELL_SIZE);
 	
@@ -203,14 +205,14 @@ std::unique_ptr<Terrain> MazeLevelGenerator::Generate(Size size)
 					m->data[(y+ty)*m->w+(x+tx)].used = 1;
 		
 		/* Now, add it to the level: */
-		lvl->SetSpawn(i, Position{
+		world->GetTankBases()->SetSpawn(i, Position{
 			x * CELL_SIZE + CELL_SIZE / 2,
 			y * CELL_SIZE + CELL_SIZE / 2
 			});
 	}
 	
 	maze_free(m);
-    return level;
+    return world;
 }
 
 }

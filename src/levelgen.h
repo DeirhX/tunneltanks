@@ -1,25 +1,22 @@
 #pragma once
+#include "levelgen_type.h"
 #include "types.h"
+#include "world.h"
+
 #include <chrono>
 #include <cstdio>
 #include <memory>
+#include <vector>
+
+class TankBase;
 class Terrain;
 
 namespace levelgen
 {
 
-enum class LevelGeneratorType
-{
-    None,
-    Toast,
-    Braid,
-    Maze,
-    Simple,
-};
-
 struct GeneratedLevel
 {
-    std::unique_ptr<Terrain> level;
+    std::unique_ptr<World> world;
     std::chrono::milliseconds generation_time;
 };
 
@@ -37,7 +34,7 @@ class GeneratorAlgorithm
     virtual ~GeneratorAlgorithm() = default;
     /* Generate a level based on an id: */
   public:
-    virtual std::unique_ptr<Terrain> Generate(Size size) = 0;
+    virtual std::unique_ptr<World> Generate(Size size) = 0;
 };
 
 class Queries

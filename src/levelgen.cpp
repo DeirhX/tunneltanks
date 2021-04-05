@@ -83,13 +83,14 @@ GeneratedLevel LevelGenerator::Generate(LevelGeneratorType generator, Size size)
         Stopwatch<std::chrono::milliseconds> s;
 
         /* Ok, now generate the level: */
-        std::unique_ptr<Terrain> level =  found->generator->Generate(size);
+        std::unique_ptr<World> world =  found->generator->Generate(size);
 
         gamelib_print("Level generated in: ");
         auto msecs = s.GetElapsed();
         gamelib_print("%lld.%03lld sec\n", msecs.count() / 1000, msecs.count() % 1000);
 
-        return {.level = std::move(level), .generation_time = std::chrono::duration_cast<std::chrono::milliseconds>(msecs)};
+        return {.world = std::move(world),
+                .generation_time = std::chrono::duration_cast<std::chrono::milliseconds>(msecs)};
     }
 }
 

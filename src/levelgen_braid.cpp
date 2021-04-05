@@ -4,6 +4,8 @@
 #include <random.h>
 #include "levelgen_braid.h"
 
+#include "world.h"
+
 namespace levelgen::braid
 {
 
@@ -222,9 +224,10 @@ static void braid_free(Braid * b)
     free_mem(b);
 }
 
-std::unique_ptr<Terrain> BraidLevelGenerator::Generate(Size size)
+std::unique_ptr<World> BraidLevelGenerator::Generate(Size size)
 {
-    std::unique_ptr<Terrain> lvl = std::make_unique<Terrain>(size);
+    auto world = std::make_unique<World>(size);
+    auto lvl = world->GetTerrain();
 	Braid *b = braid_new(lvl->GetSize() / CELL_SIZE);
 	
 	/* Reset all of the 'used' flags back to zero: */
@@ -236,22 +239,22 @@ std::unique_ptr<Terrain> BraidLevelGenerator::Generate(Size size)
 		for(int x=0; x<b->size.x; x++) {
 			Cell c = b->data[y*b->size.x+x];
 			if(c.up)
-				draw_line(lvl.get(),
+				draw_line(lvl,
 					Vector(x*CELL_SIZE,     y*CELL_SIZE), 
 					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), TerrainPixel::LevelGenDirt, 1);
 			
 			if(c.right)
-                draw_line(lvl.get(),
+                draw_line(lvl,
 					Vector((x+1)*CELL_SIZE, y*CELL_SIZE), 
 					Vector((x+1)*CELL_SIZE, (y+1)*CELL_SIZE), TerrainPixel::LevelGenDirt, 1);
 			
 			if(!c.up && !c.right)
-                set_circle(lvl.get(), (x + 1) * CELL_SIZE, y * CELL_SIZE, TerrainPixel::LevelGenDirt);
+                set_circle(lvl, (x + 1) * CELL_SIZE, y * CELL_SIZE, TerrainPixel::LevelGenDirt);
 		}
 	}
 	
 	/* Draw a line up the left, so you can see the texture there too: */
-    draw_line(lvl.get(), Vector(0, 0), Vector(0, b->size.y * CELL_SIZE), TerrainPixel::LevelGenDirt, 1);
+    draw_line(lvl, Vector(0, 0), Vector(0, b->size.y * CELL_SIZE), TerrainPixel::LevelGenDirt, 1);
 	
 	/* Fill in the unused space left behind on the right/bottom: */
 	/* TODO: Have a fill_box() in levelgenutil.c? */
@@ -264,8 +267,8 @@ std::unique_ptr<Terrain> BraidLevelGenerator::Generate(Size size)
 			lvl->SetVoxelRaw({x, y}, TerrainPixel::LevelGenDirt);
 	
 	/* Rough it up a little, and invert: */
-    rough_up(lvl.get());
-    invert_all(lvl.get());
+    rough_up(lvl);
+    invert_all(lvl);
 	
 	/* Add in the bases: */
 	for(TankColor i=0; i< tweak::world::MaxPlayers; i++) {
@@ -284,7 +287,7 @@ std::unique_ptr<Terrain> BraidLevelGenerator::Generate(Size size)
 					b->data[(y+ty)*b->size.x+(x+tx)].flag = 1;
 		
 		/* Now, add it to the level: */
-		lvl->SetSpawn(i, Position{
+		world->GetTankBases()->SetSpawn(i, Position{
 			x * CELL_SIZE + CELL_SIZE / 2,
 			y * CELL_SIZE + CELL_SIZE / 2
 			});
@@ -292,7 +295,7 @@ std::unique_ptr<Terrain> BraidLevelGenerator::Generate(Size size)
 	
 	braid_free(b);
 
-    return lvl;
+    return world;
 }
 
 }

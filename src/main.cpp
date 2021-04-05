@@ -20,6 +20,7 @@
 
 #include "exceptions.h"
 #include "game_config.h"
+#include "world.h"
 #include "gamelib/sdl/control.h"
 #include "gamelib/sdl/sdl_system.h"
 
@@ -176,10 +177,10 @@ int GameMain(int argc, char * argv[])
         {
             /* Generate our random level: */
             levelgen::GeneratedLevel generated_level = levelgen::LevelGenerator::Generate(levelgen::LevelGenerator::FromName(level_generator_id), level_size );
-            generated_level.level->MaterializeLevelTerrainAndBases();
+            generated_level.world->GetTerrain()->MaterializeLevelTerrain();
 
             /* Dump it out, and exit: */
-            generated_level.level->DumpBitmap(level_bitmap_filename);
+            generated_level.world->GetTerrain()->DumpBitmap(level_bitmap_filename);
 
             gamelib_exit();
             return 0;

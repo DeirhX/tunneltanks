@@ -14,27 +14,24 @@ Terrain::Terrain(Size size) : size(size), data(size), surfaces(size)
 {
     surfaces.terrain_surface.SetDefaultColor(static_cast<Color>(Palette.Get(Colors::Rock)));
     surfaces.objects_surface.SetDefaultColor({});
-    std::fill(this->data.begin(), this->data.end(), TerrainPixel::LevelGenRock);
+    std::ranges::fill(this->data, TerrainPixel::LevelGenRock);
 }
 
 void Terrain::OnConnectWorld(World *) {}
 
 void Terrain::BeginGame()
 {
-    for (TankBase & tank_base : this->tank_bases)
-    {
-        tank_base.BeginGame();
-    }
+
 }
 
-void Terrain::SetLevelData(int i, TerrainPixel value)
+void Terrain::SetTerrainData(int i, TerrainPixel value)
 {
     this->data[i] = value;
     /*if (this->is_ready)
         this->dirt_adjacency_data.Invalidate(i);*/
 }
 
-void Terrain::SetLevelData(Position pos, TerrainPixel value)
+void Terrain::SetTerrainData(Position pos, TerrainPixel value)
 {
     this->data[pos.y * this->size.x + pos.x] = value;
     /*if (this->is_ready)
@@ -45,11 +42,11 @@ void Terrain::SetPixel(Position pos, TerrainPixel voxel)
 {
     assert(IsInside(pos));
 
-    SetLevelData(pos.y * this->size.x + pos.x, voxel);
+    SetTerrainData(pos.y * this->size.x + pos.x, voxel);
     CommitPixel(pos);
 }
 
-void Terrain::SetVoxelRaw(Position pos, TerrainPixel voxel) { SetLevelData(pos, voxel); }
+void Terrain::SetVoxelRaw(Position pos, TerrainPixel voxel) { SetTerrainData(pos, voxel); }
 
 /*
 void Level::SetVoxelRaw(int offset, TerrainPixel voxel)
@@ -70,11 +67,10 @@ int Terrain::CountNeighbors(Position pos, TerrainPixel value)
            !!(value == GetVoxelRaw((pos.x + 1 + GetSize().x * (pos.y + 1))));
 }
 
-void Terrain::MaterializeLevelTerrainAndBases()
+void Terrain::MaterializeLevelTerrain()
 {
     assert(!is_ready);
     this->GenerateDirtAndRocks();
-    this->CreateBases();
     this->is_ready = true;
 }
 
@@ -104,58 +100,6 @@ void Terrain::GenerateDirtAndRocks()
             else
                 this->SetPixel(pos, Random.Bool(500) ? TerrainPixel::DirtLow : TerrainPixel::DirtHigh);
         }
-}
-
-void Terrain::CreateBase(Position pos, TankColor color)
-{
-    if (color >= tweak::world::MaxPlayers)
-        return;
-
-    for (int y = -tweak::base::BaseSize / 2; y <= tweak::base::BaseSize / 2; y++)
-    {
-        for (int x = -tweak::base::BaseSize / 2; x <= tweak::base::BaseSize / 2; x++)
-        {
-            Position pix = pos + Offset{x, y};
-            if (abs(x) == tweak::base::BaseSize / 2 || abs(y) == tweak::base::BaseSize / 2)
-            { // Outline
-                if (x >= -tweak::base::DoorSize / 2 && x <= tweak::base::DoorSize / 2)
-                    SetPixel(pix, TerrainPixel::BaseBarrier);
-                else
-                    SetPixel(pix, static_cast<TerrainPixel>(static_cast<char>(TerrainPixel::BaseMin) + color));
-            }
-            else
-                SetPixel(pix, TerrainPixel::Blank);
-        }
-    }
-}
-
-/* TODO: Rethink the method for adding bases, as the current method DEMANDS that
- *       you use MAX_TANKS tanks. */
-void Terrain::CreateBases()
-{
-    for (TankColor i = 0; i < tweak::world::MaxPlayers; i++)
-    {
-        CreateBase({this->tank_bases[i].GetPosition().x, this->tank_bases[i].GetPosition().y}, i);
-    }
-}
-
-TankBase * Terrain::GetSpawn(TankColor color)
-{
-    assert(color >= 0 && color < (int)this->tank_bases.size());
-    return &this->tank_bases[color];
-}
-
-void Terrain::SetSpawn(TankColor color, std::unique_ptr<TankBase> && tank_base)
-{
-    assert(color >= 0 && color < tweak::world::MaxPlayers);
-    if (TankColor(this->tank_bases.size()) <= color)
-        this->tank_bases.resize(color + 1);
-    this->tank_bases[color] = *tank_base;
-}
-
-void Terrain::SetSpawn(TankColor color, Position position)
-{
-    this->SetSpawn(color, std::make_unique<TankBase>(position, color));
 }
 
 DigResult Terrain::DigTankTunnel(Position pos, bool dig_with_torch)
@@ -212,21 +156,6 @@ void Terrain::CommitPixels(const std::vector<Position> & positions)
         surfaces.terrain_surface.SetPixel(position, GetVoxelColor(this->GetPixel(position)));
 }
 
-/* TODO: This needs to be done in a different way, as this approach will take 
- * MAX_TANKS^2 time to do all collision checks for all tanks. It should only
- * take MAX_TANKS time. */
-TankBase * Terrain::CheckBaseCollision(Position pos)
-{
-    for (TankColor id = 0; id < tweak::world::MaxPlayers; id++)
-    {
-        if (this->tank_bases[id].IsInside(pos))
-        {
-            return &this->tank_bases[id];
-        }
-    }
-
-    return nullptr;
-}
 
 Color Terrain::GetVoxelColor(TerrainPixel voxel)
 {

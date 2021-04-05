@@ -1,3 +1,5 @@
+#include "world.h"
+
 #include <Terrain.h>
 #include <levelgen_simple.h>
 #include <levelgenutil.h>
@@ -121,10 +123,10 @@ static void add_rock_lines(Terrain *lvl, Side s)
                 lvl->SetVoxelRaw(p,  TerrainPixel::LevelGenRock);
 }
 
-static void add_spawns(Terrain *lvl)
+static void add_spawns(World *world)
 {
 
-    lvl->SetSpawn(0, generate_inside(lvl->GetSize(), BORDER));
+    world->GetTankBases()->SetSpawn(0, generate_inside(world->GetTerrain()->GetSize(), BORDER));
 
     for (TankColor i = 1; i < tweak::world::MaxPlayers; i++)
     {
@@ -132,13 +134,14 @@ static void add_spawns(Terrain *lvl)
         while (!done)
         {
             /* Try adding a new point: */
-            lvl->SetSpawn(i, generate_inside(lvl->GetSize(), BORDER));
+            world->GetTankBases()->SetSpawn(i, generate_inside(world->GetTerrain()->GetSize(), BORDER));
 
             TankColor j;
             /* Make sure that point isn't too close to others: */
             for (j = 0; j < i; j++)
             {
-                if (pt_dist(lvl->GetSpawn(i)->GetPosition(), lvl->GetSpawn(j)->GetPosition()) <
+                if (pt_dist(world->GetTankBases()->GetSpawn(i)->GetPosition(),
+                            world->GetTankBases()->GetSpawn(j)->GetPosition()) <
                     tweak::base::MinDistance * tweak::base::MinDistance)
                     break;
             }
@@ -149,10 +152,10 @@ static void add_spawns(Terrain *lvl)
     }
 }
 
-std::unique_ptr<Terrain> SimpleLevelGenerator::Generate(Size size)
+std::unique_ptr<World> SimpleLevelGenerator::Generate(Size size)
 {
-    std::unique_ptr<Terrain> level = std::make_unique<Terrain>(size);
-    Terrain * lvl = level.get();
+    auto world = std::make_unique<World>(size);
+    Terrain * lvl = world->GetTerrain();
     /* Levels default to all rock. Set this to all dirt: */
     fill_all(lvl, TerrainPixel::LevelGenDirt);
 
@@ -166,8 +169,8 @@ std::unique_ptr<Terrain> SimpleLevelGenerator::Generate(Size size)
     rough_up(lvl);
 
     /* Add a few spawns, and we're good to go! */
-    add_spawns(lvl);
-    return level;
+    add_spawns(world.get());
+    return world;
 }
 
 } // namespace levelgen::simple

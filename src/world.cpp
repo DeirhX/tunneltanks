@@ -2,14 +2,14 @@
 #include "game.h"
 #include "random.h"
 
-World::World(Game * game, std::unique_ptr<Terrain> && level)
-    : game(game), terrain(std::move(level)),
-      link_map(this->terrain.get()),
+World::World(Size terrain_size)
+    : terrain(terrain_size),
+      link_map(&this->terrain),
       projectile_list(),
       harvester_list(),
-      tank_list(this->terrain.get(), &this->projectile_list),
+      tank_list(&this->terrain, &this->projectile_list),
       sprite_list(),
-      collision_solver(this->terrain.get(), &this->tank_list, &this->harvester_list)
+      collision_solver(&this->terrain, &this->tank_list, &this->harvester_list)
 {
     //this->level->OnConnectWorld(this);
 }
@@ -23,7 +23,12 @@ void World::Clear()
     this->link_map.RemoveAll();
 }
 
-void World::BeginGame() { this->terrain->BeginGame(); }
+void World::BeginGame(Game * with_game)
+{
+    this->game = with_game;
+    this->tank_bases.BeginGame();
+    this->terrain.BeginGame();
+}
 
 void World::Advance()
 {
@@ -32,12 +37,12 @@ void World::Advance()
     RegrowPass();
 
     /* Move everything: */
-    this->projectile_list.Advance(this->terrain.get(), this->GetTankList());
+    this->projectile_list.Advance(&this->terrain, this->GetTankList());
     this->tank_list.for_each([=](Tank * t) { t->Advance(*this); });
-    this->harvester_list.Advance(this->terrain.get(), this->GetTankList());
-    this->sprite_list.Advance(this->terrain.get());
+    this->harvester_list.Advance(&this->terrain, this->GetTankList());
+    this->sprite_list.Advance(&this->terrain);
     /* TODO: get out of level? */
-    for (TankBase & base : this->terrain->GetSpawns())
+    for (TankBase & base : this->tank_bases.GetSpawns())
         base.Advance();
     this->link_map.Advance();
 }
@@ -48,7 +53,7 @@ void World::Draw(WorldRenderSurface * objects_surface)
     /* Draw everything: */
     this->projectile_list.Draw(objects_surface);
     this->tank_list.for_each([=](Tank * t) { t->Draw(*objects_surface); });
-    for (const TankBase & base : this->terrain->GetSpawns())
+    for (const TankBase & base : this->tank_bases.GetSpawns())
         base.Draw(objects_surface);
     this->harvester_list.Draw(objects_surface);
     this->sprite_list.Draw(*objects_surface);
@@ -66,18 +71,19 @@ void World::RegrowPass()
     Stopwatch<> elapsed;
     int holes_decayed = 0;
     int dirt_grown = 0;
-    this->terrain->ForEachVoxelParallel(
+    this->terrain.ForEachVoxelParallel(
         [this, &holes_decayed, &dirt_grown](TerrainPixel pix, SafePixelAccessor pixel, ThreadLocal * local) {
-            if (pix == TerrainPixel::Blank || Pixel::IsScorched(pix) || this->GetTerrain()->CheckBaseCollision(pixel.GetPosition()))
+            if (pix == TerrainPixel::Blank || Pixel::IsScorched(pix) ||
+                this->tank_bases.CheckBaseCollision(pixel.GetPosition()))
             {
                 int neighbors = //this->level->DirtPixelsAdjacent(pixel.GetPosition());
-                    this->terrain->CountNeighborValues(pixel.GetPosition(), [](auto voxel) { return Pixel::IsDirt(voxel) ? 1 : 0; });
+                    this->terrain.CountNeighborValues(pixel.GetPosition(), [](auto voxel) { return Pixel::IsDirt(voxel) ? 1 : 0; });
                 int modifier = (pix == TerrainPixel::Blank) ? 4 : 1;
                 if (neighbors > 2 && local->random.Int(0, 1000) < tweak::world::DirtRegrowSpeed * neighbors * modifier)
                 {
 
                     pixel.Set(TerrainPixel::DirtGrow);
-                    this->terrain->CommitPixel(pixel.GetPosition());
+                    this->terrain.CommitPixel(pixel.GetPosition());
                     ++holes_decayed;
                 }
             }
@@ -86,7 +92,7 @@ void World::RegrowPass()
                 if (Random.Int(0, 1000) < tweak::world::DirtRecoverSpeed)
                 {
                     pixel.Set(local->random.Bool(500) ? TerrainPixel::DirtHigh : TerrainPixel::DirtLow);
-                    this->terrain->CommitPixel(pixel.GetPosition());
+                    this->terrain.CommitPixel(pixel.GetPosition());
                     ++dirt_grown;
                 }
             }

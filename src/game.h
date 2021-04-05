@@ -4,6 +4,7 @@
 #include <types.h>
 #include "game_config.h"
 
+class TankBases;
 class TankList;
 
 class Game
@@ -44,7 +45,7 @@ class GameMode
 
     virtual void TearDown();
 
-    static void SpawnAIOpponents(TankList * tank_list, Terrain * level, TankColor starting_id, int spawn_amount);
+    static void SpawnAIOpponents(TankList * tank_list, TankBases * bases, TankColor starting_id, int spawn_amount);
     static void AssumeAIControl(class Tank * tank);
 };
 

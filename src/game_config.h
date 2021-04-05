@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "levelgen.h"
+#include "levelgen_type.h"
 #include "types.h"
 
 struct VideoConfig

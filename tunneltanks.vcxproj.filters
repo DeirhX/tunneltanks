@@ -449,6 +449,9 @@
     <ClInclude Include="src\terrain_pixel_surface.h">
       <Filter>src\terrain</Filter>
     </ClInclude>
+    <ClInclude Include="src\levelgen_type.h">
+      <Filter>src\terrain\generators</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

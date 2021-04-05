@@ -34,6 +34,7 @@ struct LevelSurfaces
     WorldRenderSurface objects_surface; 
 };
 
+
 class Terrain
 {
   private:
@@ -42,12 +43,11 @@ class Terrain
     LevelSurfaces surfaces; /* Holds terrain and object surfaces for drawing */
 
     //DirtAdjacencyData dirt_adjacency_data;
-    std::vector<TankBase> tank_bases;
     bool is_ready = false;
 
   private:
-    void SetLevelData(int i, TerrainPixel value);
-    void SetLevelData(Position pos, TerrainPixel value);
+    void SetTerrainData(int i, TerrainPixel value);
+    void SetTerrainData(Position pos, TerrainPixel value);
 
   public:
     Terrain(Size size);
@@ -55,15 +55,15 @@ class Terrain
     void BeginGame();
 
     [[nodiscard]] Size GetSize() const { return this->size; }
-    LevelSurfaces * GetSurfaces() { return &this->surfaces; }
-    const Container2D<TerrainPixel> & GetLevelData() const { return this->data; }
+    [[nodiscard]] LevelSurfaces * GetSurfaces() { return &this->surfaces; }
+    [[nodiscard]] const Container2D<TerrainPixel> & GetLevelData() const { return this->data; }
 
     /* Voxel get-set-reference operations */
     void SetPixel(Position pos, TerrainPixel voxel);
     TerrainPixel GetPixel(Position pos) const;
 
     void SetVoxelRaw(Position pos, TerrainPixel voxel);
-    void SetVoxelRaw(int offset, TerrainPixel voxel) { SetLevelData(offset, voxel); }
+    void SetVoxelRaw(int offset, TerrainPixel voxel) { SetTerrainData(offset, voxel); }
     TerrainPixel GetVoxelRaw(Position pos) const;
     TerrainPixel GetVoxelRaw(int offset) const { return this->data[offset]; }
 
@@ -82,29 +82,19 @@ class Terrain
     int CountNeighborValues(Position pos, CountFunc count_func);
     //uint8_t DirtPixelsAdjacent(Position pos) { return this->dirt_adjacency_data.Get(pos); }
 
-    void MaterializeLevelTerrainAndBases();
+    void MaterializeLevelTerrain();
 
     template <typename VoxelFunc>
     void ForEachVoxel(VoxelFunc func);
     template <typename VoxelFunc>
     void ForEachVoxelParallel(VoxelFunc func, WorkerCount worker_count = {});
 
-    /* Tank-related stuff */
-    TankBase * GetSpawn(TankColor color);
-    /* TODO: Don't allow modification of the vector */
-    std::vector<TankBase> & GetSpawns() { return this->tank_bases; }
-    void SetSpawn(TankColor color, std::unique_ptr<TankBase> && tank_base);
-    void SetSpawn(TankColor color, Position position);
     DigResult DigTankTunnel(Position pos, bool dig_with_torch);
-    TankBase * CheckBaseCollision(Position pos);
 
     bool IsInside(Position position) const;
   private:
     /* Level generation */
     void GenerateDirtAndRocks();
-    void CreateBases();
-
-    void CreateBase(Position pos, TankColor color);
 };
 
 class SafePixelAccessor
