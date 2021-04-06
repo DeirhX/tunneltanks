@@ -42,7 +42,6 @@ class TankTurret
 
     void Advance(Position tank_position, widgets::Crosshair * crosshair);
     void Draw(Surface * surface) const;
-    void Erase(Terrain * level) const;
     void SetDirection(DirectionF new_dir) { this->direction = new_dir; }
 
     void HandleShoot();

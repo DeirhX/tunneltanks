@@ -45,6 +45,7 @@ void World::Advance()
     for (TankBase & base : this->tank_bases.GetSpawns())
         base.Advance();
     this->link_map.Advance();
+    this->terrain.Advance();
 }
 
 

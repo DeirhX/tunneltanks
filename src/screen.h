@@ -32,7 +32,6 @@ class Screen
     GUIController controller;
     ScreenDrawMode mode = ScreenDrawMode::DrawLevel;
 
-    LevelSurfaces * level_surfaces = nullptr;
     ScreenRenderSurface * screen_surface = nullptr;
 
   public:
@@ -43,10 +42,6 @@ class Screen
     void SetFullscreen(bool new_fullscreen);
     void Resize(Size size);
 
-    /* Set the current drawing mode: */
-    void SetDrawLevelSurfaces(LevelSurfaces * surfaces);
-
-    LevelSurfaces * GetLevelSurfaces() { return this->level_surfaces; }
     ScreenRenderSurface * GetScreenSurface() { return this->screen_surface; }
 
     /* A few useful functions for external drawing: */

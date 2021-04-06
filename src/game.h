@@ -16,12 +16,11 @@ class Game
     std::unique_ptr<class Screen> screen;
     std::unique_ptr<class World> world;
     std::unique_ptr<class GameMode> mode;
-
   public:
     Game(GameConfig config);
     ~Game();
 
-    void BeginGame();
+    void BeginGame(class Renderer * renderer);
     bool AdvanceStep();
     void GameOver();
 

@@ -89,7 +89,7 @@ void TankView::Draw(Screen & screen)
         {
             int screen_x = x + this->screen_rect.pos.x, screen_y = y + this->screen_rect.pos.y;
 
-            RenderedPixel color = screen.GetLevelSurfaces()->terrain_surface.GetPixel(
+            RenderedPixel color = GetSystem()->GetRenderer()->GetWorldSurfaces().terrain_surface.GetPixel(
                 Position{x + tank_pos.x - this->screen_rect.size.x / 2, y + tank_pos.y - this->screen_rect.size.y / 2});
             screen.DrawPixel({screen_x, screen_y}, color);
         }

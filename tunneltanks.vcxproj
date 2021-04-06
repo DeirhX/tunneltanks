@@ -33,6 +33,7 @@
     <ClCompile Include="gui.cpp" />
     <ClCompile Include="src\controllable.cpp" />
     <ClCompile Include="src\entity.cpp" />
+    <ClCompile Include="src\renderer.cpp" />
     <ClCompile Include="src\swarmer_creature.cpp" />
     <ClCompile Include="src\twitch_ai.cpp" />
     <ClCompile Include="src\bitmaps.cpp" />
@@ -111,6 +112,7 @@
     <ClInclude Include="src\gamelib\SDL\sdl_renderer.h" />
     <ClInclude Include="src\item_list_adaptor.h" />
     <ClInclude Include="src\levelgen_type.h" />
+    <ClInclude Include="src\renderer.h" />
     <ClInclude Include="src\terrain_algorithm.h" />
     <ClInclude Include="src\link.h" />
     <ClInclude Include="src\machine.h" />
@@ -206,7 +208,7 @@
     <PlatformToolset>v142</PlatformToolset>
     <UseDebugLibraries>true</UseDebugLibraries>
     <SpectreMitigation>false</SpectreMitigation>
-    <EnableUnitySupport>false</EnableUnitySupport>
+    <EnableUnitySupport>true</EnableUnitySupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>

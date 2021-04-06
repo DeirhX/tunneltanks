@@ -225,6 +225,9 @@
     <ClCompile Include="src\terrain_pixel_surface.cpp">
       <Filter>src\terrain</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer.cpp">
+      <Filter>src\draw</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\require_sdl.h">
@@ -451,6 +454,9 @@
     </ClInclude>
     <ClInclude Include="src\levelgen_type.h">
       <Filter>src\terrain\generators</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer.h">
+      <Filter>src\draw</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

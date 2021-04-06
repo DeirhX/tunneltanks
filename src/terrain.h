@@ -25,14 +25,6 @@ struct DigResult
     int minerals = 0;
 };
 
-struct LevelSurfaces
-{
-    LevelSurfaces(Size size) : terrain_surface(size, false), objects_surface(size, true) {}
-    /* Holds rendered texture of the terrain, materializing each TerrainPixel into color */
-    WorldRenderSurface terrain_surface; 
-    /* Holds a layer of frequently changed objects that will be drawn on top of terrain*/
-    WorldRenderSurface objects_surface; 
-};
 
 
 class Terrain
@@ -40,8 +32,8 @@ class Terrain
   private:
     Size size;
     Container2D<TerrainPixel> data; /* Holds logical terrain pixels - enum TerrainPixel : char */
-    LevelSurfaces surfaces; /* Holds terrain and object surfaces for drawing */
 
+    std::vector<Position> change_list; /* List of changed pixels this frame */
     //DirtAdjacencyData dirt_adjacency_data;
     bool is_ready = false;
 
@@ -55,7 +47,6 @@ class Terrain
     void BeginGame();
 
     [[nodiscard]] Size GetSize() const { return this->size; }
-    [[nodiscard]] LevelSurfaces * GetSurfaces() { return &this->surfaces; }
     [[nodiscard]] const Container2D<TerrainPixel> & GetLevelData() const { return this->data; }
 
     /* Voxel get-set-reference operations */
@@ -69,9 +60,12 @@ class Terrain
 
     /* Terrain surface interaction */
     void CommitPixel(Position pos);
-    void CommitPixels(const std::vector<Position>& positions);
-    void CommitAll();
+    void CommitPixels(const std::vector<Position> & positions);
+    void DrawChangesToSurface(WorldRenderSurface & world_surface);
+    void DrawAllToSurface(WorldRenderSurface & world_surface);
     void DumpBitmap(const char * filename) const;
+
+    void Advance() {};
 
     /* Color lookup. Can be somewhere else. */
     static Color GetVoxelColor(TerrainPixel voxel);

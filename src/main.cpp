@@ -216,7 +216,7 @@ int GameMain(int argc, char * argv[])
         ::global_game_system = CreateGameSystem(config.video_config);
         ::global_game = std::make_unique<Game>(config);
         /* Play the game: */
-        ::global_game->BeginGame();
+        ::global_game->BeginGame(::global_game_system->GetRenderer());
         gamelib_main_loop([]() -> bool { return global_game->AdvanceStep(); });
 
         /* Release global resources earlier than atexit global teardown*/

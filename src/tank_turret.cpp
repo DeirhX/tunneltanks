@@ -66,14 +66,6 @@ void TankTurret::Draw(Surface * surface) const
     }
 }
 
-void TankTurret::Erase(Terrain * level) const
-{
-    for (const Position & pos : this->TurretVoxels)
-    {
-        level->CommitPixel(pos);
-    }
-}
-
 void TankTurret::HandleShoot()
 {
     /* Handle all shooting logic: */

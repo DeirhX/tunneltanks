@@ -3,20 +3,10 @@
 #include "font_renderer.h"
 #include "game_config.h"
 #include "render_surface.h"
+#include "renderer.h"
 #include "types.h"
 #include <string_view>
 
-/*
- * Renderer: Takes care of rendering our RenderSurface to an actual device.
- */
-class Renderer
-{
-  public:
-    virtual ~Renderer() = default;
-    virtual void SetSurfaceResolution(Size size) = 0;
-    virtual Size GetSurfaceResolution() = 0;
-    virtual void RenderFrame(const ScreenRenderSurface * surface) = 0;
-};
 
 /*
  * Window: Represents the game native window
@@ -66,7 +56,7 @@ class GameSystem
   public:
     GameSystem(Size render_surface_size) : render_surface(render_surface_size) { }
     virtual ~GameSystem() = default;
-    ScreenRenderSurface * GetSurface()
+    ScreenRenderSurface * GetScreenSurface()
     {
         return &render_surface;
     } /* This should be effective, we'll be copying pixels left and right */

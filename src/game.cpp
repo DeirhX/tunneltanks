@@ -91,12 +91,12 @@ std::unique_ptr<LocalTwoPlayerMode> LocalTwoPlayerMode::Setup(Screen * screen, W
 }
 
 /* Create a default game structure: */
-Game::Game(GameConfig config)
+Game::Game(GameConfig config) 
 {
-    /* Copy in all the default values: */
     this->config = config;
     this->is_active = false;
 
+    /* Configure gamelib - this should be modernized at some point */
     if (gamelib_get_can_window())
         this->config.video_config.is_fullscreen = false;
     else if (gamelib_get_can_fullscreen())
@@ -105,10 +105,6 @@ Game::Game(GameConfig config)
     {
         throw GameException("gamelib can't run fullscreen or in a window.");
     }
-
-    /* Initialize screen */
-    this->screen =
-        std::make_unique<Screen>(this->config.video_config.is_fullscreen, GetSystem()->GetSurface());
 
     /* Benchmark level generation */
     int TestIterations = 20;
@@ -129,6 +125,9 @@ Game::Game(GameConfig config)
     gamelib_print("***\r\nAverage level time: %lld.%03lld sec\n", average_time.count() / 1000,
                   average_time.count() % 1000);
 
+    /* Initialize screen */
+    this->screen = std::make_unique<Screen>(this->config.video_config.is_fullscreen, GetSystem()->GetScreenSurface());
+
     /* Create projectile list, tank list and materialize the level voxels */
     world->GetTerrain().MaterializeLevelTerrain();
     world->GetTankBases().CreateBasesInTerrain(world->GetTerrain());
@@ -137,9 +136,6 @@ Game::Game(GameConfig config)
     if (this->config.is_debug)
         world->GetTerrain().DumpBitmap("debug_start.bmp");
 
-    /* Push the level to the draw buffer */
-    world->GetTerrain().CommitAll();
-    this->screen->SetDrawLevelSurfaces(world->GetTerrain().GetSurfaces());
 }
 
 /* Step the game simulation by handling events, and drawing: */
@@ -177,7 +173,8 @@ bool Game::AdvanceStep()
     /* Do the world advance - apply controller input, move stuff, commit level bitmap to DrawBuffer */
     /* TODO: Don't get the surface this stupid way */
     world->Advance();
-    world->Draw(&this->world->GetTerrain().GetSurfaces()->objects_surface);
+    world->GetTerrain().DrawChangesToSurface(GetSystem()->GetRenderer()->GetWorldSurfaces().terrain_surface);
+    world->Draw(&GetSystem()->GetRenderer()->GetWorldSurfaces().objects_surface);
     /* Draw our current state */
     this->screen->DrawCurrentMode();
 
@@ -196,7 +193,7 @@ Game::~Game()
     }
 }
 
-void Game::BeginGame()
+void Game::BeginGame(Renderer * renderer)
 {
     /* Set up the players/GUI inside the world */
     if (this->config.player_count > gamelib_get_max_players())
@@ -213,8 +210,12 @@ void Game::BeginGame()
         throw GameException("Don't know how to draw more than 2 players at once...");
     }
 
+    /* Create and push the level to the draw buffer */
+    renderer->InitializeWorldSurfaces(this->world->GetTerrain().GetSize());
+    this->world->GetTerrain().DrawAllToSurface(renderer->GetWorldSurfaces().terrain_surface);
+
     this->is_active = true;
-    world->BeginGame(this);
+    this->world->BeginGame(this);
 }
 
 void Game::GameOver() { assert(!"Implement game over!"); }

@@ -17,13 +17,13 @@ void Screen::FillBackground()
 {
     const Size dim = GetSystem()->GetRenderer()->GetSurfaceResolution();
 
-    GetSystem()->GetSurface()->FillRectangle({{0, 0}, dim}, Palette.Get(Colors::Background));
+    GetSystem()->GetScreenSurface()->FillRectangle({{0, 0}, dim}, Palette.Get(Colors::Background));
     ScreenPosition o;
     for (o.y = 0; o.y < dim.y; o.y++)
     {
         for (o.x = (o.y % 2) * 2; o.x < dim.x; o.x += 4)
         {
-            GetSystem()->GetSurface()->FillRectangle(ScreenRect{o, Size{1, 1}}, Palette.Get(Colors::BackgroundDot));
+            GetSystem()->GetScreenSurface()->FillRectangle(ScreenRect{o, Size{1, 1}}, Palette.Get(Colors::BackgroundDot));
         }
     }
 }
@@ -176,7 +176,7 @@ void Screen::DrawPixel(ScreenPosition pos, Color color)
 {
     //if (color.a == 0)
     //    return;
-    GetSystem()->GetSurface()->SetPixel(ScreenPosition{pos.x, pos.y}, color);
+    GetSystem()->GetScreenSurface()->SetPixel(ScreenPosition{pos.x, pos.y}, color);
     return;
 }
 
@@ -187,14 +187,14 @@ ScreenPosition Screen::FromNativeScreen(OffsetF offset) const
 
 void Screen::DrawLevel()
 {
+    auto& world_surfaces = GetSystem()->GetRenderer()->GetWorldSurfaces();
     /* Erase everything */
-    GetSystem()->GetSurface()->Clear();
-    GetLevelSurfaces()->terrain_surface.OverlaySurface(&GetLevelSurfaces()->objects_surface);
+    GetSystem()->GetScreenSurface()->Clear();
+    world_surfaces.terrain_surface.OverlaySurface(&world_surfaces.objects_surface);
     /* Draw everything */
     std::ranges::for_each(this->widgets, [this](auto & item) { item->Draw(*this); });
-
-    GetWorld()->GetTerrain().CommitPixels(GetLevelSurfaces()->objects_surface.GetChangeList());
-    GetLevelSurfaces()->objects_surface.Clear();
+    GetWorld()->GetTerrain().CommitPixels(world_surfaces.objects_surface.GetChangeList());
+    world_surfaces.objects_surface.Clear();
 }
 
 void Screen::DrawCurrentMode()
@@ -249,12 +249,6 @@ void Screen::Resize(Size size)
     /* Draw a nice bg: */
     Screen::FillBackground();
     this->screen_size = size;
-}
-
-void Screen::SetDrawLevelSurfaces(LevelSurfaces * surfaces)
-{
-    this->mode = ScreenDrawMode::DrawLevel;
-    this->level_surfaces = surfaces;
 }
 
 void Screen::AddWidget(std::unique_ptr<widgets::GuiWidget> && widget)

@@ -1,19 +1,17 @@
 #include "color_palette.h"
-#include "gamelib/sdl/bitmap.h"
 #include "terrain_pixel.h"
 #include "trace.h"
 #include "world.h"
+#include "gamelib/sdl/bitmap.h"
 #include <cassert>
 #include <cstdlib>
-#include <Terrain.h>
 #include <random.h>
+#include <terrain.h>
 #include <tweak.h>
 #include <types.h>
 
-Terrain::Terrain(Size size) : size(size), data(size), surfaces(size)
+Terrain::Terrain(Size size) : size(size), data(size)
 {
-    surfaces.terrain_surface.SetDefaultColor(static_cast<Color>(Palette.Get(Colors::Rock)));
-    surfaces.objects_surface.SetDefaultColor({});
     std::ranges::fill(this->data, TerrainPixel::LevelGenRock);
 }
 
@@ -132,28 +130,38 @@ DigResult Terrain::DigTankTunnel(Position pos, bool dig_with_torch)
     return result;
 }
 
-void Terrain::CommitAll()
-{
-    for (int y = 0; y < this->size.y; y++)
-    {
-        for (int x = 0; x < this->size.x; x++)
-        {
-            CommitPixel({x, y});
-        }
-    }
-}
-
 bool Terrain::IsInside(Position pos) const
 {
     return !(pos.x < 0 || pos.y < 0 || pos.x >= this->size.x || pos.y >= this->size.y);
 }
 
-void Terrain::CommitPixel(Position pos) { surfaces.terrain_surface.SetPixel(pos, GetVoxelColor(this->GetPixel(pos))); }
-
-void Terrain::CommitPixels(const std::vector<Position> & positions)
+void Terrain::DrawChangesToSurface(WorldRenderSurface & world_surface)
 {
-    for (auto & position : positions)
-        surfaces.terrain_surface.SetPixel(position, GetVoxelColor(this->GetPixel(position)));
+    for (auto& pos : this->change_list)
+        world_surface.SetPixel(pos, GetVoxelColor(this->GetPixel(pos)));
+    this->change_list.clear();
+}
+
+void Terrain::DrawAllToSurface(WorldRenderSurface & world_surface)
+{
+    for (int y = 0; y < this->size.y; y++)
+    {
+        for (int x = 0; x < this->size.x; x++)
+        {
+            world_surface.SetPixel({x, y}, GetVoxelColor(this->GetPixel({x, y})));
+        }
+    }
+}
+
+void Terrain::CommitPixel(Position pos)
+{
+    change_list.push_back(pos);
+}
+
+void Terrain::CommitPixels(const std::vector<Position>& positions)
+{
+    for (const auto& pos : positions)
+        change_list.push_back(pos);
 }
 
 
@@ -210,3 +218,4 @@ void Terrain::DumpBitmap(const char * filename) const
         }
     }
 }
+

@@ -14,7 +14,7 @@ void gamelib_main_loop(AdvanceFunc advance_func) {
 			return;
 
 		smart_wait();
-        GetSystem()->GetRenderer()->RenderFrame(GetSystem()->GetSurface());
+        GetSystem()->GetRenderer()->RenderFrame(GetSystem()->GetScreenSurface());
 	}
 }
 
