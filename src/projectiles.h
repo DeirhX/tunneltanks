@@ -207,7 +207,7 @@ struct ExplosionDesc
     int frames_length_max = 0;
 
     template <typename ShrapnelType>
-    std::vector<ShrapnelType> Explode(class Terrain * level) const;
+    std::vector<ShrapnelType> Explode(class Terrain & level) const;
 
     static ExplosionDesc AllDirections(Position pos, int shrapnel_count, float speed, int frames_length)
     {
@@ -236,7 +236,7 @@ struct ExplosionDesc
 };
 
 template <typename ShrapnelType>
-std::vector<ShrapnelType> ExplosionDesc::Explode(Terrain * level) const
+std::vector<ShrapnelType> ExplosionDesc::Explode(Terrain & level) const
 {
     auto items = std::vector<ShrapnelType>{};
     items.reserve(this->shrapnel_count);
@@ -249,7 +249,7 @@ std::vector<ShrapnelType> ExplosionDesc::Explode(Terrain * level) const
         auto chosen_speed = Random.Float(this->speed_min, this->speed_max) * tweak::explosion::MadnessLevel;
 
         items.emplace_back(ShrapnelType{this->center, chosen_rads.ToDirection() * chosen_speed,
-                                        Random.Int(this->frames_length_min, this->frames_length_max), level});
+                                        Random.Int(this->frames_length_min, this->frames_length_max), &level});
     }
     return items;
 }

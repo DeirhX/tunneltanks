@@ -37,15 +37,15 @@ Duration Weapon::Fire(Position pos, DirectionF direction, Tank * tank)
     {
     case WeaponType::Cannon:
         GetWorld()->GetProjectileList()->Add(
-            Bullet{pos, direction * tweak::weapon::CannonBulletSpeed, GetWorld()->GetTerrain(), tank});
+            Bullet{pos, direction * tweak::weapon::CannonBulletSpeed, &GetWorld()->GetTerrain(), tank});
         return tweak::weapon::CannonCooldown;
     case WeaponType::ConcreteSpray:
         GetWorld()->GetProjectileList()->Add(
-            ConcreteBarrel{pos, direction * tweak::weapon::ConcreteBarrelSpeed, GetWorld()->GetTerrain(), tank});
+            ConcreteBarrel{pos, direction * tweak::weapon::ConcreteBarrelSpeed, &GetWorld()->GetTerrain(), tank});
         return tweak::weapon::ConcreteSprayCooldown;
     case WeaponType::DirtSpray:
         GetWorld()->GetProjectileList()->Add(
-            DirtBarrel{pos, direction * tweak::weapon::DirtBarrelSpeed, GetWorld()->GetTerrain(), tank});
+            DirtBarrel{pos, direction * tweak::weapon::DirtBarrelSpeed, &GetWorld()->GetTerrain(), tank});
         return tweak::weapon::ConcreteSprayCooldown;
     default:
         assert(false);

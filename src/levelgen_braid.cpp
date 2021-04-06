@@ -227,7 +227,7 @@ static void braid_free(Braid * b)
 std::unique_ptr<World> BraidLevelGenerator::Generate(Size size)
 {
     auto world = std::make_unique<World>(size);
-    auto lvl = world->GetTerrain();
+    auto lvl = &world->GetTerrain();
 	Braid *b = braid_new(lvl->GetSize() / CELL_SIZE);
 	
 	/* Reset all of the 'used' flags back to zero: */

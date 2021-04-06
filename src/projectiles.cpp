@@ -37,7 +37,7 @@ void Bullet::Advance(TankList *)
             GetWorld()->GetProjectileList()->Add(ExplosionDesc::AllDirections(
                                            this->pos_blur_from.ToIntPosition(), tweak::explosion::normal::ShrapnelCount,
                                            tweak::explosion::normal::Speed, tweak::explosion::normal::Frames)
-                                           .Explode<Shrapnel>(level));
+                                           .Explode<Shrapnel>(*level));
             /* Finally, remove it: */
             this->Invalidate();
             return false;
@@ -111,7 +111,7 @@ void ConcreteBarrel::Advance(TankList * tankList)
         projectile_list->Add(ExplosionDesc::Fan(proj_position.ToIntPosition(), proj_speed, math::Radians{math::half_pi},
                                                 tweak::explosion::dirt::ShrapnelCount, tweak::explosion::dirt::Speed,
                                                 tweak::explosion::dirt::Frames)
-                                 .Explode<ConcreteFoam>(proj_level));
+                                 .Explode<ConcreteFoam>(*proj_level));
     };
     FlyingBarrel::Advance(tankList, ExplosionFunc);
 }
@@ -122,7 +122,7 @@ void DirtBarrel::Advance(TankList * tankList)
         projectile_list->Add(ExplosionDesc::Fan(proj_position.ToIntPosition(), proj_speed, math::Radians{math::half_pi},
                                                 tweak::explosion::dirt::ShrapnelCount, tweak::explosion::dirt::Speed,
                                                 tweak::explosion::dirt::Frames)
-                                 .Explode<DirtFoam>(proj_level));
+                                 .Explode<DirtFoam>(*proj_level));
     };
     FlyingBarrel::Advance(tankList, ExplosionFunc);
 }

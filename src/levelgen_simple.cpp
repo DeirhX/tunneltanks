@@ -126,7 +126,7 @@ static void add_rock_lines(Terrain *lvl, Side s)
 static void add_spawns(World *world)
 {
 
-    world->GetTankBases()->SetSpawn(0, generate_inside(world->GetTerrain()->GetSize(), BORDER));
+    world->GetTankBases()->SetSpawn(0, generate_inside(world->GetTerrain().GetSize(), BORDER));
 
     for (TankColor i = 1; i < tweak::world::MaxPlayers; i++)
     {
@@ -134,7 +134,7 @@ static void add_spawns(World *world)
         while (!done)
         {
             /* Try adding a new point: */
-            world->GetTankBases()->SetSpawn(i, generate_inside(world->GetTerrain()->GetSize(), BORDER));
+            world->GetTankBases()->SetSpawn(i, generate_inside(world->GetTerrain().GetSize(), BORDER));
 
             TankColor j;
             /* Make sure that point isn't too close to others: */
@@ -155,7 +155,7 @@ static void add_spawns(World *world)
 std::unique_ptr<World> SimpleLevelGenerator::Generate(Size size)
 {
     auto world = std::make_unique<World>(size);
-    Terrain * lvl = world->GetTerrain();
+    Terrain * lvl = &world->GetTerrain();
     /* Levels default to all rock. Set this to all dirt: */
     fill_all(lvl, TerrainPixel::LevelGenDirt);
 

@@ -68,7 +68,7 @@ void Harvester::Advance(Terrain * level)
     {
 
         auto is_suitable_position = [](Position tested_position) {
-            TerrainPixel pixel = GetWorld()->GetTerrain()->GetPixel(tested_position);
+            TerrainPixel pixel = GetWorld()->GetTerrain().GetPixel(tested_position);
             return Pixel::IsDirt(pixel);
         };
         /* Active algorithm: random pixel in radius. If full, first candidate on path to center from that position */
@@ -80,7 +80,7 @@ void Harvester::Advance(Terrain * level)
 
         if (suitable_pos.has_value() && suitable_pos.value() != this->position)
         {
-            GetWorld()->GetTerrain()->SetPixel(suitable_pos.value(), TerrainPixel::DirtGrow);
+            GetWorld()->GetTerrain().SetPixel(suitable_pos.value(), TerrainPixel::DirtGrow);
             if (this->owner)
                 this->owner->GetResources().Add(1_dirt);
         }

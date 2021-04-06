@@ -130,16 +130,16 @@ Game::Game(GameConfig config)
                   average_time.count() % 1000);
 
     /* Create projectile list, tank list and materialize the level voxels */
-    world->GetTerrain()->MaterializeLevelTerrain();
-    world->GetTankBases()->CreateBasesInTerrain(*world->GetTerrain());
+    world->GetTerrain().MaterializeLevelTerrain();
+    world->GetTankBases()->CreateBasesInTerrain(world->GetTerrain());
 
     /* Debug the starting data, if we're debugging: */
     if (this->config.is_debug)
-        world->GetTerrain()->DumpBitmap("debug_start.bmp");
+        world->GetTerrain().DumpBitmap("debug_start.bmp");
 
     /* Push the level to the draw buffer */
-    world->GetTerrain()->CommitAll();
-    this->screen->SetDrawLevelSurfaces(world->GetTerrain()->GetSurfaces());
+    world->GetTerrain().CommitAll();
+    this->screen->SetDrawLevelSurfaces(world->GetTerrain().GetSurfaces());
 }
 
 /* Step the game simulation by handling events, and drawing: */
@@ -177,7 +177,7 @@ bool Game::AdvanceStep()
     /* Do the world advance - apply controller input, move stuff, commit level bitmap to DrawBuffer */
     /* TODO: Don't get the surface this stupid way */
     world->Advance();
-    world->Draw(&this->world->GetTerrain()->GetSurfaces()->objects_surface);
+    world->Draw(&this->world->GetTerrain().GetSurfaces()->objects_surface);
     /* Draw our current state */
     this->screen->DrawCurrentMode();
 
@@ -191,7 +191,7 @@ Game::~Game()
     {
         /* Debug if we need to: */
         if (this->config.is_debug)
-            world->GetTerrain()->DumpBitmap("debug_end.bmp");
+            world->GetTerrain().DumpBitmap("debug_end.bmp");
         this->mode->TearDown();
     }
 }

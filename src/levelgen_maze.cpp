@@ -149,7 +149,7 @@ static void maze_free(Maze *m) {
 std::unique_ptr<World> MazeLevelGenerator::Generate(Size size)
 {
     auto world = std::make_unique<World>(size);
-    Terrain * lvl = world->GetTerrain();
+    Terrain * lvl = &world->GetTerrain();
 	int x, y;
 	Maze *m = maze_new(lvl->GetSize()/CELL_SIZE);
 	

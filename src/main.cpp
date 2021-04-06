@@ -177,10 +177,10 @@ int GameMain(int argc, char * argv[])
         {
             /* Generate our random level: */
             levelgen::GeneratedLevel generated_level = levelgen::LevelGenerator::Generate(levelgen::LevelGenerator::FromName(level_generator_id), level_size );
-            generated_level.world->GetTerrain()->MaterializeLevelTerrain();
+            generated_level.world->GetTerrain().MaterializeLevelTerrain();
 
             /* Dump it out, and exit: */
-            generated_level.world->GetTerrain()->DumpBitmap(level_bitmap_filename);
+            generated_level.world->GetTerrain().DumpBitmap(level_bitmap_filename);
 
             gamelib_exit();
             return 0;

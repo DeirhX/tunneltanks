@@ -64,7 +64,7 @@ static void generate_tree(World *lvl) {
 	/* Randomly generate all points: */
 	points = static_cast<Position*>(get_mem( sizeof(Position) * ToastParams::TreeSize ));
 	for(i=0; i< ToastParams::TreeSize; i++)
-		points[i] = generate_inside(lvl->GetTerrain()->GetSize(), ToastParams::BorderWidth);
+		points[i] = generate_inside(lvl->GetTerrain().GetSize(), ToastParams::BorderWidth);
 	
 	/* While we're here, copy in some of those points: */
 	lvl->GetTankBases()->SetSpawn(0, points[0]);
@@ -110,7 +110,7 @@ static void generate_tree(World *lvl) {
 		for(k=0; k< ToastParams::TreeSize; k++)
 			if(dsets[k] == bset) 
 				dsets[k] = aset;
-		draw_line(lvl->GetTerrain(), points[pairs[i].a], points[pairs[i].b], TerrainPixel::LevelGenDirt, 0);
+		draw_line(&lvl->GetTerrain(), points[pairs[i].a], points[pairs[i].b], TerrainPixel::LevelGenDirt, 0);
 	}
 	
 	/* We don't need this data anymore: */
@@ -459,8 +459,8 @@ std::unique_ptr<World> ToastLevelGenerator::Generate(Size size)
 	auto perf = MeasureFunction<1>{ __FUNCTION__ };
 
 	generate_tree(world.get());
-    randomly_expand(world->GetTerrain());
-    smooth_cavern(world->GetTerrain());
+    randomly_expand(&world->GetTerrain());
+    smooth_cavern(&world->GetTerrain());
 
 	return world;
 }

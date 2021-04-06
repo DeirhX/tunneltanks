@@ -234,7 +234,7 @@ void Tank::Die()
     GetWorld()->GetProjectileList()->Add(
         ExplosionDesc::AllDirections(this->position, tweak::explosion::death::ShrapnelCount,
                                      tweak::explosion::death::Speed, tweak::explosion::death::Frames)
-            .Explode<Shrapnel>(this->level));
+            .Explode<Shrapnel>(*this->level));
 }
 
 void Tank::ApplyControllerOutput(ControllerOutput controls)
