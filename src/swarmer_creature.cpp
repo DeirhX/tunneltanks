@@ -31,7 +31,7 @@ CollisionType Swarmer::TryCollide(Direction at_rotation, Position at_position)
     ShapeInspector::InspectRectangle(
         this->bounding_box.GetRect(at_position),
         [this, &result](Position position_) {
-            bool is_blocking_collision = GetWorld()->GetCollisionSolver()->TestCollide(
+            bool is_blocking_collision = GetWorld()->GetCollisionSolver().TestCollide(
                 position_,
                 [this, &result](Tank & tank) {
                     result = CollisionType::Blocked;
@@ -74,7 +74,7 @@ void Swarmer::ApplyControllerOutput(ControllerOutput controls)
 void Swarmer::Die()
 {
     /*
-    GetWorld()->GetProjectileList()->Add(
+    GetWorld()->GetProjectileList().Add(
         ExplosionDesc::AllDirections(this->position, tweak::explosion::death::ShrapnelCount,
                                      tweak::explosion::death::Speed, tweak::explosion::death::Frames)
             .Explode<Shrapnel>(this->level));

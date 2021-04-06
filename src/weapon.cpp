@@ -8,7 +8,7 @@
 /*
 void WeaponCannonDescriptor::SpawnProjectile(Position pos, DirectionF direction, Tank * tank)
 {
-    GetWorld()->GetProjectileList()->Add(
+    GetWorld()->GetProjectileList().Add(
         Bullet{pos, direction, tweak::weapon::CannonBulletSpeed, GetWorld()->GetLevel(), tank});
 }
 
@@ -36,15 +36,15 @@ Duration Weapon::Fire(Position pos, DirectionF direction, Tank * tank)
     switch (this->current)
     {
     case WeaponType::Cannon:
-        GetWorld()->GetProjectileList()->Add(
+        GetWorld()->GetProjectileList().Add(
             Bullet{pos, direction * tweak::weapon::CannonBulletSpeed, &GetWorld()->GetTerrain(), tank});
         return tweak::weapon::CannonCooldown;
     case WeaponType::ConcreteSpray:
-        GetWorld()->GetProjectileList()->Add(
+        GetWorld()->GetProjectileList().Add(
             ConcreteBarrel{pos, direction * tweak::weapon::ConcreteBarrelSpeed, &GetWorld()->GetTerrain(), tank});
         return tweak::weapon::ConcreteSprayCooldown;
     case WeaponType::DirtSpray:
-        GetWorld()->GetProjectileList()->Add(
+        GetWorld()->GetProjectileList().Add(
             DirtBarrel{pos, direction * tweak::weapon::DirtBarrelSpeed, &GetWorld()->GetTerrain(), tank});
         return tweak::weapon::ConcreteSprayCooldown;
     default:

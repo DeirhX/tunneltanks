@@ -13,17 +13,17 @@ void TankBase::BeginGame()
 void TankBase::RegisterLinkPoint(World * world)
 {
     assert(!this->link_point);
-    this->link_point = world->GetLinkMap()->RegisterLinkPoint(this->position, LinkPointType::Base);
+    this->link_point = world->GetLinkMap().RegisterLinkPoint(this->position, LinkPointType::Base);
 }
 
 void TankBase::CreateMachineTemplates(World * world)
 {
     Position left_center = (this->position - Size{TankBase::BaseSize.x / 2, 0});
-    this->base_charger_template = &world->GetHarvesterList()->Emplace<ChargerTemplate>(
+    this->base_charger_template = &world->GetHarvesterList().Emplace<ChargerTemplate>(
         left_center + Size{Charger::bounding_box.size.x / 2 + 4, 0}, this->materials);
 
     Position right_center = (this->position + Size{TankBase::BaseSize.x / 2, 0});
-    this->base_harvester_template = &world->GetHarvesterList()->Emplace<HarvesterTemplate>(
+    this->base_harvester_template = &world->GetHarvesterList().Emplace<HarvesterTemplate>(
         right_center - Size{Charger::bounding_box.size.x / 2 + 4, 0}, this->materials);
 }
 

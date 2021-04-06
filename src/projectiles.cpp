@@ -16,7 +16,7 @@ void Bullet::Advance(TankList *)
         this->pos = tested_pos;
         this->pos_blur_from = prev_pos;
 
-        if (GetWorld()->GetCollisionSolver()->TestCollide(this->pos.ToIntPosition(), 
+        if (GetWorld()->GetCollisionSolver().TestCollide(this->pos.ToIntPosition(), 
               [this](Tank & tank)
         {
                 if (tank.GetColor() == this->tank->GetColor())
@@ -34,7 +34,7 @@ void Bullet::Advance(TankList *)
         [](TerrainPixel level_pixel) { return Pixel::IsAnyCollision(level_pixel); }))
 
         {
-            GetWorld()->GetProjectileList()->Add(ExplosionDesc::AllDirections(
+            GetWorld()->GetProjectileList().Add(ExplosionDesc::AllDirections(
                                            this->pos_blur_from.ToIntPosition(), tweak::explosion::normal::ShrapnelCount,
                                            tweak::explosion::normal::Speed, tweak::explosion::normal::Frames)
                                            .Explode<Shrapnel>(*level));
@@ -72,7 +72,7 @@ void FlyingBarrel::Advance(TankList *, ExplosionFuncType explosionFunc)
         prev_positions.push_back(tested_pos);
         ++search_step;
 
-        bool is_collision = GetWorld()->GetCollisionSolver()->TestCollide(
+        bool is_collision = GetWorld()->GetCollisionSolver().TestCollide(
             tested_pos.ToIntPosition(),
             [this](Tank & tank) { return tank.GetColor() != this->tank->GetColor(); },
             [](Machine &) { return true; },
@@ -96,7 +96,7 @@ void FlyingBarrel::Advance(TankList *, ExplosionFuncType explosionFunc)
 
     if (collided)
     {
-        explosionFunc(this->pos, this->speed, this->level, GetWorld()->GetProjectileList());
+        explosionFunc(this->pos, this->speed, this->level, &GetWorld()->GetProjectileList());
     }
 }
 

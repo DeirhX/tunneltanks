@@ -97,7 +97,7 @@ void Harvester::Draw(Surface * surface) const
 
 void Harvester::Die(Terrain *)
 {
-    GetWorld()->GetProjectileList()->Add(
+    GetWorld()->GetProjectileList().Add(
         ExplosionDesc::AllDirections(this->position, tweak::explosion::death::ShrapnelCount,
                                      tweak::explosion::death::Speed, tweak::explosion::death::Frames)
             .Explode<Shrapnel>(GetWorld()->GetTerrain()));
@@ -154,7 +154,7 @@ void Charger::Draw(Surface * surface) const
 
 void Charger::Die(Terrain *)
 {
-    GetWorld()->GetProjectileList()->Add(
+    GetWorld()->GetProjectileList().Add(
         ExplosionDesc::AllDirections(this->position, tweak::explosion::death::ShrapnelCount,
                                      tweak::explosion::death::Speed, tweak::explosion::death::Frames)
             .Explode<Shrapnel>(GetWorld()->GetTerrain()));
@@ -206,7 +206,7 @@ Machine * HarvesterTemplate::PayAndBuildMachine() const
     if (!this->PayCost())
         return nullptr;
 
-    Machine & machine = GetWorld()->GetHarvesterList()->Emplace<Harvester>(this->position, this->type, this->owner);
+    Machine & machine = GetWorld()->GetHarvesterList().Emplace<Harvester>(this->position, this->type, this->owner);
     machine.SetState(MachineConstructState::Transporting);
     return &machine;
 }
@@ -232,7 +232,7 @@ Machine * ChargerTemplate::PayAndBuildMachine() const
     if (!this->PayCost())
         return nullptr;
 
-    Machine & machine = GetWorld()->GetHarvesterList()->Emplace<Charger>(this->position, this->owner);
+    Machine & machine = GetWorld()->GetHarvesterList().Emplace<Charger>(this->position, this->owner);
     machine.SetState(MachineConstructState::Transporting);
     return &machine;
 }

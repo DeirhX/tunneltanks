@@ -111,7 +111,7 @@ void Tank::AdvanceDeath(World & world)
         else
         {
             bool players_remaining =
-                std::any_of(world.GetTankList()->begin(), world.GetTankList()->end(),
+                std::any_of(world.GetTankList().begin(), world.GetTankList().end(),
                             [](Tank & tank) { return tank.controller->IsPlayer() && !tank.HealthOrEnergyEmpty(); });
             if (!players_remaining)
                 world.SetGameOver();
@@ -127,7 +127,7 @@ CollisionType Tank::TryCollide(Direction rotation, Position position_)
 
     tank::ForEachTankPixel(
         [this, &result](Position position_) {
-            bool is_blocking_collision = GetWorld()->GetCollisionSolver()->TestCollide(
+            bool is_blocking_collision = GetWorld()->GetCollisionSolver().TestCollide(
                 position_,
                 [this, &result](Tank & tank) {
                     if (tank.GetColor() != this->GetColor())
@@ -162,7 +162,7 @@ CollisionType Tank::TryCollide(Direction rotation, Position position_)
             return !is_blocking_collision;
     }, position_, rotation);
 
-    //if (result == CollisionType::Blocked || GetWorld()->GetTankList()->CheckForCollision(*this, position, rotation))
+    //if (result == CollisionType::Blocked || GetWorld()->GetTankList().CheckForCollision(*this, position, rotation))
     //    return CollisionType::Blocked;
 
     return result;
@@ -231,7 +231,7 @@ void Tank::Die()
     this->respawn_timer.Restart();
     this->link_source.Disable();
 
-    GetWorld()->GetProjectileList()->Add(
+    GetWorld()->GetProjectileList().Add(
         ExplosionDesc::AllDirections(this->position, tweak::explosion::death::ShrapnelCount,
                                      tweak::explosion::death::Speed, tweak::explosion::death::Frames)
             .Explode<Shrapnel>(*this->level));

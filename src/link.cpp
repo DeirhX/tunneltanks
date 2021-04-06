@@ -143,7 +143,7 @@ void LinkPoint::Advance()
 
 LinkPointSource::LinkPointSource(World * world, Position position, LinkPointType type)
 {
-    this->link_point = world->GetLinkMap()->RegisterLinkPoint(position, type);
+    this->link_point = world->GetLinkMap().RegisterLinkPoint(position, type);
 }
 
 LinkPointSource & LinkPointSource::operator=(LinkPointSource && movable) noexcept

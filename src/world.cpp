@@ -37,9 +37,9 @@ void World::Advance()
     RegrowPass();
 
     /* Move everything: */
-    this->projectile_list.Advance(&this->terrain, this->GetTankList());
+    this->projectile_list.Advance(&this->terrain, &this->GetTankList());
     this->tank_list.for_each([=](Tank * t) { t->Advance(*this); });
-    this->harvester_list.Advance(&this->terrain, this->GetTankList());
+    this->harvester_list.Advance(&this->terrain, &this->GetTankList());
     this->sprite_list.Advance(&this->terrain);
     /* TODO: get out of level? */
     for (TankBase & base : this->tank_bases.GetSpawns())

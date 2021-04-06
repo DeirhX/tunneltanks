@@ -43,12 +43,12 @@ class World
 
     [[nodiscard]] Terrain & GetTerrain() { return this->terrain; }
     [[nodiscard]] TankBases & GetTankBases() { return this->tank_bases; }
-    [[nodiscard]] ProjectileList * GetProjectileList() { return &this->projectile_list; }
-    [[nodiscard]] MachineryList * GetHarvesterList() { return &this->harvester_list; }
-    [[nodiscard]] TankList * GetTankList() { return &this->tank_list; }
-    [[nodiscard]] SpriteList * GetSpriteList() { return &this->sprite_list; }
-    [[nodiscard]] LinkMap * GetLinkMap() { return &this->link_map; }
-    [[nodiscard]] const CollisionSolver * GetCollisionSolver() const { return &this->collision_solver; }
+    [[nodiscard]] ProjectileList & GetProjectileList() { return this->projectile_list; }
+    [[nodiscard]] MachineryList & GetHarvesterList() { return this->harvester_list; }
+    [[nodiscard]] TankList & GetTankList() { return this->tank_list; }
+    [[nodiscard]] SpriteList & GetSpriteList() { return this->sprite_list; }
+    [[nodiscard]] LinkMap & GetLinkMap() { return this->link_map; }
+    [[nodiscard]] const CollisionSolver & GetCollisionSolver() const { return this->collision_solver; }
     [[nodiscard]] std::chrono::microseconds GetElapsedTime() const { return this->time_elapsed; }
 
     void SetGameOver();

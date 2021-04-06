@@ -25,7 +25,7 @@ void MachineMaterializer::PickUpMachine(MachineTemplate & machine_template)
     }
     else
     {
-        GetWorld()->GetSpriteList()->Emplace<FailedInteraction>(this->owner_tank->GetPosition());
+        GetWorld()->GetSpriteList().Emplace<FailedInteraction>(this->owner_tank->GetPosition());
     }
 }
 
@@ -58,7 +58,7 @@ void MachineMaterializer::Advance(Position)
             /* Pick up a machine if we're not holding it */
             MachineTemplate * machine_template_overlap = nullptr;
             this->owner_tank->ForEachTankPixel([&machine_template_overlap](Position world_position) {
-                machine_template_overlap = GetWorld()->GetCollisionSolver()->TestMachineTemplate(world_position);
+                machine_template_overlap = GetWorld()->GetCollisionSolver().TestMachineTemplate(world_position);
                 return !machine_template_overlap;
             });
             if (machine_template_overlap)
@@ -72,7 +72,7 @@ void MachineMaterializer::Advance(Position)
             /* Don't place it if it overlaps with any other machine */
             Machine * machine_overlap = nullptr;
             this->owner_tank->ForEachTankPixel([this, &machine_overlap](Position world_position) {
-                machine_overlap = GetWorld()->GetCollisionSolver()->TestMachine(world_position);
+                machine_overlap = GetWorld()->GetCollisionSolver().TestMachine(world_position);
                 /* Ignore collision with this transported machine template */
                 machine_overlap = machine_overlap == this->transported_machine ? nullptr : machine_overlap;
                 return !machine_overlap;
@@ -100,21 +100,21 @@ bool MachineMaterializer::TryBuildMachine(MachineType type)
     case MachineType::Harvester:
         if (this->resource_bank->Pay(tweak::rules::HarvesterCost))
         {
-            GetWorld()->GetHarvesterList()->Emplace<Harvester>(position, HarvesterType::Dirt, this->owner_tank);
+            GetWorld()->GetHarvesterList().Emplace<Harvester>(position, HarvesterType::Dirt, this->owner_tank);
             return true;
         }
         break;
     case MachineType::Miner:
         if (this->resource_bank->Pay(tweak::rules::MinerCost))
         {
-            GetWorld()->GetHarvesterList()->Emplace<Harvester>(position, HarvesterType::Mineral, this->owner_tank);
+            GetWorld()->GetHarvesterList().Emplace<Harvester>(position, HarvesterType::Mineral, this->owner_tank);
             return true;
         }
         break;
     case MachineType::Charger:
         if (this->resource_bank->Pay(tweak::rules::ChargerCost))
         {
-            GetWorld()->GetHarvesterList()->Emplace<Charger>(position, this->owner_tank);
+            GetWorld()->GetHarvesterList().Emplace<Charger>(position, this->owner_tank);
             return true;
         }
         break;
