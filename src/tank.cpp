@@ -53,7 +53,7 @@ void Tank::Advance(World & world)
         /* Recharge and discharge */
         this->GetReactor().Exhaust(tweak::tank::IdleCost);
 
-        TankBase * base = world.GetTankBases()->CheckBaseCollision(this->position);
+        TankBase * base = world.GetTankBases().CheckBaseCollision(this->position);
         if (base)
         {
             this->TryBaseHeal(*base);
@@ -63,7 +63,7 @@ void Tank::Advance(World & world)
         /* Get input from controller and figure what we *want* to do and do it: rotate turret, set desired direction and speed  */
         if (this->controller)
         {
-            Position spawn_pos = world.GetTankBases()->GetSpawn(this->color)->GetPosition();
+            Position spawn_pos = world.GetTankBases().GetSpawn(this->color)->GetPosition();
             auto controls = PublicTankInfo{*this, spawn_pos};
             this->ApplyControllerOutput(this->controller->ApplyControls(controls));
         }

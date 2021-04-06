@@ -67,16 +67,16 @@ static void generate_tree(World *lvl) {
 		points[i] = generate_inside(lvl->GetTerrain().GetSize(), ToastParams::BorderWidth);
 	
 	/* While we're here, copy in some of those points: */
-	lvl->GetTankBases()->SetSpawn(0, points[0]);
+	lvl->GetTankBases().SetSpawn(0, points[0]);
 	for(i=1,j=1; i< ToastParams::TreeSize && j< tweak::world::MaxPlayers; i++) {
 		for(k=0; k<j; k++) {
-            if (pt_dist(points[i], lvl->GetTankBases()->GetSpawn(TankColor(k))->GetPosition()) <
+            if (pt_dist(points[i], lvl->GetTankBases().GetSpawn(TankColor(k))->GetPosition()) <
                 tweak::base::MinDistance * tweak::base::MinDistance)
 				break;
 		}
 		
 		if(k!=j) continue;
-        lvl->GetTankBases()->SetSpawn(TankColor(j++), points[i]);
+        lvl->GetTankBases().SetSpawn(TankColor(j++), points[i]);
 	}
 	if(j!= tweak::world::MaxPlayers) {
 		/* TODO: More robust error handling. */

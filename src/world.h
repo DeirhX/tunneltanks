@@ -42,7 +42,7 @@ class World
     void Draw(WorldRenderSurface * objects_surface);
 
     [[nodiscard]] Terrain & GetTerrain() { return this->terrain; }
-    [[nodiscard]] TankBases * GetTankBases() { return &this->tank_bases; }
+    [[nodiscard]] TankBases & GetTankBases() { return this->tank_bases; }
     [[nodiscard]] ProjectileList * GetProjectileList() { return &this->projectile_list; }
     [[nodiscard]] MachineryList * GetHarvesterList() { return &this->harvester_list; }
     [[nodiscard]] TankList * GetTankList() { return &this->tank_list; }

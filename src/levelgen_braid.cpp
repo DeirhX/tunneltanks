@@ -287,7 +287,7 @@ std::unique_ptr<World> BraidLevelGenerator::Generate(Size size)
 					b->data[(y+ty)*b->size.x+(x+tx)].flag = 1;
 		
 		/* Now, add it to the level: */
-		world->GetTankBases()->SetSpawn(i, Position{
+		world->GetTankBases().SetSpawn(i, Position{
 			x * CELL_SIZE + CELL_SIZE / 2,
 			y * CELL_SIZE + CELL_SIZE / 2
 			});

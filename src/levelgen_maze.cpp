@@ -205,7 +205,7 @@ std::unique_ptr<World> MazeLevelGenerator::Generate(Size size)
 					m->data[(y+ty)*m->w+(x+tx)].used = 1;
 		
 		/* Now, add it to the level: */
-		world->GetTankBases()->SetSpawn(i, Position{
+		world->GetTankBases().SetSpawn(i, Position{
 			x * CELL_SIZE + CELL_SIZE / 2,
 			y * CELL_SIZE + CELL_SIZE / 2
 			});

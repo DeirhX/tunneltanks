@@ -126,7 +126,7 @@ static void add_rock_lines(Terrain *lvl, Side s)
 static void add_spawns(World *world)
 {
 
-    world->GetTankBases()->SetSpawn(0, generate_inside(world->GetTerrain().GetSize(), BORDER));
+    world->GetTankBases().SetSpawn(0, generate_inside(world->GetTerrain().GetSize(), BORDER));
 
     for (TankColor i = 1; i < tweak::world::MaxPlayers; i++)
     {
@@ -134,14 +134,14 @@ static void add_spawns(World *world)
         while (!done)
         {
             /* Try adding a new point: */
-            world->GetTankBases()->SetSpawn(i, generate_inside(world->GetTerrain().GetSize(), BORDER));
+            world->GetTankBases().SetSpawn(i, generate_inside(world->GetTerrain().GetSize(), BORDER));
 
             TankColor j;
             /* Make sure that point isn't too close to others: */
             for (j = 0; j < i; j++)
             {
-                if (pt_dist(world->GetTankBases()->GetSpawn(i)->GetPosition(),
-                            world->GetTankBases()->GetSpawn(j)->GetPosition()) <
+                if (pt_dist(world->GetTankBases().GetSpawn(i)->GetPosition(),
+                            world->GetTankBases().GetSpawn(j)->GetPosition()) <
                     tweak::base::MinDistance * tweak::base::MinDistance)
                     break;
             }
