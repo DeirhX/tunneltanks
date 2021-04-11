@@ -13,7 +13,7 @@ struct ResourceAmount
 {
     int amount;
     ResourceAmount() = default;
-    constexpr explicit ResourceAmount(int amount) : amount(amount) {}
+    constexpr ResourceAmount(int amount) : amount(amount) {}
     constexpr ResourceAmount & operator=(ResourceType other)
     {
         this->amount = other.amount;
@@ -42,23 +42,19 @@ struct ResourceAmount
  */
 struct DirtAmount : public ResourceAmount<DirtAmount>
 {
-    DirtAmount() = default;
-    constexpr DirtAmount(int amount) : ResourceAmount<DirtAmount>(amount) {}
+    using ResourceAmount<DirtAmount>::ResourceAmount;
 };
 struct MineralsAmount : public ResourceAmount<MineralsAmount>
 {
-    MineralsAmount() = default;
-    constexpr MineralsAmount(int amount) : ResourceAmount<MineralsAmount>(amount) {}
+    using ResourceAmount<MineralsAmount>::ResourceAmount;
 };
 struct EnergyAmount : public ResourceAmount<EnergyAmount>
 {
-    EnergyAmount() = default;
-    constexpr EnergyAmount(int amount) : ResourceAmount<EnergyAmount>(amount) {}
+    using ResourceAmount<EnergyAmount>::ResourceAmount;
 };
 struct HealthAmount : public ResourceAmount<HealthAmount>
 {
-    HealthAmount() = default;
-    constexpr HealthAmount(int amount) : ResourceAmount<HealthAmount>(amount) {}
+    using ResourceAmount<HealthAmount>::ResourceAmount;
 };
 
 /* Beautiful literals. 10_health, 15_dirt, 35_minerals!  */
