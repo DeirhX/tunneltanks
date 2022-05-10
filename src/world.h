@@ -8,6 +8,7 @@
 #include "projectile_list.h"
 #include "sprite_list.h"
 #include "tank_list.h"
+#include "entity.h"
 
 class WorldRenderSurface;
 
@@ -33,6 +34,7 @@ class World
     CollisionSolver collision_solver;
     RepetitiveTimer regrow_timer{tweak::world::DirtRecoverInterval};
 
+    //EntitySystem entities;
   public:
     World(Size terrain_size);
     void Clear(); /* Clear the world of everything */

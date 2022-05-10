@@ -1,27 +1,28 @@
 ﻿#pragma once
 #include "containers.h"
+#include <ecs.hpp/ecs.hpp>
+namespace ecs = ecs_hpp;
 
-class Entity
+namespace crust
 {
-public:
-    
+
+class EntitySystem
+{
+    ecs_hpp::registry registry;
 };
 
-template <typename TAdvanceable>
-concept Advanceable = requires(TAdvanceable t)
+namespace components
 {
-    t.Advance();
-};
+    struct PositionComponent { PositionF pos; };
+    struct VelocityComponent { SpeedF speed;  };
+    struct TimeToLiveComponent { float life_left;};
+} // namespace components
 
-class Component
+namespace aspect
 {
-    
-};
+    using namespace components;
+    ecs::aspect<PositionComponent, VelocityComponent> Movable;
+}
 
-/*
-template <typename... TComponent>
-class ComponentList
-{
-    MultiTypeContainer<TComponent> list;
-};
-*/
+
+} // namespace crust

@@ -58,7 +58,7 @@ class Tank : public Controllable
     [[nodiscard]] TankBase * GetBase() const { return this->tank_base; }
     [[nodiscard]] int GetLives() const { return this->lives_left; }
 
-    void Advance(World & world); /* Advance world-step */
+    void Advance(World & world) override; /* Advance world-step */
 
     void Spawn();
     void Die() override;
