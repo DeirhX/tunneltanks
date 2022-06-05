@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "bitmap.h"
 #include "exceptions.h"
 #include "require_sdl.h"

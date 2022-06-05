@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "bitmaps.h"
 #include "color.h"
 #include "color_palette.h"

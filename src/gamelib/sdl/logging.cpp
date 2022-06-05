@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "require_sdl.h"
 #include <cstdarg>
 #include <cstdio>

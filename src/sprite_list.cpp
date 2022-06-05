@@ -1,4 +1,5 @@
-﻿#include "sprite_list.h"
+﻿#include "pch.h"
+#include "sprite_list.h"
 
 void SpriteList::Advance(Terrain * level)
 {

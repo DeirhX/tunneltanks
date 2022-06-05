@@ -1,4 +1,5 @@
-﻿#include "mymath.h"
+﻿#include "pch.h"
+#include "mymath.h"
 #include "types.h"
 
 namespace math

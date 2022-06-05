@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "control.h"
 #include "exceptions.h"
 #include "gamelib.h"

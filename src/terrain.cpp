@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "color_palette.h"
 #include "terrain_pixel.h"
 #include "trace.h"

@@ -1,4 +1,5 @@
-﻿#include "machine.h"
+﻿#include "pch.h"
+#include "machine.h"
 
 #include "color_palette.h"
 #include "terrain.h"

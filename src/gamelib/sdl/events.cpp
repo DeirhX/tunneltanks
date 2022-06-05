@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "gamelib.h"
 #include "types.h"
 #include "require_sdl.h"

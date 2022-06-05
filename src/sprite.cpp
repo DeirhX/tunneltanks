@@ -1,4 +1,5 @@
-﻿#include "sprite.h"
+﻿#include "pch.h"
+#include "sprite.h"
 
 #include "color_palette.h"
 #include "shape_renderer.h"
