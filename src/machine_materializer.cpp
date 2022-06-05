@@ -1,4 +1,5 @@
-﻿#include "machine_materializer.h"
+﻿#include "pch.h"
+#include "machine_materializer.h"
 #include "controller.h"
 #include "game.h"
 #include "types.h"

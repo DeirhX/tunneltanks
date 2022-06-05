@@ -1,1 +1,2 @@
-﻿#include "bitmap_loader.h"
+﻿#include "pch.h"
+#include "bitmap_loader.h"

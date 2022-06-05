@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "terrain_pixel_surface.h"
 
 /* TODO: We're using color structures here because we started with Uint32 values

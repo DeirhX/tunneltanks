@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "color_palette.h"
 #include "types.h"
 #include <cassert>

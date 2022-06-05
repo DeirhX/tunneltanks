@@ -1,4 +1,5 @@
-﻿#include "controllable.h"
+﻿#include "pch.h"
+#include "controllable.h"
 #include "world.h"
 
 Controllable::Controllable(Position position_, const Reactor & starting_reactor_state,

@@ -1,4 +1,5 @@
-﻿#include "renderer.h"
+﻿#include "pch.h"
+#include "renderer.h"
 
 void Renderer::InitializeWorldSurfaces(Size dimensions)
 {

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "sdl_controller.h"
 #include "exceptions.h"
 #include "game_system.h"

@@ -1,4 +1,5 @@
-﻿#include "link.h"
+﻿#include "pch.h"
+#include "link.h"
 
 #include "color_palette.h"
 #include "Terrain.h"

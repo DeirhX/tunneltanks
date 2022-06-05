@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "terrain_adjacency.h"
 #include "terrain.h"
 

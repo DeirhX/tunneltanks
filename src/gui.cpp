@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "gui.h"
 
 GuiEngine::GuiEngine(): gui_thread(){};

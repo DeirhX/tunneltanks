@@ -1,4 +1,5 @@
-﻿#include "machine_list.h"
+﻿#include "pch.h"
+#include "machine_list.h"
 
 void MachineryList::Advance(Terrain * level, TankList *)
 {

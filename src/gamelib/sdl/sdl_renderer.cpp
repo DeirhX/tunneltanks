@@ -1,4 +1,5 @@
-﻿#include "sdl_renderer.h"
+﻿#include "pch.h"
+#include "sdl_renderer.h"
 #include "exceptions.h"
 #include "require_sdl.h"
 #include "tweak.h"

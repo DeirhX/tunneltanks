@@ -1,4 +1,5 @@
-﻿#include "font_renderer.h"
+﻿#include "pch.h"
+#include "font_renderer.h"
 #include "game_system.h"
 
 fonts::BrodminGlyphInfo::BrodminGlyphInfo() : GlyphInfoTable(FontFace::Brodmin)

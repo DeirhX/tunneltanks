@@ -1,3 +1,4 @@
+#include "pch.h"
 #include <control.h>
 #ifdef _WIN32
 #include <crtdbg.h>
