@@ -8,8 +8,11 @@ namespace crust
 
 class EntitySystem
 {
-    ecs_hpp::registry registry;
+public:
+    ecs::registry registry;
 };
+
+inline EntitySystem entities{};
 
 namespace components
 {
@@ -19,7 +22,7 @@ namespace components
 namespace aspect
 {
     using namespace components;
-    //ecs::aspect<PositionComponent, VelocityComponent> Movable;
+  // ecs::aspect<PositionComponent, VelocityComponent> Movable;
 }
 
 

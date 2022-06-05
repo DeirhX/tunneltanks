@@ -1,13 +1,16 @@
 ﻿#include "pch.h"
 #include "controllable.h"
 #include "world.h"
+#include "position_component.h"
 
 Controllable::Controllable(Position position_, const Reactor & starting_reactor_state,
                            MaterialCapacity material_capacity, Terrain * level_)
-    : position(position_),
-      link_source(GetWorld(), position, LinkPointType::Controllable), reactor(starting_reactor_state),
+    : entity(crust::entities.registry.create_entity()), 
+      link_source(GetWorld(), position_, LinkPointType::Controllable), reactor(starting_reactor_state),
       resources(material_capacity), level(level_)
 {
+    entity.assign_component<Position>(position_);
+    entity.assign_component<Speed>();
 }
 
 bool Controllable::HealthOrEnergyEmpty() const
@@ -17,17 +20,20 @@ bool Controllable::HealthOrEnergyEmpty() const
 
 bool Controllable::HandleMove(DirectionF torch_heading, bool torch_use)
 {
+    Position & position = this->PositionRef();
+    Speed & speed = this->SpeedRef();
+
     /* Calculate the direction: */
-    if (this->speed.x == 0 && this->speed.y == 0)
+    if (speed.x == 0 && speed.y == 0)
         return false;
-    
-    Direction dir = Direction::FromSpeed(this->speed);
-    CollisionType collision = this->TryCollide(dir, this->position + 1 * this->speed);
+
+    Direction dir = Direction::FromSpeed(speed);
+    CollisionType collision = this->TryCollide(dir, position + 1 * speed);
     /* Now, is there room to move forward in that direction? */
     if (collision != CollisionType::None)
     {
         /* Attempt to dig and see the results */
-        DigResult dug = this->level->DigTankTunnel(this->position + (1 * this->speed), torch_use);
+        DigResult dug = this->level->DigTankTunnel(position + (1 * speed), torch_use);
         this->resources.Add({dug.dirt, dug.minerals});
 
         /* If we didn't use a torch pointing roughly in the right way, we don't move in the frame of digging*/
@@ -38,13 +44,13 @@ bool Controllable::HandleMove(DirectionF torch_heading, bool torch_use)
         }
 
         /* Now if we used a torch, test the collision again - we might have failed to dig some of the minerals */
-        collision = this->TryCollide(dir, this->position + 1 * this->speed);
+        collision = this->TryCollide(dir, position + 1 * speed);
         if (collision != CollisionType::None)
             return false;
     }
 
     /* We're free to move, do it*/
     this->direction = Direction{dir};
-    this->position += this->speed;
+    position += speed;
     return true;
 }

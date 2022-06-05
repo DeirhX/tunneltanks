@@ -55,7 +55,7 @@ void Tank::Advance(World & world)
         /* Recharge and discharge */
         this->GetReactor().Exhaust(tweak::tank::IdleCost);
 
-        TankBase * base = world.GetTankBases().CheckBaseCollision(this->position);
+        TankBase * base = world.GetTankBases().CheckBaseCollision(this->GetPosition());
         if (base)
         {
             this->TryBaseHeal(*base);
@@ -71,9 +71,10 @@ void Tank::Advance(World & world)
         }
 
         /* Rotate the turret temporarily back directly to match our heading direction */
-        if (this->speed.x || this->speed.y)
+        Speed speed = this->SpeedRef();
+        if (speed.x || speed.y)
         {
-            this->turret.SetDirection(DirectionF{Direction::FromSpeed(this->speed)});
+            this->turret.SetDirection(DirectionF{Direction::FromSpeed(speed)});
         }
         /* Now override this by rotating according to crosshair if it is being used */
         this->turret.Advance(this->GetPosition(), this->crosshair);
@@ -210,8 +211,11 @@ void Tank::Draw(Surface & surface) const
         {
             char val = TANK_SPRITE[this->direction][y][x];
             if (val)
-                surface.SetPixel(Position{this->position.x + x - 3, this->position.y + y - 3},
-                                   Palette.GetTank(this->color)[val - 1]);
+            {
+                Position position = this->GetPosition();
+                surface.SetPixel(Position{position.x + x - 3, position.y + y - 3},
+                                 Palette.GetTank(this->color)[val - 1]);
+            }
         }
 
     this->turret.Draw(&surface);
@@ -221,7 +225,7 @@ void Tank::Spawn()
 {
     this->turret.Reset();
     this->reactor.Fill();
-    this->position = this->tank_base->GetPosition();
+    this->PositionRef() = this->tank_base->GetPosition();
     this->link_source.Enable();
 }
 
@@ -234,7 +238,7 @@ void Tank::Die()
     this->link_source.Disable();
 
     GetWorld()->GetProjectileList().Add(
-        ExplosionDesc::AllDirections(this->position, tweak::explosion::death::ShrapnelCount,
+        ExplosionDesc::AllDirections(this->GetPosition(), tweak::explosion::death::ShrapnelCount,
                                      tweak::explosion::death::Speed, tweak::explosion::death::Frames)
             .Explode<Shrapnel>(*this->level));
 }
@@ -243,7 +247,7 @@ void Tank::ApplyControllerOutput(ControllerOutput controls)
 {
     this->turret.ApplyControllerOutput(controls);
     this->materializer.ApplyControllerOutput(controls);
-    this->speed = controls.speed;
+    this->SpeedRef() = controls.speed;
     if (this->crosshair)
     {
         if (controls.is_crosshair_absolute)

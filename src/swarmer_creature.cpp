@@ -66,10 +66,10 @@ CollisionType Swarmer::TryCollide(Direction at_rotation, Position at_position)
 void Swarmer::ApplyControllerOutput(ControllerOutput controls)
 {
     Offset offset = static_cast<int>(speed_mult) * controls.speed;
-    Position desired_pos = this->position + offset;
+    Position desired_pos = this->PositionRef() + offset;
 
     if (this->TryCollide(Direction::FromSpeed(controls.speed), desired_pos) != CollisionType::Blocked)
-        this->position = desired_pos;
+        this->PositionRef() = desired_pos;
 }
 
 void Swarmer::Die()

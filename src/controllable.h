@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "controller.h"
+#include "entity.h"
 #include "link.h"
 #include "types.h"
 
@@ -24,9 +25,8 @@ concept CollisionEvaluator = requires(TCollisionFunc compute_collision, Directio
 
 class Controllable : public Invalidable
 {
- protected:
-    Position position;        /* Current tank position */
-    Speed speed = {};         /* Velocity... ie: is it moving now? */
+  protected:
+    ecs::entity entity;       /* For now, its entity */
     Direction direction = {}; /* Heading of the tank */
 
     LinkPointSource link_source;
@@ -37,12 +37,15 @@ class Controllable : public Invalidable
 
     Terrain * level = nullptr;
 
+  protected:
+    [[nodiscard]] Position & PositionRef() { return this->entity.get_component<Position>(); }
+    [[nodiscard]] Speed & SpeedRef() { return this->entity.get_component<Speed>(); }
   public:
     Controllable(Position position_, const Reactor & starting_reactor_state, MaterialCapacity material_capacity,
                  Terrain * level_);
     void SetController(std::shared_ptr<Controller> newController) { this->controller = newController; }
 
-    [[nodiscard]] Position GetPosition() const { return this->position; }
+    [[nodiscard]] Position GetPosition() const { return this->entity.get_component<Position>(); }
     [[nodiscard]] DirectionF GetDirection() const { return this->direction; }
     [[nodiscard]] MaterialContainer & GetResources() { return this->resources; }
     [[nodiscard]] Reactor & GetReactor() { return this->reactor; }
