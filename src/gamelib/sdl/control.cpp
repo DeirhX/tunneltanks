@@ -1,12 +1,14 @@
 #include "pch.h"
 #include "control.h"
+
+#include <SDL.h>
+
 #include "exceptions.h"
 #include "gamelib.h"
 #include "require_sdl.h"
 #include "sdl_controller.h"
 #include "tank.h"
 #include "tweak.h"
-#include <SDL.h>
 
 /* Set up SDL: */
 void gamelib_init()

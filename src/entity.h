@@ -21,7 +21,7 @@ namespace components
 namespace aspect
 {
     using namespace components;
-    ecs::aspect<PositionComponent, VelocityComponent> Movable;
+    //ecs::aspect<PositionComponent, VelocityComponent> Movable;
 }
 
 

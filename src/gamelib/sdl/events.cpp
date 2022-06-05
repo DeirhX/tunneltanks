@@ -1,8 +1,10 @@
 #include "pch.h"
-#include "gamelib.h"
-#include "types.h"
-#include "require_sdl.h"
+
 #include <SDL.h>
+
+#include "gamelib.h"
+#include "require_sdl.h"
+#include "types.h"
 
 
 #define FULLSCREEN_KEY   SDLK_F10

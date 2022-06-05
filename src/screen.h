@@ -4,7 +4,6 @@
 #include "color.h"
 #include "gui_widgets.h"
 #include <Terrain.h>
-#include <tank.h>
 #include <types.h>
 
 class World;

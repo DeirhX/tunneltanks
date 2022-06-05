@@ -1,13 +1,13 @@
 #include "pch.h"
 #include "twitch_ai.h"
 
-#include "controller.h"
-#include "tank.h"
-#include "random.h"
-#include "tweak.h"
-#include "level_view.h"
-
 #include <cstdlib>
+
+#include "controller.h"
+#include "level_view.h"
+#include "random.h"
+#include "tank.h"
+#include "tweak.h"
 
 
 /* Used when seeking a base entrance: */
