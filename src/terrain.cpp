@@ -5,7 +5,6 @@
 #include "world.h"
 #include "gamelib/sdl/bitmap.h"
 #include <cassert>
-#include <cstdlib>
 #include <random.h>
 #include <terrain.h>
 #include <tweak.h>

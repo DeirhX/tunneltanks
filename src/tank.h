@@ -5,11 +5,8 @@
 #include "Terrain.h"
 #include "level_view.h"
 #include "machine_materializer.h"
-#include "projectile_list.h"
 #include "tank_sprites.h"
 #include "tank_turret.h"
-#include "weapon.h"
-#include <memory>
 
 class TankBase;
 struct LevelView;

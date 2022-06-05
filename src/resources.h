@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include <algorithm>
 #include <cstdint>
-#include <compare>
 
 /*
  * ResourceAmount: A unit of resources able to perform arithmetic operations

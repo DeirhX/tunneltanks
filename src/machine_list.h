@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include "item_list_adaptor.h"
-#include "containers.h"
 #include "machine.h"
 
 class MachineryList : public ItemListAdaptor<Harvester, Charger, HarvesterTemplate, ChargerTemplate>

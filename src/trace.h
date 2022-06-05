@@ -2,7 +2,6 @@
 #include "gamelib.h"
 #include <cassert>
 #include <chrono>
-#include <string_view>
 #include <type_traits>
 
 using TraceLevel = int;

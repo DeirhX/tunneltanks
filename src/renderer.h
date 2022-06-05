@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include "color_palette.h"
 #include "render_surface.h"
 
 /*

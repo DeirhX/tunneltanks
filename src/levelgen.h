@@ -6,7 +6,6 @@
 #include <chrono>
 #include <cstdio>
 #include <memory>
-#include <vector>
 
 class TankBase;
 class Terrain;

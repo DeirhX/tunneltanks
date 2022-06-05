@@ -6,7 +6,6 @@
 #include "render_surface.h"
 #include "tank_base.h"
 #include "types.h"
-#include <memory>
 #include <vector>
 
 class World;

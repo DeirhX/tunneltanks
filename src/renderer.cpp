@@ -1,6 +1,8 @@
 ﻿#include "pch.h"
 #include "renderer.h"
 
+#include "color_palette.h"
+
 void Renderer::InitializeWorldSurfaces(Size dimensions)
 {
     this->render_surfaces.SetDimensions(dimensions);

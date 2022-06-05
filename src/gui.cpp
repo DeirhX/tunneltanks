@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "gui.h"
+#include <iostream>
 
 GuiEngine::GuiEngine(): gui_thread(){};
 

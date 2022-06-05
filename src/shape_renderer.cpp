@@ -3,6 +3,8 @@
 #include "screen.h"
 #include "shape_renderer.h"
 
+#include "mymath.h"
+
 void ShapeRenderer::DrawLine(Surface & surface, Position from, Position to, Color color)
 {
     Offset diff = to - from;
