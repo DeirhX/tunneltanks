@@ -27,7 +27,6 @@ class Controllable : public Invalidable
 {
   protected:
     ecs::entity entity;       /* For now, its entity */
-    Direction direction = {}; /* Heading of the tank */
 
     LinkPointSource link_source;
     Reactor reactor;
@@ -40,13 +39,14 @@ class Controllable : public Invalidable
   protected:
     [[nodiscard]] Position & PositionRef() { return this->entity.get_component<Position>(); }
     [[nodiscard]] Speed & SpeedRef() { return this->entity.get_component<Speed>(); }
+    [[nodiscard]] DirectionF & DirectionRef() { return this->entity.get_component<DirectionF>(); }
   public:
     Controllable(Position position_, const Reactor & starting_reactor_state, MaterialCapacity material_capacity,
                  Terrain * level_);
     void SetController(std::shared_ptr<Controller> newController) { this->controller = newController; }
 
     [[nodiscard]] Position GetPosition() const { return this->entity.get_component<Position>(); }
-    [[nodiscard]] DirectionF GetDirection() const { return this->direction; }
+    [[nodiscard]] DirectionF GetDirection() const { return this->entity.get_component<DirectionF>(); }
     [[nodiscard]] MaterialContainer & GetResources() { return this->resources; }
     [[nodiscard]] Reactor & GetReactor() { return this->reactor; }
     [[nodiscard]] int GetEnergy() const { return this->reactor.GetEnergy(); }

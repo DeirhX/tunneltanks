@@ -212,7 +212,7 @@ struct DirectionF : VectorF
         this->y = float(speed.y);
         //assert(this->IsNormalized());
     };
-    [[nodiscard]] int ToIntDirection() const { return Direction::FromSpeed({static_cast<int>(x), static_cast<int>(y)}); }
+    [[nodiscard]] Direction ToIntDirection() const { return Direction::FromSpeed({static_cast<int>(x), static_cast<int>(y)}); }
     [[nodiscard]] Speed ToSpeed() const { return Speed{static_cast<int>(x), static_cast<int>(y)}; }
 };
 

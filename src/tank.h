@@ -67,7 +67,7 @@ class Tank : public Controllable
     template <BasicVisitor<Position> PerPixelFunc> /* bool per_pixel_func(Position world_position). Return false to end iteration. */
     void ForEachTankPixel(PerPixelFunc per_pixel_func)
     {
-        tank::ForEachTankPixel(per_pixel_func, this->GetPosition(), this->direction);
+        tank::ForEachTankPixel(per_pixel_func, this->GetPosition(), this->GetDirection().ToIntDirection());
     }
 
     void Draw(Surface & surface) const;

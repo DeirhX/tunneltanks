@@ -36,7 +36,7 @@ Tank::Tank(TankColor color, Terrain * level, TankBase * tank_base)
     auto dir = Direction{Random.Int(0, 7)};
     if (dir >= 4)
         dir.Get()++;
-    this->direction = dir; // DirectionF{ dir };
+    this->DirectionRef() = dir; // DirectionF{ dir };
 
     Spawn();
 }
@@ -206,10 +206,11 @@ void Tank::Draw(Surface & surface) const
     if (!this->reactor.GetHealth())
         return;
 
+    auto direction = this->GetDirection().ToIntDirection();
     for (int y = 0; y < 7; y++)
         for (int x = 0; x < 7; x++)
         {
-            char val = TANK_SPRITE[this->direction][y][x];
+            char val = TANK_SPRITE[direction][y][x];
             if (val)
             {
                 Position position = this->GetPosition();

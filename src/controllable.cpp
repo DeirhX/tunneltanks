@@ -11,6 +11,7 @@ Controllable::Controllable(Position position_, const Reactor & starting_reactor_
 {
     entity.assign_component<Position>(position_);
     entity.assign_component<Speed>();
+    entity.assign_component<DirectionF>();
 }
 
 bool Controllable::HealthOrEnergyEmpty() const
@@ -50,7 +51,7 @@ bool Controllable::HandleMove(DirectionF torch_heading, bool torch_use)
     }
 
     /* We're free to move, do it*/
-    this->direction = Direction{dir};
+    this->DirectionRef() = Direction{dir};
     position += speed;
     return true;
 }
