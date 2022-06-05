@@ -120,6 +120,7 @@
     <ClInclude Include="src\gamelib\SDL\sdl_renderer.h" />
     <ClInclude Include="src\item_list_adaptor.h" />
     <ClInclude Include="src\levelgen_type.h" />
+    <ClInclude Include="src\position_component.h" />
     <ClInclude Include="src\renderer.h" />
     <ClInclude Include="src\terrain_algorithm.h" />
     <ClInclude Include="src\link.h" />

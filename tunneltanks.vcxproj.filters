@@ -469,6 +469,9 @@
     <ClInclude Include="src\gui.h">
       <Filter>src\system</Filter>
     </ClInclude>
+    <ClInclude Include="src\position_component.h">
+      <Filter>src\component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

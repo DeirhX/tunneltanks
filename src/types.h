@@ -42,12 +42,24 @@ struct Position : public Vector
     explicit Position(ScreenPosition pos) : Vector(pos.x, pos.y) {}
 };
 
+/* Offset of a position. Positions cannot be added together, position and offset can. */
+struct Offset : public Vector
+{
+    Offset() = default;
+    constexpr Offset(int dx, int dy) : Vector(dx, dy) {}
+    explicit Offset(Position pos) : Vector(pos.x, pos.y) {}
+
+    //explicit operator Position() const { return Position{this->x, this->y}; }
+    [[nodiscard]] float GetSize() const { return float(std::sqrt(x * x + y * y)); }
+};
+
 /* Size of objects in the world */
 struct Size : public Vector
 {
     constexpr Size() = default;
     constexpr Size(int sx, int sy) : Vector(sx, sy) {}
-    bool FitsInside(int sx, int sy) { return sx >= 0 && sy >= 0 && sx < this->x && sy < this->y; }
+    [[nodiscard]] bool FitsInside(int sx, int sy) const { return sx >= 0 && sy >= 0 && sx < this->x && sy < this->y; }
+    [[nodiscard]] bool FitsInside(Offset o) const { return o.x >= 0 && o.y >= 0 && o.x < this->x && o.y < this->y; }
 };
 
 /* Size in units of our screen render surface */
@@ -64,16 +76,6 @@ struct Speed : public Vector
     constexpr Speed(int sx, int sy) : Vector(sx, sy) {}
 };
 
-/* Offset of a position. Positions cannot be added together, position and offset can. */
-struct Offset : public Vector
-{
-    Offset() = default;
-    constexpr Offset(int dx, int dy) : Vector(dx, dy) {}
-    explicit Offset(Position pos) : Vector(pos.x, pos.y) {}
-
-    //explicit operator Position() const { return Position{this->x, this->y}; }
-    [[nodiscard]] float GetSize() const { return float(std::sqrt(x * x + y * y)); }
-};
 
 /*
  *   Vector +- Vector -> Vector
@@ -94,6 +96,8 @@ constexpr Size operator*(int t, Size s) { return {s.x * t, s.y * t}; }
 constexpr Size operator/(Size s, int t) { return {s.x / t, s.y / t}; }
 constexpr Offset operator+(Offset o, Size s) { return {o.x + s.x, o.y + s.y}; }
 constexpr Offset operator-(Offset o, Size s) { return {o.x - s.x, o.y - s.y}; }
+constexpr Offset operator+(Offset o1, Offset o2) { return {o1.x + o2.x, o1.y + o2.y}; }
+constexpr Offset operator-(Offset o1, Offset o2) { return {o1.x - o2.x, o1.y - o2.y}; }
 constexpr Offset operator-(Position p, Position o) { return {p.x - o.x, p.y - o.y}; }
 constexpr Position operator+(Position v, Offset o) { return {v.x + o.x, v.y + o.y}; }
 constexpr Position operator+(Position v, Size o) { return {v.x + o.x, v.y + o.y}; }
@@ -173,7 +177,7 @@ struct PositionF : public VectorF
     static PositionF FromIntPosition(Position pos) { return PositionF{pos}; }
     [[nodiscard]] Position ToIntPosition() const
     {
-        return Position{static_cast<int>(this->x), static_cast<int>(this->y)};
+        return Position{static_cast<int>(std::round(this->x)), static_cast<int>(std::round(this->y))};
     }
 };
 struct SpeedF : public VectorF
@@ -188,8 +192,11 @@ struct OffsetF : public VectorF
     OffsetF() = default;
     OffsetF(VectorF vector) : VectorF(vector) {}
     constexpr OffsetF(float sx, float sy) : VectorF(sx, sy) {}
-    explicit OffsetF(Offset int_offset) : VectorF(float(int_offset.x), float(int_offset.y)) {}
-    explicit operator Offset() const { return Offset{int(this->x), int(this->y)}; }
+    explicit OffsetF(Offset int_offset) : VectorF(static_cast<float>(int_offset.x) + 0.5f, static_cast<float>(int_offset.y) + 0.5f) {}
+    explicit operator Offset() const
+    {
+        return Offset{static_cast<int>(std::round(this->x)), static_cast<int>(std::round(this->y))};
+    }
 };
 /* TODO: we need actually just radians. But so often will we use the components it won't hurt to store them instead */
 struct DirectionF : VectorF
@@ -197,7 +204,7 @@ struct DirectionF : VectorF
   public:
     DirectionF() = default;
     DirectionF(VectorF vector) : VectorF(vector) {}
-    DirectionF(float x, float y) : VectorF(x, y) { assert((x == 0 && y == 0) || this->IsNormalized()); }
+    DirectionF(float x, float y) : VectorF(x, y) { assert((x == 0.0f && y == 0.0f) || this->IsNormalized()); }
     DirectionF(Direction int_direction)
     {
         auto speed = int_direction.ToSpeed();
@@ -205,8 +212,8 @@ struct DirectionF : VectorF
         this->y = float(speed.y);
         //assert(this->IsNormalized());
     };
-    [[nodiscard]] int ToIntDirection() const { return Direction::FromSpeed({int(x), int(y)}); }
-    [[nodiscard]] Speed ToSpeed() const { return Speed{int(x), int(y)}; }
+    [[nodiscard]] int ToIntDirection() const { return Direction::FromSpeed({static_cast<int>(x), static_cast<int>(y)}); }
+    [[nodiscard]] Speed ToSpeed() const { return Speed{static_cast<int>(x), static_cast<int>(y)}; }
 };
 
 constexpr VectorF operator+(VectorF v, VectorF o) noexcept { return {v.x + o.x, v.y + o.y}; }

@@ -13,8 +13,6 @@ class EntitySystem
 
 namespace components
 {
-    struct PositionComponent { PositionF pos; };
-    struct VelocityComponent { SpeedF speed;  };
     struct TimeToLiveComponent { float life_left;};
 } // namespace components
 
