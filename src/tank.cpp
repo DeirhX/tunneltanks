@@ -2,6 +2,7 @@
 #include "tank.h"
 
 #include "algorithm"
+#include "collision_component.h"
 #include "controller.h"
 #include "level_view.h"
 #include "projectiles.h"
@@ -30,6 +31,8 @@ Tank::Tank(TankColor color, Terrain * level, TankBase * tank_base)
     : Base(tank_base->GetPosition(), tweak::tank::DefaultTankReactor, tweak::tank::ResourcesMax, level), color(color), tank_base(tank_base),
       turret(this, Palette.GetTank(color)[2]), materializer(this, &this->GetResources())
 {
+    auto collider = this->entity.assign_component<crust::components::BitmapCollision>(Size{7, 7}, Offset{3, 3}, crust::sprites::TankSprite);
+
     // this->cached_slice = std::make_shared<LevelView>(this, lvl);
 
     /* Let's just make the starting direction random, because we can: */
@@ -210,7 +213,7 @@ void Tank::Draw(Surface & surface) const
     for (int y = 0; y < 7; y++)
         for (int x = 0; x < 7; x++)
         {
-            char val = TANK_SPRITE[direction][y][x];
+            char val = crust::sprites::TANK_SPRITE[direction][y][x];
             if (val)
             {
                 Position position = this->GetPosition();

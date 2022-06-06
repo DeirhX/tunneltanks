@@ -1,2 +1,10 @@
 #pragma once
-extern char TANK_SPRITE[9][7][7];
+#include <span>
+
+namespace crust::sprites
+{
+
+extern uint8_t TANK_SPRITE[9][7][7];
+extern std::span<uint8_t> TankSprite;
+
+} // namespace crust::sprites

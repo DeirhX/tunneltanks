@@ -90,7 +90,7 @@ void ForEachTankPixel(PerPixelFunc per_pixel_func, Position position, Direction 
     for (offset.y = -3; offset.y <= 3; offset.y++)
         for (offset.x = -3; offset.x <= 3; offset.x++)
         {
-            if (TANK_SPRITE[direction][3 + offset.y][3 + offset.x])
+            if (crust::sprites::TANK_SPRITE[direction][3 + offset.y][3 + offset.x])
             {
                 if (!per_pixel_func(position + offset))
                     return;

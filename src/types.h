@@ -60,6 +60,11 @@ struct Size : public Vector
     constexpr Size(int sx, int sy) : Vector(sx, sy) {}
     [[nodiscard]] bool FitsInside(int sx, int sy) const { return sx >= 0 && sy >= 0 && sx < this->x && sy < this->y; }
     [[nodiscard]] bool FitsInside(Offset o) const { return o.x >= 0 && o.y >= 0 && o.x < this->x && o.y < this->y; }
+    [[nodiscard]] int Area() const
+    {
+        assert(int64_t(x) * int64_t(y) <= std::numeric_limits<int>::max());
+        return this->x * this->y;
+    }
 };
 
 /* Size in units of our screen render surface */

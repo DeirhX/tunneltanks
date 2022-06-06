@@ -45,7 +45,7 @@ Tank * TankList::GetTankAtPoint(Position query_pos, TankColor ignored)
         if (pos.x < 0 || pos.x > 6 || pos.y < 0 || pos.y > 6)
             continue; /* Early exit, outside bounding box*/
 
-        if (TANK_SPRITE[tank.GetDirection().ToIntDirection()][pos.y][pos.x])
+        if (crust::sprites::TANK_SPRITE[tank.GetDirection().ToIntDirection()][pos.y][pos.x])
             return &tank;
     }
     return nullptr;
@@ -77,8 +77,8 @@ bool TankList::CheckForCollision(Position position, Direction rotation, Tank & i
         /* Check the overlap for collisions: */
         for (int ty = ly; ty <= uy; ty++)
             for (int tx = lx; tx <= ux; tx++)
-                if (TANK_SPRITE[dir][ty - pos.y + 3][tx - pos.x + 3] &&
-                    TANK_SPRITE[rotation][ty - position.y + 3][tx - position.x + 3])
+                if (crust::sprites::TANK_SPRITE[dir][ty - pos.y + 3][tx - pos.x + 3] &&
+                    crust::sprites::TANK_SPRITE[rotation][ty - position.y + 3][tx - position.x + 3])
                     return true;
     }
 

@@ -1,5 +1,11 @@
 #include "pch.h"
-char TANK_SPRITE[9][7][7] = {
+
+#include <span>
+
+namespace crust::sprites
+{
+
+uint8_t TANK_SPRITE[9][7][7] = {
 	{{0,0,0,2,0,0,0},
 	 {0,0,0,1,2,0,0},
 	 {0,0,1,1,1,2,0},
@@ -73,3 +79,6 @@ char TANK_SPRITE[9][7][7] = {
 	 {0,0,0,2,0,0,0}}
 };
 
+std::span<uint8_t> TankSprite(&TANK_SPRITE[0][0][0], sizeof(TANK_SPRITE));
+
+}
