@@ -7,36 +7,55 @@
 
 namespace crust::components
 {
-    class BitmapCollision
+
+class BitmapView
+{
+    Size size;
+    std::span<const uint8_t> data_view;
+
+  public:
+    BitmapView(std::span<const uint8_t> source, Size size) : size(size), data_view(source)
     {
-    private:
-        Size size;
-        Offset center;
-        bool multiple_directions = false;
-        std::vector<uint8_t> collision_data;
-    private:
+        assert(size.Area() == data_view.size());
+    }
+    uint8_t GetAt(Offset offset) const
+    {
+        assert(size.FitsInside(offset));
+        return data_view[offset.y * size.x + offset.x];
+    }
+};
 
-    public:
-        BitmapCollision(Size size, Offset center, std::span<uint8_t> collision_data);
-      BitmapCollision(Size size, Offset center, std::span<std::span<uint8_t>, 9> multiple_directions);
+class BitmapCollision
+{
+  private:
+    Size size;
+    Offset center;
+    bool multiple_directions = false;
+    std::vector<uint8_t> collision_data;
 
-        [[nodiscard]]
-        Size Size() const { return this->size; }
+  private:
+    std::span<uint8_t> RawDataForDirection(Direction direction);
+    std::span<const uint8_t> RawDataForDirection(Direction direction) const;
+  public:
+    BitmapCollision(Size size, Offset center, std::span<uint8_t> collision_data);
+    BitmapCollision(Size size, Offset center, std::span<std::span<uint8_t>, 9> multiple_directions);
 
-        std::span<const uint8_t> GetForDirection(Direction direction) const;
-        std::span<uint8_t> GetForDirection(Direction direction);
+    [[nodiscard]] Size Size() const { return this->size; }
+    [[nodiscard]] Offset Center() const { return this->center; }
 
-        uint8_t GetRelative(Offset offset) const 
-        {
-            Offset data_offset = offset + center;
-            if (!size.FitsInside(data_offset))
-            {
-                return {0};
-            }
-            return collision_data[data_offset.x + data_offset.y * size.x];
-        }
+    BitmapView GetForDirection(Direction direction) const;
 
-        //static std::span<std::span<std::byte>, 9> RawCharsToDirectionalSpans(::Size size, const char * unsafeArray);
-    };
+    //uint8_t GetRelative(Offset offset) const
+    //{
+    //    Offset data_offset = offset + center;
+    //    if (!size.FitsInside(data_offset))
+    //    {
+    //        return {0};
+    //    }
+    //    return collision_data[data_offset.x + data_offset.y * size.x];
+    //}
+};
 
-}
+
+
+} // namespace crust::components

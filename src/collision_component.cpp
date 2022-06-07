@@ -6,6 +6,18 @@
 namespace crust::components
 {
 
+std::span<uint8_t> BitmapCollision::RawDataForDirection(Direction direction) 
+{
+    assert(!collision_data.empty());
+    return {collision_data.begin() + direction * size.Area(), static_cast<size_t>(size.Area())};
+}
+
+std::span<const uint8_t> BitmapCollision::RawDataForDirection(Direction direction) const
+{
+    assert(!collision_data.empty());
+    return {collision_data.begin() + direction * size.Area(), static_cast<size_t>(size.Area())};
+}
+
 BitmapCollision::BitmapCollision(::Size size, Offset center, std::span<uint8_t> collision_data)
     : size(size), center(center), collision_data(collision_data.begin(), collision_data.end())
 {
@@ -24,23 +36,17 @@ BitmapCollision::BitmapCollision(::Size size, Offset center, std::span<std::span
     int directions = 9;
     for (int dir = 0; dir < directions; ++dir)
     {
-        auto slot = GetForDirection(Direction(dir));
+        auto slot = RawDataForDirection(Direction(dir));
         assert(multiple_directions[dir].size() == size.Area());
         std::ranges::copy(multiple_directions[dir], slot.begin());
     }
 }
 
-std::span<const uint8_t> BitmapCollision::GetForDirection(Direction direction) const
+BitmapView BitmapCollision::GetForDirection(Direction direction) const
 {
     assert(!collision_data.empty());
-    return {collision_data.cbegin() + direction * size.Area(), static_cast<size_t>(size.Area())};
+    auto raw_data = RawDataForDirection(direction);
+    return {std::span{raw_data.begin(), raw_data.size()}, size};
 }
 
-std::span<uint8_t> BitmapCollision::GetForDirection(Direction direction)
-{
-    assert(!collision_data.empty());
-    return {collision_data.begin() + direction * size.Area(), static_cast<size_t>(size.Area())};
-}
-
-}
-
+} // namespace crust::components
