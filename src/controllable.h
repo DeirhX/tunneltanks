@@ -25,9 +25,9 @@ concept CollisionEvaluator = requires(TCollisionFunc compute_collision, Directio
 
 class Controllable : public Invalidable
 {
+  public:
+    ecs::entity entity; /* For now, its entity */
   protected:
-    ecs::entity entity;       /* For now, its entity */
-
     LinkPointSource link_source;
     Reactor reactor;
     MaterialContainer resources;

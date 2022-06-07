@@ -1,4 +1,5 @@
 #pragma once
+#include "collision_component.h"
 #include "controllable.h"
 #include "controller.h"
 #include "gui_widgets.h"
@@ -26,7 +27,8 @@ struct PublicTankInfo
 namespace tank
 {
 template <BasicVisitor<Position> PerPixelFunc>
-void ForEachTankPixel(PerPixelFunc per_pixel_func, Position position, Direction direction);
+void ForEachTankPixel(PerPixelFunc per_pixel_func, const crust::components::BitmapCollision & collider, Position position,
+                      Direction direction);
 } // namespace tank
 
 class Tank : public Controllable
@@ -67,7 +69,7 @@ class Tank : public Controllable
     template <BasicVisitor<Position> PerPixelFunc> /* bool per_pixel_func(Position world_position). Return false to end iteration. */
     void ForEachTankPixel(PerPixelFunc per_pixel_func)
     {
-        tank::ForEachTankPixel(per_pixel_func, this->GetPosition(), this->GetDirection().ToIntDirection());
+        tank::ForEachTankPixel(per_pixel_func, entity.get_component<crust::components::BitmapCollision>(), GetPosition(), GetDirection().ToIntDirection());
     }
 
     void Draw(Surface & surface) const;
@@ -84,17 +86,17 @@ namespace tank
 {
 /* return false to stop enumeration */
 template <BasicVisitor<Position> PerPixelFunc>
-void ForEachTankPixel(PerPixelFunc per_pixel_func, Position position, Direction direction)
+void ForEachTankPixel(PerPixelFunc per_pixel_func, const crust::components::BitmapCollision& collider, Position position,
+                      Direction direction)
 {
+    auto shape = collider.GetForDirection(direction);
     Offset offset;
-    for (offset.y = -3; offset.y <= 3; offset.y++)
-        for (offset.x = -3; offset.x <= 3; offset.x++)
+    for (offset.y = 0; offset.y < collider.Size().y; ++offset.y)
+        for (offset.x = 0; offset.x < collider.Size().x; ++offset.x)
         {
-            if (crust::sprites::TANK_SPRITE[direction][3 + offset.y][3 + offset.x])
-            {
-                if (!per_pixel_func(position + offset))
+            if (shape.GetAt(offset))
+                if (!per_pixel_func(position - collider.Center() + offset))
                     return;
-            }
         }
 }
 } // namespace tank

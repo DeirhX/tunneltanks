@@ -166,7 +166,8 @@ CollisionType Tank::TryCollide(Direction rotation, Position position_)
                 });
 
             return !is_blocking_collision;
-    }, position_, rotation);
+        },
+        entity.get_component<crust::components::BitmapCollision>(), position_, rotation);
 
     //if (result == CollisionType::Blocked || GetWorld()->GetTankList().CheckForCollision(*this, position, rotation))
     //    return CollisionType::Blocked;
