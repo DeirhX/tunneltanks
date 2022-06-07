@@ -7,6 +7,8 @@ TankBase::TankBase(Position position, TankColor color) : entity(crust::entities.
 {
     entity.assign_component<Position>(position);
     entity.assign_component<BoundingBox>();
+    entity.assign_component<crust::components::BoundingBoxCollision>();
+    entity.assign_component<crust::components::TankBase>(color);
 }
 
 void TankBase::BeginGame()
@@ -151,12 +153,26 @@ void TankBase::Advance() { this->reactor.Add(tweak::base::ReactorRecoveryRate); 
 /* TODO: This needs to be done in a different way, as this approach will take 
  * MAX_TANKS^2 time to do all collision checks for all tanks. It should only
  * take MAX_TANKS time. */
-TankBase * TankBases::CheckBaseCollision(Position pos)
+TankBase * TankBases::CheckBaseCollision(Position tested_pos)
 {
+    TankColor collided_base_color = {-1};
+
+    crust::entities.registry.for_joined_components<Position, BoundingBox, crust::components::TankBase>(
+        [tested_pos, &collided_base_color](ecs::entity, Position pos, BoundingBox bbox,
+                                           crust::components::TankBase base)
+    {
+            if (bbox.IsInside(tested_pos, pos))
+            {
+                collided_base_color = base.color;
+            }
+    }, ecs::exists<crust::components::BoundingBoxCollision>{});
+
+
     for (TankColor id = 0; id < tweak::world::MaxPlayers; id++)
     {
-        if (this->tank_bases[id].IsInside(pos))
+        if (this->tank_bases[id].IsInside(tested_pos))
         {
+            assert(id == collided_base_color);
             return &this->tank_bases[id];
         }
     }

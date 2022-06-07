@@ -4,6 +4,7 @@
 #include <array>
 #include <span>
 #include "types.h"
+#include "entity.h"
 
 namespace crust::components
 {
@@ -24,6 +25,8 @@ class BitmapView
         return data_view[offset.y * size.x + offset.x];
     }
 };
+
+struct Collider {};
 
 class BitmapCollision
 {
@@ -60,6 +63,8 @@ class BoundingBoxCollision
 {
     // All needed info is in BoundingBox
 };
+
+inline ecs::aspect<BoundingBox, Collider> BoundingBoxCollidable;
 
 class PointCollision
 {

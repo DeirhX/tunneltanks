@@ -12,6 +12,16 @@ class World;
 /*
  * Tank Base, part of the level, capable of building machines 
  */
+namespace crust::components
+{
+
+struct TankBase
+{
+    TankColor color = {-1};
+};
+
+}
+
 class TankBase
 {
     /* All your base are belong...same size */
