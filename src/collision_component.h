@@ -56,6 +56,15 @@ class BitmapCollision
     //}
 };
 
+class BoundingBoxCollision
+{
+    // All needed info is in BoundingBox
+};
+
+class PointCollision
+{
+    // All needed info is in Position
+};
 
 
 } // namespace crust::components

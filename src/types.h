@@ -57,7 +57,7 @@ struct Offset : public Vector
 struct Size : public Vector
 {
     constexpr Size() = default;
-    constexpr Size(int sx, int sy) : Vector(sx, sy) {}
+    constexpr Size(int sx, int sy) : Vector(sx, sy) { assert(x >= 0 && y >= 0); }
     [[nodiscard]] bool FitsInside(int sx, int sy) const { return sx >= 0 && sy >= 0 && sx < this->x && sy < this->y; }
     [[nodiscard]] bool FitsInside(Offset o) const { return o.x >= 0 && o.y >= 0 && o.x < this->x && o.y < this->y; }
     [[nodiscard]] size_t Area() const

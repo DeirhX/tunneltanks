@@ -3,7 +3,11 @@
 #include "shape_renderer.h"
 #include "world.h"
 
-TankBase::TankBase(Position position, TankColor color) : position(position), color(color) {}
+TankBase::TankBase(Position position, TankColor color) : entity(crust::entities.registry.create_entity()), color(color)
+{
+    entity.assign_component<Position>(position);
+    entity.assign_component<BoundingBox>();
+}
 
 void TankBase::BeginGame()
 {
@@ -14,16 +18,16 @@ void TankBase::BeginGame()
 void TankBase::RegisterLinkPoint(World * world)
 {
     assert(!this->link_point);
-    this->link_point = world->GetLinkMap().RegisterLinkPoint(this->position, LinkPointType::Base);
+    this->link_point = world->GetLinkMap().RegisterLinkPoint(this->GetPosition(), LinkPointType::Base);
 }
 
 void TankBase::CreateMachineTemplates(World * world)
 {
-    Position left_center = (this->position - Size{TankBase::BaseSize.x / 2, 0});
+    Position left_center = (this->GetPosition() - Size{this->GetBoundingBox().size.x / 2, 0});
     this->base_charger_template = &world->GetHarvesterList().Emplace<ChargerTemplate>(
         left_center + Size{Charger::bounding_box.size.x / 2 + 4, 0}, this->materials);
 
-    Position right_center = (this->position + Size{TankBase::BaseSize.x / 2, 0});
+    Position right_center = (this->GetPosition() + Size{this->GetBoundingBox().size.x / 2, 0});
     this->base_harvester_template = &world->GetHarvesterList().Emplace<HarvesterTemplate>(
         right_center - Size{Charger::bounding_box.size.x / 2 + 4, 0}, this->materials);
 }
@@ -57,18 +61,20 @@ void TankBase::DrawMaterialStorage(Surface * surface) const
     for (int row = 0; row < 3; ++row)
         for (int col = 0; col < 3; ++col)
         {
-            auto cell_area = Rect{this->bounding_box.GetTopLeft(this->GetPosition()) +
-                                      Offset{col * this->BaseSize.x / cells_x, row * this->BaseSize.y / cells_y} +
-                                      Offset{col ? 0 : 1, row ? 0 : 1},
-                                  Size{this->BaseSize.x / cells_x + (col == 1 ? this->BaseSize.x % cells_x : 0),
-                                       this->BaseSize.y / cells_y + (row == 1 ? this->BaseSize.y % cells_y : 0)}};
+            auto cell_area =
+                Rect{this->GetBoundingBox().GetTopLeft(this->GetPosition()) +
+                         Offset{col * this->GetBoundingBox().size.x / cells_x,
+                                row * this->GetBoundingBox().size.y / cells_y} +
+                         Offset{col ? 0 : 1, row ? 0 : 1},
+                     Size{GetBoundingBox().size.x / cells_x + (col == 1 ? GetBoundingBox().size.x % cells_x : 0),
+                          GetBoundingBox().size.y / cells_y + (row == 1 ? GetBoundingBox().size.y % cells_y : 0)}};
             paint_material_cell(cell_area, Offset{col, row});
         }
 }
 
 bool TankBase::IsInside(Position tested_position) const
 {
-    return this->bounding_box.IsInside(tested_position, this->position);
+    return this->GetBoundingBox().IsInside(tested_position, this->GetPosition());
 }
 void TankBase::AbsorbResources(MaterialContainer & other) { this->materials.Absorb(other); }
 
@@ -119,8 +125,8 @@ void TankBase::Draw(Surface * surface) const
 {
     DrawMaterialStorage(surface);
     /* Display energy level  */
-    Size materials_rect_size = BaseSize + Size{2, 2};
-    Rect materials_rect = Rect{Position{this->position - materials_rect_size / 2}, materials_rect_size};
+    Size materials_rect_size = GetBoundingBox().size + Size{2, 2};
+    Rect materials_rect = Rect{Position{this->GetPosition() - materials_rect_size / 2}, materials_rect_size};
     int materials_drawn_pixels = 2 * materials_rect.size.x + 2 * materials_rect.size.y - 4;
     int materials_boundary = materials_drawn_pixels * this->reactor.GetEnergy() / this->reactor.GetEnergyCapacity();
     ShapeRenderer::DrawRectanglePart(surface, materials_rect, 0, materials_boundary,
@@ -167,9 +173,9 @@ TankBase * TankBases::GetSpawn(TankColor color)
 void TankBases::SetSpawn(TankColor color, std::unique_ptr<TankBase> && tank_base)
 {
     assert(color >= 0 && color < tweak::world::MaxPlayers);
-    if (TankColor(this->tank_bases.size()) <= color)
-        this->tank_bases.resize(color + 1);
-    this->tank_bases[color] = *tank_base;
+    // All colors before this should be already filled in 
+    assert(this->tank_bases.size() == color);
+    this->tank_bases.emplace_back(*tank_base);
 }
 
 void TankBases::SetSpawn(TankColor color, Position position)

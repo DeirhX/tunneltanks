@@ -4,6 +4,7 @@
 #include "resources.h"
 #include "tweak.h"
 #include "types.h"
+#include "entity.h"
 
 class Surface;
 class World;
@@ -16,8 +17,8 @@ class TankBase
     /* All your base are belong...same size */
     static constexpr Size BaseSize = Size{tweak::base::BaseSize, tweak::base::BaseSize};
 
-    Position position = {-1, -1};
-    BoundingBox bounding_box = {BaseSize};
+public:
+    ecs::entity entity;
     /* Owner tank */
     TankColor color = {-1};
     /* Link to power grid */
@@ -32,7 +33,6 @@ class TankBase
     HarvesterTemplate * base_harvester_template = nullptr;
 
   public:
-    TankBase() = default;
     explicit TankBase(Position position, TankColor color);
     void BeginGame();
 
@@ -42,7 +42,8 @@ class TankBase
     void CreateMachineTemplates(World * world);
     void DrawMaterialStorage(Surface * surface) const;
   public:
-    [[nodiscard]] Position GetPosition() const { return this->position; }
+    [[nodiscard]] Position GetPosition() const { return this->entity.get_component<Position>(); }
+    [[nodiscard]] BoundingBox GetBoundingBox() const { return this->entity.get_component<BoundingBox>(); }
     // [[nodiscard]] LinkPoint * GetLinkPoint() const { return this->link_point; }
     [[nodiscard]] TankColor GetColor() const { return this->color; }
     [[nodiscard]] const MaterialContainer & GetResources() const { return this->materials; }
