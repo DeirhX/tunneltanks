@@ -28,10 +28,11 @@ PublicTankInfo::PublicTankInfo(const Controllable & controllable, Position posit
 }
 
 Tank::Tank(TankColor color, Terrain * level, TankBase * tank_base)
-    : Base(tank_base->GetPosition(), tweak::tank::DefaultTankReactor, tweak::tank::ResourcesMax, level), color(color), tank_base(tank_base),
-      turret(this, Palette.GetTank(color)[2]), materializer(this, &this->GetResources())
+    : Base(tank_base->GetPosition(), tweak::tank::DefaultTankReactor, tweak::tank::ResourcesMax, level), color(color),
+      tank_base(tank_base), turret(this, Palette.GetTank(color)[2]), materializer(this, &this->GetResources())
 {
-    auto collider = this->entity.assign_component<crust::components::BitmapCollision>(Size{7, 7}, Offset{3, 3}, crust::sprites::TankSprite);
+    auto collider = this->entity.assign_component<crust::components::BitmapCollision>(Size{7, 7}, Offset{3, 3},
+                                                                                      crust::sprites::TankSprite);
 
     // this->cached_slice = std::make_shared<LevelView>(this, lvl);
 
@@ -85,7 +86,7 @@ void Tank::Advance(World & world)
 
         /* Move, dig and solve collisions with other tanks */
         if (this->HandleMove(this->GetDirection(), this->turret.IsShooting()))
-        {   /* Well, we moved, so let's charge ourselves: */
+        { /* Well, we moved, so let's charge ourselves: */
             this->GetReactor().Exhaust(tweak::tank::MoveCost);
         }
         this->link_source.UpdatePosition(this->GetPosition());
@@ -132,18 +133,21 @@ CollisionType Tank::TryCollide(Direction rotation, Position position_)
     CollisionType result = CollisionType::None;
 
     tank::ForEachTankPixel(
-        [this, &result](Position position_) {
+        [this, &result](Position position_)
+        {
             bool is_blocking_collision = GetWorld()->GetCollisionSolver().TestCollide(
                 position_,
-                [this, &result](Tank & tank) {
+                [this, &result](Tank & tank)
+                {
                     if (tank.GetColor() != this->GetColor())
                     {
                         result = CollisionType::Blocked;
                         return true;
                     }
                     return false;
-                }, 
-                [&result](auto & machine) {
+                },
+                [&result](auto & machine)
+                {
                     /* Collisions with machines disabled */
                     return false;
                     if (machine.IsBlockingCollision())
@@ -153,7 +157,8 @@ CollisionType Tank::TryCollide(Direction rotation, Position position_)
                     }
                     return false;
                 },
-                [&result](TerrainPixel & pixel) {
+                [&result](TerrainPixel & pixel)
+                {
                     if (Pixel::IsDirt(pixel))
                         result = CollisionType::Dirt;
 
@@ -175,7 +180,6 @@ CollisionType Tank::TryCollide(Direction rotation, Position position_)
     return result;
 }
 
-
 /* Check to see if we're in any bases, and heal based on that: */
 void Tank::TryBaseHeal(TankBase & base) { base.RechargeTank(this); }
 
@@ -189,20 +193,22 @@ void Tank::TransferResourcesToBase(TankBase & base)
 
 void Tank::CollectItems()
 {
-    this->ForEachTankPixel([this](Position world_position) {
-        TerrainPixel pixel = this->level->GetPixel(world_position);
-        if (Pixel::IsEnergy(pixel))
+    this->ForEachTankPixel(
+        [this](Position world_position)
         {
-            this->level->SetPixel(world_position, TerrainPixel::Blank);
-            EnergyAmount energy_collected = 100_energy;
-            if (pixel == TerrainPixel::EnergyMedium)
-                energy_collected.amount *= 2;
-            else if (pixel == TerrainPixel::EnergyHigh)
-                energy_collected.amount *= 4;
-            this->GetReactor().Add(energy_collected);
-        }
-        return true;
-    });
+            TerrainPixel pixel = this->level->GetPixel(world_position);
+            if (Pixel::IsEnergy(pixel))
+            {
+                this->level->SetPixel(world_position, TerrainPixel::Blank);
+                EnergyAmount energy_collected = 100_energy;
+                if (pixel == TerrainPixel::EnergyMedium)
+                    energy_collected.amount *= 2;
+                else if (pixel == TerrainPixel::EnergyHigh)
+                    energy_collected.amount *= 4;
+                this->GetReactor().Add(energy_collected);
+            }
+            return true;
+        });
 }
 
 void Tank::Draw(Surface & surface) const
