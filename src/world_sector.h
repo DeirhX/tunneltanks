@@ -31,7 +31,8 @@ class WorldSectors
 
   public:
     WorldSectors(Size worldSize)
-        : worldSize(worldSize), sectors(SectorCountFromWorldSize(worldSize),[]()
+        : worldSize(worldSize), sectors(SectorCountFromWorldSize(worldSize),
+                                        []()
                                         {
                                             static WorldSector::id_t id = 0;
                                             return ++id;
@@ -49,7 +50,6 @@ class WorldSectors
         return {static_cast<int>((worldSize.x + WorldSector::extentX - 1) / WorldSector::extentX),
                 static_cast<int>((worldSize.y + WorldSector::extentY - 1) / WorldSector::extentY)};
     }
-
 };
 
 struct WorldSectorMember

@@ -2,7 +2,6 @@
 #include <cstdint>
 #include <vector>
 
-
 #include "containers.h"
 #include "terrain_pixel.h"
 #include "types.h"
@@ -25,10 +24,7 @@ class TerrainAdjacencyData
     constexpr static ValueType Invalid = std::numeric_limits<ValueType>::max();
 
   protected:
-    TerrainAdjacencyData(Size size) : size(size)
-    {
-        array.resize(size.x * size.y, Invalid);
-    }
+    TerrainAdjacencyData(Size size) : size(size) { array.resize(size.x * size.y, Invalid); }
 
   public:
     template <typename AccumulationFuncType>
@@ -82,9 +78,10 @@ void TerrainAdjacencyData<ValueType>::Invalidate(Position pos)
 template <typename ValueType>
 template <typename AccumulationFuncType>
 ValueType TerrainAdjacencyData<ValueType>::AccumulateFromNeighbors(Position pos, Size size,
-                                                                 AccumulationFuncType accumulation_func)
+                                                                   AccumulationFuncType accumulation_func)
 {
     ValueType value_sum = {};
+    // clang-format off
     value_sum += accumulation_func(Position{std::max(pos.x - 1, 0),          std::max(pos.y - 1, 0)});
     value_sum += accumulation_func(Position{pos.x,                                       std::max(pos.y - 1, 0)});
     value_sum += accumulation_func(Position{std::min(pos.x + 1, size.x - 1), std::max(pos.y - 1, 0)});
@@ -96,6 +93,7 @@ ValueType TerrainAdjacencyData<ValueType>::AccumulateFromNeighbors(Position pos,
     value_sum += accumulation_func(Position{std::min(pos.x + 1, size.x - 1), std::min(pos.y + 1, size.y - 1)});
     return value_sum;
 
+    // clang-format on
     /*
     Position neighbor;
     auto max_x = std::min(pos.x + 1, size.x - 1);
@@ -107,8 +105,6 @@ ValueType TerrainAdjacencyData<ValueType>::AccumulateFromNeighbors(Position pos,
     return value_sum;
     */
 }
-
-
 
 //template <typename ComputeFunc>
 //uint8_t LevelAdjacencyDataCompressed::operator[](int i) const

@@ -4,14 +4,9 @@
 #include "random.h"
 
 World::World(Size terrain_size)
-    : terrain(terrain_size),
-      link_map(&this->terrain),
-      projectile_list(),
-      harvester_list(),
-      tank_list(&this->terrain, &this->projectile_list),
-      sprite_list(),
-      collision_solver(&this->terrain, &this->tank_list, &this->harvester_list),
-      sectors(terrain_size)
+    : terrain(terrain_size), link_map(&this->terrain), projectile_list(), harvester_list(),
+      tank_list(&this->terrain, &this->projectile_list), sprite_list(),
+      collision_solver(&this->terrain, &this->tank_list, &this->harvester_list), sectors(terrain_size)
 {
     //this->level->OnConnectWorld(this);
 }
@@ -50,7 +45,6 @@ void World::Advance()
     this->terrain.Advance();
 }
 
-
 void World::Draw(WorldRenderSurface * objects_surface)
 {
     /* Draw everything: */
@@ -65,7 +59,6 @@ void World::Draw(WorldRenderSurface * objects_surface)
 
 void World::SetGameOver() { this->game->GameOver(); }
 
-
 void World::RegrowPass()
 {
     if (!this->regrow_timer.AdvanceAndCheckElapsed())
@@ -75,12 +68,14 @@ void World::RegrowPass()
     int holes_decayed = 0;
     int dirt_grown = 0;
     this->terrain.ForEachVoxelParallel(
-        [this, &holes_decayed, &dirt_grown](TerrainPixel pix, SafePixelAccessor pixel, ThreadLocal * local) {
+        [this, &holes_decayed, &dirt_grown](TerrainPixel pix, SafePixelAccessor pixel, ThreadLocal * local)
+        {
             if (pix == TerrainPixel::Blank || Pixel::IsScorched(pix) ||
                 this->tank_bases.CheckBaseCollision(pixel.GetPosition()))
             {
                 int neighbors = //this->level->DirtPixelsAdjacent(pixel.GetPosition());
-                    this->terrain.CountNeighborValues(pixel.GetPosition(), [](auto voxel) { return Pixel::IsDirt(voxel) ? 1 : 0; });
+                    this->terrain.CountNeighborValues(pixel.GetPosition(),
+                                                      [](auto voxel) { return Pixel::IsDirt(voxel) ? 1 : 0; });
                 int modifier = (pix == TerrainPixel::Blank) ? 4 : 1;
                 if (neighbors > 2 && local->random.Int(0, 1000) < tweak::world::DirtRegrowSpeed * neighbors * modifier)
                 {

@@ -14,7 +14,9 @@ std::optional<Position> GetClosestPixel(const SurfaceType & surface, Position or
     float nearest_distance = std::numeric_limits<float>::max();
     Position nearest_pos = origin;
 
-    auto check_pixel = [origin, max_radius, compare_func, &nearest_distance, &nearest_pos](Position pos, const TerrainPixel & pixel) {
+    auto check_pixel =
+        [origin, max_radius, compare_func, &nearest_distance, &nearest_pos](Position pos, const TerrainPixel & pixel)
+    {
         if (compare_func(pixel))
         {
             const float distance = (pos - origin).GetSize();
