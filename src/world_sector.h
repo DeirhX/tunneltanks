@@ -14,8 +14,10 @@ class WorldSector
 
     WorldSector(id_t id) : id(id) {}
 
-  private:
+  public:
     id_t id;
+
+  private:
     boost::container::small_vector<ecs::entity_id, 64 / sizeof(ecs::entity_id)> entities;
 
   public:
@@ -26,30 +28,47 @@ class WorldSector
 class WorldSectors
 {
   private:
-    Size worldSize;
+    SizeF worldSize;
     crust::vector_2d<WorldSector> sectors;
 
   public:
-    WorldSectors(Size worldSize)
+    WorldSectors(SizeF worldSize)
         : worldSize(worldSize), sectors(SectorCountFromWorldSize(worldSize),
                                         []()
                                         {
                                             static WorldSector::id_t id = 0;
-                                            return ++id;
+                                            return id++;
                                         })
     {
     }
 
-    [[nodiscard]] Size GetWorldSize() const { return worldSize; }
-    WorldSector & GetAt(Offset offset) { return sectors.get(offset); }
-    const WorldSector & GetAt(Offset offset) const { return sectors.get(offset); }
+    [[nodiscard]] SizeF GetWorldSize() const { return worldSize; }
 
-  private:
-    constexpr static Size SectorCountFromWorldSize(Size worldSize)
+    constexpr WorldSector::id_t SectorIdForPosition(PositionF position) const
     {
-        return {static_cast<int>((worldSize.x + WorldSector::extentX - 1) / WorldSector::extentX),
-                static_cast<int>((worldSize.y + WorldSector::extentY - 1) / WorldSector::extentY)};
+        auto offset = IndexFromPosition(position);
+        auto id = WorldSector::id_t(offset.x + offset.y * sectors.size().x);
+        assert(worldSize.FitsInside(OffsetF(position)));
+        assert(sectors[id].id == id);
+        return id;
     }
+    constexpr WorldSector & SectorForPosition(PositionF position)
+    {
+        return GetAt(IndexFromPosition(position));
+    }
+    constexpr Offset IndexFromPosition(PositionF position) const
+    {
+        return Offset(static_cast<size_t>(std::ceil(position.x)) / WorldSector::extentX,
+                      static_cast<size_t>(std::ceil(position.y)) / WorldSector::extentY);
+    }
+  private:
+    constexpr static Size SectorCountFromWorldSize(SizeF worldSize)
+    {
+        return {static_cast<int>(int(worldSize.x + WorldSector::extentX - 1) / WorldSector::extentX),
+                static_cast<int>(int(worldSize.y + WorldSector::extentY - 1) / WorldSector::extentY)};
+    }
+    constexpr WorldSector & GetAt(Offset offset) { return sectors.get(offset); }
+    constexpr const WorldSector & GetAt(Offset offset) const { return sectors.get(offset); }
 };
 
 struct WorldSectorMember

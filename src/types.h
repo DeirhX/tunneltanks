@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cmath>
 #include <memory>
+#include <concepts>
 
 /* Generic types that are used all over the place.
  * Most of them are identical and exist solely to enforce sensible naming and conversions
@@ -11,13 +12,28 @@
    Conversions possible only when it is conceptually sensible - enforce clear semantics
 */
 
-/* Generic 2D vector. All things decay to it. */
-struct Vector
+template <typename T>
+concept Numeric = requires(T t)
 {
-    int x = 0, y = 0;
-    Vector() = default;
-    constexpr Vector(int x, int y) noexcept : x(x), y(y) {}
+    std::is_integral_v<T> || std::is_floating_point_v<T>;
 };
+
+template <typename T>
+concept TwoDimensional = requires(T t)
+{
+    t.x == t.y;
+};
+
+template<Numeric Number>
+struct VectorBase
+{
+    Number x = 0, y = 0;
+    VectorBase() = default;
+    constexpr VectorBase(Number x, Number y) noexcept : x(x), y(y) {}
+};
+
+/* Generic 2D vector. All things decay to it. */
+using Vector = VectorBase<int>;
 
 /* Position relative to our logical Screen (our logical render surface pixels) */
 struct ScreenPosition : public Vector
@@ -173,6 +189,7 @@ struct VectorF
             return {};
     }
 };
+
 struct PositionF : public VectorF
 {
     PositionF() = default;
@@ -187,6 +204,7 @@ struct PositionF : public VectorF
         return Position{static_cast<int>(std::round(this->x)), static_cast<int>(std::round(this->y))};
     }
 };
+
 struct SpeedF : public VectorF
 {
     SpeedF() = default;
@@ -205,6 +223,25 @@ struct OffsetF : public VectorF
         return Offset{static_cast<int>(std::round(this->x)), static_cast<int>(std::round(this->y))};
     }
 };
+
+/* Size of objects in the world */
+struct SizeF : public VectorF
+{
+    constexpr SizeF() = default;
+    constexpr SizeF(float sx, float sy) : VectorF(sx, sy) { assert(x >= 0 && y >= 0); }
+    constexpr SizeF(Size intSize) : VectorF(static_cast<float>(intSize.x), static_cast<float>(intSize.y)) { assert(x >= 0 && y >= 0); }
+    [[nodiscard]] constexpr bool FitsInside(float sx, float sy) const
+    {
+        return sx >= 0 && sy >= 0 && sx < this->x && sy < this->y;
+    }
+    [[nodiscard]] constexpr bool FitsInside(OffsetF o) const { return o.x >= 0 && o.y >= 0 && o.x < this->x && o.y < this->y; }
+    [[nodiscard]] constexpr float Area() const
+    {
+        assert(x >= 0 && y >= 0);
+        return this->x * this->y;
+    }
+};
+
 /* TODO: we need actually just radians. But so often will we use the components it won't hurt to store them instead */
 struct DirectionF : VectorF
 {
@@ -312,16 +349,18 @@ struct NativeScreenRect : RectBase<NativeScreenPosition>
     constexpr NativeScreenRect(int pos_x, int pos_y, int size_x, int size_y) : RectBase{pos_x, pos_y, size_x, size_y} {}
 };
 
-struct BoundingBox : RectBase<Position>
+
+template <typename TwoDimensional>
+struct BoundingBoxBase : RectBase<TwoDimensional>
 {
-    BoundingBox() = default;
-    BoundingBox(Size dimensions)
-        : RectBase(-dimensions.x / 2, -dimensions.y / 2, dimensions.x, dimensions.y)
+    BoundingBoxBase() = default;
+    BoundingBoxBase(Size dimensions)
+        : RectBase<TwoDimensional>(-dimensions.x / 2, -dimensions.y / 2, dimensions.x, dimensions.y)
     {
         assert(dimensions.x % 2 && dimensions.y % 2);
     }
-    Position GetTopLeft(Position tested_position) const { return tested_position + Offset{this->pos}; }
-    bool IsInside(Position tested_position, Position entity_origin) const
+    TwoDimensional GetTopLeft(TwoDimensional tested_position) const { return tested_position + Offset{this->pos}; }
+    bool IsInside(TwoDimensional tested_position, TwoDimensional entity_origin) const
     {
         return std::abs(tested_position.x - entity_origin.x) < this->size.x / 2 &&
                std::abs(tested_position.y - entity_origin.y) < this->size.y / 2;
@@ -331,8 +370,11 @@ struct BoundingBox : RectBase<Position>
         //       tested_position.y >= this->Top() + entity_origin.y &&
         //       tested_position.y <= this->Bottom() + entity_origin.y;
     }
-    Rect GetRect(Position tested_center) const { return Rect{GetTopLeft(tested_center), this->size}; }
+    Rect GetRect(TwoDimensional tested_center) const { return Rect{GetTopLeft(tested_center), this->size}; }
 };
+
+using BoundingBox = BoundingBoxBase<Position>;
+using BoundingBoxF = BoundingBoxBase<PositionF>;
 
 //constexpr bool operator==(const NativeRect & left, const NativeRect & right) { return static_cast<Rect>(left) == static_cast<Rect>(right); }
 

@@ -7,7 +7,7 @@
 World::World(Size terrain_size)
     : terrain(terrain_size), link_map(&this->terrain), projectile_list(), harvester_list(),
       tank_list(&this->terrain, &this->projectile_list), sprite_list(),
-      collision_solver(&this->terrain, &this->tank_list, &this->harvester_list), sectors(terrain_size)
+      collision_solver(&this->terrain, &this->tank_list, &this->harvester_list), sectors(SizeF(terrain_size))
 {
     //this->level->OnConnectWorld(this);
 }

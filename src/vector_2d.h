@@ -10,32 +10,33 @@ template <typename T>
 class vector_2d : public std::vector<T>
 {
     using base = std::vector<T>;
-    Size size;
+    Size dimension;
 
   public:
     vector_2d(Size dimensions) : size(dimensions) { resize(dimensions); }
     template <typename Initializer>
-    vector_2d(Size dimensions, Initializer initializer) : size(dimensions)
+    vector_2d(Size dimensions, Initializer initializer) : dimension(dimensions)
     {
         for (int i = 0; i < dimensions.Area(); ++i)
         {
             this->push_back(initializer());
         }
     }
-    T & get(Offset offset)
+    constexpr Size size() const { return dimension; }
+    constexpr T & get(Offset offset)
     {
-        assert(size.FitsInside(offset));
-        return this->operator[](offset.y * size.x + offset.x);
+        assert(dimension.FitsInside(offset));
+        return this->operator[](offset.y * dimension.x + offset.x);
     }
-    const T & get(Offset offset) const
+    constexpr const T & get(Offset offset) const
     {
-        assert(size.FitsInside(offset));
-        return this->operator[](offset.y * size.x + offset.x);
+        assert(dimension.FitsInside(offset));
+        return this->operator[](offset.y * dimension.x + offset.x);
     }
-    void set(Offset offset, const T & item)
+    constexpr void set(Offset offset, const T & item)
     {
-        assert(size.FitsInside(offset));
-        this[offset.y * size.x + offset.x] = item;
+        assert(dimension.FitsInside(offset));
+        this[offset.y * dimension.x + offset.x] = item;
     }
     void resize(Size dimensions) { base::resize(dimensions.Area()); }
 };
