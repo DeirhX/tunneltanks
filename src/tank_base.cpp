@@ -157,9 +157,9 @@ TankBase * TankBases::CheckBaseCollision(Position tested_pos)
 {
     TankColor collided_base_color = {-1};
 
-    crust::entities.registry.for_joined_components<Position, BoundingBox, crust::components::TankBase>(
-        [tested_pos, &collided_base_color](ecs::entity, Position pos, BoundingBox bbox,
-                                           crust::components::TankBase base)
+    crust::entities.const_registry.for_joined_components<Position, BoundingBox, crust::components::TankBase>(
+        [tested_pos, &collided_base_color](const ecs::const_entity, Position pos, BoundingBox bbox,
+                                           const crust::components::TankBase base)
     {
             if (bbox.IsInside(tested_pos, pos))
             {

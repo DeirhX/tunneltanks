@@ -235,6 +235,12 @@
     <ClCompile Include="src\gui.cpp">
       <Filter>src\system</Filter>
     </ClCompile>
+    <ClCompile Include="src\world_sector.cpp">
+      <Filter>src\world</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vector_2d.cpp">
+      <Filter>src\system\containers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\gamelib\SDL\require_sdl.h">
@@ -472,10 +478,16 @@
     <ClInclude Include="src\position_component.h">
       <Filter>src\component</Filter>
     </ClInclude>
+    <ClInclude Include="src\world_sector.h">
+      <Filter>src\world</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vector_2d.h">
+      <Filter>src\system\containers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include=".clang-format" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Debugging.natvis" />

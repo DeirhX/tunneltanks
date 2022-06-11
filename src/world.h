@@ -9,6 +9,7 @@
 #include "sprite_list.h"
 #include "tank_list.h"
 #include "entity.h"
+#include "world_sector.h"
 
 class WorldRenderSurface;
 
@@ -33,6 +34,8 @@ class World
 
     CollisionSolver collision_solver;
     RepetitiveTimer regrow_timer{tweak::world::DirtRecoverInterval};
+
+    WorldSectors sectors;
 
     //EntitySystem entities;
   public:

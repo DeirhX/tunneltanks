@@ -12,6 +12,7 @@ class EntitySystem
 {
 public:
     ecs::registry registry;
+    const ecs::registry & const_registry = registry;
 
 public:
     EntitySystem() = default;
