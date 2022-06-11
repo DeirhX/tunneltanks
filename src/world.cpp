@@ -2,6 +2,7 @@
 #include "world.h"
 #include "game.h"
 #include "random.h"
+#include "entity.h"
 
 World::World(Size terrain_size)
     : terrain(terrain_size), link_map(&this->terrain), projectile_list(), harvester_list(),
@@ -43,6 +44,8 @@ void World::Advance()
         base.Advance();
     this->link_map.Advance();
     this->terrain.Advance();
+
+    crust::entities.Advance();
 }
 
 void World::Draw(WorldRenderSurface * objects_surface)
