@@ -25,7 +25,7 @@ concept TwoDimensional = requires(T t)
     T::NumericType;
 };
 
-template<Numeric Number>
+template <Numeric Number>
 struct VectorBase
 {
     using NumericType = Number;
@@ -99,7 +99,6 @@ struct Speed : public Vector
     Speed() = default;
     constexpr Speed(int sx, int sy) : Vector(sx, sy) {}
 };
-
 
 /*
  *   Vector +- Vector -> Vector
@@ -220,7 +219,10 @@ struct OffsetF : public VectorF
     OffsetF() = default;
     OffsetF(VectorF vector) : VectorF(vector) {}
     constexpr OffsetF(float sx, float sy) : VectorF(sx, sy) {}
-    explicit OffsetF(Offset int_offset) : VectorF(static_cast<float>(int_offset.x) + 0.5f, static_cast<float>(int_offset.y) + 0.5f) {}
+    explicit OffsetF(Offset int_offset)
+        : VectorF(static_cast<float>(int_offset.x) + 0.5f, static_cast<float>(int_offset.y) + 0.5f)
+    {
+    }
     explicit operator Offset() const
     {
         return Offset{static_cast<int>(std::round(this->x)), static_cast<int>(std::round(this->y))};
@@ -232,12 +234,18 @@ struct SizeF : public VectorF
 {
     constexpr SizeF() = default;
     constexpr SizeF(float sx, float sy) : VectorF(sx, sy) { assert(x >= 0 && y >= 0); }
-    constexpr SizeF(Size intSize) : VectorF(static_cast<float>(intSize.x), static_cast<float>(intSize.y)) { assert(x >= 0 && y >= 0); }
+    constexpr SizeF(Size intSize) : VectorF(static_cast<float>(intSize.x), static_cast<float>(intSize.y))
+    {
+        assert(x >= 0 && y >= 0);
+    }
     [[nodiscard]] constexpr bool FitsInside(float sx, float sy) const
     {
         return sx >= 0 && sy >= 0 && sx < this->x && sy < this->y;
     }
-    [[nodiscard]] constexpr bool FitsInside(OffsetF o) const { return o.x >= 0 && o.y >= 0 && o.x < this->x && o.y < this->y; }
+    [[nodiscard]] constexpr bool FitsInside(OffsetF o) const
+    {
+        return o.x >= 0 && o.y >= 0 && o.x < this->x && o.y < this->y;
+    }
     [[nodiscard]] constexpr float Area() const
     {
         assert(x >= 0 && y >= 0);
@@ -259,7 +267,10 @@ struct DirectionF : VectorF
         this->y = float(speed.y);
         //assert(this->IsNormalized());
     };
-    [[nodiscard]] Direction ToIntDirection() const { return Direction::FromSpeed({static_cast<int>(x), static_cast<int>(y)}); }
+    [[nodiscard]] Direction ToIntDirection() const
+    {
+        return Direction::FromSpeed({static_cast<int>(x), static_cast<int>(y)});
+    }
     [[nodiscard]] Speed ToSpeed() const { return Speed{static_cast<int>(x), static_cast<int>(y)}; }
 };
 
@@ -314,10 +325,7 @@ struct RectBase
         return {std::clamp(vec.x, this->Left(), this->Right()), std::clamp(vec.y, this->Top(), this->Bottom())};
     }
     [[nodiscard]] PositionType Center() const { return {pos.x + size.x / 2, pos.y + size.y / 2}; }
-    constexpr bool operator==(const RectBase & other)
-    {
-        return this->pos == other.pos && this->size == other.size;
-    }
+    constexpr bool operator==(const RectBase & other) { return this->pos == other.pos && this->size == other.size; }
     constexpr bool operator!=(const RectBase & other) { return !this->operator==(other); }
 };
 
@@ -362,7 +370,6 @@ struct NativeScreenRect : RectBase<NativeScreenPosition, Size>
     constexpr NativeScreenRect(NativeScreenPosition pos, Size size) : RectBase{pos.x, pos.y, size.x, size.y} {}
     constexpr NativeScreenRect(int pos_x, int pos_y, int size_x, int size_y) : RectBase{pos_x, pos_y, size_x, size_y} {}
 };
-
 
 template <TwoDimensional PositionType, TwoDimensional SizeType>
 struct BoundingBoxBase : RectBase<PositionType, SizeType>
