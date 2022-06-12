@@ -1,6 +1,9 @@
 ﻿#include "pch.h"
 #include "world_sector.h"
 
+namespace crust
+{
+
 void WorldSector::AddEntity(ecs::entity entity)
 {
     assert(ranges::find(entities, entity.id()) == entities.end());
@@ -13,3 +16,5 @@ void WorldSector::RemoveEntity(ecs::entity entity)
     assert(it != entities.end());
     entities.erase(it);
 }
+
+} // namespace crust

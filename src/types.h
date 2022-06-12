@@ -22,11 +22,13 @@ template <typename T>
 concept TwoDimensional = requires(T t)
 {
     t.x == t.y;
+    T::NumericType;
 };
 
 template<Numeric Number>
 struct VectorBase
 {
+    using NumericType = Number;
     Number x = 0, y = 0;
     VectorBase() = default;
     constexpr VectorBase(Number x, Number y) noexcept : x(x), y(y) {}
@@ -173,6 +175,7 @@ constexpr bool operator==(Direction l, Direction r) noexcept { return l.dir == r
 
 struct VectorF
 {
+    using NumericType = float;
     float x = 0, y = 0;
     VectorF() = default;
     constexpr VectorF(float x, float y) : x(x), y(y) {}
@@ -284,25 +287,29 @@ constexpr OffsetF operator*(DirectionF d, float m) noexcept { return {d.x * m, d
 constexpr OffsetF operator*(float m, DirectionF d) noexcept { return {m * d.x, m * d.y}; }
 
 /* Base of all specific rectangles  */
-template <typename PositionType>
+template <TwoDimensional PositionType, TwoDimensional SizeType>
 struct RectBase
 {
     PositionType pos;
-    Size size;
+    SizeType size;
 
     constexpr RectBase() = default;
-    constexpr RectBase(PositionType pos, Size size) : pos(pos), size(size) {}
-    constexpr RectBase(int pos_x, int pos_y, int size_x, int size_y) : pos{pos_x, pos_y}, size{size_x, size_y} {}
+    constexpr RectBase(PositionType pos, SizeType size) : pos(pos), size(size) {}
+    constexpr RectBase(typename PositionType::NumericType pos_x, typename PositionType::NumericType pos_y,
+                       typename PositionType::NumericType size_x, typename PositionType::NumericType size_y)
+        : pos{pos_x, pos_y}, size{size_x, size_y}
+    {
+    }
 
     constexpr int Left() const { return pos.x; }
     constexpr int Top() const { return pos.y; }
     constexpr int Right() const { return pos.x + size.x - 1; }
     constexpr int Bottom() const { return pos.y + size.y - 1; }
-    constexpr bool IsInside(Vector vec) const
+    constexpr bool IsInside(PositionType vec) const
     {
         return vec.x >= this->Left() && vec.x <= this->Right() && vec.y >= this->Top() && vec.y <= this->Bottom();
     }
-    [[nodiscard]] Vector MakeInside(Vector vec) const
+    [[nodiscard]] PositionType MakeInside(PositionType vec) const
     {
         return {std::clamp(vec.x, this->Left(), this->Right()), std::clamp(vec.y, this->Top(), this->Bottom())};
     }
@@ -315,7 +322,7 @@ struct RectBase
 };
 
 /* Rectangle in units of our pixelated screen (render) surface */
-struct ScreenRect : RectBase<ScreenPosition>
+struct ScreenRect : RectBase<ScreenPosition, Size>
 {
     constexpr ScreenRect() = default;
     constexpr ScreenRect(ScreenPosition pos, Size size) : RectBase{pos.x, pos.y, size.x, size.y} {}
@@ -323,18 +330,26 @@ struct ScreenRect : RectBase<ScreenPosition>
 };
 
 /* A rectangle in world/level coordinates.*/
-struct Rect : RectBase<Position>
+struct Rect : RectBase<Position, Size>
 {
     constexpr Rect() = default;
     constexpr Rect(Position pos, Size size) : RectBase{pos.x, pos.y, size.x, size.y} {}
     constexpr Rect(int pos_x, int pos_y, int size_x, int size_y) : RectBase{pos_x, pos_y, size_x, size_y} {}
     explicit constexpr Rect(ScreenRect screen) : Rect{screen.pos.x, screen.pos.y, screen.size.x, screen.size.y} {}
-    explicit operator ScreenRect() const {return ScreenRect{this->pos.x, this->pos.y, this->size.x, this->size.y};
-}
+    explicit operator ScreenRect() const { return ScreenRect{this->pos.x, this->pos.y, this->size.x, this->size.y}; }
+};
+
+/* A rectangle in world/level coordinates in float.*/
+struct RectF : RectBase<PositionF, SizeF>
+{
+    using base = RectBase<PositionF, SizeF>;
+    using base::base;
+    constexpr RectF() = default;
+    constexpr RectF(PositionF pos, SizeF size) : RectBase{pos.x, pos.y, size.x, size.y} {}
 };
 
 /* Rectangle inside an image/bitmap used as a source of bliting to screen */
-struct ImageRect : RectBase<Position>
+struct ImageRect : RectBase<Position, Size>
 {
     constexpr ImageRect() = default;
     constexpr ImageRect(Position pos, Size size) : RectBase{pos.x, pos.y, size.x, size.y} {}
@@ -342,7 +357,7 @@ struct ImageRect : RectBase<Position>
 };
 
 /* Rectangle in native units of hosting window/surface. This needs to get used only if we want to draw an overlay over our pixelated surface */
-struct NativeScreenRect : RectBase<NativeScreenPosition>
+struct NativeScreenRect : RectBase<NativeScreenPosition, Size>
 {
     constexpr NativeScreenRect() = default;
     constexpr NativeScreenRect(NativeScreenPosition pos, Size size) : RectBase{pos.x, pos.y, size.x, size.y} {}
@@ -350,17 +365,17 @@ struct NativeScreenRect : RectBase<NativeScreenPosition>
 };
 
 
-template <typename TwoDimensional>
-struct BoundingBoxBase : RectBase<TwoDimensional>
+template <TwoDimensional PositionType, TwoDimensional SizeType>
+struct BoundingBoxBase : RectBase<PositionType, SizeType>
 {
     BoundingBoxBase() = default;
     BoundingBoxBase(Size dimensions)
-        : RectBase<TwoDimensional>(-dimensions.x / 2, -dimensions.y / 2, dimensions.x, dimensions.y)
+        : RectBase<PositionType, SizeType>(-dimensions.x / 2, -dimensions.y / 2, dimensions.x, dimensions.y)
     {
         assert(dimensions.x % 2 && dimensions.y % 2);
     }
-    TwoDimensional GetTopLeft(TwoDimensional tested_position) const { return tested_position + Offset{this->pos}; }
-    bool IsInside(TwoDimensional tested_position, TwoDimensional entity_origin) const
+    PositionType GetTopLeft(PositionType tested_position) const { return tested_position + Offset{this->pos}; }
+    bool IsInside(PositionType tested_position, PositionType entity_origin) const
     {
         return std::abs(tested_position.x - entity_origin.x) < this->size.x / 2 &&
                std::abs(tested_position.y - entity_origin.y) < this->size.y / 2;
@@ -370,11 +385,11 @@ struct BoundingBoxBase : RectBase<TwoDimensional>
         //       tested_position.y >= this->Top() + entity_origin.y &&
         //       tested_position.y <= this->Bottom() + entity_origin.y;
     }
-    Rect GetRect(TwoDimensional tested_center) const { return Rect{GetTopLeft(tested_center), this->size}; }
+    Rect GetRect(PositionType tested_center) const { return Rect{GetTopLeft(tested_center), this->size}; }
 };
 
-using BoundingBox = BoundingBoxBase<Position>;
-using BoundingBoxF = BoundingBoxBase<PositionF>;
+using BoundingBox = BoundingBoxBase<Position, Size>;
+using BoundingBoxF = BoundingBoxBase<PositionF, SizeF>;
 
 //constexpr bool operator==(const NativeRect & left, const NativeRect & right) { return static_cast<Rect>(left) == static_cast<Rect>(right); }
 

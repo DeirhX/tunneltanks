@@ -4,6 +4,9 @@
 #include "vector_2d.h"
 #include <boost/container/small_vector.hpp>
 
+namespace crust
+{
+
 class WorldSector
 {
   public:
@@ -49,18 +52,16 @@ class WorldSectors
         auto offset = IndexFromPosition(position);
         auto id = WorldSector::id_t(offset.x + offset.y * sectors.size().x);
         assert(worldSize.FitsInside(OffsetF(position)));
-        assert(sectors[id].id == id);
+        assert(id >= 0 && sectors.at(id).id == id);
         return id;
     }
-    constexpr WorldSector & SectorForPosition(PositionF position)
-    {
-        return GetAt(IndexFromPosition(position));
-    }
+    constexpr WorldSector & SectorForPosition(PositionF position) { return GetAt(IndexFromPosition(position)); }
     constexpr Offset IndexFromPosition(PositionF position) const
     {
         return Offset(static_cast<size_t>(std::ceil(position.x)) / WorldSector::extentX,
                       static_cast<size_t>(std::ceil(position.y)) / WorldSector::extentY);
     }
+
   private:
     constexpr static Size SectorCountFromWorldSize(SizeF worldSize)
     {
@@ -71,7 +72,13 @@ class WorldSectors
     constexpr const WorldSector & GetAt(Offset offset) const { return sectors.get(offset); }
 };
 
-struct WorldSectorMember
+namespace components
 {
-    ecs::entity_id sectorId;
-};
+    struct Sector
+    {
+        // Indicates presence in sector(s) - more than one is possible for anything that has an area
+        boost::container::small_vector<WorldSector::id_t, 4> sector_ids;
+    };
+} // namespace components
+
+} // namespace crust
