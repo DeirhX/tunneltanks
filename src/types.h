@@ -324,9 +324,8 @@ struct RectBase
 /* Rectangle in units of our pixelated screen (render) surface */
 struct ScreenRect : RectBase<ScreenPosition, Size>
 {
-    constexpr ScreenRect() = default;
-    constexpr ScreenRect(ScreenPosition pos, Size size) : RectBase{pos.x, pos.y, size.x, size.y} {}
-    constexpr ScreenRect(int pos_x, int pos_y, int size_x, int size_y) : RectBase{pos_x, pos_y, size_x, size_y} {}
+    using base = RectBase<ScreenPosition, Size>;
+    using base::base;
 };
 
 /* A rectangle in world/level coordinates.*/
