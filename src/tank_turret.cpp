@@ -36,7 +36,7 @@ void TankTurret::Advance(Position tank_position, widgets::Crosshair * crosshair)
         Position crosshair_pos = crosshair->GetWorldPosition();
         auto turret_dir = OffsetF(crosshair_pos - tank_position);
         if (turret_dir != OffsetF{})
-            this->direction = DirectionF{turret_dir};
+            this->direction = DirectionF::FromAbnormal(turret_dir);
     }
     /* If we inherited it from tank it needs to be normalized. So do it just in case, cheaper than querying. */
     this->direction = DirectionF{this->direction.Normalize()};

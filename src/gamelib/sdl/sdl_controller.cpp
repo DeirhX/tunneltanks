@@ -158,9 +158,9 @@ ControllerOutput GamePadController::ApplyControls(const PublicTankInfo &)
     //gamelib_print("Right stick: %d, %d           \r", rx, ry);
 
     /* Finally apply to crosshair */
-    VectorF aim_dir = VectorF{float(rx), float(ry)} / std::numeric_limits<short>::max();
-    if (aim_dir != VectorF{})
-        output.crosshair_direction = DirectionF{aim_dir.Normalize()};
+    auto aim_dir = VectorF(float(rx), float(ry)); 
+    if (aim_dir.NotZero())
+        output.crosshair_direction = DirectionF::FromAbnormal(aim_dir);
     else
         output.crosshair_direction = {};
     output.is_crosshair_absolute = false;

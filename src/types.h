@@ -29,42 +29,48 @@ template <Numeric Number>
 struct VectorBase
 {
     using NumericType = Number;
+
     Number x = 0, y = 0;
-    VectorBase() = default;
+
+    constexpr VectorBase() = default;
     constexpr VectorBase(Number x, Number y) noexcept : x(x), y(y) {}
+    constexpr bool operator==(const VectorBase & other) { return x == other.x && y == other.y; }
+    constexpr bool operator!=(const VectorBase & other) { return !(x == other.x && y == other.y); }
+    constexpr bool IsZero() const { return x == 0 && y == 0; }
+    constexpr bool NotZero() const { return !IsZero(); }
 };
 
 /* Generic 2D vector. All things decay to it. */
-using Vector = VectorBase<int>;
+struct Vector : public VectorBase<int>
+{
+    using base = VectorBase<int>;
+    using base::base;
+};
 
 /* Position relative to our logical Screen (our logical render surface pixels) */
 struct ScreenPosition : public Vector
 {
-    constexpr ScreenPosition() = default;
-    constexpr ScreenPosition(int x, int y) : Vector(x, y) {}
+    using Vector::Vector;
     constexpr explicit ScreenPosition(Vector vec) : Vector(vec) {}
 };
 
 /* Position relative to native OS window in its own units (physical device pixels) */
 struct NativeScreenPosition : public Vector
 {
-    constexpr NativeScreenPosition() = default;
-    constexpr NativeScreenPosition(int x, int y) : Vector(x, y) {}
+    using Vector::Vector;
 };
 
 /* Position in the level */
 struct Position : public Vector
 {
-    constexpr Position() = default;
-    constexpr Position(int x, int y) : Vector(x, y) {}
+    using Vector::Vector;
     explicit Position(ScreenPosition pos) : Vector(pos.x, pos.y) {}
 };
 
 /* Offset of a position. Positions cannot be added together, position and offset can. */
 struct Offset : public Vector
 {
-    Offset() = default;
-    constexpr Offset(int dx, int dy) : Vector(dx, dy) {}
+    using Vector::Vector;
     explicit Offset(Position pos) : Vector(pos.x, pos.y) {}
 
     //explicit operator Position() const { return Position{this->x, this->y}; }
@@ -74,8 +80,7 @@ struct Offset : public Vector
 /* Size of objects in the world */
 struct Size : public Vector
 {
-    constexpr Size() = default;
-    constexpr Size(int sx, int sy) : Vector(sx, sy) { assert(x >= 0 && y >= 0); }
+    using Vector::Vector;
     [[nodiscard]] bool FitsInside(int sx, int sy) const { return sx >= 0 && sy >= 0 && sx < this->x && sy < this->y; }
     [[nodiscard]] bool FitsInside(Offset o) const { return o.x >= 0 && o.y >= 0 && o.x < this->x && o.y < this->y; }
     [[nodiscard]] size_t Area() const
@@ -89,15 +94,13 @@ struct Size : public Vector
 /* Size in units of our screen render surface */
 struct ScreenSize : public Vector
 {
-    constexpr ScreenSize() = default;
-    constexpr ScreenSize(int sx, int sy) : Vector(sx, sy) {}
+    using Vector::Vector;
 };
 
 /* Speed of objects in the world */
 struct Speed : public Vector
 {
-    Speed() = default;
-    constexpr Speed(int sx, int sy) : Vector(sx, sy) {}
+    using Vector::Vector;
 };
 
 /*
@@ -172,15 +175,18 @@ constexpr bool operator==(Direction l, Direction r) noexcept { return l.dir == r
  *  Float math. Needed for shooting and raytracing of object trajectories.
  */
 
-struct VectorF
+struct VectorF : public VectorBase<float>
 {
-    using NumericType = float;
+    using base = VectorBase<float>;
+    using base::base;
+
     float x = 0, y = 0;
-    VectorF() = default;
+
+    constexpr VectorF() = default;
     constexpr VectorF(float x, float y) : x(x), y(y) {}
 
     [[nodiscard]] float GetSize() const { return std::sqrt(x * x + y * y); }
-    [[nodiscard]] bool IsNormalized() const { return GetSize() == 1.0f; }
+    [[nodiscard]] bool IsNormalized() const { return std::abs(GetSize() - 1.0f) < std::numeric_limits<float>::epsilon(); }
     [[nodiscard]] VectorF Normalize() const
     {
         auto size = GetSize();
@@ -194,8 +200,7 @@ struct VectorF
 
 struct PositionF : public VectorF
 {
-    PositionF() = default;
-    constexpr PositionF(float sx, float sy) : VectorF(sx, sy) {}
+    using VectorF::VectorF;
     explicit PositionF(Position pos) /* Should become center of the pixel */
         : PositionF{static_cast<float>(pos.x) + 0.5f, static_cast<float>(pos.y) + 0.5f}
     {
@@ -207,34 +212,27 @@ struct PositionF : public VectorF
     }
 };
 
-struct SpeedF : public VectorF
-{
-    SpeedF() = default;
-    SpeedF(VectorF vector) : VectorF(vector) {}
-    constexpr SpeedF(float sx, float sy) : VectorF(sx, sy) {}
-};
-
 struct OffsetF : public VectorF
 {
-    OffsetF() = default;
-    OffsetF(VectorF vector) : VectorF(vector) {}
-    constexpr OffsetF(float sx, float sy) : VectorF(sx, sy) {}
+    using VectorF::VectorF;
     explicit OffsetF(Offset int_offset)
         : VectorF(static_cast<float>(int_offset.x) + 0.5f, static_cast<float>(int_offset.y) + 0.5f)
     {
     }
+    explicit OffsetF(PositionF position) : VectorF(position) {}
+    //explicit OffsetF(SpeedF position) : VectorF(position) {}
     explicit operator Offset() const
     {
         return Offset{static_cast<int>(std::round(this->x)), static_cast<int>(std::round(this->y))};
     }
 };
 
+
 /* Size of objects in the world */
 struct SizeF : public VectorF
 {
-    constexpr SizeF() = default;
-    constexpr SizeF(float sx, float sy) : VectorF(sx, sy) { assert(x >= 0 && y >= 0); }
-    constexpr SizeF(Size intSize) : VectorF(static_cast<float>(intSize.x), static_cast<float>(intSize.y))
+    using VectorF::VectorF;
+    constexpr explicit SizeF(Size intSize) : VectorF(static_cast<float>(intSize.x), static_cast<float>(intSize.y))
     {
         assert(x >= 0 && y >= 0);
     }
@@ -258,15 +256,17 @@ struct DirectionF : VectorF
 {
   public:
     DirectionF() = default;
-    DirectionF(VectorF vector) : VectorF(vector) {}
+    DirectionF(VectorF vector) : VectorF(vector) { assert(this->IsNormalized()); }
     DirectionF(float x, float y) : VectorF(x, y) { assert((x == 0.0f && y == 0.0f) || this->IsNormalized()); }
     DirectionF(Direction int_direction)
     {
         auto speed = int_direction.ToSpeed();
         this->x = float(speed.x);
         this->y = float(speed.y);
+        //Normalize();
         //assert(this->IsNormalized());
     };
+    static DirectionF FromAbnormal(VectorF vector) { return DirectionF(vector.Normalize()); }
     [[nodiscard]] Direction ToIntDirection() const
     {
         return Direction::FromSpeed({static_cast<int>(x), static_cast<int>(y)});
@@ -274,8 +274,18 @@ struct DirectionF : VectorF
     [[nodiscard]] Speed ToSpeed() const { return Speed{static_cast<int>(x), static_cast<int>(y)}; }
 };
 
+struct SpeedF : public VectorF
+{
+    using VectorF::VectorF;
+    SpeedF(DirectionF direction, float length) : VectorF(direction.x * length, direction.y * length) {}
+    explicit SpeedF(OffsetF offset) : VectorF(offset) {}
+};
+
+
 constexpr VectorF operator+(VectorF v, VectorF o) noexcept { return {v.x + o.x, v.y + o.y}; }
 constexpr VectorF operator-(VectorF v, VectorF o) noexcept { return {v.x - o.x, v.y - o.y}; }
+// constexpr VectorF operator*(VectorF v, float o) noexcept { return {v.x * o, v.y * o}; }
+// constexpr VectorF operator/(VectorF v, float o) noexcept { return {v.x / o, v.y / o}; }
 constexpr OffsetF operator*(SpeedF s, float t) noexcept { return {s.x * t, s.y * t}; }
 constexpr OffsetF operator*(float t, SpeedF s) noexcept { return {s.x * t, s.y * t}; }
 constexpr OffsetF operator*(OffsetF o, float m) noexcept { return {o.x * m, o.y * m}; }

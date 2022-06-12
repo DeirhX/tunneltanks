@@ -248,8 +248,8 @@ std::vector<ShrapnelType> ExplosionDesc::Explode(Terrain & level) const
                                                       base_rads.val + this->direction_spread.val / 2)};
         auto chosen_speed = Random.Float(this->speed_min, this->speed_max) * tweak::explosion::MadnessLevel;
 
-        items.emplace_back(ShrapnelType{this->center, chosen_rads.ToDirection() * chosen_speed,
-                                        Random.Int(this->frames_length_min, this->frames_length_max), &level});
+        items.emplace_back(ShrapnelType(this->center, SpeedF(chosen_rads.ToDirection() * chosen_speed),
+                                        Random.Int(this->frames_length_min, this->frames_length_max), &level));
     }
     return items;
 }

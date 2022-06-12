@@ -236,8 +236,8 @@ void Crosshair::MoveRelative(Offset offset)
 
 void Crosshair::SetRelativeDirection(const Tank * tank, DirectionF direction)
 {
-    SetWorldPosition(tank->GetPosition() + Offset{tweak::control::GamePadCrosshairRadius * direction});
-    is_hidden = (direction == DirectionF{});
+    SetWorldPosition(tank->GetPosition() + Offset(OffsetF(tweak::control::GamePadCrosshairRadius * direction)));
+    is_hidden = (direction.IsZero());
 }
 
 void Crosshair::SetScreenRelativePosition(OffsetF screen_offset)
