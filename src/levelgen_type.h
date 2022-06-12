@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-namespace levelgen
+namespace crust::levelgen
 {
 enum class LevelGeneratorType
 {

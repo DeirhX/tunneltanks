@@ -6,7 +6,8 @@
 #include "raycaster.h"
 #include "render_surface.h"
 #include "tank.h"
-
+namespace crust
+{
 
 PositionF TankTurret::GetBarrelPosition() const
 {
@@ -45,15 +46,15 @@ void TankTurret::Advance(Position tank_position, widgets::Crosshair * crosshair)
     int turret_len = 0;
     this->TurretVoxels[turret_len++] = tank_position;
 
-    auto visitor = [this, &turret_len](PositionF current, PositionF) {
+    auto visitor = [this, &turret_len](PositionF current, PositionF)
+    {
         if (turret_len >= tweak::tank::TurretLength)
             return false;
 
         this->TurretVoxels[turret_len++] = current.ToIntPosition();
         return true;
     };
-    Raycaster::Cast(PositionF(tank_position),
-                    GetBarrelPosition(), visitor,
+    Raycaster::Cast(PositionF(tank_position), GetBarrelPosition(), visitor,
                     Raycaster::VisitFlags::PixelsMustTouchCorners);
 
     this->current_length = turret_len;
@@ -75,18 +76,21 @@ void TankTurret::HandleShoot()
         if (this->is_shooting_primary)
         {
             if (this->tank->GetReactor().Pay(tweak::tank::ShootCost))
-                this->bullet_timer = this->primary_weapon.Fire(this->tank->GetPosition(), this->GetDirection(), this->tank);
+                this->bullet_timer =
+                    this->primary_weapon.Fire(this->tank->GetPosition(), this->GetDirection(), this->tank);
             /* We just fired. Let's charge ourselves: */
         }
         if (this->is_shooting_secondary)
         {
             if (this->tank->GetReactor().Pay(tweak::tank::ShootCost))
-                this->bullet_timer = this->secondary_weapon.Fire(this->tank->GetPosition(), this->GetDirection(), this->tank);
+                this->bullet_timer =
+                    this->secondary_weapon.Fire(this->tank->GetPosition(), this->GetDirection(), this->tank);
         }
         if (this->is_shooting_tertiary)
         {
             if (this->tank->GetReactor().Pay(tweak::tank::ShootCost))
-                this->bullet_timer = this->tertiary_weapon.Fire(this->tank->GetPosition(), this->GetDirection(), this->tank);
+                this->bullet_timer =
+                    this->tertiary_weapon.Fire(this->tank->GetPosition(), this->GetDirection(), this->tank);
         }
     }
     else
@@ -94,3 +98,4 @@ void TankTurret::HandleShoot()
 }
 
 void TankTurret::Reset() { this->bullet_timer = Duration::Zero(); }
+} // namespace crust

@@ -2,6 +2,8 @@
 #include "projectile_list.h"
 #include "Terrain.h"
 #include "tank_list.h"
+namespace crust
+{
 
 void ProjectileList::Advance(Terrain *, TankList * tankList)
 {
@@ -16,3 +18,5 @@ void ProjectileList::Draw(Surface * drawBuffer)
 {
     this->items.ForEach([drawBuffer](auto & item) { item.Draw(drawBuffer); });
 }
+
+} // namespace crust

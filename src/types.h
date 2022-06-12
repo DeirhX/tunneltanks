@@ -5,6 +5,8 @@
 #include <cmath>
 #include <memory>
 #include <concepts>
+namespace crust
+{
 
 /* Generic types that are used all over the place.
  * Most of them are identical and exist solely to enforce sensible naming and conversions
@@ -90,6 +92,7 @@ struct Size : public Vector
         return this->x * this->y;
     }
 };
+using KoSize = Size;
 
 /* Size in units of our screen render surface */
 struct ScreenSize : public Vector
@@ -186,7 +189,10 @@ struct VectorF : public VectorBase<float>
     constexpr VectorF(float x, float y) : x(x), y(y) {}
 
     [[nodiscard]] float GetSize() const { return std::sqrt(x * x + y * y); }
-    [[nodiscard]] bool IsNormalized() const { return std::abs(GetSize() - 1.0f) < std::numeric_limits<float>::epsilon(); }
+    [[nodiscard]] bool IsNormalized() const
+    {
+        return std::abs(GetSize() - 1.0f) < std::numeric_limits<float>::epsilon();
+    }
     [[nodiscard]] VectorF Normalize() const
     {
         auto size = GetSize();
@@ -226,7 +232,6 @@ struct OffsetF : public VectorF
         return Offset{static_cast<int>(std::round(this->x)), static_cast<int>(std::round(this->y))};
     }
 };
-
 
 /* Size of objects in the world */
 struct SizeF : public VectorF
@@ -280,7 +285,6 @@ struct SpeedF : public VectorF
     SpeedF(DirectionF direction, float length) : VectorF(direction.x * length, direction.y * length) {}
     explicit SpeedF(OffsetF offset) : VectorF(offset) {}
 };
-
 
 constexpr VectorF operator+(VectorF v, VectorF o) noexcept { return {v.x + o.x, v.y + o.y}; }
 constexpr VectorF operator-(VectorF v, VectorF o) noexcept { return {v.x - o.x, v.y - o.y}; }
@@ -439,3 +443,5 @@ bool HasFlag(TEnum value, TEnum flag)
 {
     return (static_cast<std::underlying_type_t<TEnum>>(value) & static_cast<std::underlying_type_t<TEnum>>(flag)) != 0;
 }
+
+} // namespace crust

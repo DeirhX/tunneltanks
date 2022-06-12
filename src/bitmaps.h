@@ -5,6 +5,8 @@
 #include <cstddef>
 #include <initializer_list>
 #include <vector>
+namespace crust
+{
 
 class Screen;
 
@@ -40,12 +42,12 @@ class ImageData
     Size GetSize() const { return this->size; }
 
     /* Read-write accessors */
-    DataType &At(int index)
+    DataType & At(int index)
     {
         assert(index >= 0 && index < size.x * size.y);
         return data[index];
     }
-    [[nodiscard]] const DataType &At(int index) const
+    [[nodiscard]] const DataType & At(int index) const
     {
         assert(index >= 0 && index < size.x * size.y);
         return data[index];
@@ -63,11 +65,14 @@ class ImageData
     operator Container() const { return data; }
 };
 
-template <typename DataType> class Bitmap : public ImageData<DataType>
+template <typename DataType>
+class Bitmap : public ImageData<DataType>
 {
     using Base = ImageData<DataType>;
+
   public:
     using PixelType = DataType;
+
   protected:
     /* Draw entire bitmap */
     template <typename GetColorFunc>
@@ -132,26 +137,18 @@ class ColorBitmap : public Bitmap<Color>
 /* Simple hardcoded bitmaps */
 namespace bitmaps
 {
-	inline auto GuiHealth = MonoBitmap(Size{ 4, 5 },
-		{1,0,0,1,
-		 1,0,0,1,
-		 1,1,1,1,
-		 1,0,0,1,
-		 1,0,0,1 });
+    inline auto GuiHealth = MonoBitmap(Size{4, 5}, {1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1});
 
-	inline auto GuiEnergy = MonoBitmap(Size{ 4, 5 },
-		{1,1,1,1,
-		 1,0,0,0,
-		 1,1,1,0,
-		 1,0,0,0,
-		 1,1,1,1 });
+    inline auto GuiEnergy = MonoBitmap(Size{4, 5}, {1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1});
 
-	inline auto LifeDot = MonoBitmap(Size{ 2, 2 },
-		{1,1,
-		 1,1,});
+    inline auto LifeDot = MonoBitmap(Size{2, 2}, {
+                                                     1,
+                                                     1,
+                                                     1,
+                                                     1,
+                                                 });
 
-	inline auto Crosshair = MonoBitmap(Size{ 3, 3},
-		{ 0,1,0,
-		  1,1,1,
-		  0,1,0 });
-}
+    inline auto Crosshair = MonoBitmap(Size{3, 3}, {0, 1, 0, 1, 1, 1, 0, 1, 0});
+} // namespace bitmaps
+
+} // namespace MyNamespace

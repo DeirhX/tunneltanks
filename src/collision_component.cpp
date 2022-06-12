@@ -1,7 +1,8 @@
 ﻿#include "pch.h"
 #include "collision_component.h"
+//#include "types.h"
 
-#include <stdexcept>
+//#include <stdexcept>
 
 namespace crust::components
 {
@@ -18,7 +19,7 @@ std::span<const uint8_t> BitmapCollision::RawDataForDirection(Direction directio
     return {collision_data.begin() + direction * size.Area(), static_cast<size_t>(size.Area())};
 }
 
-BitmapCollision::BitmapCollision(::Size size, Offset center, std::span<uint8_t> collision_data)
+BitmapCollision::BitmapCollision(crust::Size size, Offset center, std::span<uint8_t> collision_data)
     : size(size), center(center), collision_data(collision_data.begin(), collision_data.end())
 {
     if (collision_data.size() == size.Area())
@@ -29,7 +30,7 @@ BitmapCollision::BitmapCollision(::Size size, Offset center, std::span<uint8_t> 
         throw std::logic_error("Invalid size of collision_data");
 }
 
-BitmapCollision::BitmapCollision(::Size size, Offset center, std::span<std::span<uint8_t>, 9> multiple_directions)
+BitmapCollision::BitmapCollision(crust::Size size, Offset center, std::span<std::span<uint8_t>, 9> multiple_directions)
     : size(size), center(center), multiple_directions(true)
 {
     collision_data.resize(size.Area() * 9);

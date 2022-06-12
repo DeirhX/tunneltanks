@@ -1,6 +1,8 @@
 #pragma once
 #include <Terrain.h>
 #include <types.h>
+namespace crust
+{
 
 void rough_up(Terrain * lvl);
 Position generate_inside(Size size, int border);
@@ -11,3 +13,5 @@ void draw_line(Terrain * dest, Vector a, Vector b, TerrainPixel value, int fat_l
 void fill_all(Terrain * lvl, TerrainPixel c);
 void invert_all(Terrain * lvl);
 void unmark_all(Terrain * lvl);
+
+} // namespace crust

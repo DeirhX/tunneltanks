@@ -1,5 +1,7 @@
 ﻿#pragma once
 #include "render_surface.h"
+namespace crust
+{
 
 /*
  * WorldRenderSurfaces: Pixel surfaces for overlaying rarely modified terrain with often modified objects
@@ -20,7 +22,6 @@ struct WorldRenderSurfaces
     }
 };
 
-
 /*
  * Renderer: Takes care of rendering our RenderSurface to an actual device.
  */
@@ -37,9 +38,9 @@ class Renderer
     /* Note this will reinitialize the surface and throw everything away */
     void InitializeWorldSurfaces(Size dimensions);
     WorldRenderSurfaces & GetWorldSurfaces() { return this->render_surfaces; }
-  private:
-    
 
+  private:
     /* Logical surfaces to composite */
     WorldRenderSurfaces render_surfaces;
 };
+} // namespace MyNamespace

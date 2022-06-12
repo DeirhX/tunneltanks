@@ -5,6 +5,8 @@
 #include "gui_widgets.h"
 #include <Terrain.h>
 #include <types.h>
+namespace crust
+{
 
 class World;
 
@@ -73,3 +75,5 @@ class Screens
     static void TwoPlayerScreenSetup(Screen & screen, Tank & player_one, Tank & player_two);
     static void AIViewSinglePlayerSetup(Screen & screen, Tank & player_one, Tank & player_two);
 };
+
+} // namespace crust

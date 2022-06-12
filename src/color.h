@@ -1,5 +1,7 @@
 ﻿#pragma once
 #include <cstdint>
+namespace crust
+{
 
 struct ColorLayout
 {
@@ -20,7 +22,7 @@ struct Color : public ColorLayout
     Color Mask(Color other) const
     {
         return Color((this->r * other.r) / 255, (this->g * other.g) / 255, (this->b * other.b) / 255,
-                       (this->a * other.a) / 255);
+                     (this->a * other.a) / 255);
     }
     template <typename PixelDataType = Color>
     PixelDataType BlendWith(PixelDataType other) const
@@ -48,3 +50,5 @@ struct RenderedPixel : public Color
     RenderedPixel(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255) : Color(r, g, b, a) {}
     RenderedPixel(Color color) : Color(color) {}
 };
+
+} // namespace crust

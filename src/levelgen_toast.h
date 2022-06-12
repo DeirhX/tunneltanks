@@ -1,7 +1,7 @@
 #pragma once
 #include <Terrain.h>
 
-namespace levelgen::toast
+namespace crust::levelgen::toast
 {
 
 struct ToastParams

@@ -2,6 +2,8 @@
 #include "color_palette.h"
 #include "types.h"
 #include <cassert>
+namespace crust
+{
 
 ColorPalette Palette;
 /* Various colors for use in the game: */
@@ -108,3 +110,5 @@ void ColorPalette::SetTank(TankColor index, Color color_1, Color color_2, Color 
     Tanks[static_cast<int>(index)][1] = color_2;
     Tanks[static_cast<int>(index)][2] = color_3;
 }
+
+} // namespace MyNamespace

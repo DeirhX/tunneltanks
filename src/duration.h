@@ -1,5 +1,7 @@
 ﻿#pragma once
 #include <chrono>
+namespace crust
+{
 
 /*
  * Duration: represents duration of things, decremented once per frame by AdvanceStep
@@ -10,7 +12,8 @@ class Duration
 {
 
     duration_t value;
-public:
+
+  public:
     constexpr Duration() : value(0) {}
     constexpr explicit Duration(duration_t value) : value(value) {}
 
@@ -34,7 +37,10 @@ class Timer
     bool is_running = false;
 
   public:
-    Timer(duration_t timer_cooldown, bool auto_reset) : cooldown(timer_cooldown), interval(timer_cooldown), auto_reset(auto_reset), is_running(auto_reset) {}
+    Timer(duration_t timer_cooldown, bool auto_reset)
+        : cooldown(timer_cooldown), interval(timer_cooldown), auto_reset(auto_reset), is_running(auto_reset)
+    {
+    }
 
     bool Ready() const { return this->cooldown.Finished(); }
     bool IsRunning() const { return this->is_running; }
@@ -79,7 +85,7 @@ class Timer
 
 class RepetitiveTimer : public Timer
 {
-public:
+  public:
     RepetitiveTimer(duration_t timer_cooldown) : Timer(timer_cooldown, true) {}
 };
 
@@ -92,6 +98,7 @@ class ManualTimer : public Timer
 class AutoStartManualTimer : public Timer
 {
   public:
-    AutoStartManualTimer(duration_t timer_cooldown) : Timer(timer_cooldown, false)
-    { this->Start(); }
+    AutoStartManualTimer(duration_t timer_cooldown) : Timer(timer_cooldown, false) { this->Start(); }
 };
+
+} // namespace crust

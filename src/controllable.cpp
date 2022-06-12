@@ -2,12 +2,13 @@
 #include "controllable.h"
 #include "world.h"
 #include "position_component.h"
+namespace crust
+{
 
 Controllable::Controllable(Position position_, const Reactor & starting_reactor_state,
                            MaterialCapacity material_capacity, Terrain * level_)
-    : entity(crust::entities.registry.create_entity()), 
-      link_source(GetWorld(), position_, LinkPointType::Controllable), reactor(starting_reactor_state),
-      resources(material_capacity), level(level_)
+    : entity(crust::entities.registry.create_entity()), link_source(GetWorld(), position_, LinkPointType::Controllable),
+      reactor(starting_reactor_state), resources(material_capacity), level(level_)
 {
     entity.assign_component<Position>(position_);
     entity.assign_component<Speed>();
@@ -55,3 +56,4 @@ bool Controllable::HandleMove(DirectionF torch_heading, bool torch_use)
     position += speed;
     return true;
 }
+} // namespace crust

@@ -1,5 +1,7 @@
 ﻿#pragma once
 #include "controllable.h"
+namespace crust
+{
 
 class Swarmer : Controllable
 {
@@ -18,3 +20,5 @@ class Swarmer : Controllable
     void ApplyControllerOutput(ControllerOutput controls) override;
     void Die() override;
 };
+
+} // namespace crust

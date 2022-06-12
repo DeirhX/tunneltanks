@@ -3,7 +3,8 @@
 #include "entity.h"
 #include "link.h"
 #include "types.h"
-
+namespace crust
+{
 
 enum class CollisionType
 {
@@ -14,14 +15,12 @@ enum class CollisionType
 
 template <typename TCollisionFunc>
 concept CollisionEvaluator = requires(TCollisionFunc compute_collision, Direction theoretical_direction,
-                                        Position theoretical_position)
+                                      Position theoretical_position)
 {
     {
         compute_collision(theoretical_direction, theoretical_position)
-    }
-    ->same_as<CollisionType>;
+        } -> same_as<CollisionType>;
 };
-
 
 class Controllable : public Invalidable
 {
@@ -40,6 +39,7 @@ class Controllable : public Invalidable
     [[nodiscard]] Position & PositionRef() { return this->entity.get_component<Position>(); }
     [[nodiscard]] Speed & SpeedRef() { return this->entity.get_component<Speed>(); }
     [[nodiscard]] DirectionF & DirectionRef() { return this->entity.get_component<DirectionF>(); }
+
   public:
     Controllable(Position position_, const Reactor & starting_reactor_state, MaterialCapacity material_capacity,
                  Terrain * level_);
@@ -61,8 +61,10 @@ class Controllable : public Invalidable
     virtual void Die() = 0;
 
     bool HandleMove(DirectionF torch_heading, bool torch_use);
+
   protected:
-  /*  void SetPosition(const Position & new_position) { this->position = new_position; }
+    /*  void SetPosition(const Position & new_position) { this->position = new_position; }
     void SetDirection(const Direction & new_direction) { this->direction = new_direction; }*/
 };
 
+} // namespace crust

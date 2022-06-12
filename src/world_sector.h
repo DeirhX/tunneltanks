@@ -3,7 +3,6 @@
 #include "entity.h"
 #include "vector_2d.h"
 #include <boost/container/small_vector.hpp>
-
 namespace crust
 {
 

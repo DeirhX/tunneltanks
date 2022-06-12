@@ -3,6 +3,8 @@
 #include "types.h"
 #include <vector>
 
+namespace crust
+{
 class TerrainPixelSurface
 {
     std::vector<RenderedPixel> pixel_data;
@@ -16,3 +18,5 @@ class TerrainPixelSurface
     void SetPixel(Position pos, Color color);
     RenderedPixel GetPixel(Position pos);
 };
+
+} // namespace MyNamespace

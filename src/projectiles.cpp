@@ -10,35 +10,40 @@
 #include "mymath.h"
 #include "raycaster.h"
 #include "tank_list.h"
+namespace crust
+{
 
 void Bullet::Advance(TankList *)
 {
-    auto IteratePositions = [this](PositionF tested_pos, PositionF prev_pos) {
+    auto IteratePositions = [this](PositionF tested_pos, PositionF prev_pos)
+    {
         this->pos = tested_pos;
         this->pos_blur_from = prev_pos;
 
-        if (GetWorld()->GetCollisionSolver().TestCollide(this->pos.ToIntPosition(), 
-              [this](Tank & tank)
-        {
-                if (tank.GetColor() == this->tank->GetColor())
-                    return false;
-                tank.GetReactor().Exhaust(tweak::tank::ShotDamage);
-                return true;
-        },
-        [](Machine & machine)
-        {
-            if (!machine.IsBlockingCollision())
-                return false;
-            machine.GetReactor().Exhaust(tweak::tank::ShotDamage);
-            return true;
-        },
-        [](TerrainPixel level_pixel) { return Pixel::IsAnyCollision(level_pixel); }))
+        if (GetWorld()->GetCollisionSolver().TestCollide(
+                this->pos.ToIntPosition(),
+                [this](Tank & tank)
+                {
+                    if (tank.GetColor() == this->tank->GetColor())
+                        return false;
+                    tank.GetReactor().Exhaust(tweak::tank::ShotDamage);
+                    return true;
+                },
+                [](Machine & machine)
+                {
+                    if (!machine.IsBlockingCollision())
+                        return false;
+                    machine.GetReactor().Exhaust(tweak::tank::ShotDamage);
+                    return true;
+                },
+                [](TerrainPixel level_pixel) { return Pixel::IsAnyCollision(level_pixel); }))
 
         {
-            GetWorld()->GetProjectileList().Add(ExplosionDesc::AllDirections(
-                                           this->pos_blur_from.ToIntPosition(), tweak::explosion::normal::ShrapnelCount,
-                                           tweak::explosion::normal::Speed, tweak::explosion::normal::Frames)
-                                           .Explode<Shrapnel>(*level));
+            GetWorld()->GetProjectileList().Add(ExplosionDesc::AllDirections(this->pos_blur_from.ToIntPosition(),
+                                                                             tweak::explosion::normal::ShrapnelCount,
+                                                                             tweak::explosion::normal::Speed,
+                                                                             tweak::explosion::normal::Frames)
+                                                    .Explode<Shrapnel>(*level));
             /* Finally, remove it: */
             this->Invalidate();
             return false;
@@ -69,15 +74,14 @@ void FlyingBarrel::Advance(TankList *, ExplosionFuncType explosionFunc)
     int search_step = 0;
     const int search_step_count = this->explode_distance + int(std::round(this->speed.GetSize()));
 
-    auto IteratePositions = [this, &search_step, &prev_positions](PositionF tested_pos, PositionF) {
+    auto IteratePositions = [this, &search_step, &prev_positions](PositionF tested_pos, PositionF)
+    {
         prev_positions.push_back(tested_pos);
         ++search_step;
 
         bool is_collision = GetWorld()->GetCollisionSolver().TestCollide(
-            tested_pos.ToIntPosition(),
-            [this](Tank & tank) { return tank.GetColor() != this->tank->GetColor(); },
-            [](Machine &) { return true; },
-            [](TerrainPixel & pixel) { return Pixel::IsAnyCollision(pixel); });
+            tested_pos.ToIntPosition(), [this](Tank & tank) { return tank.GetColor() != this->tank->GetColor(); },
+            [](Machine &) { return true; }, [](TerrainPixel & pixel) { return Pixel::IsAnyCollision(pixel); });
 
         if (is_collision)
         {
@@ -87,8 +91,8 @@ void FlyingBarrel::Advance(TankList *, ExplosionFuncType explosionFunc)
         return true;
     };
 
-    bool collided = !Raycaster::Cast(this->pos, this->pos + (direction * float(search_step_count)),
-                                     IteratePositions, Raycaster::VisitFlags::PixelsMustTouchCorners);
+    bool collided = !Raycaster::Cast(this->pos, this->pos + (direction * float(search_step_count)), IteratePositions,
+                                     Raycaster::VisitFlags::PixelsMustTouchCorners);
 
     /* Now divine a position {explode_dist} steps past in the simulation and explode there if needed
      * It will always be in the first slot of the circular buffer
@@ -101,14 +105,13 @@ void FlyingBarrel::Advance(TankList *, ExplosionFuncType explosionFunc)
     }
 }
 
-void FlyingBarrel::Draw(Surface * drawBuffer)
-{
-    drawBuffer->SetPixel(this->pos.ToIntPosition(), draw_color);
-}
+void FlyingBarrel::Draw(Surface * drawBuffer) { drawBuffer->SetPixel(this->pos.ToIntPosition(), draw_color); }
 
 void ConcreteBarrel::Advance(TankList * tankList)
 {
-    auto ExplosionFunc = [](PositionF proj_position, SpeedF proj_speed, Terrain * proj_level, ProjectileList * projectile_list) {
+    auto ExplosionFunc =
+        [](PositionF proj_position, SpeedF proj_speed, Terrain * proj_level, ProjectileList * projectile_list)
+    {
         projectile_list->Add(ExplosionDesc::Fan(proj_position.ToIntPosition(), proj_speed, math::Radians{math::half_pi},
                                                 tweak::explosion::dirt::ShrapnelCount, tweak::explosion::dirt::Speed,
                                                 tweak::explosion::dirt::Frames)
@@ -119,7 +122,9 @@ void ConcreteBarrel::Advance(TankList * tankList)
 
 void DirtBarrel::Advance(TankList * tankList)
 {
-    auto ExplosionFunc = [](PositionF proj_position, SpeedF proj_speed, Terrain * proj_level, ProjectileList * projectile_list) {
+    auto ExplosionFunc =
+        [](PositionF proj_position, SpeedF proj_speed, Terrain * proj_level, ProjectileList * projectile_list)
+    {
         projectile_list->Add(ExplosionDesc::Fan(proj_position.ToIntPosition(), proj_speed, math::Radians{math::half_pi},
                                                 tweak::explosion::dirt::ShrapnelCount, tweak::explosion::dirt::Speed,
                                                 tweak::explosion::dirt::Frames)
@@ -132,13 +137,14 @@ void DirtBarrel::Advance(TankList * tankList)
 
 void ShrapnelBase::Advance(TankList * tankList)
 {
-    auto AdvanceStepFunc = [this](PositionF, PositionF, TankList *) {
+    auto AdvanceStepFunc = [this](PositionF, PositionF, TankList *)
+    {
         /* Make sure we didn't hit a level detail: */
         TerrainPixel c = level->GetPixel(this->pos.ToIntPosition());
         if (Pixel::IsBlockingCollision(c))
         {
-            if ((Pixel::IsConcrete(c) && Random.Bool(tweak::explosion::ChanceToDestroyConcrete))
-                || (Pixel::IsRock(c) && Random.Bool(tweak::explosion::ChanceToDestroyRock)))
+            if ((Pixel::IsConcrete(c) && Random.Bool(tweak::explosion::ChanceToDestroyConcrete)) ||
+                (Pixel::IsRock(c) && Random.Bool(tweak::explosion::ChanceToDestroyRock)))
             {
                 level->SetPixel(this->pos.ToIntPosition(),
                                 Random.Bool(500) ? TerrainPixel::DecalHigh : TerrainPixel::DecalLow);
@@ -164,7 +170,8 @@ void ShrapnelBase::AdvanceShrapnel(TankList * tankList, OnAdvanceFuncType OnAdva
         return;
     }
 
-    auto IteratePositions = [this, OnAdvanceFunc, tankList](PositionF tested_pos, PositionF prev_pos) {
+    auto IteratePositions = [this, OnAdvanceFunc, tankList](PositionF tested_pos, PositionF prev_pos)
+    {
         /* Move the effect: */
         this->pos = tested_pos;
 
@@ -175,7 +182,6 @@ void ShrapnelBase::AdvanceShrapnel(TankList * tankList, OnAdvanceFuncType OnAdva
                     Raycaster::VisitFlags::PixelsMustTouchCorners);
 }
 
-
 void ShrapnelBase::Draw(Surface * drawBuffer)
 {
     drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::FireHot));
@@ -183,13 +189,14 @@ void ShrapnelBase::Draw(Surface * drawBuffer)
 
 void ConcreteFoam::Advance(TankList * tankList)
 {
-    auto AdvanceStepFunc = [this](PositionF, PositionF prev_pos, TankList *) {
-
+    auto AdvanceStepFunc = [this](PositionF, PositionF prev_pos, TankList *)
+    {
         /* Make sure we didn't hit a level detail: */
         TerrainPixel c = level->GetPixel(this->pos.ToIntPosition());
         if (Pixel::IsAnyCollision(c) && !Pixel::IsConcrete(c))
         {
-            level->SetPixel(prev_pos.ToIntPosition(), Random.Bool(500) ? TerrainPixel::ConcreteHigh : TerrainPixel::ConcreteLow);
+            level->SetPixel(prev_pos.ToIntPosition(),
+                            Random.Bool(500) ? TerrainPixel::ConcreteHigh : TerrainPixel::ConcreteLow);
             this->Invalidate();
             return false;
         }
@@ -206,7 +213,8 @@ void ConcreteFoam::Draw(Surface * drawBuffer)
 
 void DirtFoam::Advance(TankList * tankList)
 {
-    auto AdvanceStepFunc = [this](PositionF, PositionF prev_pos, TankList *) {
+    auto AdvanceStepFunc = [this](PositionF, PositionF prev_pos, TankList *)
+    {
         /* Make sure we didn't hit a level detail: */
         TerrainPixel c = level->GetPixel(this->pos.ToIntPosition());
         if (Pixel::IsAnyCollision(c))
@@ -226,3 +234,5 @@ void DirtFoam::Draw(Surface * drawBuffer)
 {
     drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::DirtContainerShot));
 }
+
+} // namespace crust

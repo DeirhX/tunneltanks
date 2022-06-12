@@ -1,6 +1,8 @@
 #pragma once
 
 #include <types.h>
+namespace crust
+{
 
 class Raycaster
 {
@@ -82,3 +84,5 @@ class Raycaster
         return true;
     }
 };
+
+} // namespace crust

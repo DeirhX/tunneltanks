@@ -3,6 +3,8 @@
 #include "link.h"
 #include "tweak.h"
 #include "types.h"
+namespace crust
+{
 
 class Terrain;
 
@@ -35,6 +37,7 @@ class Machine : public Invalidable
 
   protected:
     Machine(Position position, Tank * owner, Reactor reactor_, BoundingBox bounding_box);
+
   public:
     const Position & GetPosition() const { return this->position; }
 
@@ -56,7 +59,6 @@ class Machine : public Invalidable
     void SetIsTransported(bool new_value);
 };
 
-
 /*
  * Harvester: machine that harvests resources directly from environment and offers them to players 
  */
@@ -75,17 +77,15 @@ class Harvester final : public Machine
 
   public:
     static inline BoundingBox bounding_box = BoundingBox{Size{5, 5}};
+
   public:
     Harvester(Position position, HarvesterType type, Tank * tank)
-        : Machine{
-            position, tank,
-            tweak::rules::HarvesterReactor,
-            Harvester::bounding_box},
-        type(type)
+        : Machine{position, tank, tweak::rules::HarvesterReactor, Harvester::bounding_box}, type(type)
     {
     }
     void Advance(Terrain * level) override;
     void Draw(Surface * surface) const override;
+
   private:
     void Die(Terrain * level) override;
 };
@@ -98,11 +98,13 @@ class Charger final : public Machine
 {
     using Base = Machine;
     RepetitiveTimer charge_timer{tweak::rules::ChargeTimer};
+
   public:
     static inline BoundingBox bounding_box = BoundingBox{Size{5, 5}};
 
   public:
-    Charger(Position position, Tank * tank) : Machine{position, tank, tweak::rules::ChargerReactor, Charger::bounding_box}
+    Charger(Position position, Tank * tank)
+        : Machine{position, tank, tweak::rules::ChargerReactor, Charger::bounding_box}
     {
     }
 
@@ -124,10 +126,13 @@ class MachineTemplate : public Machine
     MaterialAmount build_cost = {};
     MaterialContainer * paying_container = nullptr;
     Position origin_position;
+
   protected:
     bool PayCost() const;
+
   public:
-    MachineTemplate(Position position, BoundingBox bounding_box, MaterialAmount build_cost_, MaterialContainer & paying_host);
+    MachineTemplate(Position position, BoundingBox bounding_box, MaterialAmount build_cost_,
+                    MaterialContainer & paying_host);
 
     void Advance(Terrain *) override;
     void ResetToOrigin();
@@ -137,7 +142,6 @@ class MachineTemplate : public Machine
 
     [[nodiscard]] bool IsAvailable() const { return this->is_available; }
 };
-
 
 /* HarvesterTemplate: blueprint of a Harvester machine */
 class HarvesterTemplate final : public MachineTemplate
@@ -150,12 +154,13 @@ class HarvesterTemplate final : public MachineTemplate
     Machine * PayAndBuildMachine() const override;
 };
 
-
 /* ChargerTemplate: blueprint of a Charger machine */
 class ChargerTemplate final : public MachineTemplate
 {
-public:
+  public:
     ChargerTemplate(Position position, MaterialContainer & paying_host);
     void Draw(Surface * surface) const override;
     Machine * PayAndBuildMachine() const override;
 };
+
+} // namespace crust

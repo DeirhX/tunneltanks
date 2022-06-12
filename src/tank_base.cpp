@@ -2,6 +2,8 @@
 #include "tank_base.h"
 #include "shape_renderer.h"
 #include "world.h"
+namespace crust
+{
 
 TankBase::TankBase(Position position, TankColor color) : entity(crust::entities.registry.create_entity()), color(color)
 {
@@ -39,8 +41,8 @@ void TankBase::DrawMaterialStorage(Surface * surface) const
     constexpr int cells_x = 3;
     constexpr int cells_y = 3;
 
-    auto paint_material_cell = [this, surface](const Rect & rect, Offset cell_num) {
-
+    auto paint_material_cell = [this, surface](const Rect & rect, Offset cell_num)
+    {
         int mat_current = this->materials.GetDirt();
         int mat_capacity = this->materials.GetDirtCapacity();
 
@@ -48,7 +50,8 @@ void TankBase::DrawMaterialStorage(Surface * surface) const
         int cell_capacity_min = cell_ordinal * mat_capacity / (cells_x * cells_y);
         int cell_capacity_max = (1 + cell_ordinal) * mat_capacity / (cells_x * cells_y);
 
-        float this_cell_full = std::clamp(float(mat_current - cell_capacity_min) / float(cell_capacity_max - cell_capacity_min), 0.f, 1.f);
+        float this_cell_full =
+            std::clamp(float(mat_current - cell_capacity_min) / float(cell_capacity_max - cell_capacity_min), 0.f, 1.f);
 
         /* Blend color alpha to match desired intensity */
         Color fill_color = Palette.Get(Colors::MaterialStatusFill);
@@ -148,8 +151,6 @@ void TankBase::Draw(Surface * surface) const
 
 void TankBase::Advance() { this->reactor.Add(tweak::base::ReactorRecoveryRate); }
 
-
-
 /* TODO: This needs to be done in a different way, as this approach will take 
  * MAX_TANKS^2 time to do all collision checks for all tanks. It should only
  * take MAX_TANKS time. */
@@ -160,13 +161,13 @@ TankBase * TankBases::CheckBaseCollision(Position tested_pos)
     crust::entities.const_registry.for_joined_components<Position, BoundingBox, crust::components::TankBase>(
         [tested_pos, &collided_base_color](const ecs::const_entity, Position pos, BoundingBox bbox,
                                            const crust::components::TankBase base)
-    {
+        {
             if (bbox.IsInside(tested_pos, pos))
             {
                 collided_base_color = base.color;
             }
-    }, ecs::exists<crust::components::BoundingBoxCollision>{});
-
+        },
+        ecs::exists<crust::components::BoundingBoxCollision>{});
 
     for (TankColor id = 0; id < tweak::world::MaxPlayers; id++)
     {
@@ -189,7 +190,7 @@ TankBase * TankBases::GetSpawn(TankColor color)
 void TankBases::SetSpawn(TankColor color, std::unique_ptr<TankBase> && tank_base)
 {
     assert(color >= 0 && color < tweak::world::MaxPlayers);
-    // All colors before this should be already filled in 
+    // All colors before this should be already filled in
     assert(this->tank_bases.size() == color);
     this->tank_bases.emplace_back(*tank_base);
 }
@@ -198,7 +199,6 @@ void TankBases::SetSpawn(TankColor color, Position position)
 {
     this->SetSpawn(color, std::make_unique<TankBase>(position, color));
 }
-
 
 /* TODO: Rethink the method for adding bases, as the current method DEMANDS that
  *       you use MAX_TANKS tanks. */
@@ -209,7 +209,6 @@ void TankBases::CreateBasesInTerrain(Terrain & terrain)
         CreateBaseInTerrain({this->tank_bases[i].GetPosition().x, this->tank_bases[i].GetPosition().y}, i, terrain);
     }
 }
-
 
 void TankBases::CreateBaseInTerrain(Position pos, TankColor color, Terrain & terrain)
 {
@@ -241,3 +240,4 @@ void TankBases::BeginGame()
         tank_base.BeginGame();
     }
 }
+} // namespace crust

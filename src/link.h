@@ -6,14 +6,16 @@
 #include "duration.h"
 #include "tweak.h"
 #include "types.h"
+namespace crust
+{
 
 class Surface;
 
 enum class LinkPointType
 {
     Base,
-    Machine, /* Placed machine */
-    Transit, /* Not yet placed */
+    Machine,      /* Placed machine */
+    Transit,      /* Not yet placed */
     Controllable, /* Tank being charged */
 };
 
@@ -38,7 +40,7 @@ class LinkPoint : public Invalidable
     bool is_powered = false; /* Is connected to a powered node */
 
     bool is_part_of_graph = false; /* Is already parsed by solver  */
-    public:
+  public:
     LinkPoint(Position position, LinkPointType type_, LinkMap * owner_ = nullptr);
     ~LinkPoint();
 
@@ -55,13 +57,12 @@ class LinkPoint : public Invalidable
     [[nodiscard]] bool IsEnabled() const { return this->is_enabled; }
     [[nodiscard]] bool IsPowered() const { return this->is_powered; }
 
-
     void SetPosition(Position position_);
     void SetIsPowered(bool value) { this->is_powered = value; }
     void SetIsPartOfGraph(bool value) { this->is_part_of_graph = value; }
 
     void RemovePossibleLink(LinkPoint * possible_link);
-    void UpdatePossibleLink(LinkPoint * possible_link); 
+    void UpdatePossibleLink(LinkPoint * possible_link);
     void ComputePossibleLinks();
     void ComputeIsPowered();
 
@@ -74,16 +75,15 @@ class LinkPoint : public Invalidable
     void Advance();
 };
 
-
 /* LinkPointSource: Wrapper to manage the lifetime of LinkPoint that resides in LinkMap array.
  *   Should be member of classes that own a LinkPoint
  */
 class LinkPointSource
 {
-private:
+  private:
     LinkPoint * link_point = nullptr;
 
-public:
+  public:
     LinkPointSource() = default;
     LinkPointSource(class World * world, Position position, LinkPointType type);
     /* Ban copies, force move to transfer ownership of link_point */
@@ -100,7 +100,6 @@ public:
     void Disable() { this->link_point->Disable(); }
     void Enable() { this->link_point->Enable(); }
 };
-
 
 enum class LinkType
 {
@@ -149,6 +148,7 @@ class Link : public Invalidable
 
     LinkType type = LinkType::Blocked;
     RepetitiveTimer collision_check_timer = {tweak::world::LinkCollisionCheckInterval};
+
   public:
     Link(LinkPoint * from_, LinkPoint * to_);
 
@@ -202,3 +202,4 @@ class LinkMap
     void Draw(Surface * surface) const;
 };
 
+} // namespace crust

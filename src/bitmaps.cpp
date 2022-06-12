@@ -3,10 +3,12 @@
 #include "color.h"
 #include "color_palette.h"
 #include "screen.h"
+namespace crust
+{
 
 template <typename DataType>
 template <typename GetColorFunc>
-void Bitmap<DataType>::Draw(Screen *screen, ScreenPosition position, GetColorFunc GetPixelColor)
+void Bitmap<DataType>::Draw(Screen * screen, ScreenPosition position, GetColorFunc GetPixelColor)
 {
     int x = 0;
     int y = 0;
@@ -46,7 +48,7 @@ void Bitmap<DataType>::Draw(Screen * screen, ScreenRect screen_rect, ImageRect s
 {
     auto actual_width = std::min(source_rect.size.x, screen_rect.size.x);
     auto actual_height = std::min(source_rect.size.y, screen_rect.size.y);
-    for (int x = 0; x < actual_width ; ++x)
+    for (int x = 0; x < actual_width; ++x)
         for (int y = 0; y < actual_height; ++y)
         {
             /* Draw its color or transparent nothing if it's a black/white bitmap */
@@ -58,14 +60,12 @@ void Bitmap<DataType>::Draw(Screen * screen, ScreenRect screen_rect, ImageRect s
 void MonoBitmap::Draw(Screen * screen, ScreenPosition screen_pos, Color color)
 {
     Base::Draw(screen, screen_pos,
-               [this, color](int index) { return this->At(index) ? color : 
-                    Palette.Get(Colors::Transparent); });
+               [this, color](int index) { return this->At(index) ? color : Palette.Get(Colors::Transparent); });
 }
 void MonoBitmap::Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, Color color)
 {
     Base::Draw(screen, screen_pos, source_rect,
-               [this, color](int index) { return this->At(index) ? color : 
-                    Palette.Get(Colors::Transparent); });
+               [this, color](int index) { return this->At(index) ? color : Palette.Get(Colors::Transparent); });
 }
 
 void MonoBitmap::Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, Color color)
@@ -74,21 +74,18 @@ void MonoBitmap::Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_
                [this, color](int index) { return this->At(index) ? color : Palette.Get(Colors::Transparent); });
 }
 
-        void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos)
+void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos)
 {
-    Base::Draw(screen, screen_pos, 
-               [this](int index) { return this->At(index); });
+    Base::Draw(screen, screen_pos, [this](int index) { return this->At(index); });
 }
 void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos, Color color_filter)
 {
-    Base::Draw(screen, screen_pos, 
-               [this, color_filter](int index) { return color_filter.Mask(this->At(index)); });
+    Base::Draw(screen, screen_pos, [this, color_filter](int index) { return color_filter.Mask(this->At(index)); });
 }
 
 void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect)
 {
-    Base::Draw(screen, screen_pos, source_rect, 
-               [this](int index) { return this->At(index); });
+    Base::Draw(screen, screen_pos, source_rect, [this](int index) { return this->At(index); });
 }
 void ColorBitmap::Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect)
 {
@@ -104,3 +101,5 @@ void ColorBitmap::Draw(Screen * screen, ScreenRect screen_rect, ImageRect source
     Base::Draw(screen, screen_rect, source_rect,
                [this, color_filter](int index) { return color_filter.Mask(this->At(index)); });
 }
+
+} // namespace MyNamespace

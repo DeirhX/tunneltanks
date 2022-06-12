@@ -1,5 +1,5 @@
 #include "pch.h"
-#include <Terrain.h>
+#include <terrain.h>
 #include <levelgenutil.h>
 #include <memalloc.h>
 #include <random.h>
@@ -7,7 +7,7 @@
 
 #include "world.h"
 
-namespace levelgen::braid
+namespace crust::levelgen::braid
 {
 
 /* REMEMBER: The bases are centered in cells, so these cells need to larger: */

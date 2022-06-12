@@ -5,6 +5,8 @@
 #include "world.h"
 
 #include <cassert>
+namespace crust
+{
 
 /*
 void WeaponCannonDescriptor::SpawnProjectile(Position pos, DirectionF direction, Tank * tank)
@@ -18,10 +20,7 @@ void WeaponConcreteSprayDescriptor::SpawnProjectile(Position pos, DirectionF dir
 }
 */
 
-void Weapon::CycleNext()
-{
-    this->current = WeaponType(((int(this->current) + 1) % int(WeaponType::Size)));
-}
+void Weapon::CycleNext() { this->current = WeaponType(((int(this->current) + 1) % int(WeaponType::Size))); }
 
 void Weapon::CyclePrevious()
 {
@@ -41,8 +40,8 @@ Duration Weapon::Fire(Position pos, DirectionF direction, Tank * tank)
             Bullet(pos, SpeedF(direction * tweak::weapon::CannonBulletSpeed), &GetWorld()->GetTerrain(), tank));
         return tweak::weapon::CannonCooldown;
     case WeaponType::ConcreteSpray:
-        GetWorld()->GetProjectileList().Add(
-            ConcreteBarrel{pos, SpeedF(direction * tweak::weapon::ConcreteBarrelSpeed), &GetWorld()->GetTerrain(), tank});
+        GetWorld()->GetProjectileList().Add(ConcreteBarrel{pos, SpeedF(direction * tweak::weapon::ConcreteBarrelSpeed),
+                                                           &GetWorld()->GetTerrain(), tank});
         return tweak::weapon::ConcreteSprayCooldown;
     case WeaponType::DirtSpray:
         GetWorld()->GetProjectileList().Add(
@@ -53,3 +52,5 @@ Duration Weapon::Fire(Position pos, DirectionF direction, Tank * tank)
     }
     return tweak::weapon::CannonCooldown;
 }
+
+} // namespace crust

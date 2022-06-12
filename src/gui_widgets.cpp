@@ -8,7 +8,7 @@
 #include "tweak.h"
 #include <string>
 
-namespace widgets
+namespace crust::widgets
 {
 
 void widgets::TankView::DrawStatic(Screen & screen)

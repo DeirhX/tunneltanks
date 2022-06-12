@@ -1,5 +1,7 @@
 #pragma once
 #include <stdexcept>
+namespace crust
+{
 
 class GameException : public std::runtime_error
 {
@@ -34,3 +36,4 @@ class NoControllersException : public GameException
   public:
     NoControllersException(const char * message) : GameException(message) {}
 };
+} // namespace crust

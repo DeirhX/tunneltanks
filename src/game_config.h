@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "levelgen_type.h"
 #include "types.h"
+namespace crust
+{
 
 struct VideoConfig
 {
@@ -20,3 +22,5 @@ struct GameConfig
     bool use_ai = true;
     bool follow_ai = false;
 };
+
+} // namespace crust

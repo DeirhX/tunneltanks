@@ -6,6 +6,8 @@
 #include "types.h"
 #include <memory>
 #include <SDL.h>
+namespace crust
+{
 
 /*
  *  SdlRenderer wrapper over SDL_Renderer, SDL_Texture and SDL_Surface
@@ -47,19 +49,18 @@ void SdlRenderer::Recreate(SdlWindow * new_owning_window)
     this->native_renderer.reset();
     this->native_texture.reset();
 
-    this->native_renderer = {
-        SDL_CreateRenderer(owning_window->GetNativeWindow(), -1, SDL_RENDERER_ACCELERATED),
-        [](SDL_Renderer *) { /* SDL_DestroyRenderer(renderer);*/ /* Destroyed by window */ }};
+    this->native_renderer = {SDL_CreateRenderer(owning_window->GetNativeWindow(), -1, SDL_RENDERER_ACCELERATED),
+                             [](SDL_Renderer *) { /* SDL_DestroyRenderer(renderer);*/ /* Destroyed by window */ }};
     if (!this->native_renderer)
         throw GameInitException("Failed to create game renderer.");
     if (SDL_RenderSetLogicalSize(this->native_renderer.get(), this->render_surface->GetSize().x,
                                  this->render_surface->GetSize().y))
         throw GameInitException("Failed to set logical size.");
 
-    this->native_texture = {
-        SDL_CreateTexture(this->native_renderer.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
-                          this->render_surface->GetSize().x, this->render_surface->GetSize().y),
-        [](SDL_Texture *) { /* SDL_DestroyTexture(texture); */ /* Destroyed by the surface */ }};
+    this->native_texture = {SDL_CreateTexture(this->native_renderer.get(), SDL_PIXELFORMAT_ARGB8888,
+                                              SDL_TEXTUREACCESS_STREAMING, this->render_surface->GetSize().x,
+                                              this->render_surface->GetSize().y),
+                            [](SDL_Texture *) { /* SDL_DestroyTexture(texture); */ /* Destroyed by the surface */ }};
     if (!this->native_texture)
         throw GameInitException("Failed to create texture to render into.");
 
@@ -125,3 +126,5 @@ void SdlCursor::Show()
     SDL_SetCursor(nullptr);
     SDL_ShowCursor(SDL_ENABLE);
 }
+
+} // namespace crust

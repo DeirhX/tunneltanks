@@ -2,6 +2,8 @@
 #include "renderer.h"
 
 #include "color_palette.h"
+namespace crust
+{
 
 void Renderer::InitializeWorldSurfaces(Size dimensions)
 {
@@ -9,3 +11,5 @@ void Renderer::InitializeWorldSurfaces(Size dimensions)
     render_surfaces.terrain_surface.SetDefaultColor(static_cast<Color>(Palette.Get(Colors::Rock)));
     render_surfaces.objects_surface.SetDefaultColor({});
 }
+
+} // namespace MyNamespace

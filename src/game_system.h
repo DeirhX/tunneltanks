@@ -7,7 +7,8 @@
 #include "types.h"
 #include <string_view>
 
-
+namespace crust
+{
 /*
  * Window: Represents the game native window
  */
@@ -37,7 +38,7 @@ class Cursor
  */
 class BmpDecoder
 {
-public:
+  public:
     virtual ~BmpDecoder() = default;
     virtual ColorBitmap LoadRGBA(std::string_view relative_image_path) = 0;
     virtual MonoBitmap LoadGrayscale(std::string_view relative_image_path) = 0;
@@ -51,10 +52,9 @@ public:
 class GameSystem
 {
   protected:
-    
     ScreenRenderSurface render_surface; /* Final rendered picture, ready to be copied into VRAM */
   public:
-    GameSystem(Size render_surface_size) : render_surface(render_surface_size) { }
+    GameSystem(Size render_surface_size) : render_surface(render_surface_size) {}
     virtual ~GameSystem() = default;
     ScreenRenderSurface * GetScreenSurface()
     {
@@ -71,3 +71,5 @@ class GameSystem
 inline std::unique_ptr<GameSystem> global_game_system;
 std::unique_ptr<GameSystem> CreateGameSystem(VideoConfig video_config);
 inline GameSystem * GetSystem() { return global_game_system.get(); }
+
+} // namespace crust

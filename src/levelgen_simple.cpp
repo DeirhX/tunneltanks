@@ -7,7 +7,7 @@
 #include <random.h>
 #include <types.h>
 
-namespace levelgen::simple
+namespace crust::levelgen::simple
 {
 
 constexpr int BORDER = 80;

@@ -1,5 +1,7 @@
 ﻿#pragma once
 #include "containers.h"
+namespace crust
+{
 
 template <typename... ItemType>
 class ItemListAdaptor
@@ -36,3 +38,5 @@ class ItemListAdaptor
     void RemoveAll() { items.RemoveAll(); };
     void Shrink() { this->items.Shrink(); }
 };
+
+} // namespace crust

@@ -6,6 +6,8 @@
 #include "types.h"
 #include "weapon.h"
 #include "gui_widgets.h"
+namespace crust
+{
 
 class Terrain;
 class Surface;
@@ -47,3 +49,5 @@ class TankTurret
     void HandleShoot();
     void Reset();
 };
+
+} // namespace crust

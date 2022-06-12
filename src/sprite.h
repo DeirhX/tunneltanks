@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "containers.h"
 #include "duration.h"
+namespace crust
+{
 
 class Terrain;
 class Surface;
@@ -16,7 +18,7 @@ class Sprite : public Invalidable
   public:
     Sprite(Position position_) : position(position_) {}
     virtual void Draw(Surface & surface) const = 0;
-    virtual void Advance(Terrain * level) {};
+    virtual void Advance(Terrain * level){};
 
     void SetPosition(Position new_position) { this->position = new_position; }
     [[nodiscard]] Position GetPosition() const { return this->position; }
@@ -37,3 +39,4 @@ class FailedInteraction : public Sprite
     void Advance(Terrain * level) override;
     void Draw(Surface & surface) const override;
 };
+} // namespace crust

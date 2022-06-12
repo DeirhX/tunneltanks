@@ -9,6 +9,8 @@
 #include "sdl_controller.h"
 #include "tank.h"
 #include "tweak.h"
+namespace crust
+{
 
 /* Set up SDL: */
 void gamelib_init()
@@ -107,3 +109,5 @@ void gamelib_tank_attach(Tank * tank, int tank_num, int num_players)
         }
     }
 }
+
+} // namespace crust

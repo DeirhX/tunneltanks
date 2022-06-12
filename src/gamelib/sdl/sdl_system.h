@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "bitmap.h"
 #include "sdl_renderer.h"
+namespace crust
+{
 
 struct VideoConfig;
 
@@ -11,6 +13,7 @@ class SdlSystem : public GameSystem
     SdlCursor cursor;
     SdlBmpDecoder bmp_decoder;
     FontRenderer font_renderer;
+
   public:
     explicit SdlSystem(VideoConfig video_config);
     SdlRenderer * GetRenderer() override { return &this->renderer; }
@@ -20,3 +23,4 @@ class SdlSystem : public GameSystem
     FontRenderer * GetFontRenderer() override { return &this->font_renderer; }
 };
 
+} // namespace crust

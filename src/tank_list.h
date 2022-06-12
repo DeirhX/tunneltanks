@@ -2,6 +2,8 @@
 #include "containers.h"
 #include "tank.h"
 #include "types.h"
+namespace crust
+{
 
 class ProjectileList;
 class TankBase;
@@ -34,3 +36,5 @@ class TankList
             tank_func(&tank);
     }
 };
+
+} // namespace crust

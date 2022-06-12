@@ -6,6 +6,8 @@
 #include <cassert>
 #include <SDL.h>
 #include <vector>
+namespace crust
+{
 
 ColorBitmap SdlBmpDecoder::LoadRGBA(std::string_view relative_image_path)
 {
@@ -42,7 +44,8 @@ void BmpFile::SaveToFile(const ColorBitmap & data, std::string_view file_name)
     for (int i = 0; i < static_cast<int>(data.GetLength()); ++i)
     {
         std::uint32_t mapped_color = SDL_MapRGBA(native_surface->format, data[i].r, data[i].g, data[i].b, data[i].a);
-        std::memcpy(static_cast<std::uint8_t *>(native_surface->pixels) + sizeof(Color) * i, &mapped_color, sizeof(Color));
+        std::memcpy(static_cast<std::uint8_t *>(native_surface->pixels) + sizeof(Color) * i, &mapped_color,
+                    sizeof(Color));
     }
 
     /* ... and unlock, and we're good! :) */
@@ -83,7 +86,8 @@ BitmapType BmpFile::LoadFromFile(std::string_view file_name, RawDataDecodeFunc D
 
 ColorBitmap BmpFile::LoadRGBAFromFile(std::string_view file_name)
 {
-    auto decode_func = [](std::uint32_t file_data, SDL_PixelFormat * file_data_format, Color * target_data) {
+    auto decode_func = [](std::uint32_t file_data, SDL_PixelFormat * file_data_format, Color * target_data)
+    {
         /* I want only alpha which I know will be saved last. The rest can be thrown away.*/
         SDL_GetRGBA(file_data, file_data_format, &target_data->r, &target_data->g, &target_data->b, &target_data->a);
     };
@@ -93,19 +97,21 @@ ColorBitmap BmpFile::LoadRGBAFromFile(std::string_view file_name)
 
 MonoBitmap BmpFile::LoadGrayscaleFromFile(std::string_view file_name)
 {
-    auto decode_func = [](std::uint8_t file_data, SDL_PixelFormat *, std::uint8_t * target_data) {
-        *target_data = file_data;
-    };
+    auto decode_func = [](std::uint8_t file_data, SDL_PixelFormat *, std::uint8_t * target_data)
+    { *target_data = file_data; };
     return BmpFile::LoadFromFile<MonoBitmap, std::uint8_t>(file_name, decode_func);
 }
 
 MonoBitmap BmpFile::LoadGrayscaleFromRGBA(std::string_view file_name)
 {
-    auto decode_func = [](std::uint32_t file_data, SDL_PixelFormat * file_data_format, std::uint8_t * target_data) {
-        std::uint8_t discard;  // NOLINT(cppcoreguidelines-init-variables)
+    auto decode_func = [](std::uint32_t file_data, SDL_PixelFormat * file_data_format, std::uint8_t * target_data)
+    {
+        std::uint8_t discard; // NOLINT(cppcoreguidelines-init-variables)
         /* I want only alpha which I know will be saved last. The rest can be thrown away.*/
         SDL_GetRGBA(file_data, file_data_format, &discard, &discard, &discard, target_data);
     };
 
     return BmpFile::LoadFromFile<MonoBitmap, std::uint32_t>(file_name, decode_func);
 }
+
+} // namespace crust

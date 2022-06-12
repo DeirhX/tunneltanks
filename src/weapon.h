@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "tweak.h"
 #include "types.h"
+namespace crust
+{
 
 class Tank;
 
@@ -55,3 +57,4 @@ class Weapon
 
     Duration Fire(Position pos, DirectionF direction, Tank * tank);
 };
+} // namespace crust

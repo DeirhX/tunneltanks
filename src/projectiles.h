@@ -7,10 +7,12 @@
 #include "types.h"
 #include <containers.h>
 #include <vector>
+namespace crust
+{
 
 namespace math
 {
-struct Radians;
+    struct Radians;
 }
 
 enum class ProjectileType
@@ -82,7 +84,8 @@ class Shrapnel final : public ShrapnelBase
 class ConcreteFoam final : public ShrapnelBase
 {
   public:
-    ConcreteFoam(Position position, SpeedF speed, int life, Terrain * level) : ShrapnelBase(position, speed, life, level)
+    ConcreteFoam(Position position, SpeedF speed, int life, Terrain * level)
+        : ShrapnelBase(position, speed, life, level)
     {
     }
     void Advance(class TankList * tankList) override;
@@ -253,3 +256,5 @@ std::vector<ShrapnelType> ExplosionDesc::Explode(Terrain & level) const
     }
     return items;
 }
+
+} // namespace crust

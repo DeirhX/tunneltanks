@@ -3,6 +3,8 @@
 #include "Terrain.h"
 #include "tank.h"
 #include <cstdlib>
+namespace crust
+{
 
 LevelView::QueryResult LevelView::QueryPoint(Offset offset) const
 {
@@ -44,3 +46,4 @@ LevelView::QueryResult LevelView::QueryCircle(Offset offset) const
 //}
 //
 //
+} // namespace crust

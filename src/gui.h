@@ -5,16 +5,19 @@
 #include <nanogui/nanogui.h>
 #pragma warning(pop)
 #include <thread>
-
-
+namespace crust
+{
 
 class GuiEngine
 {
-public:
+  public:
     GuiEngine();
     void Present();
 
     void ShowSuchTestWindow();
-private:
+
+  private:
     std::thread gui_thread;
 };
+
+} // namespace crust

@@ -1,6 +1,8 @@
 ﻿#include "pch.h"
 #include "render_surface.h"
 #include "shape_renderer.h"
+namespace crust
+{
 
 void Surface::Clear()
 {
@@ -33,16 +35,14 @@ void Surface::SetPixel(Position position, Color color)
         this->change_list.emplace_back(position);
 }
 
-void Surface::FillRectangle(Rect rect, Color color) {
-    ShapeRenderer::FillRectangle(this, rect, color);
-}
+void Surface::FillRectangle(Rect rect, Color color) { ShapeRenderer::FillRectangle(this, rect, color); }
 
 void Surface::OverlaySurface(const Surface * other)
 {
     assert(other->size == this->size);
     if (other->use_change_list)
     {
-        for (const Position& pos : other->change_list)
+        for (const Position & pos : other->change_list)
         {
             SetPixel(pos, other->GetPixel(pos));
         }
@@ -56,3 +56,4 @@ void Surface::OverlaySurface(const Surface * other)
     }
 }
 
+} // namespace MyNamespace

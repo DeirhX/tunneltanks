@@ -4,6 +4,8 @@
 #include "shape_renderer.h"
 
 #include "mymath.h"
+namespace crust
+{
 
 void ShapeRenderer::DrawLine(Surface & surface, Position from, Position to, Color color)
 {
@@ -25,7 +27,7 @@ void ShapeRenderer::DrawLine(Surface & surface, Position from, Position to, Colo
         OffsetF one_step = OffsetF{diff} / static_cast<float>(steps);
         PositionF curr = PositionF{from};
         PositionF target = PositionF{to};
-        
+
         int curr_step = 0;
         do
         {
@@ -36,7 +38,7 @@ void ShapeRenderer::DrawLine(Surface & surface, Position from, Position to, Colo
 }
 
 void ShapeRenderer::DrawLinePart(Surface * surface, Position from, Position to, int skip_pixels, int draw_pixels,
-    Color color)
+                                 Color color)
 {
     Offset diff = to - from;
     int pixels_drawn = 0;
@@ -81,18 +83,16 @@ void ShapeRenderer::FillRectangle(Surface * surface, Rect rect, Color color)
             surface->SetPixel(pos, color);
 }
 
-
 void ShapeRenderer::DrawFilledRectangle(Surface * surface, Rect screen_rect, bool round_corner_pixels, Color fill_color,
-                                  Color outline_color)
+                                        Color outline_color)
 {
     for (int x = screen_rect.Left(); x <= screen_rect.Right(); ++x)
         for (int y = screen_rect.Top(); y <= screen_rect.Bottom(); ++y)
         {
-            if (round_corner_pixels && 
-                ((x == screen_rect.Left() && y == screen_rect.Top()) ||
-                 (x == screen_rect.Right() && y == screen_rect.Top()) ||
-                 (x == screen_rect.Left() && y == screen_rect.Bottom()) ||
-                 (x == screen_rect.Right() && y == screen_rect.Bottom())))
+            if (round_corner_pixels && ((x == screen_rect.Left() && y == screen_rect.Top()) ||
+                                        (x == screen_rect.Right() && y == screen_rect.Top()) ||
+                                        (x == screen_rect.Left() && y == screen_rect.Bottom()) ||
+                                        (x == screen_rect.Right() && y == screen_rect.Bottom())))
             {
                 /* Don't draw if rounded */
                 continue;
@@ -127,7 +127,7 @@ void ShapeRenderer::DrawRectangle(Surface * surface, Rect screen_rect, bool roun
         DrawRectanglePart(surface, screen_rect, start_pixel, start_pixel + screen_rect.size.x - 2, outline_color);
         start_pixel = screen_rect.size.x;
         DrawRectanglePart(surface, screen_rect, start_pixel, start_pixel + screen_rect.size.y - 2, outline_color);
-        start_pixel += screen_rect.size.y - 1 ;
+        start_pixel += screen_rect.size.y - 1;
         DrawRectanglePart(surface, screen_rect, start_pixel, start_pixel + screen_rect.size.x - 2, outline_color);
         start_pixel += screen_rect.size.x - 1;
         DrawRectanglePart(surface, screen_rect, start_pixel, start_pixel + screen_rect.size.y - 2, outline_color);
@@ -142,42 +142,32 @@ void ShapeRenderer::DrawRectanglePart(Surface * surface, Rect screen_rect, int s
     //const int stop_draw = start_draw + draw_pixels;
 
     /* Draw outline using 4 lines */
-    DrawLinePart(surface, {screen_rect.Left(), screen_rect.Top()}, 
-                 {screen_rect.Right(), screen_rect.Top()},
+    DrawLinePart(surface, {screen_rect.Left(), screen_rect.Top()}, {screen_rect.Right(), screen_rect.Top()},
                  skip_pixels, draw_pixels, outline_color);
     pixels_drawn += screen_rect.size.x;
-    DrawLinePart(surface, {screen_rect.Right(), screen_rect.Top() + 1}, 
-                 {screen_rect.Right(), screen_rect.Bottom() - 1},       
-                 skip_pixels - pixels_drawn, draw_pixels - pixels_drawn,
-                 outline_color);
+    DrawLinePart(surface, {screen_rect.Right(), screen_rect.Top() + 1}, {screen_rect.Right(), screen_rect.Bottom() - 1},
+                 skip_pixels - pixels_drawn, draw_pixels - pixels_drawn, outline_color);
     pixels_drawn += screen_rect.size.y - 2;
-    DrawLinePart(surface, {screen_rect.Right(), screen_rect.Bottom()},
-                 {screen_rect.Left(), screen_rect.Bottom()},
+    DrawLinePart(surface, {screen_rect.Right(), screen_rect.Bottom()}, {screen_rect.Left(), screen_rect.Bottom()},
                  skip_pixels - pixels_drawn, draw_pixels - pixels_drawn, outline_color);
     pixels_drawn += screen_rect.size.x;
-    DrawLinePart(surface, {screen_rect.Left(), screen_rect.Bottom() - 1},
-                 {screen_rect.Left(), screen_rect.Top() + 1}, skip_pixels - pixels_drawn,
-                 draw_pixels - pixels_drawn,
-                 outline_color);
+    DrawLinePart(surface, {screen_rect.Left(), screen_rect.Bottom() - 1}, {screen_rect.Left(), screen_rect.Top() + 1},
+                 skip_pixels - pixels_drawn, draw_pixels - pixels_drawn, outline_color);
 }
 
-void ShapeRenderer::DrawCircle(Surface * surface, Position center, int radius, Color,
-                               Color outline_color)
+void ShapeRenderer::DrawCircle(Surface * surface, Position center, int radius, Color, Color outline_color)
 {
     /* Start on right side of circle and mirror every drawn pixel into 8 octants */
     int offset_x = radius;
     int offset_y = 0;
     int radius_sqr = radius * radius;
 
-    auto radius_error = [radius_sqr](int x, int y)
-    {
-        return std::abs(x * x + y * y - radius_sqr);
-    };
+    auto radius_error = [radius_sqr](int x, int y) { return std::abs(x * x + y * y - radius_sqr); };
 
     while (offset_y <= offset_x)
     {
         if (offset_y && offset_y != offset_x)
-        {   /* First pass should draw only 4 beginning pixels on x, -x, y and -y axes. Rest diverge into 8 directions. */
+        { /* First pass should draw only 4 beginning pixels on x, -x, y and -y axes. Rest diverge into 8 directions. */
             surface->SetPixel(center + Offset{-offset_x, -offset_y}, outline_color);
             surface->SetPixel(center + Offset{offset_x, offset_y}, outline_color);
             surface->SetPixel(center + Offset{-offset_y, offset_x}, outline_color);
@@ -206,3 +196,5 @@ Position ShapeInspector::GetRandomPointInCircle(Position center, int radius)
     float distance = Random.Float(0, static_cast<float>(radius));
     return center + Offset(distance * direction);
 }
+
+} // namespace MyNamespace

@@ -7,6 +7,8 @@
 #include "tank.h"
 #include <cstdlib>
 #include <SDL.h>
+namespace crust
+{
 
 /* Any SDL-based controllers go in this file. */
 
@@ -39,7 +41,8 @@ ControllerOutput KeyboardWithMouseController::ApplyControls(const PublicTankInfo
     auto mouse_buttons = SDL_GetMouseState(&x, &y);
     output.is_crosshair_absolute = true;
     Size window_size = GetSystem()->GetWindow()->GetResolution();
-    output.crosshair_screen_pos = {static_cast<float>(x) / float(window_size.x), static_cast<float>(y) / float(window_size.y)};
+    output.crosshair_screen_pos = {static_cast<float>(x) / float(window_size.x),
+                                   static_cast<float>(y) / float(window_size.y)};
     output.is_shooting_primary = mouse_buttons & SDL_BUTTON(1);
     output.is_building_primary = mouse_buttons & SDL_BUTTON(3);
     output.build_primary = output.is_building_primary && (mouse_buttons ^ this->last_mouse_state) & SDL_BUTTON(3);
@@ -158,7 +161,7 @@ ControllerOutput GamePadController::ApplyControls(const PublicTankInfo &)
     //gamelib_print("Right stick: %d, %d           \r", rx, ry);
 
     /* Finally apply to crosshair */
-    auto aim_dir = VectorF(float(rx), float(ry)); 
+    auto aim_dir = VectorF(float(rx), float(ry));
     if (aim_dir.NotZero())
         output.crosshair_direction = DirectionF::FromAbnormal(aim_dir);
     else
@@ -201,3 +204,5 @@ ControllerOutput GamePadController::ApplyControls(const PublicTankInfo &)
 
     return output;
 }
+
+} // namespace crust

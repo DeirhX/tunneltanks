@@ -4,6 +4,8 @@
 #include "random.h"
 #include "entity.h"
 
+namespace crust
+{
 World::World(Size terrain_size)
     : terrain(terrain_size), link_map(&this->terrain), projectile_list(), harvester_list(),
       tank_list(&this->terrain, &this->projectile_list), sprite_list(),
@@ -108,3 +110,5 @@ void World::RegrowPass()
                       this->regrow_average.count() % 1000);
     }
 }
+
+} // namespace MyNamespace

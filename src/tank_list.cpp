@@ -11,6 +11,8 @@
 #include "exceptions.h"
 #include "projectile_list.h"
 #include <algorithm>
+namespace crust
+{
 
 TankList::TankList(Terrain * level, ProjectileList * projectile_list) : level(level) {}
 
@@ -29,8 +31,7 @@ void TankList::RemoveTank(TankColor color)
     (*found).Invalidate();
 }
 
-void TankList::RemoveAll()
-{ this->list.RemoveAll(); }
+void TankList::RemoveAll() { this->list.RemoveAll(); }
 
 Tank * TankList::GetTankAtPoint(Position query_pos, TankColor ignored)
 {
@@ -69,10 +70,26 @@ bool TankList::CheckForCollision(Position position, Direction rotation, Tank & i
 
         /* Find the bounds of the two sprite's overlap: */
         int lx, ly, ux, uy;
-        if(pos.x< position.x) { lx= position.x-3; ux= pos.x+3;   }
-        else                 { lx= pos.x-3;     ux= position.x+3; }
-        if(pos.y< position.y) { ly= position.y-3; uy= pos.y+3;   }
-        else                 { ly= pos.y-3;     uy= position.y+3; }
+        if (pos.x < position.x)
+        {
+            lx = position.x - 3;
+            ux = pos.x + 3;
+        }
+        else
+        {
+            lx = pos.x - 3;
+            ux = position.x + 3;
+        }
+        if (pos.y < position.y)
+        {
+            ly = position.y - 3;
+            uy = pos.y + 3;
+        }
+        else
+        {
+            ly = pos.y - 3;
+            uy = position.y + 3;
+        }
 
         /* Check the overlap for collisions: */
         for (int ty = ly; ty <= uy; ty++)
@@ -84,3 +101,4 @@ bool TankList::CheckForCollision(Position position, Direction rotation, Tank & i
 
     return false;
 }
+} // namespace crust

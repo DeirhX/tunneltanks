@@ -5,6 +5,8 @@
 #include "tweak.h"
 #include "types.h"
 #include "entity.h"
+namespace crust
+{
 
 class Surface;
 class World;
@@ -12,22 +14,21 @@ class World;
 /*
  * Tank Base, part of the level, capable of building machines 
  */
-namespace crust::components
-{
 
-struct TankBase
+namespace components
 {
-    TankColor color = {-1};
-};
-
-}
+    struct TankBase
+    {
+        TankColor color = {-1};
+    };
+} // namespace components
 
 class TankBase
 {
     /* All your base are belong...same size */
     static constexpr Size BaseSize = Size{tweak::base::BaseSize, tweak::base::BaseSize};
 
-public:
+  public:
     ecs::entity entity;
     /* Owner tank */
     TankColor color = {-1};
@@ -51,6 +52,7 @@ public:
     void RegisterLinkPoint(World * world);
     void CreateMachineTemplates(World * world);
     void DrawMaterialStorage(Surface * surface) const;
+
   public:
     [[nodiscard]] Position GetPosition() const { return this->entity.get_component<Position>(); }
     [[nodiscard]] BoundingBox GetBoundingBox() const { return this->entity.get_component<BoundingBox>(); }
@@ -78,6 +80,7 @@ class TankBases
     TankBases() = default;
     TankBases(const std::vector<TankBase> & existing_bases) : tank_bases(existing_bases) {}
     void BeginGame();
+
   public:
     TankBase * GetSpawn(TankColor color);
     std::vector<TankBase> & GetSpawns() { return this->tank_bases; }
@@ -88,3 +91,5 @@ class TankBases
     void CreateBasesInTerrain(Terrain & terrain);
     void CreateBaseInTerrain(Position pos, TankColor color, Terrain & terrain);
 };
+
+} // namespace crust

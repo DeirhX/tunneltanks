@@ -5,17 +5,15 @@
 #include "types.h"
 #include "tank.h"
 #include "world.h"
+namespace crust
+{
 
 MachineMaterializer::MachineMaterializer(Tank * tank, MaterialContainer * resource_bank)
     : owner_tank(tank), resource_bank(resource_bank)
 {
-
 }
 
-void MachineMaterializer::PickUpMachine(Machine & machine)
-{
-    this->transported_machine = &machine;
-}
+void MachineMaterializer::PickUpMachine(Machine & machine) { this->transported_machine = &machine; }
 
 void MachineMaterializer::PickUpMachine(MachineTemplate & machine_template)
 {
@@ -39,7 +37,6 @@ void MachineMaterializer::PlaceMachine()
         this->transported_machine->SetPosition(this->owner_tank->GetPosition());
         this->transported_machine = nullptr;
     }
-    
 }
 
 void MachineMaterializer::ApplyControllerOutput(ControllerOutput controls)
@@ -58,10 +55,12 @@ void MachineMaterializer::Advance(Position)
         {
             /* Pick up a machine if we're not holding it */
             MachineTemplate * machine_template_overlap = nullptr;
-            this->owner_tank->ForEachTankPixel([&machine_template_overlap](Position world_position) {
-                machine_template_overlap = GetWorld()->GetCollisionSolver().TestMachineTemplate(world_position);
-                return !machine_template_overlap;
-            });
+            this->owner_tank->ForEachTankPixel(
+                [&machine_template_overlap](Position world_position)
+                {
+                    machine_template_overlap = GetWorld()->GetCollisionSolver().TestMachineTemplate(world_position);
+                    return !machine_template_overlap;
+                });
             if (machine_template_overlap)
             {
                 PickUpMachine(*machine_template_overlap);
@@ -72,15 +71,17 @@ void MachineMaterializer::Advance(Position)
         {
             /* Don't place it if it overlaps with any other machine */
             Machine * machine_overlap = nullptr;
-            this->owner_tank->ForEachTankPixel([this, &machine_overlap](Position world_position) {
-                machine_overlap = GetWorld()->GetCollisionSolver().TestMachine(world_position);
-                /* Ignore collision with this transported machine template */
-                machine_overlap = machine_overlap == this->transported_machine ? nullptr : machine_overlap;
-                return !machine_overlap;
-            });
+            this->owner_tank->ForEachTankPixel(
+                [this, &machine_overlap](Position world_position)
+                {
+                    machine_overlap = GetWorld()->GetCollisionSolver().TestMachine(world_position);
+                    /* Ignore collision with this transported machine template */
+                    machine_overlap = machine_overlap == this->transported_machine ? nullptr : machine_overlap;
+                    return !machine_overlap;
+                });
 
             if (!machine_overlap)
-            {                
+            {
                 PlaceMachine();
             }
         }
@@ -94,7 +95,8 @@ void MachineMaterializer::Advance(Position)
 
 bool MachineMaterializer::TryBuildMachine(MachineType type)
 {
-    Position position = (this->owner_tank->GetTurretBarrel() + this->owner_tank->GetTurretDirection() * 3.f).ToIntPosition();
+    Position position =
+        (this->owner_tank->GetTurretBarrel() + this->owner_tank->GetTurretDirection() * 3.f).ToIntPosition();
 
     switch (type)
     {
@@ -124,3 +126,5 @@ bool MachineMaterializer::TryBuildMachine(MachineType type)
     }
     return false;
 }
+
+} // namespace crust

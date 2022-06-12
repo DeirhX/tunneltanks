@@ -8,7 +8,7 @@
 
 #include "world.h"
 
-namespace levelgen::maze {
+namespace crust::levelgen::maze {
 
 /* REMEMBER: The bases are centered in cells, so these cells need to larger: */
 #define CELL_SIZE 60

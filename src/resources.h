@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include <algorithm>
 #include <cstdint>
+namespace crust
+{
 
 /*
  * ResourceAmount: A unit of resources able to perform arithmetic operations
@@ -28,12 +30,8 @@ struct ResourceAmount
         this->amount += other.amount;
         return *this;
     }
-    constexpr ResourceType operator+(ResourceType right)
-    { return ResourceType{this->amount + right.amount};
-    }
-    constexpr ResourceType operator-(ResourceType right)
-    { return ResourceType{this->amount - right.amount};
-    }
+    constexpr ResourceType operator+(ResourceType right) { return ResourceType{this->amount + right.amount}; }
+    constexpr ResourceType operator-(ResourceType right) { return ResourceType{this->amount - right.amount}; }
     auto operator<=>(const ResourceAmount & right) const = default;
 };
 /*
@@ -74,7 +72,6 @@ constexpr HealthAmount operator"" _health(std::uint64_t health_value) noexcept
     return HealthAmount{static_cast<int>(health_value)};
 }
 
-
 /*
  * Template for binding two resources together. It can be chained further.
  */
@@ -87,7 +84,9 @@ struct TwoResourceAmount
     constexpr TwoResourceAmount() = default;
     constexpr TwoResourceAmount(FirstResourceType first_) : first(first_) {}
     constexpr TwoResourceAmount(SecondResourceType second_) : second(second_) {}
-    constexpr TwoResourceAmount(FirstResourceType first_, SecondResourceType second_) : first(first_), second(second_) {}
+    constexpr TwoResourceAmount(FirstResourceType first_, SecondResourceType second_) : first(first_), second(second_)
+    {
+    }
 
     TwoResourceAmount & operator+=(TwoResourceAmount other)
     {
@@ -115,7 +114,7 @@ struct TwoResourceAmount
         this->first = std::max(0, this->first.amount);
         this->second = std::max(0, this->second.amount);
     }
-    auto operator <=> (const TwoResourceAmount & right) const = default;
+    auto operator<=>(const TwoResourceAmount & right) const = default;
 };
 
 /*
@@ -124,13 +123,14 @@ struct TwoResourceAmount
 struct MaterialAmount : public TwoResourceAmount<DirtAmount, MineralsAmount>
 {
     using Parent = TwoResourceAmount<DirtAmount, MineralsAmount>;
-public:
+
+  public:
     MaterialAmount() = default;
     constexpr MaterialAmount(DirtAmount first_) : Parent(first_) {}
     constexpr MaterialAmount(MineralsAmount second_) : Parent(second_) {}
-    constexpr MaterialAmount(DirtAmount first_, MineralsAmount second_) : Parent(first_, second_) { }
+    constexpr MaterialAmount(DirtAmount first_, MineralsAmount second_) : Parent(first_, second_) {}
 
-    DirtAmount & Dirt() { return this->first;}
+    DirtAmount & Dirt() { return this->first; }
     MineralsAmount & Minerals() { return this->second; }
     DirtAmount Dirt() const { return this->first; }
     MineralsAmount Minerals() const { return this->second; }
@@ -175,10 +175,7 @@ class ResourceContainer
 
   public:
     constexpr ResourceContainer(CapacityType capacity_) : capacity(capacity_) {}
-    constexpr ResourceContainer(AmountType amount_, CapacityType capacity_)
-        : current(amount_), capacity(capacity_)
-    {
-    }
+    constexpr ResourceContainer(AmountType amount_, CapacityType capacity_) : current(amount_), capacity(capacity_) {}
     bool CanPay(AmountType payment) const;
     /* true - paid the whole sum.  false - didn't have enough resources, state is unchanged */
     bool Pay(AmountType payment);
@@ -199,7 +196,6 @@ bool ResourceContainer<AmountType, CapacityType>::CanPay(AmountType payment) con
 {
     return !((this->current - payment).IsNegative());
 }
-
 
 template <typename AmountType, typename CapacityType>
 bool ResourceContainer<AmountType, CapacityType>::Pay(AmountType payment)
@@ -250,18 +246,19 @@ void ResourceContainer<AmountType, CapacityType>::Absorb(ResourceContainer & oth
     other.current += excess;
 }
 
-
 /*
  * Container for gathered materials that can be transferred with other container
  */
 class MaterialContainer : public ResourceContainer<MaterialAmount, MaterialCapacity>
 {
     using Parent = ResourceContainer<MaterialAmount, MaterialCapacity>;
+
   public:
     constexpr MaterialContainer(MaterialCapacity capacity_) : Parent(capacity_) {}
     constexpr MaterialContainer(DirtAmount dirt, MineralsAmount minerals, MaterialCapacity capacity_)
         : Parent({dirt, minerals}, capacity_)
-    { }
+    {
+    }
 
     int GetDirt() const { return this->current.Dirt().amount; }
     int GetMinerals() const { return this->current.Minerals().amount; }
@@ -280,7 +277,8 @@ class Reactor : public ResourceContainer<ReactorState, ReactorCapacity>
     constexpr Reactor(ReactorCapacity capacity_) : Parent(capacity_) {}
     constexpr Reactor(EnergyAmount energy, HealthAmount health, ReactorCapacity capacity_)
         : Parent({energy, health}, capacity_)
-    { }
+    {
+    }
 
     int GetHealth() const { return this->current.Health().amount; }
     int GetHealthCapacity() const { return this->capacity.Health().amount; }
@@ -288,4 +286,4 @@ class Reactor : public ResourceContainer<ReactorState, ReactorCapacity>
     int GetEnergyCapacity() const { return this->capacity.Energy().amount; }
 };
 
-
+} // namespace crust

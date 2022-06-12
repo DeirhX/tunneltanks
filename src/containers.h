@@ -6,7 +6,8 @@
 #include <queue>
 #include <type_traits>
 #include <vector>
-
+namespace crust
+{
 
 /*
  Effective container for storing in-place, cache-local objects - deleting does not shift, dead objects can be reused
@@ -21,15 +22,16 @@ concept IsInvalidable = requires(T t)
 {
     {
         t.IsInvalid()
-    }
-    -> same_as<bool>;
+        } -> same_as<bool>;
 };
 
 class Invalidable
 {
     bool is_alive = true;
+
   protected:
     bool destructor_called = false;
+
   public:
     Invalidable() = default;
     Invalidable(const Invalidable & other) = delete;
@@ -58,7 +60,6 @@ class Invalidable
     } /* No way to return back to life, consider it destroyed */
     //void SetDestroyed() { this->destructor_called = true; }
 };
-
 
 template <IsInvalidable TElement>
 class ValueContainerView
@@ -226,6 +227,7 @@ class MultiTypeContainer
 
   public:
     MultiTypeContainer() = default;
+
   public:
     /* Do not allow implicit copy. It's most likely a mistake. */
     MultiTypeContainer(const MultiTypeContainer &) = delete;
@@ -242,7 +244,8 @@ class MultiTypeContainer
     void MergeFrom(const MultiTypeContainer & other)
     {
         std::apply(
-            [&other](auto &&... cont) {
+            [&other](auto &&... cont)
+            {
                 (...,
                  cont.MergeFrom(other.GetContainer(
                      cont))); /* TODO: No idea how to extract type from [cont]. Passing as parameter as a workaround */
@@ -253,7 +256,8 @@ class MultiTypeContainer
     void MoveFrom(MultiTypeContainer & other)
     {
         std::apply(
-            [&other](auto &&... cont) {
+            [&other](auto &&... cont)
+            {
                 (...,
                  cont.MoveFrom(other.GetContainer(
                      cont))); /* TODO: No idea how to extract type from [cont]. Passing as parameter as a workaround */
@@ -292,7 +296,8 @@ class MultiTypeContainer
     template <typename TVisit>
     void ForEach(const TVisit & visitor)
     {
-        auto for_each_element = [visitor](auto & container) {
+        auto for_each_element = [visitor](auto & container)
+        {
             for (auto & el : container)
                 visitor(el);
         };
@@ -302,7 +307,8 @@ class MultiTypeContainer
     template <typename TValue, typename TVisit>
     void ForEach(const TVisit & visitor)
     {
-        auto for_each_element = [visitor](auto & container) {
+        auto for_each_element = [visitor](auto & container)
+        {
             for (auto & el : container)
                 visitor(el);
         };
@@ -344,7 +350,7 @@ class MultiTypeContainer
         return const_cast<MultiTypeContainer *>(this)->GetContainer<TValue>();
     }
     template <typename TValue>
-    ValueContainer<TValue> & GetContainer(const ValueContainer<TValue> & /* Deduction only */) 
+    ValueContainer<TValue> & GetContainer(const ValueContainer<TValue> & /* Deduction only */)
     {
         return std::get<ValueContainer<TValue>>(this->items);
     }
@@ -386,3 +392,4 @@ class Container2D
     typename Container::const_iterator cbegin() const { return array.cbegin(); }
     typename Container::const_iterator cend() const { return array.cend(); }
 };
+} // namespace crust

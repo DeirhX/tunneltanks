@@ -2,7 +2,7 @@
 #include "levelgen.h"
 #include <memory>
 
-namespace levelgen::maze
+namespace crust::levelgen::maze
 {
 
 class MazeLevelGenerator : public GeneratorAlgorithm

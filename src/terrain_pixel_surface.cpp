@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "terrain_pixel_surface.h"
+namespace crust
+{
 
 /* TODO: We're using color structures here because we started with Uint32 values
  *       and this was an easier transition. Eventually, all colors will be in a
@@ -24,3 +26,5 @@ RenderedPixel TerrainPixelSurface::GetPixel(Position offset)
         return this->default_color;
     return pixel_data[offset.y * size.x + offset.x];
 }
+
+} // namespace MyNamespace

@@ -5,6 +5,8 @@
 #include "containers.h"
 #include "terrain_pixel.h"
 #include "types.h"
+namespace crust
+{
 
 /*
  * Adjacency Data
@@ -124,3 +126,4 @@ ValueType TerrainAdjacencyData<ValueType>::AccumulateFromNeighbors(Position pos,
 //        val = (val & 0xF) | (value << 4);
 //    val = val & (0xF0 | (value & 0xF));
 //}
+} // namespace MyNamespace

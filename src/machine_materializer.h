@@ -1,4 +1,6 @@
 ﻿#pragma once
+namespace crust
+{
 
 class Machine;
 class MachineTemplate;
@@ -6,7 +8,10 @@ class MaterialContainer;
 class Tank;
 struct Position;
 struct ControllerOutput;
-namespace widgets {class Crosshair;}
+namespace widgets
+{
+    class Crosshair;
+}
 
 enum class MachineType
 {
@@ -31,6 +36,7 @@ class MachineMaterializer
     Machine * transported_machine = nullptr;
     //MachineTemplate * transported_machine_template = nullptr;
     MaterialContainer * resource_bank = nullptr;
+
   public:
     MachineMaterializer(Tank * owner_tank, MaterialContainer * resource_bank);
 
@@ -41,6 +47,8 @@ class MachineMaterializer
     void ApplyControllerOutput(ControllerOutput controls);
     void Advance(Position tank_position);
 
-private:
+  private:
     bool TryBuildMachine(MachineType type);
 };
+
+} // namespace crust

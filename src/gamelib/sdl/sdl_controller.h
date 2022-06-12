@@ -1,6 +1,8 @@
 #pragma once
 #include "controller.h"
 #include <SDL.h>
+namespace crust
+{
 
 struct PublicTankInfo;
 
@@ -19,6 +21,7 @@ class KeyboardWithMouseController : public KeyboardController
 {
     using Base = KeyboardController;
     Uint32 last_mouse_state = 0;
+
   public:
     KeyboardWithMouseController(SDL_Scancode left, SDL_Scancode right, SDL_Scancode up, SDL_Scancode down,
                                 SDL_Scancode shoot)
@@ -44,7 +47,10 @@ struct GamePadMapping
         int16_t axis_threshold = 0;
 
         constexpr ButtonOrAxis() = default;
-        constexpr ButtonOrAxis(int8_t ordinal, MappingType type, int16_t threshold = 0) : ordinal(ordinal), type(type), axis_threshold(threshold) { }
+        constexpr ButtonOrAxis(int8_t ordinal, MappingType type, int16_t threshold = 0)
+            : ordinal(ordinal), type(type), axis_threshold(threshold)
+        {
+        }
 
         constexpr int8_t Id() const { return ordinal; }
         constexpr MappingType Type() const { return type; }
@@ -77,7 +83,9 @@ struct GamePadMapping
     struct Axis : public ButtonOrAxis
     {
         constexpr Axis() : ButtonOrAxis(-1, MappingType::Axis) {}
-        constexpr Axis(int8_t ordinal, int16_t threshold = 1000) : ButtonOrAxis(ordinal, MappingType::Axis, threshold) {}
+        constexpr Axis(int8_t ordinal, int16_t threshold = 1000) : ButtonOrAxis(ordinal, MappingType::Axis, threshold)
+        {
+        }
     };
     struct Pad : public ButtonOrAxis
     {
@@ -122,3 +130,5 @@ class GamePadController : public Controller
 
     bool IsPlayer() override { return true; }
 };
+
+} // namespace crust

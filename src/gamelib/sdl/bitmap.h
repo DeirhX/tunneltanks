@@ -2,6 +2,8 @@
 
 #include "bitmaps.h"
 #include "game_system.h"
+namespace crust
+{
 
 class SdlBmpDecoder : public BmpDecoder
 {
@@ -21,3 +23,5 @@ class BmpFile
     static MonoBitmap LoadGrayscaleFromFile(std::string_view file_name);
     static MonoBitmap LoadGrayscaleFromRGBA(std::string_view file_name);
 };
+
+} // namespace crust

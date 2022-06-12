@@ -17,7 +17,7 @@
 #include "containers_queue.h"
 #include "parallelism.h"
 
-namespace levelgen::toast {
+namespace crust::levelgen::toast {
 
 /* Configuration Constants: */
 

@@ -6,9 +6,12 @@
 #include "types.h"
 #include "world.h"
 #include "game_system.h"
+namespace crust
+{
 
 /* The constructor sets the video mode: */
-Screen::Screen(bool is_fullscreen, ScreenRenderSurface * render_surface) : is_fullscreen(is_fullscreen), screen_surface(render_surface)
+Screen::Screen(bool is_fullscreen, ScreenRenderSurface * render_surface)
+    : is_fullscreen(is_fullscreen), screen_surface(render_surface)
 {
     this->Resize(screen_surface->GetSize());
 }
@@ -24,7 +27,8 @@ void Screen::FillBackground()
     {
         for (o.x = (o.y % 2) * 2; o.x < dim.x; o.x += 4)
         {
-            GetSystem()->GetScreenSurface()->FillRectangle(ScreenRect{o, Size{1, 1}}, Palette.Get(Colors::BackgroundDot));
+            GetSystem()->GetScreenSurface()->FillRectangle(ScreenRect{o, Size{1, 1}},
+                                                           Palette.Get(Colors::BackgroundDot));
         }
     }
 }
@@ -88,7 +92,7 @@ struct TwoPlayerLayout : public SinglePlayerLayout
     constexpr static ScreenRect lives_left_rect_two =
         ScreenRect{health_energy_two.Left() - health_letter_rect.size.x, health_energy_two.Top() + 1, 2, status_height};
 
-     /* Resource overlays */
+    /* Resource overlays */
     constexpr static ScreenRect resource_overlay_one = ScreenRect{player_view_one.pos, Size{20, 20}};
     constexpr static ScreenRect resource_overlay_two =
         ScreenRect{{player_view_two.Right() - 19, player_view_two.Top()}, Size{20, 20}};
@@ -99,7 +103,6 @@ struct AIViewOnePlayerLayout : public TwoPlayerLayout
     /* Player world view */
     constexpr static ScreenRect player_view_one = TwoPlayerLayout::player_view_one;
     constexpr static ScreenRect player_view_two = TwoPlayerLayout::player_view_two;
-
 };
 
 void Screens::SinglePlayerScreenSetup(Screen & screen, Tank & player)
@@ -117,13 +120,13 @@ void Screens::SinglePlayerScreenSetup(Screen & screen, Tank & player)
 
     /* Add the letters E and H bitmaps: */
     screen.AddBitmap(SinglePlayerLayout::energy_letter_rect, bitmaps::GuiEnergy,
-                      static_cast<Color>(Palette.Get(Colors::StatusEnergy)));
+                     static_cast<Color>(Palette.Get(Colors::StatusEnergy)));
     screen.AddBitmap(SinglePlayerLayout::health_letter_rect, bitmaps::GuiHealth,
-                      static_cast<Color>(Palette.Get(Colors::StatusHealth)));
+                     static_cast<Color>(Palette.Get(Colors::StatusHealth)));
 
     /* Add resources owned overlay */
     screen.AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(SinglePlayerLayout::resource_overlay,
-                                                                       HorizontalAlign::Left, player));
+                                                                      HorizontalAlign::Left, player));
 
     GetSystem()->GetCursor()->Hide();
 }
@@ -155,15 +158,15 @@ void Screens::TwoPlayerScreenSetup(Screen & screen, Tank & player_one, Tank & pl
 
     /* Add the letters E and H bitmaps: */
     screen.AddBitmap(TwoPlayerLayout::energy_letter_rect, bitmaps::GuiEnergy,
-                      static_cast<Color>(Palette.Get(Colors::StatusEnergy)));
+                     static_cast<Color>(Palette.Get(Colors::StatusEnergy)));
     screen.AddBitmap(TwoPlayerLayout::health_letter_rect, bitmaps::GuiHealth,
-                      static_cast<Color>(Palette.Get(Colors::StatusHealth)));
+                     static_cast<Color>(Palette.Get(Colors::StatusHealth)));
 
     /* Add resources owned overlays */
     screen.AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(TwoPlayerLayout::resource_overlay_one,
-                                                                       HorizontalAlign::Left, player_one));
+                                                                      HorizontalAlign::Left, player_one));
     screen.AddWidget(std::make_unique<widgets::ResourcesMinedDisplay>(TwoPlayerLayout::resource_overlay_two,
-                                                                       HorizontalAlign::Right, player_two));
+                                                                      HorizontalAlign::Right, player_two));
 
     GetSystem()->GetCursor()->Show();
 }
@@ -188,7 +191,7 @@ ScreenPosition Screen::FromNativeScreen(OffsetF offset) const
 
 void Screen::DrawLevel()
 {
-    auto& world_surfaces = GetSystem()->GetRenderer()->GetWorldSurfaces();
+    auto & world_surfaces = GetSystem()->GetRenderer()->GetWorldSurfaces();
     /* Erase everything */
     GetSystem()->GetScreenSurface()->Clear();
     world_surfaces.terrain_surface.OverlaySurface(&world_surfaces.objects_surface);
@@ -283,7 +286,6 @@ void Screen::ClearGuiElements() { this->widgets.clear(); }
 
 /* We don't check to see if gamelib needs the gui controller thing in this file.
  * That is handled in game.c: */
-void Screen::AddController(Rect r)
-{
-    this->controller.r = r;
-}
+void Screen::AddController(Rect r) { this->controller.r = r; }
+
+} // namespace crust

@@ -4,6 +4,8 @@
 #include "render_surface.h"
 #include "types.h"
 #include <optional>
+namespace crust
+{
 
 struct Color;
 class Screen;
@@ -16,10 +18,11 @@ class ShapeRenderer
                              Color color);
     static void FillRectangle(Surface * surface, Rect screen_rect, Color color);
     static void DrawFilledRectangle(Surface * surface, Rect screen_rect, bool round_corners, Color fill_color,
-                              Color outline_color);
+                                    Color outline_color);
     static void DrawRectangle(Surface * surface, Rect screen_rect, bool round_corners, Color outline_color);
     /* Rectangle draw from top-left clockwise */
-    static void DrawRectanglePart(Surface * surface, Rect screen_rect, int skip_pixels, int draw_pixels, Color outline_color);
+    static void DrawRectanglePart(Surface * surface, Rect screen_rect, int skip_pixels, int draw_pixels,
+                                  Color outline_color);
 
     static void DrawCircle(Surface * surface, Position center, int radius, Color fill_color, Color outline_color);
 };
@@ -35,7 +38,6 @@ class ShapeInspector
     static bool InspectRectangle(const SurfaceType & container, Rect rect, InspectFunc inspect_func);
     template <BasicVisitor<Position> InspectFunc>
     static bool InspectRectangle(Rect rect, InspectFunc inspect_func);
-
 };
 
 /* InspectFunc (Position position) -> bool
@@ -52,7 +54,8 @@ std::optional<Position> ShapeInspector::FromRandomPointInCircleToCenter(Position
     /* If found not suitable, cast a ray to the center and find first pixel that does */
     if (Raycaster::Cast(
             PositionF{possible_pos}, PositionF{center},
-            [&possible_pos, inspect_func](PositionF tested_pos, PositionF) {
+            [&possible_pos, inspect_func](PositionF tested_pos, PositionF)
+            {
                 if (inspect_func(tested_pos.ToIntPosition()))
                 {
                     possible_pos = tested_pos.ToIntPosition();
@@ -102,3 +105,5 @@ bool ShapeInspector::InspectRectangle(Rect rect, InspectFunc inspect_func)
         }
     return true;
 }
+
+} // namespace MyNamespace

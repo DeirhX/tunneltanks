@@ -1,10 +1,13 @@
 #pragma once
 #include "containers.h"
 #include "projectiles.h"
+namespace crust
+{
 
 class ProjectileList
 {
-    using ProjectileContainer =  MultiTypeContainer<Bullet, Shrapnel, ConcreteBarrel, ConcreteFoam, DirtBarrel, DirtFoam>;
+    using ProjectileContainer =
+        MultiTypeContainer<Bullet, Shrapnel, ConcreteBarrel, ConcreteFoam, DirtBarrel, DirtFoam>;
     /* Live items. Unmodified except for BEFORE Advance */
     ProjectileContainer items;
     /* Items here will be integrated into main vector on Advance */
@@ -32,3 +35,5 @@ class ProjectileList
     void Advance(class Terrain * level, class TankList * tankList);
     void Draw(class Surface * drawBuffer);
 };
+
+} // namespace crust

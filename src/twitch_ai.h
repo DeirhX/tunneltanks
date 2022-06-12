@@ -2,6 +2,8 @@
 
 #include "ai_controller.h"
 #include "controller.h"
+namespace crust
+{
 
 /* Our first AI: Twitch! (note: the 'I' in 'AI' is being used VERY loosely) */
 
@@ -29,7 +31,6 @@ class TwitchAI final : public AiAlgorithm
   public:
     TwitchAI(AiController<TwitchAI> & controller_) : controller(&controller_) {}
 
-
     ControllerOutput AdvanceStep(const PublicTankInfo & info) override;
 
   private:
@@ -41,3 +42,4 @@ class TwitchAI final : public AiAlgorithm
     ControllerOutput Start(const PublicTankInfo & info);
 };
 
+} // namespace crust

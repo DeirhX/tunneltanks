@@ -2,7 +2,7 @@
 #include "mymath.h"
 #include "types.h"
 
-namespace math
+namespace crust::math
 {
 
 float ToRadians(DirectionF vector) { return std::atan2(vector.y, vector.x); }

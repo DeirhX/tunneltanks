@@ -8,6 +8,8 @@
 #include "world.h"
 
 #include <algorithm>
+namespace crust
+{
 
 LinkPoint::LinkPoint(Position position, LinkPointType type_, LinkMap * owner_)
     : type(type_), position(position), owner(owner_)
@@ -35,8 +37,7 @@ std::optional<NeighborLinkPoint> LinkPoint::GetClosestOrphanedPoint(CompareFunc 
     for (const NeighborLinkPoint & neighbor : this->possible_links)
     {
         if (neighbor.point->IsOrphaned() && neighbor.point->IsEnabled() &&
-            (!closest_point || neighbor.distance < closest_point->distance) &&
-            compare_func(*this, neighbor))
+            (!closest_point || neighbor.distance < closest_point->distance) && compare_func(*this, neighbor))
         {
             closest_point = &neighbor;
         }
@@ -56,7 +57,7 @@ bool LinkPoint::IsInRange(LinkPoint * other_link) const
     float distance = (other_link->GetPosition() - this->GetPosition()).GetSize();
     return this->IsEnabled() &&
            (distance <= tweak::world::MaximumLiveLinkDistance ||
-           (this->type == LinkPointType::Transit && distance <= tweak::world::MaximumTheoreticalLinkDistance));
+            (this->type == LinkPointType::Transit && distance <= tweak::world::MaximumTheoreticalLinkDistance));
 }
 
 void LinkPoint::SetPosition(Position position_)
@@ -118,11 +119,16 @@ void LinkPoint::ComputePossibleLinks()
 void LinkPoint::ComputeIsPowered()
 {
     this->is_powered =
-        this->type == LinkPointType::Base || std::any_of(this->active_links.begin(), this->active_links.end(),
-                                                         [this](Link * link) { return link->GetType() == LinkType::Live && 
-                                                         link->GetSource() != this && /* Consider only links that lead to this one (this one is the target, not source) */
-                                                         link->IsConnectedToLiveLink() ; });
-        
+        this->type == LinkPointType::Base ||
+        std::any_of(
+            this->active_links.begin(), this->active_links.end(),
+            [this](Link * link)
+            {
+                return link->GetType() == LinkType::Live &&
+                       link->GetSource() !=
+                           this && /* Consider only links that lead to this one (this one is the target, not source) */
+                       link->IsConnectedToLiveLink();
+            });
 }
 
 void LinkPoint::AddActiveLink(Link * active_link) { this->active_links.push_back(active_link); }
@@ -133,10 +139,7 @@ void LinkPoint::RemoveActiveLink(Link * active_link)
     std::erase(this->active_links, active_link);
 }
 
-void LinkPoint::Advance()
-{
-    ComputeIsPowered();
-}
+void LinkPoint::Advance() { ComputeIsPowered(); }
 
 /*
  * LinkPointSource
@@ -251,10 +254,12 @@ void Link::Advance()
 
 bool Link::IsConnectionBlocked(Position from, Position to)
 {
-    return !Raycaster::Cast(PositionF{from}, PositionF{to}, [](PositionF tested_pos, PositionF) {
-        auto pixel = GetWorld()->GetTerrain().GetPixel(tested_pos.ToIntPosition());
-        return Pixel::IsAnyCollision(pixel) ? false : true;
-    });
+    return !Raycaster::Cast(PositionF{from}, PositionF{to},
+                            [](PositionF tested_pos, PositionF)
+                            {
+                                auto pixel = GetWorld()->GetTerrain().GetPixel(tested_pos.ToIntPosition());
+                                return Pixel::IsAnyCollision(pixel) ? false : true;
+                            });
 }
 
 bool Link::IsConnectionBlocked() const
@@ -288,7 +293,6 @@ void Link::UpdateType(LinkType value)
         this->to.GetPoint()->ComputeIsPowered();
     }
 }
-
 
 /*
  * LinkMap
@@ -358,7 +362,8 @@ void LinkMap::SolveLinks()
         LinkPoint * source = {};
         NeighborLinkPoint target = {};
     };
-    auto find_best_candidate = [&connected_nodes](auto & predicate) {
+    auto find_best_candidate = [&connected_nodes](auto & predicate)
+    {
         BestCandidate best_match;
         /* Walk through visited nodes and find one closest new node to any of them */
         for (LinkPoint * point : connected_nodes)
@@ -386,21 +391,21 @@ void LinkMap::SolveLinks()
         BlockedTanks,
         Done
     };
-    auto connect_with_live_machines_only = [](const LinkPoint & from, const NeighborLinkPoint & possible_link)-> bool {
-        return possible_link.point->GetType() == LinkPointType::Machine && 
-               from.IsPowered() &&
+    auto connect_with_live_machines_only = [](const LinkPoint & from, const NeighborLinkPoint & possible_link) -> bool
+    {
+        return possible_link.point->GetType() == LinkPointType::Machine && from.IsPowered() &&
                !Link::IsConnectionBlocked(from.GetPosition(), possible_link.point->GetPosition());
     };
-    auto connect_with_blocked_machines = [](const LinkPoint &, const NeighborLinkPoint & possible_link) -> bool {
-        return possible_link.point->GetType() == LinkPointType::Machine;
-    };
-    auto connect_with_live_tanks = [](const LinkPoint & from, const NeighborLinkPoint & possible_link) -> bool {
+    auto connect_with_blocked_machines = [](const LinkPoint &, const NeighborLinkPoint & possible_link) -> bool
+    { return possible_link.point->GetType() == LinkPointType::Machine; };
+    auto connect_with_live_tanks = [](const LinkPoint & from, const NeighborLinkPoint & possible_link) -> bool
+    {
         return possible_link.point->GetType() == LinkPointType::Controllable &&
-               possible_link.distance <= tweak::tank::MaximumAbsorbEnergyDistance && 
-               from.IsPowered() &&
+               possible_link.distance <= tweak::tank::MaximumAbsorbEnergyDistance && from.IsPowered() &&
                !Link::IsConnectionBlocked(from.GetPosition(), possible_link.point->GetPosition());
     };
-    auto connect_with_blocked_tanks = [](const LinkPoint &, const NeighborLinkPoint & possible_link) -> bool {
+    auto connect_with_blocked_tanks = [](const LinkPoint &, const NeighborLinkPoint & possible_link) -> bool
+    {
         return possible_link.point->GetType() == LinkPointType::Controllable &&
                possible_link.distance <= tweak::tank::MaximumAbsorbEnergyDistance;
     };
@@ -471,3 +476,5 @@ void LinkMap::Draw(Surface * surface) const
         link.Draw(surface);
     }
 }
+
+} // namespace crust

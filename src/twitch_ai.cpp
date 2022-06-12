@@ -8,11 +8,11 @@
 #include "random.h"
 #include "tank.h"
 #include "tweak.h"
-
+namespace crust
+{
 
 /* Used when seeking a base entrance: */
 constexpr int OutsideBase = (tweak::base::BaseSize / 2 + 5);
-
 
 ControllerOutput TwitchAI::AdvanceStep(const PublicTankInfo & tank_info)
 {
@@ -146,3 +146,5 @@ ControllerOutput TwitchAI::Recharge(const PublicTankInfo & tank_info)
     return {Speed{tank_info.relative_pos.x ? ((tank_info.relative_pos.x < 0) * 2 - 1) : 0,
                   tank_info.relative_pos.y ? ((tank_info.relative_pos.y < 0) * 2 - 1) : 0}};
 }
+
+} // namespace crust

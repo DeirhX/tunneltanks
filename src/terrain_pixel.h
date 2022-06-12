@@ -1,4 +1,6 @@
 ﻿#pragma once
+namespace crust
+{
 
 /*
  * TerrainPixel
@@ -45,17 +47,26 @@ class Pixel
                (pixel >= TerrainPixel::BaseMin && pixel <= TerrainPixel::BaseMax);
     }
     static bool IsAnyCollision(TerrainPixel pixel) { return IsSoftCollision(pixel) || IsBlockingCollision(pixel); }
-    static bool IsBase(TerrainPixel pixel) { return (pixel >= TerrainPixel::BaseMin && pixel <= TerrainPixel::BaseMax); }
-    static bool IsScorched(TerrainPixel pixel) { return pixel == TerrainPixel::DecalHigh || pixel == TerrainPixel::DecalLow; }
+    static bool IsBase(TerrainPixel pixel)
+    {
+        return (pixel >= TerrainPixel::BaseMin && pixel <= TerrainPixel::BaseMax);
+    }
+    static bool IsScorched(TerrainPixel pixel)
+    {
+        return pixel == TerrainPixel::DecalHigh || pixel == TerrainPixel::DecalLow;
+    }
     static bool IsConcrete(TerrainPixel pixel)
     {
         return pixel == TerrainPixel::ConcreteHigh || pixel == TerrainPixel::ConcreteLow;
     }
-    static bool IsRock(TerrainPixel pixel) { return pixel == TerrainPixel::Rock;  }
+    static bool IsRock(TerrainPixel pixel) { return pixel == TerrainPixel::Rock; }
     static bool IsMineral(TerrainPixel pixel) { return IsConcrete(pixel) || IsRock(pixel); }
     static bool IsEnergy(TerrainPixel pixel)
     {
-        return pixel == TerrainPixel::EnergyLow || pixel == TerrainPixel::EnergyMedium || pixel == TerrainPixel::EnergyHigh;
+        return pixel == TerrainPixel::EnergyLow || pixel == TerrainPixel::EnergyMedium ||
+               pixel == TerrainPixel::EnergyHigh;
     }
     static bool IsEmpty(TerrainPixel pixel) { return pixel == TerrainPixel::Blank; }
 };
+
+} // namespace MyNamespace

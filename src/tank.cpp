@@ -14,6 +14,8 @@
 #include "terrain.h"
 #include "tweak.h"
 #include "world.h"
+namespace crust
+{
 
 /*  /\
  * TANK
@@ -271,3 +273,5 @@ void Tank::ApplyControllerOutput(ControllerOutput controls)
         }
     }
 }
+
+} // namespace crust

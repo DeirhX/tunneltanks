@@ -7,6 +7,8 @@
 #include "tank_base.h"
 #include "types.h"
 #include <vector>
+namespace crust
+{
 
 class World;
 enum class TerrainPixel : char;
@@ -23,8 +25,6 @@ struct DigResult
     int dirt = 0;
     int minerals = 0;
 };
-
-
 
 class Terrain
 {
@@ -64,7 +64,7 @@ class Terrain
     void DrawAllToSurface(WorldRenderSurface & world_surface);
     void DumpBitmap(const char * filename) const;
 
-    void Advance() {};
+    void Advance(){};
 
     /* Color lookup. Can be somewhere else. */
     static Color GetVoxelColor(TerrainPixel voxel);
@@ -85,6 +85,7 @@ class Terrain
     DigResult DigTankTunnel(Position pos, bool dig_with_torch);
 
     bool IsInside(Position position) const;
+
   private:
     /* Level generation */
     void GenerateDirtAndRocks();
@@ -119,7 +120,8 @@ void Terrain::ForEachVoxel(VoxelFunc voxelFunc)
 template <typename VoxelFunc> // requires{ voxelFunc(Position, LevelVoxel&) -> void; }
 void Terrain::ForEachVoxelParallel(VoxelFunc voxelFunc, WorkerCount worker_count)
 {
-    auto parallel_slice = [this, voxelFunc](int min, int max, ThreadLocal * threadLocal) {
+    auto parallel_slice = [this, voxelFunc](int min, int max, ThreadLocal * threadLocal)
+    {
         Position pos;
         for (pos.x = min; pos.x <= max; ++pos.x)
             for (pos.y = 0; pos.y < this->GetSize().y; ++pos.y)
@@ -144,3 +146,5 @@ int Terrain::CountNeighborValues(Position pos, CountFunc count_func)
            count_func(GetVoxelRaw((pos.x + GetSize().x * (pos.y + 1)))) +
            count_func(GetVoxelRaw((pos.x + 1 + GetSize().x * (pos.y + 1))));
 }
+
+} // namespace MyNamespace

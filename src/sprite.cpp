@@ -3,6 +3,8 @@
 
 #include "color_palette.h"
 #include "shape_renderer.h"
+namespace crust
+{
 
 void Sprite::Draw(Surface & surface) const {}
 
@@ -22,3 +24,5 @@ void FailedInteraction::Draw(Surface & surface) const
     ShapeRenderer::DrawLine(surface, this->GetPosition() + Offset{+diam, -diam},
                             this->GetPosition() + Offset{-diam, diam}, Palette.Get(Colors::FailedInteraction));
 }
+
+} // namespace crust

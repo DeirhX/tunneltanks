@@ -2,7 +2,7 @@
 #include "levelgen.h"
 #include <memory>
 
-namespace levelgen::braid
+namespace crust::levelgen::braid
 {
 
 class BraidLevelGenerator : public GeneratorAlgorithm

@@ -12,7 +12,7 @@
 #include <levelgen_toast.h>
 #include <trace.h>
 
-namespace levelgen
+namespace crust::levelgen
 {
 
 struct LevelGeneratorDesc
@@ -144,4 +144,4 @@ int Queries::CountNeighborValues(Position pos, Terrain * level)
            (char)level->GetVoxelRaw((pos.x + 1 + level->GetSize().x * (pos.y + 1)));
 }
 
-} // namespace levelgen
+} 

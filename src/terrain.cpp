@@ -9,18 +9,14 @@
 #include <terrain.h>
 #include <tweak.h>
 #include <types.h>
-
-Terrain::Terrain(Size size) : size(size), data(size)
+namespace crust
 {
-    std::ranges::fill(this->data, TerrainPixel::LevelGenRock);
-}
+
+Terrain::Terrain(Size size) : size(size), data(size) { std::ranges::fill(this->data, TerrainPixel::LevelGenRock); }
 
 void Terrain::OnConnectWorld(World *) {}
 
-void Terrain::BeginGame()
-{
-
-}
+void Terrain::BeginGame() {}
 
 void Terrain::SetTerrainData(int i, TerrainPixel value)
 {
@@ -137,7 +133,7 @@ bool Terrain::IsInside(Position pos) const
 
 void Terrain::DrawChangesToSurface(WorldRenderSurface & world_surface)
 {
-    for (auto& pos : this->change_list)
+    for (auto & pos : this->change_list)
         world_surface.SetPixel(pos, GetVoxelColor(this->GetPixel(pos)));
     this->change_list.clear();
 }
@@ -153,17 +149,13 @@ void Terrain::DrawAllToSurface(WorldRenderSurface & world_surface)
     }
 }
 
-void Terrain::CommitPixel(Position pos)
-{
-    change_list.push_back(pos);
-}
+void Terrain::CommitPixel(Position pos) { change_list.push_back(pos); }
 
-void Terrain::CommitPixels(const std::vector<Position>& positions)
+void Terrain::CommitPixels(const std::vector<Position> & positions)
 {
-    for (const auto& pos : positions)
+    for (const auto & pos : positions)
         change_list.push_back(pos);
 }
-
 
 Color Terrain::GetVoxelColor(TerrainPixel voxel)
 {
@@ -219,3 +211,4 @@ void Terrain::DumpBitmap(const char * filename) const
     }
 }
 
+} // namespace MyNamespace

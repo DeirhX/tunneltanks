@@ -4,6 +4,8 @@
 #include <future>
 #include <type_traits>
 #include <vector>
+namespace crust
+{
 
 struct PhysicalCores
 {
@@ -32,7 +34,7 @@ struct ThreadLocal
 {
     RandomGenerator random;
 
-    ThreadLocal() { random = ::Random; } // Copy state
+    ThreadLocal() { random = Random; } // Copy state
 };
 
 template <typename Func> /* void(int first, int last)  */
@@ -64,3 +66,5 @@ auto parallel_for(Func func, int minimum, int maximum, WorkerCount worker_count 
     }
     return result;
 };
+
+} // namespace crust

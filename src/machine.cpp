@@ -7,11 +7,13 @@
 #include "projectiles.h"
 #include "shape_renderer.h"
 #include "world.h"
+namespace crust
+{
 
 Machine::Machine(Position position, Tank * owner, Reactor reactor_, BoundingBox bounding_box)
-    : position(position), bounding_box(bounding_box), owner(owner), link_source(GetWorld(), position, LinkPointType::Machine), reactor(reactor_)
+    : position(position), bounding_box(bounding_box), owner(owner),
+      link_source(GetWorld(), position, LinkPointType::Machine), reactor(reactor_)
 {
-    
 }
 
 bool Machine::CheckAlive(Terrain * level)
@@ -48,17 +50,16 @@ void Machine::SetIsTransported(bool new_value)
 {
     this->is_transported = new_value;
     if (new_value)
-    {   /* Transport */
+    { /* Transport */
         this->link_source.Disable();
         this->SetState(MachineConstructState::Transporting);
     }
     else
-    {   /* Plant */
+    { /* Plant */
         this->link_source.Enable();
         this->SetState(MachineConstructState::Planted);
     }
 }
-
 
 void Harvester::Advance(Terrain * level)
 {
@@ -68,7 +69,8 @@ void Harvester::Advance(Terrain * level)
     if (this->harvest_timer.AdvanceAndCheckElapsed())
     {
 
-        auto is_suitable_position = [](Position tested_position) {
+        auto is_suitable_position = [](Position tested_position)
+        {
             TerrainPixel pixel = GetWorld()->GetTerrain().GetPixel(tested_position);
             return Pixel::IsDirt(pixel);
         };
@@ -116,41 +118,41 @@ void Charger::Advance(Terrain * level)
         return;
 }
 
-    //if (this->charge_timer.AdvanceAndCheckElapsed())
-    //{
-    //    auto is_suitable_position = [](Position tested_position)
-    //    {
-    //        TerrainPixel pixel = GetWorld()->GetLevel()->GetPixel(tested_position);
-    //        return Pixel::IsEmpty(pixel) || Pixel::IsScorched(pixel) || Pixel::IsEnergy(pixel);
-    //    };
-    //    /* Active algorithm: random pixel in radius. If full, first candidate on path to center from that position */
-    //    std::optional<Position> suitable_pos = ShapeInspector::FromRandomPointInCircleToCenter(
-    //        this->position, tweak::rules::ChargeMaxRange, is_suitable_position);
+//if (this->charge_timer.AdvanceAndCheckElapsed())
+//{
+//    auto is_suitable_position = [](Position tested_position)
+//    {
+//        TerrainPixel pixel = GetWorld()->GetLevel()->GetPixel(tested_position);
+//        return Pixel::IsEmpty(pixel) || Pixel::IsScorched(pixel) || Pixel::IsEnergy(pixel);
+//    };
+//    /* Active algorithm: random pixel in radius. If full, first candidate on path to center from that position */
+//    std::optional<Position> suitable_pos = ShapeInspector::FromRandomPointInCircleToCenter(
+//        this->position, tweak::rules::ChargeMaxRange, is_suitable_position);
 
-    //    /*
-    //     * Grow radially from center
-    //    auto closest_pixel = level::GetClosestPixel(GetWorld()->GetLevel()->GetLevelData(), this->position,
-    //                                                tweak::rules::HarvestMaxRange,
-    //                                                [](TerrainPixel pixel) { return Pixel::IsEmpty(pixel) || Pixel::IsScorched(pixel); });
-    //                                                */
-    //    if (suitable_pos.has_value() && suitable_pos.value() != this->position)
-    //    {
-    //        TerrainPixel current_pixel = GetWorld()->GetLevel()->GetPixel(suitable_pos.value());
-    //        TerrainPixel desired_pixel;
-    //        if (current_pixel == TerrainPixel::EnergyLow)
-    //            desired_pixel = TerrainPixel::EnergyMedium;
-    //        else if (current_pixel == TerrainPixel::EnergyMedium || current_pixel == TerrainPixel::EnergyHigh)
-    //            desired_pixel = TerrainPixel::EnergyHigh;
-    //        else
-    //            desired_pixel = TerrainPixel::EnergyLow;
-    //        GetWorld()->GetLevel()->SetPixel(suitable_pos.value(), desired_pixel);
-    //    }
-    //}
-
+//    /*
+//     * Grow radially from center
+//    auto closest_pixel = level::GetClosestPixel(GetWorld()->GetLevel()->GetLevelData(), this->position,
+//                                                tweak::rules::HarvestMaxRange,
+//                                                [](TerrainPixel pixel) { return Pixel::IsEmpty(pixel) || Pixel::IsScorched(pixel); });
+//                                                */
+//    if (suitable_pos.has_value() && suitable_pos.value() != this->position)
+//    {
+//        TerrainPixel current_pixel = GetWorld()->GetLevel()->GetPixel(suitable_pos.value());
+//        TerrainPixel desired_pixel;
+//        if (current_pixel == TerrainPixel::EnergyLow)
+//            desired_pixel = TerrainPixel::EnergyMedium;
+//        else if (current_pixel == TerrainPixel::EnergyMedium || current_pixel == TerrainPixel::EnergyHigh)
+//            desired_pixel = TerrainPixel::EnergyHigh;
+//        else
+//            desired_pixel = TerrainPixel::EnergyLow;
+//        GetWorld()->GetLevel()->SetPixel(suitable_pos.value(), desired_pixel);
+//    }
+//}
 
 void Charger::Draw(Surface * surface) const
 {
-    ShapeRenderer::DrawCircle(surface, this->position, 2, Palette.Get(Colors::HarvesterInside), Palette.Get(Colors::ChargerOutline));
+    ShapeRenderer::DrawCircle(surface, this->position, 2, Palette.Get(Colors::HarvesterInside),
+                              Palette.Get(Colors::ChargerOutline));
 }
 
 void Charger::Die(Terrain *)
@@ -167,14 +169,12 @@ void Charger::Die(Terrain *)
  * MachineTemplate
  */
 
-bool MachineTemplate::PayCost() const
-{
-    return this->paying_container->Pay(this->build_cost);
-}
+bool MachineTemplate::PayCost() const { return this->paying_container->Pay(this->build_cost); }
 
 MachineTemplate::MachineTemplate(Position position, BoundingBox bounding_box, MaterialAmount build_cost_,
                                  MaterialContainer & paying_host)
-    : Machine{position, nullptr, Reactor{ReactorCapacity{}}, bounding_box}, build_cost(build_cost_), paying_container(&paying_host), origin_position{position}
+    : Machine{position, nullptr, Reactor{ReactorCapacity{}}, bounding_box}, build_cost(build_cost_),
+      paying_container(&paying_host), origin_position{position}
 {
     this->is_template = true;
     this->is_blocking_collidable = false;
@@ -183,8 +183,6 @@ MachineTemplate::MachineTemplate(Position position, BoundingBox bounding_box, Ma
 void MachineTemplate::Advance(Terrain *) { this->is_available = this->paying_container->CanPay(this->build_cost); }
 
 void MachineTemplate::ResetToOrigin() { this->SetPosition(this->origin_position); }
-
-
 
 HarvesterTemplate::HarvesterTemplate(Position position, MaterialContainer & paying_host)
     : MachineTemplate{position, Harvester::bounding_box, tweak::rules::HarvesterCost, paying_host}
@@ -198,8 +196,8 @@ void HarvesterTemplate::Draw(Surface * surface) const
     //outline_color.a = (outline_color.a * (this->IsAvailable() ? 128 : 32)) / 255;
     Color inside_color = Palette.Get(Colors::HarvesterInside);
     inside_color.a = (inside_color.a * (this->IsAvailable() ? 255 : 64)) / 255;
-    ShapeRenderer::DrawFilledRectangle(surface, Rect{this->GetPosition() - Size{2, 2}, Size{5, 5}},
-                                 true, inside_color, outline_color);
+    ShapeRenderer::DrawFilledRectangle(surface, Rect{this->GetPosition() - Size{2, 2}, Size{5, 5}}, true, inside_color,
+                                       outline_color);
 }
 
 Machine * HarvesterTemplate::PayAndBuildMachine() const
@@ -238,3 +236,4 @@ Machine * ChargerTemplate::PayAndBuildMachine() const
     return &machine;
 }
 
+} // namespace crust

@@ -3,8 +3,11 @@
 #include <boost/lockfree/queue.hpp>
 #include <cassert>
 #include <queue>
+namespace crust
+{
 
-template <typename TValue> class GrowingDeque
+template <typename TValue>
+class GrowingDeque
 {
     using Container = std::vector<TValue>;
     Container cont;
@@ -28,10 +31,15 @@ template <typename TValue> class GrowingDeque
     size_t size() { return cont.size(); }
     void push_back(TValue val) { cont.push_back(val); }
 
-    template <class... TArgs> void emplace_back(TArgs &&... args) { cont.emplace_back(std::forward<TArgs>(args)...); }
+    template <class... TArgs>
+    void emplace_back(TArgs &&... args)
+    {
+        cont.emplace_back(std::forward<TArgs>(args)...);
+    }
 };
 
-template <typename Value> class counted_lockfree_queue : private boost::lockfree::queue<Value>
+template <typename Value>
+class counted_lockfree_queue : private boost::lockfree::queue<Value>
 {
     using parent = boost::lockfree::queue<Value>;
     std::atomic<int> count = 0;
@@ -51,7 +59,8 @@ template <typename Value> class counted_lockfree_queue : private boost::lockfree
     size_t size() { return count; }
 };
 
-template <typename Value> class queue_adaptor : private std::queue<Value>
+template <typename Value>
+class queue_adaptor : private std::queue<Value>
 {
     using parent = std::queue<Value>;
 
@@ -71,7 +80,8 @@ template <typename Value> class queue_adaptor : private std::queue<Value>
     size_t size() { return parent::size(); }
 };
 
-template <typename Value> struct circular_buffer_adaptor : private boost::circular_buffer<Value>
+template <typename Value>
+struct circular_buffer_adaptor : private boost::circular_buffer<Value>
 {
     using parent = boost::circular_buffer<Value>;
     circular_buffer_adaptor(int capacity) : parent(capacity) {}
@@ -89,3 +99,5 @@ template <typename Value> struct circular_buffer_adaptor : private boost::circul
     }
     size_t size() { return parent::size(); }
 };
+
+} // namespace crust

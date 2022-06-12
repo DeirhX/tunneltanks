@@ -15,6 +15,8 @@
 #include "world.h"
 #include <chrono>
 
+namespace crust
+{
 /*----------------------------------------------------------------------------*
  * This bit is used to initialize various GUIs:                               *
  *----------------------------------------------------------------------------*/
@@ -28,8 +30,7 @@ void GameMode::SpawnAIOpponents(TankList * tank_list, TankBases * bases, TankCol
     }
 }
 
-void GameMode::AssumeAIControl(Tank * tank)
-{ tank->SetController(std::make_shared<AiController<TwitchAI>>()); }
+void GameMode::AssumeAIControl(Tank * tank) { tank->SetController(std::make_shared<AiController<TwitchAI>>()); }
 
 void GameMode::TearDown()
 {
@@ -53,7 +54,6 @@ std::unique_ptr<SinglePlayerMode> SinglePlayerMode::Setup(Screen * screen, World
 
     return std::make_unique<SinglePlayerMode>(screen, world);
 }
-
 
 std::unique_ptr<FollowAISinglePlayerMode> FollowAISinglePlayerMode::Setup(Screen * screen, World * world)
 {
@@ -83,16 +83,16 @@ std::unique_ptr<LocalTwoPlayerMode> LocalTwoPlayerMode::Setup(Screen * screen, W
     /*controller_twitch_attach(t);  << Attach a twitch to a camera tank, so we can see if they're getting smarter... */
     gamelib_tank_attach(player_two, 1, 2);
 
-    Screens::TwoPlayerScreenSetup(*screen,*player_one, *player_two);
+    Screens::TwoPlayerScreenSetup(*screen, *player_one, *player_two);
     /* Fill up the rest of the slots with Twitches: */
     if (use_ai)
         GameMode::SpawnAIOpponents(&world->GetTankList(), &world->GetTankBases(), 2, tweak::world::MaxPlayers - 2);
 
-    return std::make_unique<LocalTwoPlayerMode>(screen, world); 
+    return std::make_unique<LocalTwoPlayerMode>(screen, world);
 }
 
 /* Create a default game structure: */
-Game::Game(GameConfig config) 
+Game::Game(GameConfig config)
 {
     this->config = config;
     this->is_active = false;
@@ -109,16 +109,17 @@ Game::Game(GameConfig config)
 
     /* Benchmark level generation */
     int TestIterations = 20;
-    #ifdef _DEBUG
-        TestIterations = 1;
-    #endif
+#ifdef _DEBUG
+    TestIterations = 1;
+#endif
     std::chrono::milliseconds time_taken = {};
 
     /* Generate our random level: */
     for (int i = 0; i != TestIterations; ++i)
     {
-        gamelib_print("Generating level %d/%d...\n", i+1, TestIterations);
-        auto generated_level = levelgen::LevelGenerator::Generate(this->config.level_generator, this->config.level_size);
+        gamelib_print("Generating level %d/%d...\n", i + 1, TestIterations);
+        auto generated_level =
+            levelgen::LevelGenerator::Generate(this->config.level_generator, this->config.level_size);
         time_taken += generated_level.generation_time;
         world = std::move(generated_level.world);
     }
@@ -136,7 +137,6 @@ Game::Game(GameConfig config)
     /* Debug the starting data, if we're debugging: */
     if (this->config.is_debug)
         world->GetTerrain().DumpBitmap("debug_start.bmp");
-
 }
 
 /* Step the game simulation by handling events, and drawing: */
@@ -159,7 +159,6 @@ bool Game::AdvanceStep()
         else if (temp == GameEvent::ToggleFullscreen)
         {
             this->screen->SetFullscreen(this->screen->GetFullscreen());
-
         }
         /* Trying to exit? */
         else if (temp == GameEvent::Exit)
@@ -221,8 +220,6 @@ void Game::BeginGame(Renderer * renderer)
 
 void Game::GameOver() { assert(!"Implement game over!"); }
 
-void Game::ClearWorld()
-{
-    world->Clear();
-}
+void Game::ClearWorld() { world->Clear(); }
 
+} // namespace MyNamespace

@@ -25,15 +25,17 @@
 #include "gamelib/sdl/control.h"
 #include "gamelib/sdl/sdl_system.h"
 
+using namespace crust;
+
 int GameMain(int argc, char * argv[]);
 
 int main(int argc, char * argv[])
 {
     try
     {
-        #ifdef _WIN32
+#ifdef _WIN32
         _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-        #endif
+#endif
 
         return GameMain(argc, argv);
     }
@@ -177,7 +179,8 @@ int GameMain(int argc, char * argv[])
         if (level_bitmap_filename)
         {
             /* Generate our random level: */
-            levelgen::GeneratedLevel generated_level = levelgen::LevelGenerator::Generate(levelgen::LevelGenerator::FromName(level_generator_id), level_size );
+            levelgen::GeneratedLevel generated_level =
+                levelgen::LevelGenerator::Generate(levelgen::LevelGenerator::FromName(level_generator_id), level_size);
             generated_level.world->GetTerrain().MaterializeLevelTerrain();
 
             /* Dump it out, and exit: */
@@ -214,16 +217,16 @@ int GameMain(int argc, char * argv[])
 
         /* TODO: Unify this global mess */
         /* Setup input/output system */
-        ::global_game_system = CreateGameSystem(config.video_config);
-        ::global_game = std::make_unique<Game>(config);
+        global_game_system = CreateGameSystem(config.video_config);
+        global_game = std::make_unique<Game>(config);
         /* Play the game: */
-        ::global_game->BeginGame(::global_game_system->GetRenderer());
+        global_game->BeginGame(global_game_system->GetRenderer());
         gamelib_main_loop([]() -> bool { return global_game->AdvanceStep(); });
 
         /* Release global resources earlier than atexit global teardown*/
-        ::global_game->ClearWorld();
-        ::global_game.reset();
-        ::global_game_system.reset();
+        global_game->ClearWorld();
+        global_game.reset();
+        global_game_system.reset();
 
         /* Ok, we're done. Tear everything up: */
         gamelib_exit();

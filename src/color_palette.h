@@ -1,6 +1,8 @@
 #pragma once
 #include "types.h"
 #include "color.h"
+namespace crust
+{
 
 enum class Colors
 {
@@ -64,7 +66,7 @@ struct ColorPalette
     Color Get(Colors colorName);
     //Color GetNoAlpha(Colors colorName);
     Color GetPrimary(TankColor index);
-    Color *GetTank(TankColor index);
+    Color * GetTank(TankColor index);
 
   private:
     void Set(Colors colorName, Color color);
@@ -74,3 +76,4 @@ struct ColorPalette
 
 /* Get your colors here! */
 extern ColorPalette Palette;
+} // namespace MyNamespace

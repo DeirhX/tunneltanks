@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "game_system.h"
 #include <SDL.h>
+namespace crust
+{
 
 class SdlWindow;
 
@@ -53,3 +55,4 @@ class SdlCursor final : public Cursor
     void Hide() override;
     void Show() override;
 };
+} // namespace crust

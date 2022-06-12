@@ -1,6 +1,8 @@
 ﻿#include "pch.h"
 #include "font_renderer.h"
 #include "game_system.h"
+namespace crust
+{
 
 fonts::BrodminGlyphInfo::BrodminGlyphInfo() : GlyphInfoTable(FontFace::Brodmin)
 {
@@ -33,7 +35,7 @@ void BitmapFont::Render(Screen * surface, ScreenRect screen_rect, std::string_vi
                         HorizontalAlign alignment)
 {
     if (alignment == HorizontalAlign::Left)
-    {   /* Easy, just let the bitmap renderer do the clipping into screen_rect */
+    { /* Easy, just let the bitmap renderer do the clipping into screen_rect */
         for (char ch : text)
         {
             auto & glyph_rect = this->glyph_lookup.GetSourceRect(ch);
@@ -43,7 +45,7 @@ void BitmapFont::Render(Screen * surface, ScreenRect screen_rect, std::string_vi
         }
     }
     else /* Alignment::Right */
-    {    /* We'll need to do some clever clipping ourselves since normally it's clipped from the bottom right, we need to clip left */
+    { /* We'll need to do some clever clipping ourselves since normally it's clipped from the bottom right, we need to clip left */
         int horizontal_offset = 0;
         for (auto it = text.rbegin(); it != text.rend(); ++it)
         {
@@ -52,12 +54,12 @@ void BitmapFont::Render(Screen * surface, ScreenRect screen_rect, std::string_vi
             ScreenRect target_rect;
             /* Decide if we have enough space to fit this letter*/
             if (horizontal_offset <= screen_rect.size.x)
-            {   /* Enough space, render normally */
+            { /* Enough space, render normally */
                 target_rect = {{screen_rect.Right() - horizontal_offset + 1, screen_rect.Top()},
                                {glyph_rect.size.x, screen_rect.size.y}};
             }
             else
-            {   /* Needs clipping, clip the source rect */
+            { /* Needs clipping, clip the source rect */
                 const int remaining = std::max(0, screen_rect.size.x - horizontal_offset + glyph_rect.size.x);
                 target_rect = {{screen_rect.Left(), screen_rect.Top()}, Size{remaining, screen_rect.size.y}};
                 glyph_rect.pos.x += glyph_rect.size.x - remaining;
@@ -80,3 +82,5 @@ void FontRenderer::Render(FontFace font, Screen * screen, ScreenRect screen_rect
     assert(font == FontFace::Brodmin);
     this->font_brodmin.Render(screen, screen_rect, text, color, alignment);
 }
+
+} // namespace MyNamespace

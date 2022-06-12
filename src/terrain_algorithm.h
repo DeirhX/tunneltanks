@@ -4,7 +4,7 @@
 #include "types.h"
 #include <optional>
 
-namespace level
+namespace crust::level
 {
 
 template <typename SurfaceType, typename PixelCompareFunc>
@@ -43,4 +43,4 @@ std::optional<Position> GetClosestPixel(const SurfaceType & surface, Position or
     return {};
 }
 
-} // namespace level
+} // namespace crust::level

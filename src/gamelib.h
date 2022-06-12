@@ -1,10 +1,13 @@
 #pragma once
+#include <types.h>
+namespace crust
+{
+
 /* This file defines an interface that is implemented by one of this folder's
  * subdirectories. Most functions in here are normally provided by SDL, but are
  * abstracted so that this game can be used in non-SDL environments. (Namely:
  * Android.) */
 
-#include <types.h>
 
 /* If the gamelib needs initialization, this'll do it: */
 void gamelib_init();
@@ -41,8 +44,9 @@ GameEvent gamelib_event_get_type();
 Rect gamelib_event_resize_get_size(); /* Returns {0,0,0,0} on fail. */
 void gamelib_event_done();
 
-
 /* A few outputting commands: */
 void gamelib_print(const char * str, ...);
 void gamelib_debug(const char * str, ...);
 void gamelib_error(const char * str, ...);
+
+} // namespace crust

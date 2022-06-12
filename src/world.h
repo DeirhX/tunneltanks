@@ -11,6 +11,8 @@
 #include "entity.h"
 #include "world_sector.h"
 
+namespace crust
+{
 class WorldRenderSurface;
 
 class World
@@ -55,7 +57,7 @@ class World
     [[nodiscard]] LinkMap & GetLinkMap() { return this->link_map; }
     [[nodiscard]] const CollisionSolver & GetCollisionSolver() const { return this->collision_solver; }
     [[nodiscard]] std::chrono::microseconds GetElapsedTime() const { return this->time_elapsed; }
-    [[nodiscard]] crust::WorldSectors& GetSectors() { return this->sectors; }
+    [[nodiscard]] crust::WorldSectors & GetSectors() { return this->sectors; }
 
     void SetGameOver();
 
@@ -68,3 +70,5 @@ class World
 };
 
 inline World * GetWorld() { return GetGame()->GetWorld(); }
+
+} // namespace MyNamespace

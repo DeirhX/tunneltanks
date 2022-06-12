@@ -1,16 +1,17 @@
 ﻿#pragma once
 #include "controller.h"
+namespace crust
+{
 
 struct PublicTankInfo;
 
 class AiAlgorithm
 {
-public:
+  public:
     ~AiAlgorithm() = default;
 
     virtual ControllerOutput AdvanceStep(const PublicTankInfo & info) = 0;
 };
-
 
 template <typename AiType>
 class AiController : public Controller
@@ -27,3 +28,5 @@ class AiController : public Controller
 
     bool IsPlayer() override { return false; }
 };
+
+} // namespace crust

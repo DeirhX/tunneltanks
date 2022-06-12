@@ -1,7 +1,7 @@
 #pragma once
 #include "levelgen.h"
 
-namespace levelgen::simple
+namespace crust::levelgen::simple
 {
 
 class SimpleLevelGenerator : public GeneratorAlgorithm

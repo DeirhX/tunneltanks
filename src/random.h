@@ -1,5 +1,7 @@
 #pragma once
 #include <random>
+namespace crust
+{
 
 class RandomGenerator
 {
@@ -31,3 +33,5 @@ IntegerType RandomGenerator::Int(IntegerType min, IntegerType max)
 	 * integers, so w/e: */
     return (gen() % range) + min;
 }
+
+} // namespace crust

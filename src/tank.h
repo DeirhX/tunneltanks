@@ -8,6 +8,8 @@
 #include "machine_materializer.h"
 #include "tank_sprites.h"
 #include "tank_turret.h"
+namespace crust
+{
 
 class TankBase;
 struct LevelView;
@@ -26,9 +28,9 @@ struct PublicTankInfo
 
 namespace tank
 {
-template <BasicVisitor<Position> PerPixelFunc>
-void ForEachTankPixel(PerPixelFunc per_pixel_func, const crust::components::BitmapCollision & collider,
-                      Position position, Direction direction);
+    template <BasicVisitor<Position> PerPixelFunc>
+    void ForEachTankPixel(PerPixelFunc per_pixel_func, const crust::components::BitmapCollision & collider,
+                          Position position, Direction direction);
 } // namespace tank
 
 class Tank : public Controllable
@@ -66,7 +68,8 @@ class Tank : public Controllable
 
     CollisionType TryCollide(Direction rotation, Position position) override;
 
-    template <BasicVisitor<Position> PerPixelFunc> /* bool per_pixel_func(Position world_position). Return false to end iteration. */
+    template <BasicVisitor<Position>
+                  PerPixelFunc> /* bool per_pixel_func(Position world_position). Return false to end iteration. */
     void ForEachTankPixel(PerPixelFunc per_pixel_func)
     {
         tank::ForEachTankPixel(per_pixel_func, entity.get_component<crust::components::BitmapCollision>(),
@@ -85,19 +88,20 @@ class Tank : public Controllable
 
 namespace tank
 {
-/* return false to stop enumeration */
-template <BasicVisitor<Position> PerPixelFunc>
-void ForEachTankPixel(PerPixelFunc per_pixel_func, const crust::components::BitmapCollision & collider,
-                      Position position, Direction direction)
-{
-    auto shape = collider.GetForDirection(direction);
-    Offset offset;
-    for (offset.y = 0; offset.y < collider.Size().y; ++offset.y)
-        for (offset.x = 0; offset.x < collider.Size().x; ++offset.x)
-        {
-            if (shape.GetAt(offset))
-                if (!per_pixel_func(position - collider.Center() + offset))
-                    return;
-        }
-}
+    /* return false to stop enumeration */
+    template <BasicVisitor<Position> PerPixelFunc>
+    void ForEachTankPixel(PerPixelFunc per_pixel_func, const crust::components::BitmapCollision & collider,
+                          Position position, Direction direction)
+    {
+        auto shape = collider.GetForDirection(direction);
+        Offset offset;
+        for (offset.y = 0; offset.y < collider.Size().y; ++offset.y)
+            for (offset.x = 0; offset.x < collider.Size().x; ++offset.x)
+            {
+                if (shape.GetAt(offset))
+                    if (!per_pixel_func(position - collider.Center() + offset))
+                        return;
+            }
+    }
 } // namespace tank
+} // namespace crust

@@ -1,6 +1,8 @@
 #pragma once
 #include "controllable.h"
 #include "types.h"
+namespace crust
+{
 
 struct LevelView
 {
@@ -27,3 +29,5 @@ struct LevelView
 };
 
 //#define LSP_LOOKUP(lsp,x,y) ((lsp).data[(y)*LS_WIDTH+(x)])
+
+} // namespace crust

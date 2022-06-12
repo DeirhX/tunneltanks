@@ -2,11 +2,12 @@
 #include "bitmaps.h"
 #include <array>
 #include <string_view>
+namespace crust
+{
 
 class GameSystem;
 class ScreenRenderSurface;
 class BmpDecoder;
-
 
 enum class FontFace
 {
@@ -47,7 +48,6 @@ namespace fonts
 
 } // namespace fonts
 
-
 /* BitmapFont:  Font with simple bits designating value/transparency
  *  Stored as uint_8 because operating with just bits is now going to be faster */
 class BitmapFont
@@ -56,7 +56,7 @@ class BitmapFont
     GlyphInfoTable glyph_lookup;
 
   public:
-    BitmapFont(MonoBitmap && bitmap, GlyphInfoTable && glyph_info) : font_bitmap(bitmap), glyph_lookup(glyph_info) { };
+    BitmapFont(MonoBitmap && bitmap, GlyphInfoTable && glyph_info) : font_bitmap(bitmap), glyph_lookup(glyph_info){};
     void Render(Screen * screen, ScreenRect screen_rect, std::string_view text, Color color, HorizontalAlign alignment);
 };
 
@@ -64,9 +64,12 @@ class FontRenderer
 {
   private:
     BitmapFont font_brodmin;
+
   public:
     FontRenderer(BmpDecoder * game_system);
 
-    void Render(FontFace font, Screen * screen, ScreenRect screen_rect, std::string_view text, Color color, 
+    void Render(FontFace font, Screen * screen, ScreenRect screen_rect, std::string_view text, Color color,
                 HorizontalAlign alignment = HorizontalAlign::Left);
 };
+
+} // namespace MyNamespace
