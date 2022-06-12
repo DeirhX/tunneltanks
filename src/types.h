@@ -326,10 +326,19 @@ struct RectBase
     {
     }
 
-    constexpr int Left() const { return pos.x; }
-    constexpr int Top() const { return pos.y; }
-    constexpr int Right() const { return pos.x + size.x - 1; }
-    constexpr int Bottom() const { return pos.y + size.y - 1; }
+    constexpr PositionType::NumericType Left() const { return pos.x; }
+    constexpr PositionType::NumericType Top() const { return pos.y; }
+    constexpr PositionType::NumericType Right() const { return pos.x + size.x - 1; }
+    constexpr PositionType::NumericType Bottom() const { return pos.y + size.y - 1; }
+
+    template <typename RectPointVisitor>
+    constexpr void VisitAllPoints(RectPointVisitor visitor)
+    {
+        visitor(PositionType(Left(), Top()));
+        visitor(PositionType(Right(), Top()));
+        visitor(PositionType(Left(), Bottom()));
+        visitor(PositionType(Right(), Bottom()));
+    }
     constexpr bool IsInside(PositionType vec) const
     {
         return vec.x >= this->Left() && vec.x <= this->Right() && vec.y >= this->Top() && vec.y <= this->Bottom();
@@ -343,30 +352,24 @@ struct RectBase
     constexpr bool operator!=(const RectBase & other) { return !this->operator==(other); }
 };
 
+
+/* A rectangle in world/level coordinates.*/
+using Rect = RectBase<Position, Size>;
+/* A rectangle in world/level coordinates in float.*/
+using RectF = RectBase<PositionF, SizeF>;
+
 /* Rectangle in units of our pixelated screen (render) surface */
 struct ScreenRect : RectBase<ScreenPosition, Size>
 {
     using base = RectBase<ScreenPosition, Size>;
     using base::base;
-};
-
-/* A rectangle in world/level coordinates.*/
-struct Rect : RectBase<Position, Size>
-{
-    constexpr Rect() = default;
-    constexpr Rect(Position pos, Size size) : RectBase{pos.x, pos.y, size.x, size.y} {}
-    constexpr Rect(int pos_x, int pos_y, int size_x, int size_y) : RectBase{pos_x, pos_y, size_x, size_y} {}
-    explicit constexpr Rect(ScreenRect screen) : Rect{screen.pos.x, screen.pos.y, screen.size.x, screen.size.y} {}
-    explicit operator ScreenRect() const { return ScreenRect{this->pos.x, this->pos.y, this->size.x, this->size.y}; }
-};
-
-/* A rectangle in world/level coordinates in float.*/
-struct RectF : RectBase<PositionF, SizeF>
-{
-    using base = RectBase<PositionF, SizeF>;
-    using base::base;
-    constexpr RectF() = default;
-    constexpr RectF(PositionF pos, SizeF size) : RectBase{pos.x, pos.y, size.x, size.y} {}
+    constexpr ScreenRect(const Rect & rect)
+    {
+        base::pos.x = rect.pos.x;
+        base::pos.y = rect.pos.y;
+        base::size = rect.size;
+    }
+    explicit operator Rect() const { return Rect{this->pos.x, this->pos.y, this->size.x, this->size.y}; }
 };
 
 /* Rectangle inside an image/bitmap used as a source of bliting to screen */
@@ -394,7 +397,10 @@ struct BoundingBoxBase : RectBase<PositionType, SizeType>
     {
         assert(dimensions.x % 2 && dimensions.y % 2);
     }
-    PositionType GetTopLeft(PositionType tested_position) const { return tested_position + Offset{this->pos}; }
+    PositionType GetTopLeft(PositionType tested_position) const
+    {
+        return PositionType(tested_position.x + this->pos.x, tested_position.y + this->pos.y);
+    }
     bool IsInside(PositionType tested_position, PositionType entity_origin) const
     {
         return std::abs(tested_position.x - entity_origin.x) < this->size.x / 2 &&
@@ -405,7 +411,10 @@ struct BoundingBoxBase : RectBase<PositionType, SizeType>
         //       tested_position.y >= this->Top() + entity_origin.y &&
         //       tested_position.y <= this->Bottom() + entity_origin.y;
     }
-    Rect GetRect(PositionType tested_center) const { return Rect{GetTopLeft(tested_center), this->size}; }
+    RectBase<PositionType, SizeType> GetRect(PositionType tested_center) const
+    {
+        return RectBase<PositionType, SizeType>(GetTopLeft(tested_center), this->size);
+    }
 };
 
 using BoundingBox = BoundingBoxBase<Position, Size>;
