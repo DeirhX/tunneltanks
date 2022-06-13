@@ -2,6 +2,8 @@
 #include "tank_base.h"
 #include "shape_renderer.h"
 #include "world.h"
+#include "entity.h"
+
 namespace crust
 {
 
@@ -11,6 +13,7 @@ TankBase::TankBase(Position position, TankColor color) : entity(crust::entities.
     entity.assign_component<BoundingBox>();
     entity.assign_component<crust::components::BoundingBoxCollision>();
     entity.assign_component<crust::components::TankBase>(color);
+    entity.assign_component<crust::components::OccupiedSector>();
 }
 
 void TankBase::BeginGame()

@@ -6,6 +6,9 @@
 namespace crust
 {
 
+/*
+ * Sector object containing ids of entities inside it
+ */
 class WorldSector
 {
   public:
@@ -27,6 +30,9 @@ class WorldSector
     void RemoveEntity(ecs::entity entity);
 };
 
+/*
+ * Container of all sector objects
+ */
 class WorldSectors
 {
   private:
@@ -73,10 +79,24 @@ class WorldSectors
 
 namespace components
 {
-    struct Sector
+    // Sector component holds the list of sectors currently occupied by an entity
+    class OccupiedSector
     {
+      public:
+        using sector_list_t = boost::container::small_vector<WorldSector::id_t, 4>;
+
+      private:
         // Indicates presence in sector(s) - more than one is possible for anything that has an area
-        boost::container::small_vector<WorldSector::id_t, 4> sector_ids;
+        sector_list_t sector_ids;
+
+      public:
+        void EnterSector(WorldSector::id_t sectorId);
+        void ExitSector(WorldSector::id_t sectorId);
+        void MoveToSectors(sector_list_t incomingList);
+
+      private:
+        void OnEnterNotify(WorldSector::id_t sectorId);
+        void OnExitNotify(WorldSector::id_t sectorId);
     };
 } // namespace components
 

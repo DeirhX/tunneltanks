@@ -21,8 +21,8 @@ void systems::CollisionSystem::process(ecs::registry & owner, const detect_colli
 
 void systems::UpdateSectorPositions::process(ecs::registry & owner, const detect_collisions_step & evt)
 {
-    owner.for_joined_components<PositionF, BoundingBoxF, components::Sector>(
-        [&evt](ecs::entity, PositionF & pos, const BoundingBoxF & bbox, components::Sector & sector)
+    owner.for_joined_components<PositionF, BoundingBoxF, components::OccupiedSector>(
+        [&evt](ecs::entity, PositionF & pos, const BoundingBoxF & bbox, components::OccupiedSector & sector)
         {
             auto bounding_rect = bbox.GetRect(pos);
             boost::container::small_vector<WorldSector::id_t, 4> occupiedSectors;
@@ -30,13 +30,13 @@ void systems::UpdateSectorPositions::process(ecs::registry & owner, const detect
                 [&occupiedSectors](PositionF point)
                 { occupiedSectors.emplace_back(GetWorld()->GetSectors().SectorIdForPosition(point)); });
             // Just overwrite it
-            sector.sector_ids = occupiedSectors;
+            sector.MoveToSectors(occupiedSectors);
         });
 
     // Has a bounding box we'll use for sector assignment.
     // Theoretical maximum: 4 sectors
-    owner.for_joined_components<Position, BoundingBox, components::Sector>(
-        [&evt](ecs::entity, Position & pos, const BoundingBox & bbox, components::Sector & sector)
+    owner.for_joined_components<Position, BoundingBox, components::OccupiedSector>(
+        [&evt](ecs::entity, Position & pos, const BoundingBox & bbox, components::OccupiedSector & sector)
         {
             auto bounding_rect = bbox.GetRect(pos);
             boost::container::small_vector<WorldSector::id_t, 4> occupiedSectors;
@@ -44,17 +44,17 @@ void systems::UpdateSectorPositions::process(ecs::registry & owner, const detect
                 { occupiedSectors.emplace_back(GetWorld()->GetSectors().SectorIdForPosition(PositionF(point)));
             });
             // Just overwrite it
-            sector.sector_ids = occupiedSectors;
+            sector.MoveToSectors( occupiedSectors);
         });
 
     // Does not have a bounding box, point-only check is easier
     // Theoretical maximum: always 1 sector
-    owner.for_joined_components<Position, components::Sector>(
-        [&evt](ecs::entity, Position & pos, components::Sector & sector)
+    owner.for_joined_components<Position, components::OccupiedSector>(
+        [&evt](ecs::entity, Position & pos, components::OccupiedSector & sector)
         {
             auto sectorId = GetWorld()->GetSectors().SectorIdForPosition(PositionF(pos));
             //if (sector.sector_ids.size() != 1 || sector.sector_ids[0] != sectorId)
-                sector.sector_ids = decltype(sector.sector_ids){sectorId};
+            sector.MoveToSectors({sectorId});
             
         },!ecs::exists<BoundingBox>{});
     
