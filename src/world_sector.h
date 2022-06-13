@@ -26,8 +26,8 @@ class WorldSector
     boost::container::small_vector<ecs::entity_id, 64 / sizeof(ecs::entity_id)> entities;
 
   public:
-    void AddEntity(ecs::entity entity);
-    void RemoveEntity(ecs::entity entity);
+    void AddEntity(ecs::entity_id entity);
+    void RemoveEntity(ecs::entity_id entity);
 };
 
 /*
@@ -67,6 +67,17 @@ class WorldSectors
                       static_cast<size_t>(std::ceil(position.y)) / WorldSector::extentY);
     }
 
+    constexpr WorldSector & Get(WorldSector::id_t id)
+    {
+        assert(((void)sectors.at(id), true));
+        return sectors[id];
+    }
+    constexpr const WorldSector & Get(WorldSector::id_t id) const
+    {
+        assert(((void)sectors.at(id), true));
+        return sectors[id];
+    }
+
   private:
     constexpr static Size SectorCountFromWorldSize(SizeF worldSize)
     {
@@ -87,16 +98,16 @@ namespace components
 
       private:
         // Indicates presence in sector(s) - more than one is possible for anything that has an area
-        sector_list_t sector_ids;
+        sector_list_t sectorIds;
 
       public:
-        void EnterSector(WorldSector::id_t sectorId);
-        void ExitSector(WorldSector::id_t sectorId);
-        void MoveToSectors(sector_list_t incomingList);
+        void EnterSector(ecs::entity_id entity_id, WorldSector::id_t sectorId);
+        void ExitSector(ecs::entity_id entity_id, WorldSector::id_t sectorId);
+        void MoveToSectors(ecs::entity_id entity_id, sector_list_t incomingList);
 
       private:
-        void OnEnterNotify(WorldSector::id_t sectorId);
-        void OnExitNotify(WorldSector::id_t sectorId);
+        static void OnEnterNotify(ecs::entity_id entityId, WorldSector::id_t sectorId);
+        static void OnExitNotify(ecs::entity_id entity_id, WorldSector::id_t sectorId);
     };
 } // namespace components
 
