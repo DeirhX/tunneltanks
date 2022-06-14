@@ -33,8 +33,8 @@ Tank::Tank(TankColor color, Terrain * level, TankBase * tank_base)
     : Base(tank_base->GetPosition(), tweak::tank::DefaultTankReactor, tweak::tank::ResourcesMax, level), color(color),
       tank_base(tank_base), turret(this, Palette.GetTank(color)[2]), materializer(this, &this->GetResources())
 {
-    auto collider = this->entity.assign_component<crust::components::BitmapCollision>(Size{7, 7}, Offset{3, 3},
-                                                                                      crust::sprites::TankSprite);
+    auto collider = this->entity.assign_component<components::BitmapCollision>(Size{7, 7}, Offset{3, 3},
+                                                                                      sprites::TankSprite);
 
     // this->cached_slice = std::make_shared<LevelView>(this, lvl);
 
@@ -174,7 +174,7 @@ CollisionType Tank::TryCollide(Direction rotation, Position position_)
 
             return !is_blocking_collision;
         },
-        entity.get_component<crust::components::BitmapCollision>(), position_, rotation);
+        entity.get_component<components::BitmapCollision>(), position_, rotation);
 
     //if (result == CollisionType::Blocked || GetWorld()->GetTankList().CheckForCollision(*this, position, rotation))
     //    return CollisionType::Blocked;
@@ -222,7 +222,7 @@ void Tank::Draw(Surface & surface) const
     for (int y = 0; y < 7; y++)
         for (int x = 0; x < 7; x++)
         {
-            char val = crust::sprites::TANK_SPRITE[direction][y][x];
+            char val = sprites::TANK_SPRITE[direction][y][x];
             if (val)
             {
                 Position position = this->GetPosition();

@@ -18,6 +18,7 @@ class EntitySystem
 
   public:
     EntitySystem();
+    void Begin(); /* TODO: Remove once fully ecs */
     void Advance();
 };
 

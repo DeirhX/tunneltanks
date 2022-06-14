@@ -7,7 +7,7 @@ namespace crust
 
 Controllable::Controllable(Position position_, const Reactor & starting_reactor_state,
                            MaterialCapacity material_capacity, Terrain * level_)
-    : entity(crust::entities.registry.create_entity()), link_source(GetWorld(), position_, LinkPointType::Controllable),
+    : entity(entities.registry.create_entity()), link_source(GetWorld(), position_, LinkPointType::Controllable),
       reactor(starting_reactor_state), resources(material_capacity), level(level_)
 {
     entity.assign_component<Position>(position_);

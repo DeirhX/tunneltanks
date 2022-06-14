@@ -29,7 +29,7 @@ struct PublicTankInfo
 namespace tank
 {
     template <BasicVisitor<Position> PerPixelFunc>
-    void ForEachTankPixel(PerPixelFunc per_pixel_func, const crust::components::BitmapCollision & collider,
+    void ForEachTankPixel(PerPixelFunc per_pixel_func, const components::BitmapCollision & collider,
                           Position position, Direction direction);
 } // namespace tank
 
@@ -72,7 +72,7 @@ class Tank : public Controllable
                   PerPixelFunc> /* bool per_pixel_func(Position world_position). Return false to end iteration. */
     void ForEachTankPixel(PerPixelFunc per_pixel_func)
     {
-        tank::ForEachTankPixel(per_pixel_func, entity.get_component<crust::components::BitmapCollision>(),
+        tank::ForEachTankPixel(per_pixel_func, entity.get_component<components::BitmapCollision>(),
                                GetPosition(), GetDirection().ToIntDirection());
     }
 
@@ -90,7 +90,7 @@ namespace tank
 {
     /* return false to stop enumeration */
     template <BasicVisitor<Position> PerPixelFunc>
-    void ForEachTankPixel(PerPixelFunc per_pixel_func, const crust::components::BitmapCollision & collider,
+    void ForEachTankPixel(PerPixelFunc per_pixel_func, const components::BitmapCollision & collider,
                           Position position, Direction direction)
     {
         auto shape = collider.GetForDirection(direction);

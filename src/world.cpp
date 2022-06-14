@@ -28,6 +28,8 @@ void World::BeginGame(Game * with_game)
     this->game = with_game;
     this->tank_bases.BeginGame();
     this->terrain.BeginGame();
+
+    crust::entities.Begin();
 }
 
 void World::Advance()

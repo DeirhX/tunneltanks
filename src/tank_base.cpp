@@ -7,13 +7,13 @@
 namespace crust
 {
 
-TankBase::TankBase(Position position, TankColor color) : entity(crust::entities.registry.create_entity()), color(color)
+TankBase::TankBase(Position position, TankColor color) : entity(entities.registry.create_entity()), color(color)
 {
     entity.assign_component<Position>(position);
-    entity.assign_component<BoundingBox>();
-    entity.assign_component<crust::components::BoundingBoxCollision>();
-    entity.assign_component<crust::components::TankBase>(color);
-    entity.assign_component<crust::components::OccupiedSector>();
+    entity.assign_component<BoundingBox>(BaseSize);
+    entity.assign_component<components::BoundingBoxCollision>();
+    entity.assign_component<components::TankBase>(color);
+    entity.assign_component<components::OccupiedSector>();
 }
 
 void TankBase::BeginGame()
@@ -159,27 +159,37 @@ void TankBase::Advance() { this->reactor.Add(tweak::base::ReactorRecoveryRate); 
  * take MAX_TANKS time. */
 TankBase * TankBases::CheckBaseCollision(Position tested_pos)
 {
-    TankColor collided_base_color = {-1};
+    const WorldSector & sector = GetWorld()->GetSectors().SectorForPosition(PositionF(tested_pos));
 
-    crust::entities.const_registry.for_joined_components<Position, BoundingBox, crust::components::TankBase>(
-        [tested_pos, &collided_base_color](const ecs::const_entity, Position pos, BoundingBox bbox,
-                                           const crust::components::TankBase base)
-        {
-            if (bbox.IsInside(tested_pos, pos))
-            {
-                collided_base_color = base.color;
-            }
-        },
-        ecs::exists<crust::components::BoundingBoxCollision>{});
-
-    for (TankColor id = 0; id < tweak::world::MaxPlayers; id++)
+    for (const auto & entity : sector.Entities())
     {
-        if (this->tank_bases[id].IsInside(tested_pos))
+        auto components =
+            entity.get_components<Position, BoundingBox, components::BoundingBoxCollision, components::TankBase>();
+        if (std::get<const BoundingBox &>(components).IsInside(tested_pos, std::get<const Position &>(components)))
         {
-            assert(id == collided_base_color);
-            return &this->tank_bases[id];
+            return &this->tank_bases[std::get<const components::TankBase &>(components).color];
         }
     }
+
+    //entities.const_registry.for_joined_components<Position, BoundingBox, components::TankBase>(
+    //    [tested_pos, &collided_base_color](const ecs::const_entity, Position pos, BoundingBox bbox,
+    //                                       const components::TankBase base)
+    //    {
+    //        if (bbox.IsInside(tested_pos, pos))
+    //        {
+    //            collided_base_color = base.color;
+    //        }
+    //    },
+    //    ecs::exists<components::BoundingBoxCollision>{});
+
+    //for (TankColor id = 0; id < tweak::world::MaxPlayers; id++)
+    //{
+    //    if (this->tank_bases[id].IsInside(tested_pos))
+    //    {
+    //        assert(id == collided_base_color);
+    //        return &this->tank_bases[id];
+    //    }
+    //}
 
     return nullptr;
 }

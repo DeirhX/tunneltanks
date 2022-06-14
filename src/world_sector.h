@@ -13,7 +13,8 @@ class WorldSector
 {
   public:
     using id_t = int;
-    constexpr static size_t extent = 64;
+    using entities_t = boost::container::small_vector<ecs::entity, 64 / sizeof(ecs::entity)>;
+    constexpr static size_t extent = tweak::perf::SectorSize;
     constexpr static size_t extentX = extent;
     constexpr static size_t extentY = extent;
 
@@ -23,11 +24,12 @@ class WorldSector
     id_t id;
 
   private:
-    boost::container::small_vector<ecs::entity_id, 64 / sizeof(ecs::entity_id)> entities;
+    entities_t entities;
 
   public:
-    void AddEntity(ecs::entity_id entity);
-    void RemoveEntity(ecs::entity_id entity);
+    void AddEntity(ecs::entity entity);
+    void RemoveEntity(ecs::entity entity);
+    const entities_t & Entities() const { return entities; }
 };
 
 /*
@@ -37,7 +39,7 @@ class WorldSectors
 {
   private:
     SizeF worldSize;
-    crust::vector_2d<WorldSector> sectors;
+    vector_2d<WorldSector> sectors;
 
   public:
     WorldSectors(SizeF worldSize)
@@ -101,13 +103,13 @@ namespace components
         sector_list_t sectorIds;
 
       public:
-        void EnterSector(ecs::entity_id entity_id, WorldSector::id_t sectorId);
-        void ExitSector(ecs::entity_id entity_id, WorldSector::id_t sectorId);
-        void MoveToSectors(ecs::entity_id entity_id, sector_list_t incomingList);
+        void EnterSector(ecs::entity entity_id, WorldSector::id_t sectorId);
+        void ExitSector(ecs::entity entity_id, WorldSector::id_t sectorId);
+        void MoveToSectors(ecs::entity entity_id, sector_list_t incomingList);
 
       private:
-        static void OnEnterNotify(ecs::entity_id entityId, WorldSector::id_t sectorId);
-        static void OnExitNotify(ecs::entity_id entity_id, WorldSector::id_t sectorId);
+        static void OnEnterNotify(ecs::entity entityId, WorldSector::id_t sectorId);
+        static void OnExitNotify(ecs::entity entity_id, WorldSector::id_t sectorId);
     };
 } // namespace components
 

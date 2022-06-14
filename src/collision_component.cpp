@@ -1,8 +1,7 @@
 ﻿#include "pch.h"
 #include "collision_component.h"
-//#include "types.h"
+#include "types.h"
 
-//#include <stdexcept>
 
 namespace crust::components
 {
@@ -50,4 +49,4 @@ BitmapView BitmapCollision::GetForDirection(Direction direction) const
     return {std::span{raw_data.begin(), raw_data.size()}, size};
 }
 
-} // namespace crust::components
+} // namespace components

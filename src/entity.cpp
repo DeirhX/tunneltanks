@@ -12,6 +12,8 @@ EntitySystem::EntitySystem()
         ecs::feature().add_system<systems::UpdateSectorPositions>().add_system<systems::CollisionSystem>());
 }
 
+void EntitySystem::Begin() { registry.process_event(detect_collisions_step()); }
+
 void EntitySystem::Advance() { registry.process_event(detect_collisions_step()); }
 
 void systems::CollisionSystem::process(ecs::registry & owner, const detect_collisions_step & evt)
@@ -30,7 +32,7 @@ void systems::UpdateSectorPositions::process(ecs::registry & owner, const detect
                 [&occupiedSectors](PositionF point)
                 { occupiedSectors.emplace_back(GetWorld()->GetSectors().SectorIdForPosition(point)); });
             // Just overwrite it
-            sector.MoveToSectors(entity.id(), occupiedSectors);
+            sector.MoveToSectors(entity, occupiedSectors);
         });
 
     // Has a bounding box we'll use for sector assignment.
@@ -44,7 +46,7 @@ void systems::UpdateSectorPositions::process(ecs::registry & owner, const detect
                 { occupiedSectors.emplace_back(GetWorld()->GetSectors().SectorIdForPosition(PositionF(point)));
             });
             // Just overwrite it
-            sector.MoveToSectors(entity.id(), occupiedSectors);
+            sector.MoveToSectors(entity, occupiedSectors);
         });
 
     // Does not have a bounding box, point-only check is easier
@@ -54,7 +56,7 @@ void systems::UpdateSectorPositions::process(ecs::registry & owner, const detect
         {
             auto sectorId = GetWorld()->GetSectors().SectorIdForPosition(PositionF(pos));
             //if (sector.sector_ids.size() != 1 || sector.sector_ids[0] != sectorId)
-            sector.MoveToSectors(entity.id(),{sectorId});
+            sector.MoveToSectors(entity,{sectorId});
             
         },!ecs::exists<BoundingBox>{});
     

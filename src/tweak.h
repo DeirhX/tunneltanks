@@ -26,6 +26,9 @@ namespace perf
 
 	/* The desired speed in frames per second: */
 	constexpr int TargetFps = 24;
+
+    /* Size of a collision sector*/
+    constexpr int SectorSize = 64;
 }
 
 namespace screen

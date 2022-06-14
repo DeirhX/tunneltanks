@@ -10,13 +10,13 @@ namespace crust
 /*
  * Add/Remove entity ids to to/from this sector
  */
-void WorldSector::AddEntity(ecs::entity_id entityId)
+void WorldSector::AddEntity(ecs::entity entityId)
 {
     assert(ranges::find(entities, entityId) == entities.end());
     entities.emplace_back(entityId);
 }
 
-void WorldSector::RemoveEntity(ecs::entity_id entityId)
+void WorldSector::RemoveEntity(ecs::entity entityId)
 {
     const auto it = ranges::find(entities, entityId);
     assert(it != entities.end());
@@ -27,13 +27,13 @@ void WorldSector::RemoveEntity(ecs::entity_id entityId)
  * Process change notifications of modifying the local list of occupied sectors for an entity
  */
 
-void components::OccupiedSector::EnterSector(ecs::entity_id entityId, WorldSector::id_t sectorId)
+void components::OccupiedSector::EnterSector(ecs::entity entityId, WorldSector::id_t sectorId)
 {
     OnEnterNotify(entityId, sectorId);
     this->sectorIds.push_back(sectorId);
 }
 
-void components::OccupiedSector::ExitSector(ecs::entity_id entityId, WorldSector::id_t sectorId)
+void components::OccupiedSector::ExitSector(ecs::entity entityId, WorldSector::id_t sectorId)
 {
     OnExitNotify(entityId, sectorId);
     auto existing_it = ranges::find(sectorIds, sectorId);
@@ -41,7 +41,7 @@ void components::OccupiedSector::ExitSector(ecs::entity_id entityId, WorldSector
     this->sectorIds.erase(existing_it);
 }
 
-void components::OccupiedSector::MoveToSectors(ecs::entity_id entity_id, sector_list_t incomingList)
+void components::OccupiedSector::MoveToSectors(ecs::entity entity_id, sector_list_t incomingList)
 {
     ranges::sort(incomingList);
     auto current_it = this->sectorIds.begin();
@@ -79,12 +79,12 @@ void components::OccupiedSector::MoveToSectors(ecs::entity_id entity_id, sector_
         this->sectorIds = incomingList;
 }
 
-void components::OccupiedSector::OnEnterNotify(ecs::entity_id entityId, WorldSector::id_t sectorId)
+void components::OccupiedSector::OnEnterNotify(ecs::entity entityId, WorldSector::id_t sectorId)
 {
     GetWorld()->GetSectors().Get(sectorId).AddEntity(entityId);
 }
 
-void components::OccupiedSector::OnExitNotify(ecs::entity_id entityId, WorldSector::id_t sectorId)
+void components::OccupiedSector::OnExitNotify(ecs::entity entityId, WorldSector::id_t sectorId)
 {
     GetWorld()->GetSectors().Get(sectorId).RemoveEntity(entityId);
 }

@@ -2,7 +2,7 @@
 
 #include <span>
 
-namespace crust::sprites
+namespace sprites
 {
 
 uint8_t TANK_SPRITE[9][7][7] = {

@@ -72,4 +72,4 @@ class PointCollision
 };
 
 
-} // namespace crust::components
+} // namespace components
