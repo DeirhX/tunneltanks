@@ -183,11 +183,6 @@ struct VectorF : public VectorBase<float>
     using base = VectorBase<float>;
     using base::base;
 
-    float x = 0, y = 0;
-
-    constexpr VectorF() = default;
-    constexpr VectorF(float x, float y) : x(x), y(y) {}
-
     [[nodiscard]] float GetSize() const { return std::sqrt(x * x + y * y); }
     [[nodiscard]] bool IsNormalized() const
     {
