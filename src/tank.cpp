@@ -35,7 +35,7 @@ Tank::Tank(TankColor color, Terrain * level, TankBase * tank_base)
 {
     this->entity.assign_component<components::BitmapCollision>(Size{7, 7}, Offset{3, 3}, sprites::TankSprite);
     this->entity.assign_component<components::ColorLookup>(components::ColorLookup::PaletteKind::Tank, color);
-    this->entity.assign_component<MonoBitmap>(Size{7, 7}, sprites::TankSprite, 9);
+    this->entity.assign_component<IndexedBitmap>(Size{7, 7}, sprites::TankSprite, 9);
     assert(aspects.verify(entity));
 
     // this->cached_slice = std::make_shared<LevelView>(this, lvl);
@@ -219,6 +219,10 @@ void Tank::Draw(Surface & surface) const
 {
     if (!this->reactor.GetHealth())
         return;
+
+    /*auto & bitmap = this->entity.get_component<IndexedBitmap>();
+    auto & palette = this->entity.get_component<ColorPalette>();
+    bitmap.Draw();*/
 
     auto direction = this->GetDirection().ToIntDirection();
     for (int y = 0; y < 7; y++)

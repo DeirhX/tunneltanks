@@ -8,7 +8,7 @@ namespace crust
 
 template <typename DataType>
 template <typename GetColorFunc>
-void Bitmap<DataType>::Draw(Screen * screen, ScreenPosition position, GetColorFunc GetPixelColor, int spriteId)
+void Bitmap<DataType>::Draw(Screen * screen, ScreenPosition position, GetColorFunc GetPixelColor, int spriteId) const
 {
     int x = 0;
     int y = 0;
@@ -29,8 +29,8 @@ void Bitmap<DataType>::Draw(Screen * screen, ScreenPosition position, GetColorFu
 template <typename DataType>
 template <typename GetColorFunc>
 void Bitmap<DataType>::Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect,
-                            GetColorFunc GetPixelColor,  /* return Color */
-                            int spriteId)
+                            GetColorFunc GetPixelColor, /* return Color */
+                            int spriteId) const
 {
     for (int x = source_rect.Left(); x <= source_rect.Right(); ++x)
         for (int y = source_rect.Top(); y <= source_rect.Bottom(); ++y)
@@ -46,7 +46,7 @@ template <typename DataType>
 template <typename GetColorFunc>
 void Bitmap<DataType>::Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect,
                             GetColorFunc GetPixelColor, /* return Color */
-                            int spriteId)
+                            int spriteId) const
 {
     auto actual_width = std::min(source_rect.size.x, screen_rect.size.x);
     auto actual_height = std::min(source_rect.size.y, screen_rect.size.y);
@@ -59,14 +59,15 @@ void Bitmap<DataType>::Draw(Screen * screen, ScreenRect screen_rect, ImageRect s
         }
 }
 
-void MonoBitmap::Draw(Screen * screen, ScreenPosition screen_pos, Color color, int spriteId)
+void MonoBitmap::Draw(Screen * screen, ScreenPosition screen_pos, Color color, int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
     Base::Draw(screen, screen_pos,
                [this, color, spriteOffset](int index)
                { return this->At(index + spriteOffset) ? color : Palette.Get(Colors::Transparent); });
 }
-void MonoBitmap::Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, Color color, int spriteId)
+void MonoBitmap::Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, Color color,
+                      int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
     Base::Draw(screen, screen_pos, source_rect,
@@ -74,19 +75,20 @@ void MonoBitmap::Draw(Screen * screen, ScreenPosition screen_pos, ImageRect sour
                { return this->At(index + spriteOffset) ? color : Palette.Get(Colors::Transparent); });
 }
 
-void MonoBitmap::Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, Color color, int spriteId)
+void MonoBitmap::Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, Color color, int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
     Base::Draw(screen, screen_rect, source_rect,
-               [this, color, spriteOffset](int index) { return this->At(index + spriteOffset) ? color : Palette.Get(Colors::Transparent); });
+               [this, color, spriteOffset](int index)
+               { return this->At(index + spriteOffset) ? color : Palette.Get(Colors::Transparent); });
 }
 
-void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos, int spriteId)
+void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos, int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
     Base::Draw(screen, screen_pos, [this, spriteOffset](int index) { return this->At(index + spriteOffset); });
 }
-void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos, Color color_filter, int spriteId)
+void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos, Color color_filter, int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
     Base::Draw(screen, screen_pos,
@@ -94,13 +96,13 @@ void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos, Color color_f
                { return color_filter.Mask(this->At(index + spriteOffset)); });
 }
 
-void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, int spriteId)
+void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
     Base::Draw(screen, screen_pos, source_rect,
                [this, spriteOffset](int index) { return this->At(index + spriteOffset); });
 }
-void ColorBitmap::Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, int spriteId)
+void ColorBitmap::Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
     Base::Draw(
@@ -108,7 +110,7 @@ void ColorBitmap::Draw(Screen * screen, ScreenRect screen_rect, ImageRect source
         spriteId);
 }
 void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, Color color_filter,
-                       int spriteId)
+                       int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
     Base::Draw(
@@ -116,11 +118,14 @@ void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos, ImageRect sou
         [this, spriteOffset, color_filter](int index) { return color_filter.Mask(this->At(index + spriteOffset)); },
         spriteId);
 }
-void ColorBitmap::Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, Color color_filter, int spriteId)
+void ColorBitmap::Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, Color color_filter,
+                       int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
-    Base::Draw(screen, screen_rect, source_rect,
-        [this, spriteOffset, color_filter](int index) { return color_filter.Mask(this->At(index + spriteOffset)); }, spriteId);
+    Base::Draw(
+        screen, screen_rect, source_rect,
+        [this, spriteOffset, color_filter](int index) { return color_filter.Mask(this->At(index + spriteOffset)); },
+        spriteId);
 }
 
-} // namespace MyNamespace
+} // namespace crust
