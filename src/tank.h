@@ -6,6 +6,7 @@
 #include "Terrain.h"
 #include "level_view.h"
 #include "machine_materializer.h"
+#include "render_component.h"
 #include "tank_sprites.h"
 #include "tank_turret.h"
 namespace crust
@@ -36,6 +37,7 @@ namespace tank
 class Tank : public Controllable
 {
     using Base = Controllable;
+    aspect::entity_aspects<aspects::PaletteRenderable> aspects;
 
     TankColor color;                /* Unique id and also color of the tank */
     TankBase * tank_base = nullptr; /* Base owned by the tank  */

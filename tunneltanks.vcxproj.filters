@@ -484,6 +484,9 @@
     <ClInclude Include="src\vector_2d.h">
       <Filter>src\system\containers</Filter>
     </ClInclude>
+    <ClInclude Include="src\render_component.h">
+      <Filter>src\component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />

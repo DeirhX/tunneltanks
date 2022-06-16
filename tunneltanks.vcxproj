@@ -124,6 +124,7 @@
     <ClInclude Include="src\levelgen_type.h" />
     <ClInclude Include="src\position_component.h" />
     <ClInclude Include="src\renderer.h" />
+    <ClInclude Include="src\render_component.h" />
     <ClInclude Include="src\vector_2d.h" />
     <ClInclude Include="src\world_sector.h" />
     <ClInclude Include="src\terrain_algorithm.h" />
