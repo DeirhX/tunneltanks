@@ -89,7 +89,7 @@ Color ColorPalette::GetPrimary(TankColor index)
     return Primaries[static_cast<int>(index)];
 }
 
-Color * ColorPalette::GetTank(TankColor index)
+std::span<Color, 3> ColorPalette::GetTank(TankColor index)
 {
     assert(index >= 0 && index < PrimaryColors);
     return Tanks[static_cast<int>(index)];
