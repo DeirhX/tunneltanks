@@ -14,7 +14,7 @@ class Screen;
  *  ValueArray: an iterable, generic container for any type of 2D image data.
  *   Can be simple bits, 8-bit values or full-fledged RGB or RGBA data.
  */
-template <typename DataType = char>
+template <typename DataType = uint8_t>
 class ImageData
 {
   public:
@@ -23,7 +23,7 @@ class ImageData
     using const_iterator = typename Container::const_iterator;
     /* Wasteful to copy in dynamically-allocated memory. But expecting we'll be keeping bitmaps in files in near future
      * when it's gonna be needed. Hang on! */
-  private:
+  protected:
     /* 2-D dimensions of the image*/
     Size size;
     /* The actual data of templated type*/
@@ -65,49 +65,76 @@ class ImageData
     operator Container() const { return data; }
 };
 
-template <typename DataType>
-class Bitmap : public ImageData<DataType>
+template <typename DataType = uint8_t>
+class SpriteImageData : public ImageData<DataType>
 {
     using Base = ImageData<DataType>;
 
   public:
+    /* In-place value initialization from hardcoded byte-array */
+    SpriteImageData(Size size, std::initializer_list<DataType> data, int spriteCount = 1)
+        : Base(Size(size.x, size.y * spriteCount), data), spriteCount(spriteCount), spriteSize(size)
+    {
+        assert(size.Area() == int(data.size()));
+    }
+    /* Initialization for dynamic content */
+    SpriteImageData(Size size, int spriteCount = 1)
+        : Base(Size(size.x, size.y * spriteCount)), spriteCount(spriteCount), spriteSize(size)
+    {
+    }
+
+    Size GetSize() const { return this->spriteSize; }
+
+  private:
+    int spriteCount;
+    Size spriteSize;
+};
+
+template <typename DataType>
+class Bitmap : public SpriteImageData<DataType>
+{
+    using Base = SpriteImageData<DataType>;
+
+  public:
     using PixelType = DataType;
+    using Bitmap::Bitmap;
 
   protected:
     /* Draw entire bitmap */
     template <typename GetColorFunc>
-    void Draw(Screen * screen, ScreenPosition position,
-              GetColorFunc GetPixelColor); /* Color GetPixelColor(int index) */
+    void Draw(Screen * screen, ScreenPosition position, GetColorFunc GetPixelColor, /* Color GetPixelColor(int index) */
+              int spriteId = 0);
     /* Draw portion of bitmap */
     template <typename GetColorFunc>
     void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect,
-              GetColorFunc GetPixelColor); /* Color GetPixelColor(int index) */
+              GetColorFunc GetPixelColor, /* Color GetPixelColor(int index) */
+              int spriteId = 0);
     /* Draw portion of bitmap into a screen rectangle, clipping it if it exceeds bounds */
     template <typename GetColorFunc>
     void Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect,
-              GetColorFunc GetPixelColor); /* Color GetPixelColor(int index) */
-
-    Bitmap(Size size, std::initializer_list<DataType> data) : Base(size, data) {}
-    Bitmap(Size size) : Base(size) {}
+              GetColorFunc GetPixelColor, /* Color GetPixelColor(int index) */
+              int spriteId = 0);
 
   public:
     [[nodiscard]] int ToIndex(Position position) const { return position.x + position.y * this->GetSize().x; }
 };
 
-/* MonoBitmap: a true 'bitmap, mapping one for value and zero for transparency */
+/*
+ * MonoBitmap: a true 'bitmap, mapping one for value and zero for transparency
+ * Can contain multiple sprites. If so, the data is expected to contain them sequentially.
+ */
 class MonoBitmap : public Bitmap<std::uint8_t>
 {
     using Base = Bitmap<std::uint8_t>;
 
   public:
-    MonoBitmap(Size size, std::initializer_list<std::uint8_t> data) : Bitmap<std::uint8_t>(size, data) {}
-    MonoBitmap(Size size) : Bitmap<std::uint8_t>(size) {}
+    using Base::Base;
     /* Draw entire bitmap */
-    void Draw(Screen * screen, ScreenPosition position, Color color);
+    void Draw(Screen * screen, ScreenPosition position, Color color, int spriteId = 0);
     /* Draw a portion of bitmap */
-    void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, Color color);
+    void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, Color color, int spriteId = 0);
     /* Draw a portion of bitmap, possibly clipping to fit into screen rect */
-    void Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, Color color);
+    void Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, Color color, int spriteId = 0);
 
   private:
     // int ToIndex(Position position) const { return position.x + position.y * size.x; }
@@ -119,16 +146,15 @@ class ColorBitmap : public Bitmap<Color>
     using Base = Bitmap<Color>;
 
   public:
-    ColorBitmap(Size size, std::initializer_list<Color> data) : Bitmap<Color>(size, data) {}
-    ColorBitmap(Size size) : Bitmap<Color>(size) {}
+    using Base::Base;
     /* Draw entire bitmap */
-    void Draw(Screen * screen, ScreenPosition screen_pos);
-    void Draw(Screen * screen, ScreenPosition screen_pos, Color color_filter);
+    void Draw(Screen * screen, ScreenPosition screen_pos, int spriteId = 0);
+    void Draw(Screen * screen, ScreenPosition screen_pos, Color color_filter, int spriteId = 0);
     /* Draw portion of bitmap */
-    void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect);
-    void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, Color color_filter);
-    void Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect);
-    void Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, Color color_filter);
+    void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, int spriteId = 0);
+    void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, Color color_filter, int spriteId = 0);
+    void Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, int spriteId = 0);
+    void Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, Color color_filter, int spriteId = 0);
 
   private:
     // int ToIndex(Position position) const { return position.x + position.y * size.x; }
@@ -137,18 +163,39 @@ class ColorBitmap : public Bitmap<Color>
 /* Simple hardcoded bitmaps */
 namespace bitmaps
 {
-    inline auto GuiHealth = MonoBitmap(Size{4, 5}, {1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1});
+    // clang-format off
+    inline auto GuiHealth = MonoBitmap(Size{4, 5}, 
+    {
+        1, 0, 0, 1,
+        1, 0, 0, 1,
+        1, 1, 1, 1,
+        1, 0, 0, 1,
+        1, 0, 0, 1
+    });
 
-    inline auto GuiEnergy = MonoBitmap(Size{4, 5}, {1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1});
+    inline auto GuiEnergy = MonoBitmap(Size{4, 5}, 
+    {
+        1, 1, 1, 1,
+        1, 0, 0, 0,
+        1, 1, 1, 0,
+        1, 0, 0, 0,
+        1, 1, 1, 1
+    });
 
-    inline auto LifeDot = MonoBitmap(Size{2, 2}, {
-                                                     1,
-                                                     1,
-                                                     1,
-                                                     1,
-                                                 });
+    inline auto LifeDot = MonoBitmap(Size{2, 2}, 
+{
+         1, 1,
+         1, 1,
+    });
 
-    inline auto Crosshair = MonoBitmap(Size{3, 3}, {0, 1, 0, 1, 1, 1, 0, 1, 0});
+    inline auto Crosshair = MonoBitmap(Size{3, 3}, 
+{
+        0, 1, 0,
+        1, 1, 1,
+        0, 1, 0
+    });
+
+    // clang-format on
 } // namespace bitmaps
 
-} // namespace MyNamespace
+} // namespace crust

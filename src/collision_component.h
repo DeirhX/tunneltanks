@@ -26,50 +26,56 @@ class BitmapView
     }
 };
 
-struct Collider {};
+struct Collider
+{
+};
 
-class BitmapCollision
+class BitmapContainer
 {
   private:
     Size size;
     Offset center;
     bool multiple_directions = false;
-    std::vector<uint8_t> collision_data;
+    std::vector<uint8_t> bitmap_data;
 
   private:
     std::span<uint8_t> RawDataForDirection(Direction direction);
     std::span<const uint8_t> RawDataForDirection(Direction direction) const;
+
   public:
-    BitmapCollision(Size size, Offset center, std::span<uint8_t> collision_data);
-    BitmapCollision(Size size, Offset center, std::span<std::span<uint8_t>, 9> multiple_directions);
+    BitmapContainer(Size size, Offset center, std::span<uint8_t> collision_data);
+    BitmapContainer(Size size, Offset center, std::span<std::span<uint8_t>, 9> multiple_directions);
 
     [[nodiscard]] Size Size() const { return this->size; }
     [[nodiscard]] Offset Center() const { return this->center; }
 
     BitmapView GetForDirection(Direction direction) const;
-
-    //uint8_t GetRelative(Offset offset) const
-    //{
-    //    Offset data_offset = offset + center;
-    //    if (!size.FitsInside(data_offset))
-    //    {
-    //        return {0};
-    //    }
-    //    return collision_data[data_offset.x + data_offset.y * size.x];
-    //}
 };
 
-class BoundingBoxCollision
+class BitmapCollision : public BitmapContainer
+{
+    using Base = BitmapContainer;
+
+  public:
+    using Base::Base;
+};
+
+struct BoundingBoxCollision
 {
     // All needed info is in BoundingBox
 };
-
-inline ecs::aspect<BoundingBox, Collider> BoundingBoxCollidable;
 
 class PointCollision
 {
     // All needed info is in Position
 };
 
+} // namespace crust::components
 
-} // namespace components
+namespace crust::aspects
+{
+using namespace components;
+using BitmapCollidable = ecs::aspect<Position, BitmapCollision>;
+using BoundingBoxCollidable = ecs::aspect<Position, BoundingBox, BoundingBoxCollision>;
+using PointCollidable = ecs::aspect<Position, PointCollision>;
+} // namespace crust::aspects

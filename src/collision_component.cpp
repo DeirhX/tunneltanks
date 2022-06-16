@@ -6,33 +6,33 @@
 namespace crust::components
 {
 
-std::span<uint8_t> BitmapCollision::RawDataForDirection(Direction direction) 
+std::span<uint8_t> BitmapContainer::RawDataForDirection(Direction direction) 
 {
-    assert(!collision_data.empty());
-    return {collision_data.begin() + direction * size.Area(), static_cast<size_t>(size.Area())};
+    assert(!bitmap_data.empty());
+    return {bitmap_data.begin() + direction * size.Area(), static_cast<size_t>(size.Area())};
 }
 
-std::span<const uint8_t> BitmapCollision::RawDataForDirection(Direction direction) const
+std::span<const uint8_t> BitmapContainer::RawDataForDirection(Direction direction) const
 {
-    assert(!collision_data.empty());
-    return {collision_data.begin() + direction * size.Area(), static_cast<size_t>(size.Area())};
+    assert(!bitmap_data.empty());
+    return {bitmap_data.begin() + direction * size.Area(), static_cast<size_t>(size.Area())};
 }
 
-BitmapCollision::BitmapCollision(crust::Size size, Offset center, std::span<uint8_t> collision_data)
-    : size(size), center(center), collision_data(collision_data.begin(), collision_data.end())
+BitmapContainer::BitmapContainer(crust::Size size, Offset center, std::span<uint8_t> bitmap_data)
+    : size(size), center(center), bitmap_data(bitmap_data.begin(), bitmap_data.end())
 {
-    if (collision_data.size() == size.Area())
+    if (bitmap_data.size() == size.Area())
         multiple_directions = false;
-    else if (collision_data.size() == 9 * size.Area())
+    else if (bitmap_data.size() == 9 * size.Area())
         multiple_directions = true;
     else
-        throw std::logic_error("Invalid size of collision_data");
+        throw std::logic_error("Invalid size of bitmap_data");
 }
 
-BitmapCollision::BitmapCollision(crust::Size size, Offset center, std::span<std::span<uint8_t>, 9> multiple_directions)
+BitmapContainer::BitmapContainer(crust::Size size, Offset center, std::span<std::span<uint8_t>, 9> multiple_directions)
     : size(size), center(center), multiple_directions(true)
 {
-    collision_data.resize(size.Area() * 9);
+    bitmap_data.resize(size.Area() * 9);
     int directions = 9;
     for (int dir = 0; dir < directions; ++dir)
     {
@@ -42,9 +42,9 @@ BitmapCollision::BitmapCollision(crust::Size size, Offset center, std::span<std:
     }
 }
 
-BitmapView BitmapCollision::GetForDirection(Direction direction) const
+BitmapView BitmapContainer::GetForDirection(Direction direction) const
 {
-    assert(!collision_data.empty());
+    assert(!bitmap_data.empty());
     auto raw_data = RawDataForDirection(direction);
     return {std::span{raw_data.begin(), raw_data.size()}, size};
 }

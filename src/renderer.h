@@ -43,4 +43,11 @@ class Renderer
     /* Logical surfaces to composite */
     WorldRenderSurfaces render_surfaces;
 };
-} // namespace MyNamespace
+
+//class TankRenderer
+//{
+//public:
+//    void Render()
+//};
+
+} 

@@ -28,7 +28,7 @@ class TankBase
 {
     /* All your base are belong...same size */
     static constexpr Size BaseSize = Size{tweak::base::BaseSize, tweak::base::BaseSize};
-    aspect::entity_aspects<components::aspects::BoundingBoxCollidable> aspects;
+    aspect::entity_aspects<aspects::BoundingBoxCollidable> aspects;
   public:
     ecs::entity entity;
     /* Owner tank */
