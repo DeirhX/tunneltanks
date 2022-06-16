@@ -33,8 +33,10 @@ Tank::Tank(TankColor color, Terrain * level, TankBase * tank_base)
     : Base(tank_base->GetPosition(), tweak::tank::DefaultTankReactor, tweak::tank::ResourcesMax, level), color(color),
       tank_base(tank_base), turret(this, Palette.GetTank(color)[2]), materializer(this, &this->GetResources())
 {
-    auto collider = this->entity.assign_component<components::BitmapCollision>(Size{7, 7}, Offset{3, 3},
+    this->entity.assign_component<components::BitmapCollision>(Size{7, 7}, Offset{3, 3},
                                                                                       sprites::TankSprite);
+    this->entity.assign_component<components::ColorLookup>(components::ColorLookup::PaletteKind::Tank, color);
+    this->entity.assign_component<MonoBitmap>(Size{7, 7}, sprites::TankSprite, 9);
 
     // this->cached_slice = std::make_shared<LevelView>(this, lvl);
 

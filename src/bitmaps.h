@@ -26,40 +26,80 @@ class ImageData
   protected:
     /* 2-D dimensions of the image*/
     Size size;
-    /* The actual data of templated type*/
-    Container data;
+    /* May hold private image data if not constructed from a global. If initialized, data_view always points to this. */
+    std::shared_ptr<Container> data;
+    /* Always points to the image data. May point into Container if data is unique to this instance. In order cases, may point to globally shared data. */
+    std::span<DataType> data_view;
 
   public:
     /* In-place value initialization from hardcoded byte-array */
-    ImageData(Size size, std::initializer_list<DataType> data) : size(size), data(data)
+    ImageData(Size size, std::initializer_list<DataType> data) : size(size), data(std::make_shared<Container>(data))
     {
-        assert(size.x * size.y == int(data.size()));
+        assert(size.x * size.y == static_cast<int>(data.size()));
+        data_view = std::span<DataType>(this->data->begin(), this->data->end());
+    }
+    ImageData(Size size, std::span<DataType> data) : size(size), data_view(data)
+    {
+        assert(size.x * size.y == static_cast<int>(data.size()));
     }
     /* Initialization for dynamic content */
-    ImageData(Size size) : size(size) { data.resize(size.x * size.y); }
+    ImageData(Size size) : size(size)
+    {
+        data = std::make_shared<Container>();
+        data->resize(size.x * size.y);
+        data_view = std::span<DataType>(this->data->begin(), this->data->end());
+    }
+    /* Copy assignment and constructor - need to re-point data_view to data  */
+    ImageData(const ImageData & other) noexcept { *this = other; }
+    ImageData & operator=(const ImageData & other) noexcept
+    {
+        this->size = other.size;
+        if (other.data)
+        {
+            this->data = other.data;
+            this->data_view = std::span<DataType>(this->data->begin(), this->data->end());
+        }
+        else
+            this->data_view = other.data_view;
+        return *this;
+    }
+    /* Move assignment and constructor - need to re-point data_view to data  */
+    ImageData(ImageData && other) noexcept { *this = std::move(other); }
+    ImageData & operator=(ImageData && other) noexcept
+    {
+        this->size = other.size;
+        if (other.data)
+        {
+            this->data = std::move(other.data);
+            this->data_view = std::span<DataType>(this->data->begin(), this->data->end());
+        }
+        else
+            this->data_view = other.data_view;
+        return *this;
+    }
 
-    size_t GetLength() const { return data.size(); }
+    size_t GetLength() const { return data_view.size(); }
     Size GetSize() const { return this->size; }
 
     /* Read-write accessors */
     DataType & At(int index)
     {
-        assert(index >= 0 && index < size.x * size.y);
-        return data[index];
+        assert(index >= 0 && index < data_view.size());
+        return *(data_view.begin() + index);
     }
     [[nodiscard]] const DataType & At(int index) const
     {
-        assert(index >= 0 && index < size.x * size.y);
-        return data[index];
+        assert(index >= 0 && index < data_view.size());
+        return *(data_view.begin() + index);
     }
     DataType & operator[](int index) { return At(index); }
     [[nodiscard]] const DataType & operator[](int index) const { return At(index); }
 
     /* Iterator support */
-    iterator begin() { return data.begin(); }
-    iterator end() { return data.end(); }
-    const_iterator cbegin() const { return data.cbegin(); }
-    const_iterator cend() const { return data.cend(); }
+    iterator begin() { return data_view.begin(); }
+    iterator end() { return data_view.end(); }
+    const_iterator cbegin() const { return data_view.cbegin(); }
+    const_iterator cend() const { return data_view.cend(); }
 
     /* Conversion to raw data */
     operator Container() const { return data; }
@@ -75,7 +115,13 @@ class SpriteImageData : public ImageData<DataType>
     SpriteImageData(Size size, std::initializer_list<DataType> data, int spriteCount = 1)
         : Base(Size(size.x, size.y * spriteCount), data), spriteCount(spriteCount), spriteSize(size)
     {
-        assert(size.Area() == int(data.size()));
+        assert(size.Area() * spriteCount == static_cast<int>(data.size()));
+    }
+    /* In-place value initialization from byte-array span */
+    SpriteImageData(Size size, std::span<DataType> data, int spriteCount = 1)
+        : Base(Size(size.x, size.y * spriteCount), data), spriteCount(spriteCount), spriteSize(size)
+    {
+        assert(size.Area() * spriteCount == static_cast<int>(data.size()));
     }
     /* Initialization for dynamic content */
     SpriteImageData(Size size, int spriteCount = 1)
@@ -97,7 +143,7 @@ class Bitmap : public SpriteImageData<DataType>
 
   public:
     using PixelType = DataType;
-    using Bitmap::Bitmap;
+    using Base::Base;
 
   protected:
     /* Draw entire bitmap */
@@ -122,6 +168,7 @@ class Bitmap : public SpriteImageData<DataType>
 /*
  * MonoBitmap: a true 'bitmap, mapping one for value and zero for transparency
  * Can contain multiple sprites. If so, the data is expected to contain them sequentially.
+ * Values contained may be looked up using a ColorPalette to assign colors
  */
 class MonoBitmap : public Bitmap<std::uint8_t>
 {

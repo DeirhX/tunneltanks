@@ -56,7 +56,7 @@ class BitmapFont
     GlyphInfoTable glyph_lookup;
 
   public:
-    BitmapFont(MonoBitmap && bitmap, GlyphInfoTable && glyph_info) : font_bitmap(bitmap), glyph_lookup(glyph_info){};
+    BitmapFont(MonoBitmap && bitmap, GlyphInfoTable && glyph_info) : font_bitmap(std::move(bitmap)), glyph_lookup(glyph_info){};
     void Render(Screen * screen, ScreenRect screen_rect, std::string_view text, Color color, HorizontalAlign alignment);
 };
 
