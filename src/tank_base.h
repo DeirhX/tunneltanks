@@ -5,6 +5,7 @@
 #include "tweak.h"
 #include "types.h"
 #include "entity.h"
+#include "collision_component.h"
 namespace crust
 {
 
@@ -27,7 +28,7 @@ class TankBase
 {
     /* All your base are belong...same size */
     static constexpr Size BaseSize = Size{tweak::base::BaseSize, tweak::base::BaseSize};
-
+    aspect::entity_aspects<components::aspects::BoundingBoxCollidable> aspects;
   public:
     ecs::entity entity;
     /* Owner tank */

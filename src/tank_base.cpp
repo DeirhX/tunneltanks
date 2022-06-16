@@ -14,6 +14,7 @@ TankBase::TankBase(Position position, TankColor color) : entity(entities.registr
     entity.assign_component<components::BoundingBoxCollision>();
     entity.assign_component<components::TankBase>(color);
     entity.assign_component<components::OccupiedSector>();
+    assert(aspects.verify(entity));
 }
 
 void TankBase::BeginGame()

@@ -59,6 +59,23 @@ namespace components
 namespace aspect
 {
     using namespace components;
+
+
+    template <typename... Aspect>
+    struct entity_aspects
+    {
+        static bool verify(ecs::entity entity) { return true; }
+    };
+    template <typename Aspect, typename... Aspects>
+    struct entity_aspects<Aspect, Aspects...>
+    {
+        static bool verify(ecs::entity entity)
+        {
+            return Aspect::match_entity(entity) && entity_aspects<Aspects...>::verify(entity);
+        }
+    };
+
+
     // ecs::aspect<PositionComponent, VelocityComponent> Movable;
 } // namespace aspect
 
