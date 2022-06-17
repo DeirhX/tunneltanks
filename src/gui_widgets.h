@@ -3,8 +3,7 @@
 #include "color_palette.h"
 namespace crust
 {
-
-class Screen;
+class ScreenRenderSurface;
 class Tank;
 
 namespace widgets
@@ -28,7 +27,7 @@ namespace widgets
         virtual ~GuiWidget() = default;
         ScreenRect GetRect() const { return screen_rect; }
 
-        virtual void Draw(class Screen & screen) = 0;
+        virtual void Draw(ScreenRenderSurface & screen) = 0;
     };
 
     /* Will draw a window using the level's drawbuffer: */
@@ -41,13 +40,13 @@ namespace widgets
 
       public:
         TankView(ScreenRect screen_rect, class Tank & tank) : GuiWidget(screen_rect), tank(&tank) {}
-        void Draw(Screen & screen) override;
+        void Draw(ScreenRenderSurface & screen) override;
         Position TranslatePosition(ScreenPosition screen_position) const;
         ScreenPosition TranslatePosition(Position screen_position) const;
 
       private:
         /* Will randomly draw static to a window, based on a tank's health.  */
-        void DrawStatic(Screen & screen);
+        void DrawStatic(ScreenRenderSurface & screen);
     };
 
     /* Will draw two bars indicating the charge/health of a tank: */
@@ -61,7 +60,7 @@ namespace widgets
             : GuiWidget(screen_rect), tank(&tank), decreases_to_left(decrease_to_left)
         {
         }
-        void Draw(Screen & screen) override;
+        void Draw(ScreenRenderSurface & screen) override;
     };
 
     /* Will draw an arbitrary, static bitmap to screen*/
@@ -75,7 +74,7 @@ namespace widgets
             : GuiWidget(screen_rect), data(&bitmap_data), color(color)
         {
         }
-        void Draw(Screen & screen) override;
+        void Draw(ScreenRenderSurface & screen) override;
     };
 
     struct LivesLeft : public BitmapRender
@@ -90,7 +89,7 @@ namespace widgets
             assert(direction == Orientation::Vertical && rect.size.x == this->data->GetSize().x ||
                    direction == Orientation::Horizontal && rect.size.y == this->data->GetSize().y);
         }
-        void Draw(Screen & screen) override;
+        void Draw(ScreenRenderSurface & screen) override;
     };
 
     class Crosshair : public BitmapRender
@@ -116,7 +115,7 @@ namespace widgets
         [[nodiscard]] ScreenPosition GetScreenPosition() const { return this->center; }
         Position GetWorldPosition() const { return parent_view->TranslatePosition(GetScreenPosition()); }
         void SetWorldPosition(Position position);
-        void Draw(Screen & screen) override;
+        void Draw(ScreenRenderSurface & screen) override;
     };
 
     class ResourcesMinedDisplay : public GuiWidget
@@ -129,7 +128,7 @@ namespace widgets
             : GuiWidget(screen_rect), tank(&tank), alignment(alignment)
         {
         }
-        void Draw(Screen & screen) override;
+        void Draw(ScreenRenderSurface & screen) override;
     };
 
 } // namespace widgets

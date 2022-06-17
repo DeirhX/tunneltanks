@@ -52,15 +52,15 @@ void World::Advance()
     crust::entities.Advance();
 }
 
-void World::Draw(WorldRenderSurface * objects_surface)
+void World::Draw(WorldRenderSurface & objects_surface)
 {
     /* Draw everything: */
     this->projectile_list.Draw(objects_surface);
-    this->tank_list.for_each([=](Tank * t) { t->Draw(*objects_surface); });
+    this->tank_list.for_each([&](Tank * t) { t->Draw(objects_surface); });
     for (const TankBase & base : this->tank_bases.GetSpawns())
         base.Draw(objects_surface);
     this->harvester_list.Draw(objects_surface);
-    this->sprite_list.Draw(*objects_surface);
+    this->sprite_list.Draw(objects_surface);
     this->link_map.Draw(objects_surface);
 }
 

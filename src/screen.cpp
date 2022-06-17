@@ -21,13 +21,13 @@ void Screen::FillBackground()
 {
     const Size dim = GetSystem()->GetRenderer()->GetSurfaceResolution();
 
-    GetSystem()->GetScreenSurface()->FillRectangle({{0, 0}, dim}, Palette.Get(Colors::Background));
+    GetSystem()->GetScreenSurface().FillRectangle({{0, 0}, dim}, Palette.Get(Colors::Background));
     ScreenPosition o;
     for (o.y = 0; o.y < dim.y; o.y++)
     {
         for (o.x = (o.y % 2) * 2; o.x < dim.x; o.x += 4)
         {
-            GetSystem()->GetScreenSurface()->FillRectangle(ScreenRect{o, Size{1, 1}},
+            GetSystem()->GetScreenSurface().FillRectangle(ScreenRect{o, Size{1, 1}},
                                                            Palette.Get(Colors::BackgroundDot));
         }
     }
@@ -180,7 +180,7 @@ void Screen::DrawPixel(ScreenPosition pos, Color color)
 {
     //if (color.a == 0)
     //    return;
-    GetSystem()->GetScreenSurface()->SetPixel(ScreenPosition{pos.x, pos.y}, color);
+    GetSystem()->GetScreenSurface().SetPixel(ScreenPosition{pos.x, pos.y}, color);
     return;
 }
 
@@ -193,10 +193,10 @@ void Screen::DrawLevel()
 {
     auto & world_surfaces = GetSystem()->GetRenderer()->GetWorldSurfaces();
     /* Erase everything */
-    GetSystem()->GetScreenSurface()->Clear();
+    GetSystem()->GetScreenSurface().Clear();
     world_surfaces.terrain_surface.OverlaySurface(&world_surfaces.objects_surface);
     /* Draw everything */
-    std::ranges::for_each(this->widgets, [this](auto & item) { item->Draw(*this); });
+    std::ranges::for_each(this->widgets, [this](auto & item) { item->Draw(this->GetScreenSurface()); });
     GetWorld()->GetTerrain().CommitPixels(world_surfaces.objects_surface.GetChangeList());
     world_surfaces.objects_surface.Clear();
 }

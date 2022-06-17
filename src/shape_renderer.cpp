@@ -37,7 +37,7 @@ void ShapeRenderer::DrawLine(Surface & surface, Position from, Position to, Colo
     }
 }
 
-void ShapeRenderer::DrawLinePart(Surface * surface, Position from, Position to, int skip_pixels, int draw_pixels,
+void ShapeRenderer::DrawLinePart(Surface & surface, Position from, Position to, int skip_pixels, int draw_pixels,
                                  Color color)
 {
     Offset diff = to - from;
@@ -53,7 +53,7 @@ void ShapeRenderer::DrawLinePart(Surface * surface, Position from, Position to, 
         do
         {
             if (pixels_drawn >= start_draw && pixels_drawn < stop_draw)
-                surface->SetPixel(from, color);
+                surface.SetPixel(from, color);
             from += step;
             ++pixels_drawn;
         } while (--steps && pixels_drawn < stop_draw);
@@ -68,22 +68,22 @@ void ShapeRenderer::DrawLinePart(Surface * surface, Position from, Position to, 
         do
         {
             if (pixels_drawn >= start_draw && pixels_drawn < stop_draw)
-                surface->SetPixel(curr.ToIntPosition(), color);
+                surface.SetPixel(curr.ToIntPosition(), color);
             curr += one_step;
             ++pixels_drawn;
         } while (--steps && pixels_drawn < stop_draw);
     }
 }
 
-void ShapeRenderer::FillRectangle(Surface * surface, Rect rect, Color color)
+void ShapeRenderer::FillRectangle(Surface & surface, Rect rect, Color color)
 {
     Position pos;
     for (pos.x = rect.Left(); pos.x < rect.Right(); ++pos.x)
         for (pos.y = rect.Top(); pos.y < rect.Bottom(); ++pos.y)
-            surface->SetPixel(pos, color);
+            surface.SetPixel(pos, color);
 }
 
-void ShapeRenderer::DrawFilledRectangle(Surface * surface, Rect screen_rect, bool round_corner_pixels, Color fill_color,
+void ShapeRenderer::DrawFilledRectangle(Surface & surface, Rect screen_rect, bool round_corner_pixels, Color fill_color,
                                         Color outline_color)
 {
     for (int x = screen_rect.Left(); x <= screen_rect.Right(); ++x)
@@ -104,16 +104,16 @@ void ShapeRenderer::DrawFilledRectangle(Surface * surface, Rect screen_rect, boo
             {
                 if (fill_color.a == 0)
                     continue;
-                surface->SetPixel(Position{x, y}, fill_color);
+                surface.SetPixel(Position{x, y}, fill_color);
             }
             else
             {
-                surface->SetPixel(Position{x, y}, outline_color);
+                surface.SetPixel(Position{x, y}, outline_color);
             }
         }
 }
 
-void ShapeRenderer::DrawRectangle(Surface * surface, Rect screen_rect, bool round_corners, Color outline_color)
+void ShapeRenderer::DrawRectangle(Surface & surface, Rect screen_rect, bool round_corners, Color outline_color)
 {
     const int drawn_pixels = 2 * screen_rect.size.x + 2 * screen_rect.size.y - 4;
     if (!round_corners)
@@ -134,7 +134,7 @@ void ShapeRenderer::DrawRectangle(Surface * surface, Rect screen_rect, bool roun
     }
 }
 
-void ShapeRenderer::DrawRectanglePart(Surface * surface, Rect screen_rect, int skip_pixels, int draw_pixels,
+void ShapeRenderer::DrawRectanglePart(Surface & surface, Rect screen_rect, int skip_pixels, int draw_pixels,
                                       Color outline_color)
 {
     int pixels_drawn = 0;
@@ -155,7 +155,7 @@ void ShapeRenderer::DrawRectanglePart(Surface * surface, Rect screen_rect, int s
                  skip_pixels - pixels_drawn, draw_pixels - pixels_drawn, outline_color);
 }
 
-void ShapeRenderer::DrawCircle(Surface * surface, Position center, int radius, Color, Color outline_color)
+void ShapeRenderer::DrawCircle(Surface & surface, Position center, int radius, Color, Color outline_color)
 {
     /* Start on right side of circle and mirror every drawn pixel into 8 octants */
     int offset_x = radius;
@@ -168,15 +168,15 @@ void ShapeRenderer::DrawCircle(Surface * surface, Position center, int radius, C
     {
         if (offset_y && offset_y != offset_x)
         { /* First pass should draw only 4 beginning pixels on x, -x, y and -y axes. Rest diverge into 8 directions. */
-            surface->SetPixel(center + Offset{-offset_x, -offset_y}, outline_color);
-            surface->SetPixel(center + Offset{offset_x, offset_y}, outline_color);
-            surface->SetPixel(center + Offset{-offset_y, offset_x}, outline_color);
-            surface->SetPixel(center + Offset{offset_y, -offset_x}, outline_color);
+           surface.SetPixel(center + Offset{-offset_x, -offset_y}, outline_color);
+           surface.SetPixel(center + Offset{offset_x, offset_y}, outline_color);
+           surface.SetPixel(center + Offset{-offset_y, offset_x}, outline_color);
+           surface.SetPixel(center + Offset{offset_y, -offset_x}, outline_color);
         }
-        surface->SetPixel(center + Offset{-offset_y, -offset_x}, outline_color);
-        surface->SetPixel(center + Offset{offset_y, offset_x}, outline_color);
-        surface->SetPixel(center + Offset{-offset_x, offset_y}, outline_color);
-        surface->SetPixel(center + Offset{offset_x, -offset_y}, outline_color);
+       surface.SetPixel(center + Offset{-offset_y, -offset_x}, outline_color);
+       surface.SetPixel(center + Offset{offset_y, offset_x}, outline_color);
+       surface.SetPixel(center + Offset{-offset_x, offset_y}, outline_color);
+       surface.SetPixel(center + Offset{offset_x, -offset_y}, outline_color);
 
         /* Decide if we end up with distance error from center by going directly up 
          *  or by going up and left (this is then mirrored into every octant)

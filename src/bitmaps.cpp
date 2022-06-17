@@ -8,13 +8,13 @@ namespace crust
 
 template <typename DataType>
 template <typename GetColorFunc>
-void Bitmap<DataType>::Draw(Screen * screen, ScreenPosition position, GetColorFunc GetPixelColor, int spriteId) const
+void Bitmap<DataType>::Draw(Surface & surface, ScreenPosition position, GetColorFunc GetPixelColor, int spriteId) const
 {
     int x = 0;
     int y = 0;
     for (int i = 0; i < (this->GetSize().x * this->GetSize().y); i++)
     {
-        screen->DrawPixel({x + position.x, y + position.y}, GetPixelColor(i));
+        surface.SetPixel({x + position.x, y + position.y}, GetPixelColor(i));
 
         /* Begin a new line if we're at the...wait for it... end-of-the-line! */
         if (++x >= this->GetSize().x)
@@ -28,7 +28,7 @@ void Bitmap<DataType>::Draw(Screen * screen, ScreenPosition position, GetColorFu
 /* Draw portion of bitmap */
 template <typename DataType>
 template <typename GetColorFunc>
-void Bitmap<DataType>::Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect,
+void Bitmap<DataType>::Draw(Surface & surface, ScreenPosition screen_pos, ImageRect source_rect,
                             GetColorFunc GetPixelColor, /* return Color */
                             int spriteId) const
 {
@@ -36,15 +36,15 @@ void Bitmap<DataType>::Draw(Screen * screen, ScreenPosition screen_pos, ImageRec
         for (int y = source_rect.Top(); y <= source_rect.Bottom(); ++y)
         {
             /* Draw its color or transparent nothing if it's a black/white bitmap */
-            screen->DrawPixel({x - source_rect.Left() + screen_pos.x, y - source_rect.Top() + screen_pos.y},
-                              GetPixelColor(this->ToIndex({x, y})));
+            surface.SetPixel({x - source_rect.Left() + screen_pos.x, y - source_rect.Top() + screen_pos.y},
+                             GetPixelColor(this->ToIndex({x, y})));
         }
 }
 
 /* Draw portion of bitmap into a screen rectangle, clipping it if it exceeds bounds */
 template <typename DataType>
 template <typename GetColorFunc>
-void Bitmap<DataType>::Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect,
+void Bitmap<DataType>::Draw(Surface & surface, ScreenRect screen_rect, ImageRect source_rect,
                             GetColorFunc GetPixelColor, /* return Color */
                             int spriteId) const
 {
@@ -54,76 +54,76 @@ void Bitmap<DataType>::Draw(Screen * screen, ScreenRect screen_rect, ImageRect s
         for (int y = 0; y < actual_height; ++y)
         {
             /* Draw its color or transparent nothing if it's a black/white bitmap */
-            screen->DrawPixel({x + screen_rect.Left(), y + screen_rect.Top()},
-                              GetPixelColor(this->ToIndex({x + source_rect.Left(), y + source_rect.Top()})));
+            surface.SetPixel({x + screen_rect.Left(), y + screen_rect.Top()},
+                             GetPixelColor(this->ToIndex({x + source_rect.Left(), y + source_rect.Top()})));
         }
 }
 
-void MonoBitmap::Draw(Screen * screen, ScreenPosition screen_pos, Color color, int spriteId) const
+void MonoBitmap::Draw(Surface & surface, ScreenPosition screen_pos, Color color, int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
-    Base::Draw(screen, screen_pos,
+    Base::Draw(surface, screen_pos,
                [this, color, spriteOffset](int index)
                { return this->At(index + spriteOffset) ? color : Palette.Get(Colors::Transparent); });
 }
-void MonoBitmap::Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, Color color,
+void MonoBitmap::Draw(Surface & surface, ScreenPosition screen_pos, ImageRect source_rect, Color color,
                       int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
-    Base::Draw(screen, screen_pos, source_rect,
+    Base::Draw(surface, screen_pos, source_rect,
                [this, color, spriteOffset](int index)
                { return this->At(index + spriteOffset) ? color : Palette.Get(Colors::Transparent); });
 }
 
-void MonoBitmap::Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, Color color, int spriteId) const
+void MonoBitmap::Draw(Surface & surface, ScreenRect screen_rect, ImageRect source_rect, Color color, int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
-    Base::Draw(screen, screen_rect, source_rect,
+    Base::Draw(surface, screen_rect, source_rect,
                [this, color, spriteOffset](int index)
                { return this->At(index + spriteOffset) ? color : Palette.Get(Colors::Transparent); });
 }
 
-void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos, int spriteId) const
+void ColorBitmap::Draw(Surface & surface, ScreenPosition screen_pos, int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
-    Base::Draw(screen, screen_pos, [this, spriteOffset](int index) { return this->At(index + spriteOffset); });
+    Base::Draw(surface, screen_pos, [this, spriteOffset](int index) { return this->At(index + spriteOffset); });
 }
-void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos, Color color_filter, int spriteId) const
+void ColorBitmap::Draw(Surface & surface, ScreenPosition screen_pos, Color color_filter, int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
-    Base::Draw(screen, screen_pos,
+    Base::Draw(surface, screen_pos,
                [this, spriteOffset, color_filter](int index)
                { return color_filter.Mask(this->At(index + spriteOffset)); });
 }
 
-void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, int spriteId) const
+void ColorBitmap::Draw(Surface & surface, ScreenPosition screen_pos, ImageRect source_rect, int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
-    Base::Draw(screen, screen_pos, source_rect,
+    Base::Draw(surface, screen_pos, source_rect,
                [this, spriteOffset](int index) { return this->At(index + spriteOffset); });
 }
-void ColorBitmap::Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, int spriteId) const
+void ColorBitmap::Draw(Surface & surface, ScreenRect screen_rect, ImageRect source_rect, int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
     Base::Draw(
-        screen, screen_rect, source_rect, [this, spriteOffset](int index) { return this->At(index + spriteOffset); },
+        surface, screen_rect, source_rect, [this, spriteOffset](int index) { return this->At(index + spriteOffset); },
         spriteId);
 }
-void ColorBitmap::Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, Color color_filter,
+void ColorBitmap::Draw(Surface & surface, ScreenPosition screen_pos, ImageRect source_rect, Color color_filter,
                        int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
     Base::Draw(
-        screen, screen_pos, source_rect,
+        surface, screen_pos, source_rect,
         [this, spriteOffset, color_filter](int index) { return color_filter.Mask(this->At(index + spriteOffset)); },
         spriteId);
 }
-void ColorBitmap::Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, Color color_filter,
+void ColorBitmap::Draw(Surface & surface, ScreenRect screen_rect, ImageRect source_rect, Color color_filter,
                        int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
     Base::Draw(
-        screen, screen_rect, source_rect,
+        surface, screen_rect, source_rect,
         [this, spriteOffset, color_filter](int index) { return color_filter.Mask(this->At(index + spriteOffset)); },
         spriteId);
 }

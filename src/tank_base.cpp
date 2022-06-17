@@ -40,12 +40,12 @@ void TankBase::CreateMachineTemplates(World * world)
         right_center - Size{Charger::bounding_box.size.x / 2 + 4, 0}, this->materials);
 }
 
-void TankBase::DrawMaterialStorage(Surface * surface) const
+void TankBase::DrawMaterialStorage(Surface & surface) const
 {
     constexpr int cells_x = 3;
     constexpr int cells_y = 3;
 
-    auto paint_material_cell = [this, surface](const Rect & rect, Offset cell_num)
+    auto paint_material_cell = [this, &surface](const Rect & rect, Offset cell_num)
     {
         int mat_current = this->materials.GetDirt();
         int mat_capacity = this->materials.GetDirtCapacity();
@@ -130,7 +130,7 @@ void TankBase::RechargeTank(Tank * tank)
         this->GiveResources(tank->GetReactor(), {tweak::tank::EnemyChargeSpeed, tweak::tank::EnemyHealSpeed});
 }
 
-void TankBase::Draw(Surface * surface) const
+void TankBase::Draw(Surface & surface) const
 {
     DrawMaterialStorage(surface);
     /* Display energy level  */

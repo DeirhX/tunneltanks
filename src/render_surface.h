@@ -79,4 +79,4 @@ class WorldRenderSurface : public Surface
     void FillRectangle(Rect rect, Color color) { Surface::FillRectangle(rect, color); }
 };
 
-} // namespace MyNamespace
+} 

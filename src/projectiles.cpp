@@ -54,10 +54,10 @@ void Bullet::Advance(TankList *)
     Raycaster::Cast(this->pos, this->pos + (this->speed), IteratePositions);
 }
 
-void Bullet::Draw(Surface * drawBuffer)
+void Bullet::Draw(Surface & drawBuffer)
 {
-    drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::FireHot));
-    drawBuffer->SetPixel(this->pos_blur_from.ToIntPosition(), Palette.Get(Colors::FireCold));
+    drawBuffer.SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::FireHot));
+    drawBuffer.SetPixel(this->pos_blur_from.ToIntPosition(), Palette.Get(Colors::FireCold));
 }
 
 template <typename ExplosionFuncType>
@@ -105,7 +105,7 @@ void FlyingBarrel::Advance(TankList *, ExplosionFuncType explosionFunc)
     }
 }
 
-void FlyingBarrel::Draw(Surface * drawBuffer) { drawBuffer->SetPixel(this->pos.ToIntPosition(), draw_color); }
+void FlyingBarrel::Draw(Surface & drawBuffer) { drawBuffer.SetPixel(this->pos.ToIntPosition(), draw_color); }
 
 void ConcreteBarrel::Advance(TankList * tankList)
 {
@@ -182,9 +182,9 @@ void ShrapnelBase::AdvanceShrapnel(TankList * tankList, OnAdvanceFuncType OnAdva
                     Raycaster::VisitFlags::PixelsMustTouchCorners);
 }
 
-void ShrapnelBase::Draw(Surface * drawBuffer)
+void ShrapnelBase::Draw(Surface & drawBuffer)
 {
-    drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::FireHot));
+    drawBuffer.SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::FireHot));
 }
 
 void ConcreteFoam::Advance(TankList * tankList)
@@ -206,9 +206,9 @@ void ConcreteFoam::Advance(TankList * tankList)
     AdvanceShrapnel(tankList, AdvanceStepFunc);
 }
 
-void ConcreteFoam::Draw(Surface * drawBuffer)
+void ConcreteFoam::Draw(Surface & drawBuffer)
 {
-    drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::ConcreteShot));
+    drawBuffer.SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::ConcreteShot));
 }
 
 void DirtFoam::Advance(TankList * tankList)
@@ -230,9 +230,9 @@ void DirtFoam::Advance(TankList * tankList)
     AdvanceShrapnel(tankList, AdvanceStepFunc);
 }
 
-void DirtFoam::Draw(Surface * drawBuffer)
+void DirtFoam::Draw(Surface & drawBuffer)
 {
-    drawBuffer->SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::DirtContainerShot));
+    drawBuffer.SetPixel(this->pos.ToIntPosition(), Palette.Get(Colors::DirtContainerShot));
 }
 
 } // namespace crust

@@ -45,7 +45,7 @@ class Machine : public Invalidable
     virtual void Die(Terrain * level) = 0;
     /* They will not be called via v-table, don't worry. Compile-time polymorphism only. Just so you don't   */
     virtual void Advance(Terrain * level) = 0;
-    virtual void Draw(Surface * surface) const = 0;
+    virtual void Draw(Surface & surface) const = 0;
 
     [[nodiscard]] virtual bool TestCollide(Position position) const;
 
@@ -84,7 +84,7 @@ class Harvester final : public Machine
     {
     }
     void Advance(Terrain * level) override;
-    void Draw(Surface * surface) const override;
+    void Draw(Surface & surface) const override;
 
   private:
     void Die(Terrain * level) override;
@@ -109,7 +109,7 @@ class Charger final : public Machine
     }
 
     void Advance(Terrain * level) override;
-    void Draw(Surface * surface) const override;
+    void Draw(Surface & surface) const override;
 
   private:
     void Die(Terrain * level) override;
@@ -150,7 +150,7 @@ class HarvesterTemplate final : public MachineTemplate
 
   public:
     HarvesterTemplate(Position position, MaterialContainer & paying_host);
-    void Draw(Surface * surface) const override;
+    void Draw(Surface & surface) const override;
     Machine * PayAndBuildMachine() const override;
 };
 
@@ -159,7 +159,7 @@ class ChargerTemplate final : public MachineTemplate
 {
   public:
     ChargerTemplate(Position position, MaterialContainer & paying_host);
-    void Draw(Surface * surface) const override;
+    void Draw(Surface & surface) const override;
     Machine * PayAndBuildMachine() const override;
 };
 

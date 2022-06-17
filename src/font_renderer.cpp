@@ -31,7 +31,7 @@ fonts::BrodminGlyphInfo::BrodminGlyphInfo() : GlyphInfoTable(FontFace::Brodmin)
     /* Don't care about the rest for now */
 }
 
-void BitmapFont::Render(Screen * surface, ScreenRect screen_rect, std::string_view text, Color color,
+void BitmapFont::Render(Surface & surface, ScreenRect screen_rect, std::string_view text, Color color,
                         HorizontalAlign alignment)
 {
     if (alignment == HorizontalAlign::Left)
@@ -75,7 +75,7 @@ FontRenderer::FontRenderer(BmpDecoder * bmp_decoder)
 {
 }
 
-void FontRenderer::Render(FontFace font, Screen * screen, ScreenRect screen_rect, std::string_view text, Color color,
+void FontRenderer::Render(FontFace font, Surface & screen, ScreenRect screen_rect, std::string_view text, Color color,
                           HorizontalAlign alignment)
 {
     /* There's not other font now*/

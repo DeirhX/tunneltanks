@@ -60,11 +60,11 @@ void TankTurret::Advance(Position tank_position, widgets::Crosshair * crosshair)
     this->current_length = turret_len;
 }
 
-void TankTurret::Draw(Surface * surface) const
+void TankTurret::Draw(Surface & surface) const
 {
     for (int i = 0; i < this->current_length; ++i)
     {
-        surface->SetPixel(this->TurretVoxels[i], this->color);
+        surface.SetPixel(this->TurretVoxels[i], this->color);
     }
 }
 

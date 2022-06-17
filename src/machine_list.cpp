@@ -9,9 +9,9 @@ void MachineryList::Advance(Terrain * level, TankList *)
     this->items.ForEach([level](auto & item) { item.Advance(level); });
 }
 
-void MachineryList::Draw(Surface * surface)
+void MachineryList::Draw(Surface & surface)
 {
-    this->items.ForEach([surface](auto & item) { item.Draw(surface); });
+    this->items.ForEach([&surface](auto & item) { item.Draw(surface); });
 }
 
 Machine * MachineryList::GetMachineAtPoint(Position position)

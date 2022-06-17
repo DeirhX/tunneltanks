@@ -43,7 +43,7 @@ class TankTurret
     void ApplyControllerOutput(ControllerOutput controls);
 
     void Advance(Position tank_position, widgets::Crosshair * crosshair);
-    void Draw(Surface * surface) const;
+    void Draw(Surface & surface) const;
     void SetDirection(DirectionF new_dir) { this->direction = new_dir; }
 
     void HandleShoot();

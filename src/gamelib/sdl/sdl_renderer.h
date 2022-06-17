@@ -20,7 +20,7 @@ class SdlRenderer final : public Renderer
     explicit SdlRenderer(SdlWindow * owning_window, ScreenRenderSurface * render_surface);
     void SetSurfaceResolution(Size size) override;
     Size GetSurfaceResolution() override { return this->render_surface->GetSize(); }
-    void RenderFrame(const ScreenRenderSurface * surface) override;
+    void RenderFrame(const ScreenRenderSurface & surface) override;
 
   public:
     void Recreate(SdlWindow * new_owning_window);

@@ -14,9 +14,9 @@ void ProjectileList::Advance(Terrain *, TankList * tankList)
     /* Advance everything */
     this->items.ForEach([tankList](auto & item) { item.Advance(tankList); });
 }
-void ProjectileList::Draw(Surface * drawBuffer)
+void ProjectileList::Draw(Surface & drawBuffer)
 {
-    this->items.ForEach([drawBuffer](auto & item) { item.Draw(drawBuffer); });
+    this->items.ForEach([&drawBuffer](auto & item) { item.Draw(drawBuffer); });
 }
 
 } // namespace crust

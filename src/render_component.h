@@ -8,7 +8,7 @@ namespace crust
 namespace aspects
 {
     using namespace components;
-    using PaletteRenderable = ecs::aspect<ColorPalette, IndexedBitmap>;
+    using PaletteRenderable = ecs::aspect<ColorLookup, IndexedBitmap>;
 
 }
 

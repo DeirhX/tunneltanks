@@ -33,7 +33,7 @@ class Renderer
     virtual ~Renderer() {}
     virtual void SetSurfaceResolution(Size size) = 0;
     virtual Size GetSurfaceResolution() = 0;
-    virtual void RenderFrame(const ScreenRenderSurface * surface) = 0;
+    virtual void RenderFrame(const ScreenRenderSurface & surface) = 0;
 
     /* Note this will reinitialize the surface and throw everything away */
     void InitializeWorldSurfaces(Size dimensions);

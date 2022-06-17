@@ -42,7 +42,7 @@ struct Projectile : public Invalidable
   public:
     //virtual ProjectileType GetType() = 0;
     virtual void Advance(class TankList * tankList) = 0;
-    virtual void Draw(class Surface * drawBuffer) = 0;
+    virtual void Draw(class Surface & surface) = 0;
 };
 
 /*  
@@ -63,7 +63,7 @@ class ShrapnelBase : public Projectile
     //ProjectileType GetType() override { return ProjectileType::Shrapnel; }
   public:
     void Advance(class TankList * tankList) override;
-    void Draw(class Surface * drawBuffer) override;
+    void Draw(class Surface & surface) override;
 
   protected:
     template <typename OnAdvanceFuncType>
@@ -89,7 +89,7 @@ class ConcreteFoam final : public ShrapnelBase
     {
     }
     void Advance(class TankList * tankList) override;
-    void Draw(class Surface * drawBuffer) override;
+    void Draw(class Surface & surface) override;
 };
 
 /*
@@ -102,7 +102,7 @@ class DirtFoam final : public ShrapnelBase
   public:
     DirtFoam(Position position, SpeedF speed, int life, Terrain * level) : ShrapnelBase(position, speed, life, level) {}
     void Advance(class TankList * tankList) override;
-    void Draw(class Surface * drawBuffer) override;
+    void Draw(class Surface & surface) override;
 };
 
 /*
@@ -135,7 +135,7 @@ class Bullet final : public MotionBlurProjectile
     //ProjectileType GetType() override { return ProjectileType::Bullet; }
 
     void Advance(class TankList * tankList) override;
-    void Draw(class Surface * drawBuffer) override;
+    void Draw(class Surface & surface) override;
 };
 
 /*
@@ -160,7 +160,7 @@ class FlyingBarrel : public Projectile
     template <typename ExplosionFuncType>
     void Advance(TankList * tankList, ExplosionFuncType explosionFunc);
 
-    void Draw(Surface * drawBuffer) override;
+    void Draw(Surface & surface) override;
 };
 
 /*

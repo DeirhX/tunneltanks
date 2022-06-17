@@ -43,7 +43,7 @@ class Screen
     void SetFullscreen(bool new_fullscreen);
     void Resize(Size size);
 
-    ScreenRenderSurface * GetScreenSurface() { return this->screen_surface; }
+    ScreenRenderSurface & GetScreenSurface() { return *this->screen_surface; }
 
     /* A few useful functions for external drawing: */
     void DrawPixel(ScreenPosition pos, Color color);

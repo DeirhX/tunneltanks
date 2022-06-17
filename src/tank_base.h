@@ -52,7 +52,7 @@ class TankBase
     /* Initialization */
     void RegisterLinkPoint(World * world);
     void CreateMachineTemplates(World * world);
-    void DrawMaterialStorage(Surface * surface) const;
+    void DrawMaterialStorage(Surface & surface) const;
 
   public:
     [[nodiscard]] Position GetPosition() const { return this->entity.get_component<Position>(); }
@@ -69,7 +69,7 @@ class TankBase
     void GiveResources(Reactor & other, ReactorState rate);
     void RechargeTank(Tank * tank);
 
-    void Draw(Surface * surface) const;
+    void Draw(Surface & surface) const;
     void Advance();
 };
 

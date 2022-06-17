@@ -33,7 +33,7 @@ class ProjectileList
     void Shrink() { this->items.Shrink(); }
 
     void Advance(class Terrain * level, class TankList * tankList);
-    void Draw(class Surface * drawBuffer);
+    void Draw(class Surface & drawBuffer);
 };
 
 } // namespace crust

@@ -46,7 +46,7 @@ class World
 
     void BeginGame(class Game * game);
     void Advance();
-    void Draw(WorldRenderSurface * objects_surface);
+    void Draw(WorldRenderSurface & objects_surface);
 
     [[nodiscard]] Terrain & GetTerrain() { return this->terrain; }
     [[nodiscard]] TankBases & GetTankBases() { return this->tank_bases; }

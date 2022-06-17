@@ -7,7 +7,7 @@
 #include <vector>
 namespace crust
 {
-
+class Surface;
 class Screen;
 
 /*
@@ -148,16 +148,16 @@ class Bitmap : public SpriteImageData<DataType>
   protected:
     /* Draw entire bitmap */
     template <typename GetColorFunc>
-    void Draw(Screen * screen, ScreenPosition position, GetColorFunc GetPixelColor, /* Color GetPixelColor(int index) */
+    void Draw(Surface& surface, ScreenPosition position, GetColorFunc GetPixelColor, /* Color GetPixelColor(int index) */
               int spriteId = 0) const;
     /* Draw portion of bitmap */
     template <typename GetColorFunc>
-    void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect,
+    void Draw(Surface& surface, ScreenPosition screen_pos, ImageRect source_rect,
               GetColorFunc GetPixelColor, /* Color GetPixelColor(int index) */
               int spriteId = 0) const;
     /* Draw portion of bitmap into a screen rectangle, clipping it if it exceeds bounds */
     template <typename GetColorFunc>
-    void Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect,
+    void Draw(Surface& surface, ScreenRect screen_rect, ImageRect source_rect,
               GetColorFunc GetPixelColor, /* Color GetPixelColor(int index) */
               int spriteId = 0) const;
 
@@ -178,11 +178,11 @@ class MonoBitmap : public Bitmap<std::uint8_t>
   public:
     using Base::Base;
     /* Draw entire bitmap */
-    void Draw(Screen * screen, ScreenPosition position, Color color, int spriteId = 0) const;
+    void Draw(Surface& surface, ScreenPosition position, Color color, int spriteId = 0) const;
     /* Draw a portion of bitmap */
-    void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, Color color, int spriteId = 0) const;
+    void Draw(Surface& surface, ScreenPosition screen_pos, ImageRect source_rect, Color color, int spriteId = 0) const;
     /* Draw a portion of bitmap, possibly clipping to fit into screen rect */
-    void Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, Color color, int spriteId = 0) const;
+    void Draw(Surface& surface, ScreenRect screen_rect, ImageRect source_rect, Color color, int spriteId = 0) const;
 
   private:
     // int ToIndex(Position position) const { return position.x + position.y * size.x; }
@@ -196,14 +196,14 @@ class ColorBitmap : public Bitmap<Color>
   public:
     using Base::Base;
     /* Draw entire bitmap */
-    void Draw(Screen * screen, ScreenPosition screen_pos, int spriteId = 0) const;
-    void Draw(Screen * screen, ScreenPosition screen_pos, Color color_filter, int spriteId = 0) const;
+    void Draw(Surface& surface, ScreenPosition screen_pos, int spriteId = 0) const;
+    void Draw(Surface& surface, ScreenPosition screen_pos, Color color_filter, int spriteId = 0) const;
     /* Draw portion of bitmap */
-    void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, int spriteId = 0) const;
-    void Draw(Screen * screen, ScreenPosition screen_pos, ImageRect source_rect, Color color_filter,
+    void Draw(Surface& surface, ScreenPosition screen_pos, ImageRect source_rect, int spriteId = 0) const;
+    void Draw(Surface& surface, ScreenPosition screen_pos, ImageRect source_rect, Color color_filter,
               int spriteId = 0) const;
-    void Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, int spriteId = 0) const;
-    void Draw(Screen * screen, ScreenRect screen_rect, ImageRect source_rect, Color color_filter,
+    void Draw(Surface& surface, ScreenRect screen_rect, ImageRect source_rect, int spriteId = 0) const;
+    void Draw(Surface& surface, ScreenRect screen_rect, ImageRect source_rect, Color color_filter,
               int spriteId = 0) const;
 
   private:

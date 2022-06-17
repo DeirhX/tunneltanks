@@ -35,7 +35,7 @@ void Surface::SetPixel(Position position, Color color)
         this->change_list.emplace_back(position);
 }
 
-void Surface::FillRectangle(Rect rect, Color color) { ShapeRenderer::FillRectangle(this, rect, color); }
+void Surface::FillRectangle(Rect rect, Color color) { ShapeRenderer::FillRectangle(*this, rect, color); }
 
 void Surface::OverlaySurface(const Surface * other)
 {

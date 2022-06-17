@@ -25,7 +25,7 @@ void SdlRenderer::SetSurfaceResolution(Size size)
     Recreate(this->owning_window);
 }
 
-void SdlRenderer::RenderFrame(const ScreenRenderSurface *)
+void SdlRenderer::RenderFrame(const ScreenRenderSurface &)
 {
     if (SDL_UpdateTexture(this->native_texture.get(), nullptr, this->render_surface->GetRawData(),
                           this->render_surface->GetRowPitch()))

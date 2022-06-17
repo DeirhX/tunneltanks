@@ -128,7 +128,7 @@ Game::Game(GameConfig config)
                   average_time.count() % 1000);
 
     /* Initialize screen */
-    this->screen = std::make_unique<Screen>(this->config.video_config.is_fullscreen, GetSystem()->GetScreenSurface());
+    this->screen = std::make_unique<Screen>(this->config.video_config.is_fullscreen, &GetSystem()->GetScreenSurface());
 
     /* Create projectile list, tank list and materialize the level voxels */
     world->GetTerrain().MaterializeLevelTerrain();
@@ -174,7 +174,7 @@ bool Game::AdvanceStep()
     /* TODO: Don't get the surface this stupid way */
     world->Advance();
     world->GetTerrain().DrawChangesToSurface(GetSystem()->GetRenderer()->GetWorldSurfaces().terrain_surface);
-    world->Draw(&GetSystem()->GetRenderer()->GetWorldSurfaces().objects_surface);
+    world->Draw(GetSystem()->GetRenderer()->GetWorldSurfaces().objects_surface);
     /* Draw our current state */
     this->screen->DrawCurrentMode();
 

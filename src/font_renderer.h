@@ -57,7 +57,7 @@ class BitmapFont
 
   public:
     BitmapFont(MonoBitmap && bitmap, GlyphInfoTable && glyph_info) : font_bitmap(std::move(bitmap)), glyph_lookup(glyph_info){};
-    void Render(Screen * screen, ScreenRect screen_rect, std::string_view text, Color color, HorizontalAlign alignment);
+    void Render(Surface & screen, ScreenRect screen_rect, std::string_view text, Color color, HorizontalAlign alignment);
 };
 
 class FontRenderer
@@ -68,7 +68,7 @@ class FontRenderer
   public:
     FontRenderer(BmpDecoder * game_system);
 
-    void Render(FontFace font, Screen * screen, ScreenRect screen_rect, std::string_view text, Color color,
+    void Render(FontFace font, Surface & screen, ScreenRect screen_rect, std::string_view text, Color color,
                 HorizontalAlign alignment = HorizontalAlign::Left);
 };
 

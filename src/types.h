@@ -186,7 +186,7 @@ struct VectorF : public VectorBase<float>
     [[nodiscard]] float GetSize() const { return std::sqrt(x * x + y * y); }
     [[nodiscard]] bool IsNormalized() const
     {
-        return std::abs(GetSize() - 1.0f) < std::numeric_limits<float>::epsilon();
+        return std::abs(GetSize() - 1.0f) < 2*std::numeric_limits<float>::epsilon();
     }
     [[nodiscard]] VectorF Normalize() const
     {

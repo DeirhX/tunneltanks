@@ -237,7 +237,7 @@ void Tank::Draw(Surface & surface) const
             }
         }
 
-    this->turret.Draw(&surface);
+    this->turret.Draw(surface);
 }
 
 void Tank::Spawn()

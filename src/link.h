@@ -155,7 +155,7 @@ class Link : public Invalidable
     [[nodiscard]] LinkType GetType() const { return this->type; }
     [[nodiscard]] LinkPoint * GetSource() const { return this->from.GetPoint(); }
     [[nodiscard]] LinkPoint * GetTarget() const { return this->to.GetPoint(); }
-    void Draw(Surface * surface) const;
+    void Draw(Surface & surface) const;
     void DisconnectPoint(LinkPoint * point);
     void Advance();
 
@@ -199,7 +199,7 @@ class LinkMap
     void SolveLinks();
 
     void Advance();
-    void Draw(Surface * surface) const;
+    void Draw(Surface & surface) const;
 };
 
 } // namespace crust

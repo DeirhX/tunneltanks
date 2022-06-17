@@ -196,7 +196,7 @@ Link::Link(LinkPoint * from_, LinkPoint * to_) : from(from_, this), to(to_, this
     }
 }
 
-void Link::Draw(Surface * surface) const
+void Link::Draw(Surface & surface) const
 {
     if (!this->from.GetPoint() || !this->to.GetPoint())
         return;
@@ -214,7 +214,7 @@ void Link::Draw(Surface * surface) const
         color = Palette.Get(Colors::LinkBlocked);
         break;
     }
-    ShapeRenderer::DrawLine(*surface, this->from.GetPoint()->GetPosition(), this->to.GetPoint()->GetPosition(), color);
+    ShapeRenderer::DrawLine(surface, this->from.GetPoint()->GetPosition(), this->to.GetPoint()->GetPosition(), color);
 }
 
 void Link::DisconnectPoint(LinkPoint * point)
@@ -469,7 +469,7 @@ void LinkMap::Advance()
         link.Advance();
 }
 
-void LinkMap::Draw(Surface * surface) const
+void LinkMap::Draw(Surface & surface) const
 {
     for (const Link & link : this->links)
     {

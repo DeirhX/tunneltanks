@@ -56,9 +56,9 @@ class GameSystem
   public:
     GameSystem(Size render_surface_size) : render_surface(render_surface_size) {}
     virtual ~GameSystem() = default;
-    ScreenRenderSurface * GetScreenSurface()
+    ScreenRenderSurface & GetScreenSurface()
     {
-        return &render_surface;
+        return render_surface;
     } /* This should be effective, we'll be copying pixels left and right */
 
     virtual Renderer * GetRenderer() = 0;

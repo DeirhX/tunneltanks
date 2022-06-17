@@ -92,7 +92,7 @@ void Harvester::Advance(Terrain * level)
     this->link_source.UpdatePosition(this->position);
 }
 
-void Harvester::Draw(Surface * surface) const
+void Harvester::Draw(Surface & surface) const
 {
     ShapeRenderer::DrawCircle(surface, this->position, 2, Palette.Get(Colors::HarvesterInside),
                               Palette.Get(Colors::HarvesterOutline));
@@ -149,7 +149,7 @@ void Charger::Advance(Terrain * level)
 //    }
 //}
 
-void Charger::Draw(Surface * surface) const
+void Charger::Draw(Surface & surface) const
 {
     ShapeRenderer::DrawCircle(surface, this->position, 2, Palette.Get(Colors::HarvesterInside),
                               Palette.Get(Colors::ChargerOutline));
@@ -190,7 +190,7 @@ HarvesterTemplate::HarvesterTemplate(Position position, MaterialContainer & payi
     this->link_source.Disable();
 }
 
-void HarvesterTemplate::Draw(Surface * surface) const
+void HarvesterTemplate::Draw(Surface & surface) const
 {
     Color outline_color = Palette.Get(Colors::HarvesterOutline);
     //outline_color.a = (outline_color.a * (this->IsAvailable() ? 128 : 32)) / 255;
@@ -216,7 +216,7 @@ ChargerTemplate::ChargerTemplate(Position position, MaterialContainer & paying_h
     this->link_source.Disable();
 }
 
-void ChargerTemplate::Draw(Surface * surface) const
+void ChargerTemplate::Draw(Surface & surface) const
 {
     Color outline_color = Palette.Get(Colors::ChargerOutline);
     //outline_color.a = (outline_color.a * (this->IsAvailable() ? 128 : 32)) / 255;
