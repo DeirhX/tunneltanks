@@ -223,24 +223,11 @@ void Tank::Draw(Surface & surface) const
     auto direction = this->GetDirection().ToIntDirection();
 
     auto & bitmap = this->entity.get_component<IndexedBitmap>();
-    //auto & palette = this->entity.get_component<ColorPalette>();
+    auto & colorLookup = this->entity.get_component<components::ColorLookup>();
     bitmap.Draw(surface, ScreenPosition(this->GetPosition() - Size{3, 3}),
-                [this](uint8_t color)
-                { return color ? Palette.GetTank(this->color)[color - 1] : Palette.Get(Colors::Transparent); }, direction);
+        [this, colorLookup](uint8_t color) { return color ? colorLookup.Lookup(color - 1) : Palette.Get(Colors::Transparent); },
+        direction);
 
-    /*
-    for (int y = 0; y < 7; y++)
-        for (int x = 0; x < 7; x++)
-        {
-            char val = sprites::TANK_SPRITE[direction][y][x];
-            if (val)
-            {
-                Position position = this->GetPosition();
-                surface.SetPixel(Position{position.x + x - 3, position.y + y - 3},
-                                 Palette.GetTank(this->color)[val - 1]);
-            }
-        }
-        */
     this->turret.Draw(surface);
 }
 
