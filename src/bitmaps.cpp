@@ -5,60 +5,6 @@
 #include "screen.h"
 namespace crust
 {
-
-template <typename DataType>
-template <typename GetColorFunc>
-void Bitmap<DataType>::Draw(Surface & surface, ScreenPosition position, GetColorFunc GetPixelColor, int spriteId) const
-{
-    int x = 0;
-    int y = 0;
-    for (int i = 0; i < (this->GetSize().x * this->GetSize().y); i++)
-    {
-        surface.SetPixel({x + position.x, y + position.y}, GetPixelColor(i));
-
-        /* Begin a new line if we're at the...wait for it... end-of-the-line! */
-        if (++x >= this->GetSize().x)
-        {
-            y++;
-            x = 0;
-        }
-    }
-}
-
-/* Draw portion of bitmap */
-template <typename DataType>
-template <typename GetColorFunc>
-void Bitmap<DataType>::Draw(Surface & surface, ScreenPosition screen_pos, ImageRect source_rect,
-                            GetColorFunc GetPixelColor, /* return Color */
-                            int spriteId) const
-{
-    for (int x = source_rect.Left(); x <= source_rect.Right(); ++x)
-        for (int y = source_rect.Top(); y <= source_rect.Bottom(); ++y)
-        {
-            /* Draw its color or transparent nothing if it's a black/white bitmap */
-            surface.SetPixel({x - source_rect.Left() + screen_pos.x, y - source_rect.Top() + screen_pos.y},
-                             GetPixelColor(this->ToIndex({x, y})));
-        }
-}
-
-/* Draw portion of bitmap into a screen rectangle, clipping it if it exceeds bounds */
-template <typename DataType>
-template <typename GetColorFunc>
-void Bitmap<DataType>::Draw(Surface & surface, ScreenRect screen_rect, ImageRect source_rect,
-                            GetColorFunc GetPixelColor, /* return Color */
-                            int spriteId) const
-{
-    auto actual_width = std::min(source_rect.size.x, screen_rect.size.x);
-    auto actual_height = std::min(source_rect.size.y, screen_rect.size.y);
-    for (int x = 0; x < actual_width; ++x)
-        for (int y = 0; y < actual_height; ++y)
-        {
-            /* Draw its color or transparent nothing if it's a black/white bitmap */
-            surface.SetPixel({x + screen_rect.Left(), y + screen_rect.Top()},
-                             GetPixelColor(this->ToIndex({x + source_rect.Left(), y + source_rect.Top()})));
-        }
-}
-
 void MonoBitmap::Draw(Surface & surface, ScreenPosition screen_pos, Color color, int spriteId) const
 {
     int spriteOffset = int(this->GetSize().Area() * spriteId);
@@ -127,5 +73,8 @@ void ColorBitmap::Draw(Surface & surface, ScreenRect screen_rect, ImageRect sour
         [this, spriteOffset, color_filter](int index) { return color_filter.Mask(this->At(index + spriteOffset)); },
         spriteId);
 }
+
+// Explicit instantiation
+template class Bitmap<std::uint8_t>;
 
 } // namespace crust

@@ -1,140 +1,12 @@
 #pragma once
 #include "color.h"
 #include "types.h"
-#include <cassert>
 #include <cstddef>
-#include <initializer_list>
-#include <vector>
+#include "image_data.h"
+#include "render_surface.h"
+
 namespace crust
 {
-class Surface;
-class Screen;
-
-/*
- *  ValueArray: an iterable, generic container for any type of 2D image data.
- *   Can be simple bits, 8-bit values or full-fledged RGB or RGBA data.
- */
-template <typename DataType = uint8_t>
-class ImageData
-{
-  public:
-    using Container = std::vector<DataType>;
-    using iterator = typename Container::iterator;
-    using const_iterator = typename Container::const_iterator;
-    /* Wasteful to copy in dynamically-allocated memory. But expecting we'll be keeping bitmaps in files in near future
-     * when it's gonna be needed. Hang on! */
-  protected:
-    /* 2-D dimensions of the image*/
-    Size size;
-    /* May hold private image data if not constructed from a global. If initialized, data_view always points to this. */
-    std::shared_ptr<Container> data;
-    /* Always points to the image data. May point into Container if data is unique to this instance. In order cases, may point to globally shared data. */
-    std::span<DataType> data_view;
-
-  public:
-    /* In-place value initialization from hardcoded byte-array */
-    ImageData(Size size, std::initializer_list<DataType> data) : size(size), data(std::make_shared<Container>(data))
-    {
-        assert(size.x * size.y == static_cast<int>(data.size()));
-        data_view = std::span<DataType>(this->data->begin(), this->data->end());
-    }
-    ImageData(Size size, std::span<DataType> data) : size(size), data_view(data)
-    {
-        assert(size.x * size.y == static_cast<int>(data.size()));
-    }
-    /* Initialization for dynamic content */
-    ImageData(Size size) : size(size)
-    {
-        data = std::make_shared<Container>();
-        data->resize(size.x * size.y);
-        data_view = std::span<DataType>(this->data->begin(), this->data->end());
-    }
-    /* Copy assignment and constructor - need to re-point data_view to data  */
-    ImageData(const ImageData & other) noexcept { *this = other; }
-    ImageData & operator=(const ImageData & other) noexcept
-    {
-        this->size = other.size;
-        if (other.data)
-        {
-            this->data = other.data;
-            this->data_view = std::span<DataType>(this->data->begin(), this->data->end());
-        }
-        else
-            this->data_view = other.data_view;
-        return *this;
-    }
-    /* Move assignment and constructor - need to re-point data_view to data  */
-    ImageData(ImageData && other) noexcept { *this = std::move(other); }
-    ImageData & operator=(ImageData && other) noexcept
-    {
-        this->size = other.size;
-        if (other.data)
-        {
-            this->data = std::move(other.data);
-            this->data_view = std::span<DataType>(this->data->begin(), this->data->end());
-        }
-        else
-            this->data_view = other.data_view;
-        return *this;
-    }
-
-    size_t GetLength() const { return data_view.size(); }
-    Size GetSize() const { return this->size; }
-
-    /* Read-write accessors */
-    DataType & At(int index)
-    {
-        assert(index >= 0 && index < data_view.size());
-        return *(data_view.begin() + index);
-    }
-    [[nodiscard]] const DataType & At(int index) const
-    {
-        assert(index >= 0 && index < data_view.size());
-        return *(data_view.begin() + index);
-    }
-    DataType & operator[](int index) { return At(index); }
-    [[nodiscard]] const DataType & operator[](int index) const { return At(index); }
-
-    /* Iterator support */
-    iterator begin() { return data_view.begin(); }
-    iterator end() { return data_view.end(); }
-    const_iterator cbegin() const { return data_view.cbegin(); }
-    const_iterator cend() const { return data_view.cend(); }
-
-    /* Conversion to raw data */
-    operator Container() const { return data; }
-};
-
-template <typename DataType = uint8_t>
-class SpriteImageData : public ImageData<DataType>
-{
-    using Base = ImageData<DataType>;
-
-  public:
-    /* In-place value initialization from hardcoded byte-array */
-    SpriteImageData(Size size, std::initializer_list<DataType> data, int spriteCount = 1)
-        : Base(Size(size.x, size.y * spriteCount), data), spriteCount(spriteCount), spriteSize(size)
-    {
-        assert(size.Area() * spriteCount == static_cast<int>(data.size()));
-    }
-    /* In-place value initialization from byte-array span */
-    SpriteImageData(Size size, std::span<DataType> data, int spriteCount = 1)
-        : Base(Size(size.x, size.y * spriteCount), data), spriteCount(spriteCount), spriteSize(size)
-    {
-        assert(size.Area() * spriteCount == static_cast<int>(data.size()));
-    }
-    /* Initialization for dynamic content */
-    SpriteImageData(Size size, int spriteCount = 1)
-        : Base(Size(size.x, size.y * spriteCount)), spriteCount(spriteCount), spriteSize(size)
-    {
-    }
-
-    Size GetSize() const { return this->spriteSize; }
-
-  private:
-    int spriteCount;
-    Size spriteSize;
-};
 
 template <typename DataType>
 class Bitmap : public SpriteImageData<DataType>
@@ -145,19 +17,20 @@ class Bitmap : public SpriteImageData<DataType>
     using PixelType = DataType;
     using Base::Base;
 
-  protected:
+  public:
     /* Draw entire bitmap */
     template <typename GetColorFunc>
-    void Draw(Surface& surface, ScreenPosition position, GetColorFunc GetPixelColor, /* Color GetPixelColor(int index) */
+    void Draw(Surface & surface, ScreenPosition position,
+              GetColorFunc GetPixelColor, /* Color GetPixelColor(int index) */
               int spriteId = 0) const;
     /* Draw portion of bitmap */
     template <typename GetColorFunc>
-    void Draw(Surface& surface, ScreenPosition screen_pos, ImageRect source_rect,
+    void Draw(Surface & surface, ScreenPosition screen_pos, ImageRect source_rect,
               GetColorFunc GetPixelColor, /* Color GetPixelColor(int index) */
               int spriteId = 0) const;
     /* Draw portion of bitmap into a screen rectangle, clipping it if it exceeds bounds */
     template <typename GetColorFunc>
-    void Draw(Surface& surface, ScreenRect screen_rect, ImageRect source_rect,
+    void Draw(Surface & surface, ScreenRect screen_rect, ImageRect source_rect,
               GetColorFunc GetPixelColor, /* Color GetPixelColor(int index) */
               int spriteId = 0) const;
 
@@ -165,7 +38,96 @@ class Bitmap : public SpriteImageData<DataType>
     [[nodiscard]] int ToIndex(Position position) const { return position.x + position.y * this->GetSize().x; }
 };
 
-using IndexedBitmap = Bitmap<std::uint8_t>;
+template <typename DataType>
+template <typename GetColorFunc>
+void Bitmap<DataType>::Draw(Surface & surface, ScreenPosition position, GetColorFunc GetPixelColor, int spriteId) const
+{
+    int x = 0;
+    int y = 0;
+    for (int i = 0; i < (this->GetSize().x * this->GetSize().y); i++)
+    {
+        surface.SetPixel({x + position.x, y + position.y}, GetPixelColor(i));
+
+        /* Begin a new line if we're at the...wait for it... end-of-the-line! */
+        if (++x >= this->GetSize().x)
+        {
+            y++;
+            x = 0;
+        }
+    }
+}
+
+/* Draw portion of bitmap */
+template <typename DataType>
+template <typename GetColorFunc>
+void Bitmap<DataType>::Draw(Surface & surface, ScreenPosition screen_pos, ImageRect source_rect,
+                            GetColorFunc GetPixelColor, /* return Color */
+                            int spriteId) const
+{
+    for (int x = source_rect.Left(); x <= source_rect.Right(); ++x)
+        for (int y = source_rect.Top(); y <= source_rect.Bottom(); ++y)
+        {
+            /* Draw its color or transparent nothing if it's a black/white bitmap */
+            surface.SetPixel({x - source_rect.Left() + screen_pos.x, y - source_rect.Top() + screen_pos.y},
+                             GetPixelColor(this->ToIndex({x, y})));
+        }
+}
+
+/* Draw portion of bitmap into a screen rectangle, clipping it if it exceeds bounds */
+template <typename DataType>
+template <typename GetColorFunc>
+void Bitmap<DataType>::Draw(Surface & surface, ScreenRect screen_rect, ImageRect source_rect,
+                            GetColorFunc GetPixelColor, /* return Color */
+                            int spriteId) const
+{
+    auto actual_width = std::min(source_rect.size.x, screen_rect.size.x);
+    auto actual_height = std::min(source_rect.size.y, screen_rect.size.y);
+    for (int x = 0; x < actual_width; ++x)
+        for (int y = 0; y < actual_height; ++y)
+        {
+            /* Draw its color or transparent nothing if it's a black/white bitmap */
+            surface.SetPixel({x + screen_rect.Left(), y + screen_rect.Top()},
+                             GetPixelColor(this->ToIndex({x + source_rect.Left(), y + source_rect.Top()})));
+        }
+}
+
+class IndexedBitmap : public Bitmap<std::uint8_t>
+{
+    using Base = Bitmap<std::uint8_t>;
+
+  public:
+    using Base::Base;
+    /* Draw entire bitmap */
+    template <typename GetColorFromIndex>
+    void Draw(Surface & surface, ScreenPosition screen_pos, GetColorFromIndex colorLookup, int spriteId = 0) const
+    {
+        int spriteOffset = static_cast<int>(this->GetSize().Area() * spriteId);
+        Base::Draw(surface, screen_pos,
+                   [this, colorLookup, spriteOffset](int index)
+                   { return colorLookup(this->At(index + spriteOffset)); });
+    }
+    /* Draw a portion of bitmap */
+    template <typename GetColorFromIndex>
+    void Draw(Surface & surface, ScreenPosition screen_pos, ImageRect source_rect, GetColorFromIndex colorLookup,
+              int spriteId = 0) const
+    {
+        int spriteOffset = static_cast<int>(this->GetSize().Area() * spriteId);
+        Base::Draw(surface, screen_pos, source_rect,
+                   [this, colorLookup, spriteOffset](int index)
+                   { return colorLookup(this->At(index + spriteOffset)); });
+    }
+    /* Draw a portion of bitmap, possibly clipping to fit into screen rect */
+    template <typename GetColorFromIndex>
+    void Draw(Surface & surface, ScreenRect screen_rect, ImageRect source_rect, GetColorFromIndex colorLookup,
+              int spriteId = 0) const
+    {
+        int spriteOffset = static_cast<int>(this->GetSize().Area() * spriteId);
+        Base::Draw(surface, screen_rect, source_rect,
+                   [this, colorLookup, spriteOffset](int index)
+                   { return colorLookup(this->At(index + spriteOffset)); });
+    }
+};
+
 /*
  * MonoBitmap: a true 'bitmap, mapping one for value and zero for transparency
  * Can contain multiple sprites. If so, the data is expected to contain them sequentially.
@@ -178,11 +140,11 @@ class MonoBitmap : public Bitmap<std::uint8_t>
   public:
     using Base::Base;
     /* Draw entire bitmap */
-    void Draw(Surface& surface, ScreenPosition position, Color color, int spriteId = 0) const;
+    void Draw(Surface & surface, ScreenPosition position, Color color, int spriteId = 0) const;
     /* Draw a portion of bitmap */
-    void Draw(Surface& surface, ScreenPosition screen_pos, ImageRect source_rect, Color color, int spriteId = 0) const;
+    void Draw(Surface & surface, ScreenPosition screen_pos, ImageRect source_rect, Color color, int spriteId = 0) const;
     /* Draw a portion of bitmap, possibly clipping to fit into screen rect */
-    void Draw(Surface& surface, ScreenRect screen_rect, ImageRect source_rect, Color color, int spriteId = 0) const;
+    void Draw(Surface & surface, ScreenRect screen_rect, ImageRect source_rect, Color color, int spriteId = 0) const;
 
   private:
     // int ToIndex(Position position) const { return position.x + position.y * size.x; }
@@ -196,14 +158,14 @@ class ColorBitmap : public Bitmap<Color>
   public:
     using Base::Base;
     /* Draw entire bitmap */
-    void Draw(Surface& surface, ScreenPosition screen_pos, int spriteId = 0) const;
-    void Draw(Surface& surface, ScreenPosition screen_pos, Color color_filter, int spriteId = 0) const;
+    void Draw(Surface & surface, ScreenPosition screen_pos, int spriteId = 0) const;
+    void Draw(Surface & surface, ScreenPosition screen_pos, Color color_filter, int spriteId = 0) const;
     /* Draw portion of bitmap */
-    void Draw(Surface& surface, ScreenPosition screen_pos, ImageRect source_rect, int spriteId = 0) const;
-    void Draw(Surface& surface, ScreenPosition screen_pos, ImageRect source_rect, Color color_filter,
+    void Draw(Surface & surface, ScreenPosition screen_pos, ImageRect source_rect, int spriteId = 0) const;
+    void Draw(Surface & surface, ScreenPosition screen_pos, ImageRect source_rect, Color color_filter,
               int spriteId = 0) const;
-    void Draw(Surface& surface, ScreenRect screen_rect, ImageRect source_rect, int spriteId = 0) const;
-    void Draw(Surface& surface, ScreenRect screen_rect, ImageRect source_rect, Color color_filter,
+    void Draw(Surface & surface, ScreenRect screen_rect, ImageRect source_rect, int spriteId = 0) const;
+    void Draw(Surface & surface, ScreenRect screen_rect, ImageRect source_rect, Color color_filter,
               int spriteId = 0) const;
 
   private:

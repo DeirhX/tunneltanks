@@ -487,6 +487,9 @@
     <ClInclude Include="src\render_component.h">
       <Filter>src\component</Filter>
     </ClInclude>
+    <ClInclude Include="src\image_data.h">
+      <Filter>src\draw</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />

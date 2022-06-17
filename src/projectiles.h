@@ -201,7 +201,7 @@ class DirtBarrel final : public FlyingBarrel
 struct ExplosionDesc
 {
     Position center = {};
-    DirectionF base_direction = {};
+    SpeedF base_direction = {};
     math::Radians direction_spread = {};
     int shrapnel_count = 0;
     float speed_min = 0;
@@ -224,7 +224,7 @@ struct ExplosionDesc
                              .frames_length_max = frames_length};
     }
 
-    static ExplosionDesc Fan(Position pos, DirectionF direction, math::Radians angle, int shrapnel_count, float speed,
+    static ExplosionDesc Fan(Position pos, SpeedF direction, math::Radians angle, int shrapnel_count, float speed,
                              int frames_length)
     {
         return ExplosionDesc{.center = pos,

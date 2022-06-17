@@ -220,11 +220,15 @@ void Tank::Draw(Surface & surface) const
     if (!this->reactor.GetHealth())
         return;
 
-    /*auto & bitmap = this->entity.get_component<IndexedBitmap>();
-    auto & palette = this->entity.get_component<ColorPalette>();
-    bitmap.Draw();*/
-
     auto direction = this->GetDirection().ToIntDirection();
+
+    auto & bitmap = this->entity.get_component<IndexedBitmap>();
+    //auto & palette = this->entity.get_component<ColorPalette>();
+    bitmap.Draw(surface, ScreenPosition(this->GetPosition() - Size{3, 3}),
+                [this](uint8_t color)
+                { return color ? Palette.GetTank(this->color)[color - 1] : Palette.Get(Colors::Transparent); }, direction);
+
+    /*
     for (int y = 0; y < 7; y++)
         for (int x = 0; x < 7; x++)
         {
@@ -236,7 +240,7 @@ void Tank::Draw(Surface & surface) const
                                  Palette.GetTank(this->color)[val - 1]);
             }
         }
-
+        */
     this->turret.Draw(surface);
 }
 

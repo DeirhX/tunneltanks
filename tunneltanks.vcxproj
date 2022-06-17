@@ -104,6 +104,7 @@
   <ItemGroup>
     <ClInclude Include="src\collision_component.h" />
     <ClInclude Include="src\gui.h" />
+    <ClInclude Include="src\image_data.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\ai_controller.h" />
     <ClInclude Include="src\bitmap_loader.h" />
