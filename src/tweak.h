@@ -15,7 +15,7 @@ namespace crust::tweak
 
 namespace system
 {
-    constexpr char WindowTitle[] = "Diggerer";
+    constexpr char WindowTitle[] = "Crust";
     constexpr char Version[] = "0.1 alpha";
 } // namespace system
 

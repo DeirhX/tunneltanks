@@ -8,6 +8,20 @@
 namespace crust
 {
 
+/*
+ * BitmapTransform : the transformation of top left corner of the bitmap relative to entity's position
+ */
+class BitmapTransform
+{
+  public:
+    Offset offset{};
+};
+
+/*
+ * Bitmap : drawable color information
+ *          Can contain multiple sprites. If so, the data is expected to contain them sequentially.
+ *          Values contained may be looked up using a ColorPalette to assign colors
+ */
 template <typename DataType>
 class Bitmap : public SpriteImageData<DataType>
 {
@@ -91,6 +105,11 @@ void Bitmap<DataType>::Draw(Surface & surface, ScreenRect screen_rect, ImageRect
         }
 }
 
+/*
+ * IndexedBitmap: each byte can represent up to 255 indexable colors
+ *                works together with ColorLookup
+ */
+
 class IndexedBitmap : public Bitmap<std::uint8_t>
 {
     using Base = Bitmap<std::uint8_t>;
@@ -130,8 +149,6 @@ class IndexedBitmap : public Bitmap<std::uint8_t>
 
 /*
  * MonoBitmap: a true 'bitmap, mapping one for value and zero for transparency
- * Can contain multiple sprites. If so, the data is expected to contain them sequentially.
- * Values contained may be looked up using a ColorPalette to assign colors
  */
 class MonoBitmap : public Bitmap<std::uint8_t>
 {
@@ -150,7 +167,10 @@ class MonoBitmap : public Bitmap<std::uint8_t>
     // int ToIndex(Position position) const { return position.x + position.y * size.x; }
 };
 
-/* ColorBitmap: full-fledged 32-bit RGBA color data */
+/*
+ * ColorBitmap: full-fledged 32-bit RGBA color data
+ *
+ */
 class ColorBitmap : public Bitmap<Color>
 {
     using Base = Bitmap<Color>;

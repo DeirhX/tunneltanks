@@ -36,6 +36,7 @@ Tank::Tank(TankColor color, Terrain * level, TankBase * tank_base)
     this->entity.assign_component<components::BitmapCollision>(Size{7, 7}, Offset{3, 3}, sprites::TankSprite);
     this->entity.assign_component<components::ColorLookup>(components::ColorLookup::PaletteKind::Tank, color);
     this->entity.assign_component<IndexedBitmap>(Size{7, 7}, sprites::TankSprite, 9);
+    this->entity.assign_component<BitmapTransform>(Offset(-3, -3));
     assert(aspects.verify(entity));
 
     // this->cached_slice = std::make_shared<LevelView>(this, lvl);
@@ -224,7 +225,9 @@ void Tank::Draw(Surface & surface) const
 
     auto & bitmap = this->entity.get_component<IndexedBitmap>();
     auto & colorLookup = this->entity.get_component<components::ColorLookup>();
-    bitmap.Draw(surface, ScreenPosition(this->GetPosition() - Size{3, 3}),
+    auto & transform = this->entity.get_component<BitmapTransform>();
+
+    bitmap.Draw(surface, ScreenPosition(this->GetPosition() + transform.offset),
         [this, colorLookup](uint8_t color) { return color ? colorLookup.Lookup(color - 1) : Palette.Get(Colors::Transparent); },
         direction);
 
