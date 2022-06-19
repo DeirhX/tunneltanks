@@ -132,4 +132,4 @@ namespace widgets
     };
 
 } // namespace widgets
-} // namespace MyNamespace
+}

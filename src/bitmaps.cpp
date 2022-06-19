@@ -74,6 +74,14 @@ void ColorBitmap::Draw(Surface & surface, ScreenRect screen_rect, ImageRect sour
         spriteId);
 }
 
+void RenderPoint::Draw(Surface & surface, PositionF position) const { surface.SetPixel(position.ToIntPosition(), this->color); }
+void RenderPoint::Draw(Surface & surface, Position position) const { surface.SetPixel(position, this->color); }
+
+void RenderLine::Draw(Surface & surface, PositionF origin) const
+{
+
+}
+
 // Explicit instantiation
 template class Bitmap<std::uint8_t>;
 

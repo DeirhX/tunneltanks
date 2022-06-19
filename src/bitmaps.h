@@ -192,6 +192,24 @@ class ColorBitmap : public Bitmap<Color>
     // int ToIndex(Position position) const { return position.x + position.y * size.x; }
 };
 
+class RenderPoint
+{
+  public:
+    Color color;
+    RenderPoint(Color color) : color(color) {}
+    void Draw(Surface & surface, PositionF origin) const;
+    void Draw(Surface & surface, Position origin) const;
+};
+
+class RenderLine
+{
+  public:
+    Color color;
+    PositionF endpoint;
+    RenderLine(Color color, PositionF line_end) : color(color), endpoint(line_end) {}
+    void Draw(Surface & surface, PositionF origin) const;
+};
+
 /* Simple hardcoded bitmaps */
 namespace bitmaps
 {
