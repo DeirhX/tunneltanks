@@ -9,10 +9,10 @@
 namespace crust
 {
 TankTurret::TankTurret(Tank * owner, Color turret_color)
-    : entity(entities.registry.create_entity()), tank(owner), color(turret_color),
-      position(this->entity.assign_component<PositionF>()),
-      direction(this->entity.assign_component<DirectionF>(1.0f, 0.f))
+    : entity(entities.registry.create_entity()), tank(owner), color(turret_color)
 {
+    this->entity.assign_component<PositionF>(owner->GetPosition());
+    this->entity.assign_component<DirectionF>(1.0f, 0.f);
     //this->render_line = &this->entity.assign_component<RenderLine>(turret_color, PositionF(owner->GetPosition()));
     //this->tank->GetPosition()
     Reset();
@@ -20,7 +20,7 @@ TankTurret::TankTurret(Tank * owner, Color turret_color)
 
 PositionF TankTurret::GetBarrelPosition() const
 {
-    return PositionF(this->tank->GetPosition()) + (this->direction * float(tweak::tank::TurretLength));
+    return PositionF(this->tank->GetPosition()) + (this->GetDirection() * float(tweak::tank::TurretLength));
 }
 
 void TankTurret::ApplyControllerOutput(ControllerOutput controls)
@@ -41,19 +41,20 @@ void TankTurret::ApplyControllerOutput(ControllerOutput controls)
 
 void TankTurret::Advance(Position tank_position, widgets::Crosshair * crosshair)
 {
+    DirectionF & direction = entity.get_component<DirectionF>();
     if (crosshair)
     { /* If we got a crosshair at action, let it dictate the direction */
         Position crosshair_pos = crosshair->GetWorldPosition();
         auto turret_dir = OffsetF(crosshair_pos - tank_position);
         if (turret_dir != OffsetF{})
-            this->direction = DirectionF::FromAbnormal(turret_dir);
+            direction = DirectionF::FromAbnormal(turret_dir);
     }
     /* If we inherited it from tank it needs to be normalized. So do it just in case, cheaper than querying. */
     else
     {
-        this->direction = DirectionF{this->direction.Normalize()};
+        direction = DirectionF{direction.Normalize()};
     }
-    OffsetF offset = this->direction * tweak::tank::TurretLength;
+    OffsetF offset = direction * tweak::tank::TurretLength;
     //this->render_line->endpoint = 
 
     /* Begin the turret at voxel 0 */

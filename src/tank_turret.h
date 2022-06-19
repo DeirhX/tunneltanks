@@ -21,8 +21,6 @@ class TankTurret
 
     std::array<Position, tweak::tank::TurretLength> TurretVoxels;
     Color color;
-    PositionF & position;
-    DirectionF & direction;
     int current_length = tweak::tank::TurretLength;
 
     bool is_shooting_primary = false;
@@ -37,7 +35,8 @@ class TankTurret
 
   public:
     TankTurret(Tank * owner, Color turret_color);
-    DirectionF GetDirection() const { return this->direction; }
+    PositionF GetPosition() const { return this->entity.get_component<PositionF>(); }
+    DirectionF GetDirection() const { return this->entity.get_component<DirectionF>(); }
     PositionF GetBarrelPosition() const;
     bool IsShooting() const
     {
@@ -47,7 +46,7 @@ class TankTurret
 
     void Advance(Position tank_position, widgets::Crosshair * crosshair);
     void Draw(Surface & surface) const;
-    void SetDirection(DirectionF new_dir) { this->direction = new_dir; }
+    void SetDirection(DirectionF new_dir) { this->entity.get_component<DirectionF>() = new_dir; }
 
     void HandleShoot();
     void Reset();
