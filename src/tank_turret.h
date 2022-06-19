@@ -15,11 +15,14 @@ struct ControllerOutput;
 
 class TankTurret
 {
+    ecs::entity entity; /* For now, its entity */
+    class RenderLine * render_line;
     class Tank * tank;
 
     std::array<Position, tweak::tank::TurretLength> TurretVoxels;
     Color color;
-    DirectionF direction = {1.0, 0};
+    PositionF & position;
+    DirectionF & direction;
     int current_length = tweak::tank::TurretLength;
 
     bool is_shooting_primary = false;
@@ -33,7 +36,7 @@ class TankTurret
     Weapon tertiary_weapon = Weapon{WeaponType::DirtSpray};
 
   public:
-    TankTurret(Tank * owner, Color turret_color) : tank(owner), color(turret_color) { Reset(); }
+    TankTurret(Tank * owner, Color turret_color);
     DirectionF GetDirection() const { return this->direction; }
     PositionF GetBarrelPosition() const;
     bool IsShooting() const

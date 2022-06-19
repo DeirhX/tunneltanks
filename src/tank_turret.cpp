@@ -2,12 +2,21 @@
 #include "tank_turret.h"
 #include "controller.h"
 #include "duration.h"
-#include "Terrain.h"
+#include "terrain.h"
 #include "raycaster.h"
 #include "render_surface.h"
 #include "tank.h"
 namespace crust
 {
+TankTurret::TankTurret(Tank * owner, Color turret_color)
+    : entity(entities.registry.create_entity()), tank(owner), color(turret_color),
+      position(this->entity.assign_component<PositionF>()),
+      direction(this->entity.assign_component<DirectionF>(1.0f, 0.f))
+{
+    //this->render_line = &this->entity.assign_component<RenderLine>(turret_color, PositionF(owner->GetPosition()));
+    //this->tank->GetPosition()
+    Reset();
+}
 
 PositionF TankTurret::GetBarrelPosition() const
 {
@@ -40,7 +49,12 @@ void TankTurret::Advance(Position tank_position, widgets::Crosshair * crosshair)
             this->direction = DirectionF::FromAbnormal(turret_dir);
     }
     /* If we inherited it from tank it needs to be normalized. So do it just in case, cheaper than querying. */
-    this->direction = DirectionF{this->direction.Normalize()};
+    else
+    {
+        this->direction = DirectionF{this->direction.Normalize()};
+    }
+    OffsetF offset = this->direction * tweak::tank::TurretLength;
+    //this->render_line->endpoint = 
 
     /* Begin the turret at voxel 0 */
     int turret_len = 0;
