@@ -490,6 +490,9 @@
     <ClInclude Include="src\image_data.h">
       <Filter>src\draw</Filter>
     </ClInclude>
+    <ClInclude Include="src\line_component.h">
+      <Filter>src\component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
