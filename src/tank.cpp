@@ -45,7 +45,7 @@ Tank::Tank(TankColor color, Terrain * level, TankBase * tank_base)
     auto dir = Direction{Random.Int(0, 7)};
     if (dir >= 4)
         dir.Get()++;
-    this->DirectionRef() = dir; // DirectionF{ dir };
+    this->DirectionRef() = DirectionF(dir);
 
     Spawn();
 }

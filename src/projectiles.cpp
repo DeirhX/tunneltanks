@@ -69,7 +69,7 @@ void FlyingBarrel::Advance(TankList *, ExplosionFuncType explosionFunc)
      *  We will test always [explode_dist] amount of positions in front of the projectile trajectory.
      *  If there is a hypothetical collision, we attempt to explode {explode_dist} pixels away.
      */
-    DirectionF direction = this->speed.Normalize();
+    auto direction = DirectionF(this->speed.Normalize());
     auto prev_positions = boost::circular_buffer<PositionF>{this->explode_distance + 1ull};
     int search_step = 0;
     const int search_step_count = this->explode_distance + int(std::round(this->speed.GetSize()));

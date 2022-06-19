@@ -256,9 +256,9 @@ struct DirectionF : VectorF
 {
   public:
     DirectionF() = default;
-    DirectionF(VectorF vector) : VectorF(vector) { assert(this->IsNormalized()); }
+    explicit DirectionF(VectorF vector) : VectorF(vector) { assert(this->IsNormalized()); }
     DirectionF(float x, float y) : VectorF(x, y) { assert((x == 0.0f && y == 0.0f) || this->IsNormalized()); }
-    DirectionF(Direction int_direction)
+    explicit DirectionF(Direction int_direction)
     {
         auto speed = int_direction.ToSpeed();
         this->x = float(speed.x);
