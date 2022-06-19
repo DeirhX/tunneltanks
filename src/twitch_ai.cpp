@@ -68,7 +68,7 @@ ControllerOutput TwitchAI::ExitUp(const PublicTankInfo & tank_info)
         return ControllerOutput{};
     }
 
-    return ControllerOutput{Speed{0, -1}};
+    return ControllerOutput{{SpeedF{0, -1}}};
 }
 
 ControllerOutput TwitchAI::ExitDown(const PublicTankInfo & tank_info)
@@ -80,7 +80,7 @@ ControllerOutput TwitchAI::ExitDown(const PublicTankInfo & tank_info)
         return ControllerOutput{};
     }
 
-    return ControllerOutput{Speed{0, 1}};
+    return ControllerOutput{{SpeedF{0, 1}}};
 }
 
 ControllerOutput TwitchAI::Twitch(const PublicTankInfo & tank_info)
@@ -103,7 +103,7 @@ ControllerOutput TwitchAI::Twitch(const PublicTankInfo & tank_info)
     }
 
     this->time_to_change--;
-    return ControllerOutput{.speed = Speed{this->spd}, .is_shooting_primary = this->shoot};
+    return ControllerOutput{.move{.speed = SpeedF{this->spd}}, .shoot{.is_shooting_primary = this->shoot}};
 }
 /* Make a simple effort to get back to your base: */
 ControllerOutput TwitchAI::Return(const PublicTankInfo & tank_info)
@@ -123,14 +123,14 @@ ControllerOutput TwitchAI::Return(const PublicTankInfo & tank_info)
     /* If we are close to the base, we need to navigate around the walls: */
     if (abs(tank_info.relative_pos.x) <= OutsideBase && abs(tank_info.relative_pos.y) < OutsideBase)
     {
-        return {Speed{0, (tank_info.relative_pos.y < targety) * 2 - 1}};
+        return {.move{ .speed{SpeedF{0, (tank_info.relative_pos.y < targety) * 2 - 1}}}};
     }
 
     /* Else, we will very simply seek to the correct point: */
-    Speed speed;
-    speed.x = tank_info.relative_pos.x != 0 ? ((tank_info.relative_pos.x < 0) * 2 - 1) : 0;
-    speed.y = tank_info.relative_pos.y != targety ? ((tank_info.relative_pos.y < targety) * 2 - 1) : 0;
-    return {speed};
+    SpeedF speed;
+    speed.x = tank_info.relative_pos.x != 0 ? ((tank_info.relative_pos.x < 0) * 2 - 1) : 0.f;
+    speed.y = tank_info.relative_pos.y != targety ? ((tank_info.relative_pos.y < targety) * 2 - 1) : 0.f;
+    return {.move{speed}};
 }
 
 ControllerOutput TwitchAI::Recharge(const PublicTankInfo & tank_info)
@@ -143,8 +143,8 @@ ControllerOutput TwitchAI::Recharge(const PublicTankInfo & tank_info)
     }
 
     /* Else, seek to the base's origin, and wait: */
-    return {Speed{tank_info.relative_pos.x ? ((tank_info.relative_pos.x < 0) * 2 - 1) : 0,
-                  tank_info.relative_pos.y ? ((tank_info.relative_pos.y < 0) * 2 - 1) : 0}};
-}
+    return {.move{.speed{SpeedF{tank_info.relative_pos.x ? ((tank_info.relative_pos.x < 0) * 2 - 1) : 0,
+                               tank_info.relative_pos.y ? ((tank_info.relative_pos.y < 0) * 2 - 1) : 0}}}};
+    }
 
 } // namespace crust

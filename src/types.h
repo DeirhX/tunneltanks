@@ -73,7 +73,7 @@ struct Position : public Vector
 struct Offset : public Vector
 {
     using Vector::Vector;
-    explicit Offset(Position pos) : Vector(pos.x, pos.y) {}
+    constexpr explicit Offset(Position pos) : Vector(pos.x, pos.y) {}
 
     //explicit operator Position() const { return Position{this->x, this->y}; }
     [[nodiscard]] float GetSize() const { return float(std::sqrt(x * x + y * y)); }
@@ -83,9 +83,15 @@ struct Offset : public Vector
 struct Size : public Vector
 {
     using Vector::Vector;
-    [[nodiscard]] bool FitsInside(int sx, int sy) const { return sx >= 0 && sy >= 0 && sx < this->x && sy < this->y; }
-    [[nodiscard]] bool FitsInside(Offset o) const { return o.x >= 0 && o.y >= 0 && o.x < this->x && o.y < this->y; }
-    [[nodiscard]] size_t Area() const
+    [[nodiscard]] constexpr bool FitsInside(int sx, int sy) const
+    {
+        return sx >= 0 && sy >= 0 && sx < this->x && sy < this->y;
+    }
+    [[nodiscard]] constexpr bool FitsInside(Offset o) const
+    {
+        return o.x >= 0 && o.y >= 0 && o.x < this->x && o.y < this->y;
+    }
+    [[nodiscard]] constexpr size_t Area() const
     {
         assert(x >= 0 && y >= 0);
         assert(uint64_t(x) * uint64_t(y) <= std::numeric_limits<size_t>::max());
@@ -162,15 +168,15 @@ constexpr ScreenPosition & operator+=(ScreenPosition & p, Offset o) noexcept
 struct Direction
 {
     int dir;
-    [[nodiscard]] int Get() const { return this->dir; }
-    int & Get() { return this->dir; }
-    void Set(int new_dir) { this->dir = new_dir; }
-    [[nodiscard]] Speed ToSpeed() const
+    [[nodiscard]] constexpr int Get() const { return this->dir; }
+    constexpr int & Get() { return this->dir; }
+    constexpr void Set(int new_dir) { this->dir = new_dir; }
+    [[nodiscard]] constexpr Speed ToSpeed() const
     {
         return Speed{static_cast<int>(this->dir) % 3 - 1, static_cast<int>(this->dir) / 3 - 1};
     }
-    static Direction FromSpeed(Speed speed) { return Direction{speed.x + 1 + 3 * (speed.y + 1)}; }
-    operator int() const { return dir; }
+    constexpr static Direction FromSpeed(Speed speed) { return Direction{speed.x + 1 + 3 * (speed.y + 1)}; }
+    constexpr operator int() const { return dir; }
 };
 constexpr bool operator==(Direction l, Direction r) noexcept { return l.dir == r.dir; }
 
@@ -186,7 +192,7 @@ struct VectorF : public VectorBase<float>
     [[nodiscard]] float GetSize() const { return std::sqrt(x * x + y * y); }
     [[nodiscard]] bool IsNormalized() const
     {
-        return std::abs(GetSize() - 1.0f) < 2*std::numeric_limits<float>::epsilon();
+        return std::abs(GetSize() - 1.0f) < 2 * std::numeric_limits<float>::epsilon();
     }
     [[nodiscard]] VectorF Normalize() const
     {
@@ -202,11 +208,11 @@ struct VectorF : public VectorBase<float>
 struct PositionF : public VectorF
 {
     using VectorF::VectorF;
-    explicit PositionF(Position pos) /* Should become center of the pixel */
+    constexpr explicit PositionF(Position pos) /* Should become center of the pixel */
         : PositionF{static_cast<float>(pos.x) + 0.5f, static_cast<float>(pos.y) + 0.5f}
     {
     }
-    static PositionF FromIntPosition(Position pos) { return PositionF{pos}; }
+    constexpr static PositionF FromIntPosition(Position pos) { return PositionF{pos}; }
     [[nodiscard]] Position ToIntPosition() const
     {
         return Position{static_cast<int>(std::round(this->x)), static_cast<int>(std::round(this->y))};
@@ -216,13 +222,13 @@ struct PositionF : public VectorF
 struct OffsetF : public VectorF
 {
     using VectorF::VectorF;
-    explicit OffsetF(Offset int_offset)
+    constexpr explicit OffsetF(Offset int_offset)
         : VectorF(static_cast<float>(int_offset.x) + 0.5f, static_cast<float>(int_offset.y) + 0.5f)
     {
     }
-    explicit OffsetF(PositionF position) : VectorF(position) {}
+    constexpr explicit OffsetF(PositionF position) : VectorF(position) {}
     //explicit OffsetF(SpeedF position) : VectorF(position) {}
-    explicit operator Offset() const
+    constexpr explicit operator Offset() const
     {
         return Offset{static_cast<int>(std::round(this->x)), static_cast<int>(std::round(this->y))};
     }
@@ -255,10 +261,10 @@ struct SizeF : public VectorF
 struct DirectionF : VectorF
 {
   public:
-    DirectionF() = default;
+    constexpr DirectionF() = default;
     explicit DirectionF(VectorF vector) : VectorF(vector) { assert(this->IsNormalized()); }
     DirectionF(float x, float y) : VectorF(x, y) { assert((x == 0.0f && y == 0.0f) || this->IsNormalized()); }
-    explicit DirectionF(Direction int_direction)
+    constexpr explicit DirectionF(Direction int_direction)
     {
         auto speed = int_direction.ToSpeed();
         this->x = float(speed.x);
@@ -277,8 +283,12 @@ struct DirectionF : VectorF
 struct SpeedF : public VectorF
 {
     using VectorF::VectorF;
-    SpeedF(DirectionF direction, float length) : VectorF(direction.x * length, direction.y * length) {}
-    explicit SpeedF(OffsetF offset) : VectorF(offset) {}
+    constexpr SpeedF(DirectionF direction, float length) : VectorF(direction.x * length, direction.y * length) {}
+    constexpr explicit SpeedF(OffsetF offset) : VectorF(offset) {}
+    constexpr explicit SpeedF(Speed speed) : VectorF(static_cast<float>(speed.x), static_cast<float>(speed.y)) {}
+    constexpr SpeedF(int x, int y) : VectorF(static_cast<float>(x), static_cast<float>(y)) {}
+    constexpr SpeedF(float x, float y) : VectorF(x, y) {}
+    constexpr Speed ToIntSpeed() { return Speed{static_cast<int>(x), static_cast<int>(y)}; }
 };
 
 constexpr VectorF operator+(VectorF v, VectorF o) noexcept { return {v.x + o.x, v.y + o.y}; }
@@ -347,7 +357,6 @@ struct RectBase
     constexpr bool operator!=(const RectBase & other) { return !this->operator==(other); }
 };
 
-
 /* A rectangle in world/level coordinates.*/
 using Rect = RectBase<Position, Size>;
 /* A rectangle in world/level coordinates in float.*/
@@ -386,17 +395,17 @@ struct NativeScreenRect : RectBase<NativeScreenPosition, Size>
 template <TwoDimensional PositionType, TwoDimensional SizeType>
 struct BoundingBoxBase : RectBase<PositionType, SizeType>
 {
-    BoundingBoxBase() = default;
-    BoundingBoxBase(Size dimensions)
+    constexpr BoundingBoxBase() = default;
+    constexpr BoundingBoxBase(Size dimensions)
         : RectBase<PositionType, SizeType>(-dimensions.x / 2, -dimensions.y / 2, dimensions.x, dimensions.y)
     {
         assert(dimensions.x % 2 && dimensions.y % 2);
     }
-    PositionType GetTopLeft(PositionType tested_position) const
+    constexpr PositionType GetTopLeft(PositionType tested_position) const
     {
         return PositionType(tested_position.x + this->pos.x, tested_position.y + this->pos.y);
     }
-    bool IsInside(PositionType tested_position, PositionType entity_origin) const
+    constexpr bool IsInside(PositionType tested_position, PositionType entity_origin) const
     {
         return std::abs(tested_position.x - entity_origin.x) < this->size.x / 2 &&
                std::abs(tested_position.y - entity_origin.y) < this->size.y / 2;
@@ -406,7 +415,7 @@ struct BoundingBoxBase : RectBase<PositionType, SizeType>
         //       tested_position.y >= this->Top() + entity_origin.y &&
         //       tested_position.y <= this->Bottom() + entity_origin.y;
     }
-    RectBase<PositionType, SizeType> GetRect(PositionType tested_center) const
+    constexpr RectBase<PositionType, SizeType> GetRect(PositionType tested_center) const
     {
         return RectBase<PositionType, SizeType>(GetTopLeft(tested_center), this->size);
     }
@@ -443,7 +452,7 @@ class holder_with_deleter : public std::unique_ptr<Type, void (*)(Type *)>
 };
 
 template <typename TEnum>
-bool HasFlag(TEnum value, TEnum flag)
+constexpr bool HasFlag(TEnum value, TEnum flag)
 {
     return (static_cast<std::underlying_type_t<TEnum>>(value) & static_cast<std::underlying_type_t<TEnum>>(flag)) != 0;
 }

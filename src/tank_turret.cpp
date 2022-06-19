@@ -25,17 +25,17 @@ PositionF TankTurret::GetBarrelPosition() const
 
 void TankTurret::ApplyControllerOutput(ControllerOutput controls)
 {
-    this->is_shooting_primary = controls.is_shooting_primary;
-    this->is_shooting_secondary = controls.is_shooting_secondary;
-    this->is_shooting_tertiary = controls.is_shooting_tertiary;
+    this->is_shooting_primary = controls.shoot.is_shooting_primary;
+    this->is_shooting_secondary = controls.shoot.is_shooting_secondary;
+    this->is_shooting_tertiary = controls.shoot.is_shooting_tertiary;
 
-    if (controls.switch_primary_weapon_next)
+    if (controls.shoot.switch_primary_weapon_next)
         this->primary_weapon.CycleNext();
-    if (controls.switch_primary_weapon_prev)
+    if (controls.shoot.switch_primary_weapon_prev)
         this->primary_weapon.CyclePrevious();
-    if (controls.switch_secondary_weapon_next)
+    if (controls.shoot.switch_secondary_weapon_next)
         this->secondary_weapon.CycleNext();
-    if (controls.switch_secondary_weapon_prev)
+    if (controls.shoot.switch_secondary_weapon_prev)
         this->secondary_weapon.CyclePrevious();
 }
 

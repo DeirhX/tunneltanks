@@ -41,9 +41,9 @@ void MachineMaterializer::PlaceMachine()
 
 void MachineMaterializer::ApplyControllerOutput(ControllerOutput controls)
 {
-    this->is_building_primary = controls.build_primary;
-    this->is_building_secondary = controls.build_secondary;
-    this->is_building_tertiary = controls.build_tertiary;
+    this->is_building_primary = controls.build.build_primary;
+    this->is_building_secondary = controls.build.build_secondary;
+    this->is_building_tertiary = controls.build.build_tertiary;
 }
 
 void MachineMaterializer::Advance(Position)

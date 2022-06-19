@@ -30,8 +30,9 @@ ControllerOutput KeyboardController::ApplyControls(const PublicTankInfo &)
     assert(num_keys >
            std::max(this->right, std::max(this->left, std::max(this->down, std::max(this->up, this->shoot)))));
 
-    return ControllerOutput{.speed{keys[this->right] - keys[this->left], keys[this->down] - keys[this->up]},
-                            .is_shooting_primary = keys[this->shoot] != 0};
+    return ControllerOutput{
+        .move{.speed{SpeedF{keys[this->right] - keys[this->left], keys[this->down] - keys[this->up]}}},
+        .shoot{.is_shooting_primary = keys[this->shoot] != 0}};
 }
 
 ControllerOutput KeyboardWithMouseController::ApplyControls(const PublicTankInfo & tankPublic)
@@ -39,13 +40,14 @@ ControllerOutput KeyboardWithMouseController::ApplyControls(const PublicTankInfo
     auto output = Base::ApplyControls(tankPublic);
     int x, y;
     auto mouse_buttons = SDL_GetMouseState(&x, &y);
-    output.is_crosshair_absolute = true;
+    output.xhair.is_crosshair_absolute = true;
     Size window_size = GetSystem()->GetWindow()->GetResolution();
-    output.crosshair_screen_pos = {static_cast<float>(x) / float(window_size.x),
-                                   static_cast<float>(y) / float(window_size.y)};
-    output.is_shooting_primary = mouse_buttons & SDL_BUTTON(1);
-    output.is_building_primary = mouse_buttons & SDL_BUTTON(3);
-    output.build_primary = output.is_building_primary && (mouse_buttons ^ this->last_mouse_state) & SDL_BUTTON(3);
+    output.xhair.crosshair_screen_pos = {static_cast<float>(x) / float(window_size.x),
+                                         static_cast<float>(y) / float(window_size.y)};
+    output.shoot.is_shooting_primary = mouse_buttons & SDL_BUTTON(1);
+    output.build.is_building_primary = mouse_buttons & SDL_BUTTON(3);
+    output.build.build_primary =
+        output.build.is_building_primary && (mouse_buttons ^ this->last_mouse_state) & SDL_BUTTON(3);
     this->last_mouse_state = mouse_buttons;
     return output;
 }
@@ -141,7 +143,7 @@ ControllerOutput GamePadController::ApplyControls(const PublicTankInfo &)
         int tx = (lx == 0) ? 0 : (abs(ly * 1000 / lx) < 2000);
         int ty = (lx == 0) ? 1 : (abs(ly * 1000 / lx) > 500);
 
-        output.speed = {tx * (lx > 0 ? 1 : -1), ty * (ly > 0 ? 1 : -1)};
+        output.move.speed = {tx * (lx > 0 ? 1 : -1), ty * (ly > 0 ? 1 : -1)};
     }
 
     /* Get right analog stick */
@@ -163,43 +165,45 @@ ControllerOutput GamePadController::ApplyControls(const PublicTankInfo &)
     /* Finally apply to crosshair */
     auto aim_dir = VectorF(float(rx), float(ry));
     if (aim_dir.NotZero())
-        output.crosshair_direction = DirectionF::FromAbnormal(aim_dir);
+        output.xhair.crosshair_direction = DirectionF::FromAbnormal(aim_dir);
     else
-        output.crosshair_direction = {};
-    output.is_crosshair_absolute = false;
+        output.xhair.crosshair_direction = {};
+    output.xhair.is_crosshair_absolute = false;
 
-    output.is_shooting_primary = this->mapping.ShootPrimary.IsPressed(this->joystick);
-    output.is_shooting_secondary = this->mapping.ShootSecondary.IsPressed(this->joystick);
-    output.is_shooting_tertiary = this->mapping.ShootTertiary.IsPressed(this->joystick);
+    output.shoot.is_shooting_primary = this->mapping.ShootPrimary.IsPressed(this->joystick);
+    output.shoot.is_shooting_secondary = this->mapping.ShootSecondary.IsPressed(this->joystick);
+    output.shoot.is_shooting_tertiary = this->mapping.ShootTertiary.IsPressed(this->joystick);
 
     /* Cycle Primary & Secondary weapons */
     bool cycle_primary_weapon_next = this->mapping.CyclePrimaryWeaponNext.IsPressed(this->joystick);
-    output.switch_primary_weapon_next = cycle_primary_weapon_next && !this->was_cycle_primary_weapon_next_down;
+    output.shoot.switch_primary_weapon_next = cycle_primary_weapon_next && !this->was_cycle_primary_weapon_next_down;
     this->was_cycle_primary_weapon_next_down = cycle_primary_weapon_next;
 
     bool cycle_primary_weapon_prev = this->mapping.CyclePrimaryWeaponsPrev.IsPressed(this->joystick);
-    output.switch_primary_weapon_prev = cycle_primary_weapon_prev && !this->was_cycle_primary_weapon_prev_down;
+    output.shoot.switch_primary_weapon_prev = cycle_primary_weapon_prev && !this->was_cycle_primary_weapon_prev_down;
     this->was_cycle_primary_weapon_prev_down = cycle_primary_weapon_prev;
 
     bool cycle_secondary_weapon_next = this->mapping.CycleSecondaryWeaponNext.IsPressed(this->joystick);
-    output.switch_secondary_weapon_next = cycle_secondary_weapon_next && !this->was_cycle_secondary_weapon_next_down;
+    output.shoot.switch_secondary_weapon_next =
+        cycle_secondary_weapon_next && !this->was_cycle_secondary_weapon_next_down;
     this->was_cycle_secondary_weapon_next_down = cycle_secondary_weapon_next;
 
     bool cycle_secondary_weapon_prev = this->mapping.CycleSecondaryWeaponsPrev.IsPressed(this->joystick);
-    output.switch_secondary_weapon_prev = cycle_secondary_weapon_prev && !this->was_cycle_secondary_weapon_prev_down;
+    output.shoot.switch_secondary_weapon_prev =
+        cycle_secondary_weapon_prev && !this->was_cycle_secondary_weapon_prev_down;
     this->was_cycle_secondary_weapon_prev_down = cycle_secondary_weapon_prev;
 
     bool build_primary_down = this->mapping.BuildPrimary.IsPressed(this->joystick);
-    output.build_primary = build_primary_down && !this->was_build_primary_down;
-    output.is_building_primary = build_primary_down;
+    output.build.build_primary = build_primary_down && !this->was_build_primary_down;
+    output.build.is_building_primary = build_primary_down;
     this->was_build_primary_down = build_primary_down;
 
     bool build_secondary = this->mapping.BuildSecondary.IsPressed(this->joystick);
-    output.build_secondary = build_secondary && !this->was_build_secondary_down;
+    output.build.build_secondary = build_secondary && !this->was_build_secondary_down;
     this->was_build_secondary_down = build_secondary;
 
     bool build_tertiary = this->mapping.BuildTertiary.IsPressed(this->joystick);
-    output.build_tertiary = build_tertiary && !this->was_build_tertiary_down;
+    output.build.build_tertiary = build_tertiary && !this->was_build_tertiary_down;
     this->was_build_tertiary_down = build_tertiary;
 
     return output;

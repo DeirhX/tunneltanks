@@ -260,16 +260,16 @@ void Tank::ApplyControllerOutput(ControllerOutput controls)
 {
     this->turret.ApplyControllerOutput(controls);
     this->materializer.ApplyControllerOutput(controls);
-    this->SpeedRef() = controls.speed;
+    this->SpeedRef() = controls.move.speed.ToIntSpeed();
     if (this->crosshair)
     {
-        if (controls.is_crosshair_absolute)
+        if (controls.xhair.is_crosshair_absolute)
         {
-            this->crosshair->SetScreenRelativePosition(controls.crosshair_screen_pos);
+            this->crosshair->SetScreenRelativePosition(controls.xhair.crosshair_screen_pos);
         }
         else
         {
-            this->crosshair->SetRelativeDirection(this, controls.crosshair_direction);
+            this->crosshair->SetRelativeDirection(this, controls.xhair.crosshair_direction);
         }
     }
 }
