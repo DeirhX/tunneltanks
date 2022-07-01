@@ -3,6 +3,7 @@
 #include <memory>
 #include <types.h>
 #include "game_config.h"
+#include "entity.h"
 
 namespace crust
 {
@@ -34,12 +35,17 @@ class Game
   private:
 };
 
+inline EntitySystem entity_system{}; // Needs to live longer than World as it might have raw pointers into it
 inline std::unique_ptr<Game> global_game;
+
 inline Game * GetGame()
 {
     assert(global_game.get());
     return global_game.get();
 }
+
+inline ecs::registry & entities() { return entity_system.registry; }
+inline const ecs::registry & const_entities() { return entity_system.registry; }
 
 class GameMode
 {

@@ -57,7 +57,7 @@ class World
     [[nodiscard]] LinkMap & GetLinkMap() { return this->link_map; }
     [[nodiscard]] const CollisionSolver & GetCollisionSolver() const { return this->collision_solver; }
     [[nodiscard]] std::chrono::microseconds GetElapsedTime() const { return this->time_elapsed; }
-    [[nodiscard]] crust::WorldSectors & GetSectors() { return this->sectors; }
+    [[nodiscard]] WorldSectors & GetSectors() { return this->sectors; }
 
     void SetGameOver();
 
@@ -70,5 +70,4 @@ class World
 };
 
 inline World * GetWorld() { return GetGame()->GetWorld(); }
-
 } // namespace MyNamespace

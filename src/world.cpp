@@ -21,6 +21,8 @@ void World::Clear()
     this->harvester_list.RemoveAll();
     this->sprite_list.RemoveAll();
     this->link_map.RemoveAll();
+
+    entity_system.Clear();
 }
 
 void World::BeginGame(Game * with_game)
@@ -29,7 +31,7 @@ void World::BeginGame(Game * with_game)
     this->tank_bases.BeginGame();
     this->terrain.BeginGame();
 
-    crust::entities.Begin();
+    entity_system.Begin();
 }
 
 void World::Advance()
@@ -49,7 +51,7 @@ void World::Advance()
     this->link_map.Advance();
     this->terrain.Advance();
 
-    crust::entities.Advance();
+    entity_system.Advance();
 }
 
 void World::Draw(WorldRenderSurface & objects_surface)

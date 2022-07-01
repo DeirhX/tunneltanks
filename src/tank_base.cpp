@@ -7,7 +7,7 @@
 namespace crust
 {
 
-TankBase::TankBase(Position position, TankColor color) : entity(entities.registry.create_entity()), color(color)
+TankBase::TankBase(Position position, TankColor color) : entity(entities().create_entity()), color(color)
 {
     entity.assign_component<Position>(position);
     entity.assign_component<BoundingBox>(BaseSize);

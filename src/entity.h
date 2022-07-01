@@ -20,9 +20,8 @@ class EntitySystem
     EntitySystem();
     void Begin(); /* TODO: Remove once fully ecs */
     void Advance();
+    void Clear();
 };
-
-inline EntitySystem entities{};
 
 struct detect_collisions_step
 {

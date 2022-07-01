@@ -2,6 +2,7 @@
 #include "tank_turret.h"
 #include "controller.h"
 #include "duration.h"
+#include "game.h"
 #include "terrain.h"
 #include "raycaster.h"
 #include "render_surface.h"
@@ -9,7 +10,7 @@
 namespace crust
 {
 TankTurret::TankTurret(Tank * owner, Color turret_color)
-    : entity(entities.registry.create_entity()), tank(owner), color(turret_color)
+    : entity(entities().create_entity()), tank(owner), color(turret_color)
 {
     this->entity.assign_component<PositionF>(owner->GetPosition());
     this->entity.assign_component<DirectionF>(1.0f, 0.f);
