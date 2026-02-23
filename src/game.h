@@ -21,6 +21,20 @@ class Game
     std::unique_ptr<class World> world;
     std::unique_ptr<class GameMode> mode;
 
+    struct DrawProfile
+    {
+        std::chrono::microseconds terrain_draw{};
+        std::chrono::microseconds objects_draw{};
+        std::chrono::microseconds screen_draw{};
+        std::chrono::microseconds total_frame{};
+        int frame_count = 0;
+
+        void Reset() { *this = {}; }
+    } draw_profile{};
+
+    static constexpr int ProfileReportInterval = 100;
+    void ReportDrawProfile();
+
   public:
     Game(GameConfig config);
     ~Game();
@@ -31,8 +45,6 @@ class Game
 
     void ClearWorld();
     World * GetWorld() { return world.get(); }
-
-  private:
 };
 
 inline EntitySystem entity_system{}; // Needs to live longer than World as it might have raw pointers into it

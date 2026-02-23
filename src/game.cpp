@@ -170,15 +170,38 @@ bool Game::AdvanceStep()
         gamelib_event_done();
     }
 
-    /* Do the world advance - apply controller input, move stuff, commit level bitmap to DrawBuffer */
-    /* TODO: Don't get the surface this stupid way */
+    Stopwatch<> frame_watch;
+
     world->Advance();
-    world->GetTerrain().DrawChangesToSurface(GetSystem()->GetRenderer()->GetWorldSurfaces().terrain_surface);
-    world->Draw(GetSystem()->GetRenderer()->GetWorldSurfaces().objects_surface);
-    /* Draw our current state */
-    this->screen->DrawCurrentMode();
+
+    { Stopwatch<> w; world->GetTerrain().DrawChangesToSurface(GetSystem()->GetRenderer()->GetWorldSurfaces().terrain_surface); draw_profile.terrain_draw += w.GetElapsed(); }
+    { Stopwatch<> w; world->Draw(GetSystem()->GetRenderer()->GetWorldSurfaces().objects_surface); draw_profile.objects_draw += w.GetElapsed(); }
+    { Stopwatch<> w; this->screen->DrawCurrentMode(); draw_profile.screen_draw += w.GetElapsed(); }
+
+    draw_profile.total_frame += frame_watch.GetElapsed();
+    ++draw_profile.frame_count;
+
+    if (draw_profile.frame_count >= ProfileReportInterval)
+        ReportDrawProfile();
 
     return true;
+}
+
+void Game::ReportDrawProfile()
+{
+    auto avg = [&](std::chrono::microseconds acc) -> long long { return acc.count() / draw_profile.frame_count; };
+    auto ms  = [](long long us) -> long long { return us / 1000; };
+    auto frac = [](long long us) -> long long { return us % 1000; };
+
+    long long t = avg(draw_profile.total_frame);
+    DebugTrace<3>("[Draw]    terrain=%lld.%03lld objects=%lld.%03lld screen=%lld.%03lld "
+                  "| total=%lld.%03lld ms (avg over %d frames)\n",
+                  ms(avg(draw_profile.terrain_draw)), frac(avg(draw_profile.terrain_draw)),
+                  ms(avg(draw_profile.objects_draw)), frac(avg(draw_profile.objects_draw)),
+                  ms(avg(draw_profile.screen_draw)), frac(avg(draw_profile.screen_draw)),
+                  ms(t), frac(t),
+                  draw_profile.frame_count);
+    draw_profile.Reset();
 }
 
 /* Done with a game structure: */

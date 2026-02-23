@@ -61,12 +61,34 @@ class World
 
     void SetGameOver();
 
+    struct SimulationProfile
+    {
+        std::chrono::microseconds regrow{};
+        std::chrono::microseconds projectiles{};
+        std::chrono::microseconds tanks{};
+        std::chrono::microseconds harvesters{};
+        std::chrono::microseconds sprites{};
+        std::chrono::microseconds bases{};
+        std::chrono::microseconds links{};
+        std::chrono::microseconds terrain_advance{};
+        std::chrono::microseconds ecs{};
+        std::chrono::microseconds total{};
+        int frame_count = 0;
+
+        void Reset() { *this = {}; }
+    };
+
+    [[nodiscard]] const SimulationProfile & GetProfile() const { return profile; }
+
   private:
+    SimulationProfile profile{};
+    static constexpr int ProfileReportInterval = 100;
+
     std::chrono::microseconds regrow_elapsed = {};
     std::chrono::microseconds regrow_average = {};
 
-    /* Attempts to regrow destroyed dirt in empty places where there is some neighboring dirt to extend */
     void RegrowPass();
+    void ReportProfile();
 };
 
 inline World * GetWorld() { return GetGame()->GetWorld(); }

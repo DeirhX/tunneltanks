@@ -36,22 +36,51 @@ void World::BeginGame(Game * with_game)
 
 void World::Advance()
 {
+    Stopwatch<> frame_watch;
+
     ++this->advance_count;
     this->time_elapsed += tweak::world::AdvanceStep;
-    RegrowPass();
 
-    /* Move everything: */
-    this->projectile_list.Advance(&this->terrain, &this->GetTankList());
-    this->tank_list.for_each([=](Tank * t) { t->Advance(*this); });
-    this->harvester_list.Advance(&this->terrain, &this->GetTankList());
-    this->sprite_list.Advance(&this->terrain);
-    /* TODO: get out of level? */
-    for (TankBase & base : this->tank_bases.GetSpawns())
-        base.Advance();
-    this->link_map.Advance();
-    this->terrain.Advance();
+    { Stopwatch<> w; RegrowPass(); profile.regrow += w.GetElapsed(); }
 
-    entity_system.Advance();
+    { Stopwatch<> w; this->projectile_list.Advance(&this->terrain, &this->GetTankList()); profile.projectiles += w.GetElapsed(); }
+    { Stopwatch<> w; this->tank_list.for_each([=](Tank * t) { t->Advance(*this); }); profile.tanks += w.GetElapsed(); }
+    { Stopwatch<> w; this->harvester_list.Advance(&this->terrain, &this->GetTankList()); profile.harvesters += w.GetElapsed(); }
+    { Stopwatch<> w; this->sprite_list.Advance(&this->terrain); profile.sprites += w.GetElapsed(); }
+    { Stopwatch<> w; for (TankBase & base : this->tank_bases.GetSpawns()) base.Advance(); profile.bases += w.GetElapsed(); }
+    { Stopwatch<> w; this->link_map.Advance(); profile.links += w.GetElapsed(); }
+    { Stopwatch<> w; this->terrain.Advance(); profile.terrain_advance += w.GetElapsed(); }
+    { Stopwatch<> w; entity_system.Advance(); profile.ecs += w.GetElapsed(); }
+
+    profile.total += frame_watch.GetElapsed();
+    ++profile.frame_count;
+
+    if (profile.frame_count >= ProfileReportInterval)
+        ReportProfile();
+}
+
+void World::ReportProfile()
+{
+    auto avg = [&](std::chrono::microseconds acc) -> long long { return acc.count() / profile.frame_count; };
+    auto ms  = [](long long us) -> long long { return us / 1000; };
+    auto frac = [](long long us) -> long long { return (us % 1000); };
+
+    long long t = avg(profile.total);
+    DebugTrace<3>("[Profile] regrow=%lld.%03lld proj=%lld.%03lld tanks=%lld.%03lld harv=%lld.%03lld "
+                  "spr=%lld.%03lld bases=%lld.%03lld links=%lld.%03lld terr=%lld.%03lld ecs=%lld.%03lld "
+                  "| total=%lld.%03lld ms (avg over %d frames)\n",
+                  ms(avg(profile.regrow)), frac(avg(profile.regrow)),
+                  ms(avg(profile.projectiles)), frac(avg(profile.projectiles)),
+                  ms(avg(profile.tanks)), frac(avg(profile.tanks)),
+                  ms(avg(profile.harvesters)), frac(avg(profile.harvesters)),
+                  ms(avg(profile.sprites)), frac(avg(profile.sprites)),
+                  ms(avg(profile.bases)), frac(avg(profile.bases)),
+                  ms(avg(profile.links)), frac(avg(profile.links)),
+                  ms(avg(profile.terrain_advance)), frac(avg(profile.terrain_advance)),
+                  ms(avg(profile.ecs)), frac(avg(profile.ecs)),
+                  ms(t), frac(t),
+                  profile.frame_count);
+    profile.Reset();
 }
 
 void World::Draw(WorldRenderSurface & objects_surface)
