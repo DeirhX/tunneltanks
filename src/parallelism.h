@@ -3,6 +3,7 @@
 #include "tweak.h"
 #include <future>
 #include <type_traits>
+#include <utility>
 #include <vector>
 namespace crust
 {
@@ -33,17 +34,19 @@ struct WorkerDivisor : WorkerCount
 struct ThreadLocal
 {
     RandomGenerator random;
+    std::vector<std::pair<int, char>> staged_writes;
+    int counter_a = 0;
+    int counter_b = 0;
 
-    ThreadLocal() { random = Random; } // Copy state
+    ThreadLocal() { random = Random; }
 };
 
-template <typename Func> /* void(int first, int last)  */
-auto parallel_for(Func func, int minimum, int maximum, WorkerCount worker_count = {})
-    -> std::invoke_result_t<Func, int, int, ThreadLocal *>
+template <typename Func>
+auto parallel_for(Func func, int minimum, int maximum, std::vector<ThreadLocal> & threadLocals,
+                  WorkerCount worker_count = {}) -> std::invoke_result_t<Func, int, int, ThreadLocal *>
 {
-    /* Parallelize the process using std::async and slicing jobs */
-    auto threadLocals = std::vector<ThreadLocal>();
     auto tasks = std::vector<std::future<int>>();
+    threadLocals.clear();
     threadLocals.reserve(worker_count);
     tasks.reserve(worker_count);
 
@@ -58,13 +61,20 @@ auto parallel_for(Func func, int minimum, int maximum, WorkerCount worker_count 
             curr = until + 1;
         }
     }
-    /* Wait for everything done and sum the results */
-    auto result = std::invoke_result_t<Func, int, int, ThreadLocal *>{}; //std::result_of<Func>::type{};
+    auto result = std::invoke_result_t<Func, int, int, ThreadLocal *>{};
     for (auto & task : tasks)
     {
         result += task.get();
     }
     return result;
-};
+}
+
+template <typename Func>
+auto parallel_for(Func func, int minimum, int maximum, WorkerCount worker_count = {})
+    -> std::invoke_result_t<Func, int, int, ThreadLocal *>
+{
+    std::vector<ThreadLocal> threadLocals;
+    return parallel_for(func, minimum, maximum, threadLocals, worker_count);
+}
 
 } // namespace crust

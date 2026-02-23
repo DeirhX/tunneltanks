@@ -103,37 +103,48 @@ void World::RegrowPass()
         return;
 
     Stopwatch<> elapsed;
-    int holes_decayed = 0;
-    int dirt_grown = 0;
+
+    std::vector<ThreadLocal> threadLocals;
     this->terrain.ForEachVoxelParallel(
-        [this, &holes_decayed, &dirt_grown](TerrainPixel pix, SafePixelAccessor pixel, ThreadLocal * local)
+        [this](TerrainPixel pix, SafePixelAccessor pixel, ThreadLocal * local)
         {
-            if (pix == TerrainPixel::Blank || Pixel::IsScorched(pix) ||
-                this->tank_bases.CheckBaseCollision(pixel.GetPosition()))
+            if (pix == TerrainPixel::Blank || Pixel::IsScorched(pix))
             {
-                int neighbors = //this->level->DirtPixelsAdjacent(pixel.GetPosition());
+                int neighbors =
                     this->terrain.CountNeighborValues(pixel.GetPosition(),
                                                       [](auto voxel) { return Pixel::IsDirt(voxel) ? 1 : 0; });
                 int modifier = (pix == TerrainPixel::Blank) ? 4 : 1;
                 if (neighbors > 2 && local->random.Int(0, 1000) < tweak::world::DirtRegrowSpeed * neighbors * modifier)
                 {
-
-                    pixel.Set(TerrainPixel::DirtGrow);
-                    this->terrain.CommitPixel(pixel.GetPosition());
-                    ++holes_decayed;
+                    local->staged_writes.emplace_back(pixel.GetIndex(), static_cast<char>(TerrainPixel::DirtGrow));
+                    ++local->counter_a;
                 }
             }
             else if (pix == TerrainPixel::DirtGrow)
             {
-                if (Random.Int(0, 1000) < tweak::world::DirtRecoverSpeed)
+                if (local->random.Int(0, 1000) < tweak::world::DirtRecoverSpeed)
                 {
-                    pixel.Set(local->random.Bool(500) ? TerrainPixel::DirtHigh : TerrainPixel::DirtLow);
-                    this->terrain.CommitPixel(pixel.GetPosition());
-                    ++dirt_grown;
+                    TerrainPixel new_pix = local->random.Bool(500) ? TerrainPixel::DirtHigh : TerrainPixel::DirtLow;
+                    local->staged_writes.emplace_back(pixel.GetIndex(), static_cast<char>(new_pix));
+                    ++local->counter_b;
                 }
             }
         },
-        WorkerCount{PhysicalCores{}});
+        threadLocals, WorkerCount{PhysicalCores{}});
+
+    int holes_decayed = 0;
+    int dirt_grown = 0;
+    int width = this->terrain.GetSize().x;
+    for (auto & tl : threadLocals)
+    {
+        for (auto & [offset, value] : tl.staged_writes)
+        {
+            this->terrain.SetVoxelRaw(offset, static_cast<TerrainPixel>(value));
+            this->terrain.CommitPixel(Position{offset % width, offset / width});
+        }
+        holes_decayed += tl.counter_a;
+        dirt_grown += tl.counter_b;
+    }
 
     this->regrow_elapsed += elapsed.GetElapsed();
     if (this->advance_count % 100 == 1)

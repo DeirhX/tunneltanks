@@ -407,8 +407,9 @@ static void randomly_expand(Terrain *lvl) {
 	
 static int smooth_once(Terrain *lvl) {
 
-	/* Smooth surfaces. Require at least 3 neighbors to keep alive. Spawn new at 5 neighbors. */
-	auto smooth_step = [lvl](int from_y, int until_y, ThreadLocal*) {
+	/* Smooth surfaces. Require at least 3 neighbors to keep alive. Spawn new at 5 neighbors.
+	 * Stage writes per-thread to avoid read-write races at slice boundaries (Jacobi iteration). */
+	auto smooth_step = [lvl](int from_y, int until_y, ThreadLocal* local) {
 		Stopwatch time_step;
 		int count = 0;
 		Size size = lvl->GetSize();
@@ -418,9 +419,11 @@ static int smooth_once(Terrain *lvl) {
 
 				int n = Queries::CountNeighborValues({x, y}, lvl);
 				bool paintRock = (oldbit != TerrainPixel::LevelGenDirt) ? (n >= 3) : (n > 4);
-				lvl->SetVoxelRaw({ x, y }, paintRock ? TerrainPixel::LevelGenRock : TerrainPixel::LevelGenDirt);
-
-				count += lvl->GetVoxelRaw({ x, y }) != oldbit;
+				TerrainPixel newbit = paintRock ? TerrainPixel::LevelGenRock : TerrainPixel::LevelGenDirt;
+				if (newbit != oldbit) {
+					local->staged_writes.emplace_back(x + y * size.x, static_cast<char>(newbit));
+					++count;
+				}
 			}
 
 		time_step.Stop();
@@ -430,8 +433,13 @@ static int smooth_once(Terrain *lvl) {
 	};
 
 	Stopwatch time_whole;
-	int count = parallel_for(smooth_step, 1, lvl->GetSize().y - 2, WorkerDivisor{4});
-	
+	std::vector<ThreadLocal> threadLocals;
+	int count = parallel_for(smooth_step, 1, lvl->GetSize().y - 2, threadLocals, WorkerDivisor{4});
+
+	for (auto & tl : threadLocals)
+		for (auto & [offset, value] : tl.staged_writes)
+			lvl->SetVoxelRaw(offset, static_cast<TerrainPixel>(value));
+
 	time_whole.Stop();
 	DebugTrace<4>("  smooth_once total took %lld.%03lld ms \n",
 		time_whole.GetElapsed().count() / 1000, time_whole.GetElapsed().count() % 1000);

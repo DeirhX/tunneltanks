@@ -81,6 +81,8 @@ class Terrain
     void ForEachVoxel(VoxelFunc func);
     template <typename VoxelFunc>
     void ForEachVoxelParallel(VoxelFunc func, WorkerCount worker_count = {});
+    template <typename VoxelFunc>
+    void ForEachVoxelParallel(VoxelFunc func, std::vector<ThreadLocal> & threadLocals, WorkerCount worker_count = {});
 
     DigResult DigTankTunnel(Position pos, bool dig_with_torch);
 
@@ -103,6 +105,7 @@ class SafePixelAccessor
     {
     }
     Position GetPosition() const { return this->position; }
+    int GetIndex() const { return this->index; }
     TerrainPixel Get() const { return level->GetVoxelRaw(this->index); }
     void Set(TerrainPixel pix) { level->SetVoxelRaw(this->index, pix); }
 };
@@ -117,7 +120,7 @@ void Terrain::ForEachVoxel(VoxelFunc voxelFunc)
             voxelFunc(SafePixelAccessor(this, pos, this->GetSize()));
         }
 }
-template <typename VoxelFunc> // requires{ voxelFunc(Position, LevelVoxel&) -> void; }
+template <typename VoxelFunc>
 void Terrain::ForEachVoxelParallel(VoxelFunc voxelFunc, WorkerCount worker_count)
 {
     auto parallel_slice = [this, voxelFunc](int min, int max, ThreadLocal * threadLocal)
@@ -132,6 +135,24 @@ void Terrain::ForEachVoxelParallel(VoxelFunc voxelFunc, WorkerCount worker_count
     };
 
     parallel_for(parallel_slice, 0, this->GetSize().x - 1, worker_count);
+}
+
+template <typename VoxelFunc>
+void Terrain::ForEachVoxelParallel(VoxelFunc voxelFunc, std::vector<ThreadLocal> & threadLocals,
+                                   WorkerCount worker_count)
+{
+    auto parallel_slice = [this, voxelFunc](int min, int max, ThreadLocal * threadLocal)
+    {
+        Position pos;
+        for (pos.x = min; pos.x <= max; ++pos.x)
+            for (pos.y = 0; pos.y < this->GetSize().y; ++pos.y)
+            {
+                voxelFunc(this->GetVoxelRaw(pos), SafePixelAccessor(this, pos, this->GetSize()), threadLocal);
+            }
+        return 0;
+    };
+
+    parallel_for(parallel_slice, 0, this->GetSize().x - 1, threadLocals, worker_count);
 }
 
 template <typename CountFunc>
