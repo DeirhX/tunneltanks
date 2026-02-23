@@ -1,0 +1,56 @@
+---
+description: C++ conformance rules and known issues for MSVC v145 (VS 2026)
+globs: src/**/*.h, src/**/*.cpp
+alwaysApply: false
+---
+
+# C++ Conformance (MSVC v145)
+
+The project compiles with `/std:c++latest` and `/WX` (warnings as errors). Be aware of these strict conformance requirements.
+
+## Concepts: Type Requirements Need `typename`
+
+In a `requires` expression, checking for a nested type must use `typename`:
+
+```cpp
+// WRONG — MSVC treats this as an expression, not a type requirement
+concept Foo = requires(T t) { T::SomeType; };
+
+// CORRECT
+concept Foo = requires(T t) { typename T::SomeType; };
+```
+
+## C++20 Operator Rewriting
+
+Do NOT define both `operator==` and `operator!=` as members. C++20 auto-synthesizes `!=` from `==`. Having both causes C7692 ambiguity errors. Always make `operator==` const:
+
+```cpp
+// WRONG
+bool operator==(const Foo& o) { return ...; }
+bool operator!=(const Foo& o) { return !(*this == o); }
+
+// CORRECT — C++20 synthesizes operator!= automatically
+bool operator==(const Foo& o) const { return ...; }
+```
+
+## User-Defined Literal Operators
+
+No space between `""` and the suffix (C++23 deprecation, C5311):
+
+```cpp
+// WRONG
+constexpr Foo operator"" _bar(uint64_t v) noexcept;
+
+// CORRECT
+constexpr Foo operator""_bar(uint64_t v) noexcept;
+```
+
+## Eigen / NanoGUI Deprecation Warnings
+
+NanoGUI's bundled Eigen uses deprecated `std::float_denorm_style`. This is silenced in `pch.h`:
+
+```cpp
+#define _SILENCE_CXX23_DENORM_DEPRECATION_WARNING
+```
+
+Do not remove this define — it will break the build.

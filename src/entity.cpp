@@ -18,7 +18,7 @@ void EntitySystem::Advance() { registry.process_event(detect_collisions_step());
 
 void EntitySystem::Clear()
 {
-    registry = std::move(ecs::registry());
+    registry = ecs::registry();
 }
 
 void systems::CollisionSystem::process(ecs::registry & owner, const detect_collisions_step & evt)

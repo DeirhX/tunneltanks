@@ -1,0 +1,53 @@
+---
+description: PowerShell quoting and syntax pitfalls to avoid in shell commands
+alwaysApply: true
+---
+
+# PowerShell Shell Rules
+
+The default shell is PowerShell 7. Never invoke `pwsh`, `bash`, or `cmd` explicitly.
+
+## Heredocs Don't Work
+
+PowerShell does not support bash-style heredocs (`<<'EOF'`). For git commit messages:
+
+```powershell
+# WRONG — will fail with "Missing file specification after redirection operator"
+git commit -m "$(cat <<'EOF'
+message
+EOF
+)"
+
+# CORRECT — use inline string with backtick-n for newlines
+git commit -m "Line one`nLine two`nLine three"
+
+# CORRECT — for very long messages, write to a temp file
+$msg = "Line one`nLine two"; Set-Content -Path msg.txt -Value $msg; git commit -F msg.txt; Remove-Item msg.txt
+```
+
+## Chaining Commands
+
+```powershell
+# Use semicolons to chain (runs regardless of previous exit code)
+git add .; git commit -m "msg"
+
+# Use && only when you need short-circuit on failure
+git add . && git commit -m "msg"
+```
+
+## Quoting Paths
+
+Always double-quote paths with spaces. PowerShell uses backtick as escape, not backslash.
+
+```powershell
+& "C:\Program Files\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe" "path\to\project.vcxproj"
+```
+
+## Listing Files
+
+`ls` in PowerShell returns objects, not plain text. Use `-Name` for names only:
+
+```powershell
+Get-ChildItem "path" -Name           # File/dir names
+Get-ChildItem "path" -Recurse -Name  # Recursive listing
+```
