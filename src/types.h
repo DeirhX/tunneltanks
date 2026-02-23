@@ -24,7 +24,7 @@ template <typename T>
 concept TwoDimensional = requires(T t)
 {
     t.x == t.y;
-    T::NumericType;
+    typename T::NumericType;
 };
 
 template <Numeric Number>
@@ -36,8 +36,7 @@ struct VectorBase
 
     constexpr VectorBase() = default;
     constexpr VectorBase(Number x, Number y) noexcept : x(x), y(y) {}
-    constexpr bool operator==(const VectorBase & other) { return x == other.x && y == other.y; }
-    constexpr bool operator!=(const VectorBase & other) { return !(x == other.x && y == other.y); }
+    constexpr bool operator==(const VectorBase & other) const { return x == other.x && y == other.y; }
     constexpr bool IsZero() const { return x == 0 && y == 0; }
     constexpr bool NotZero() const { return !IsZero(); }
 };
@@ -353,8 +352,7 @@ struct RectBase
         return {std::clamp(vec.x, this->Left(), this->Right()), std::clamp(vec.y, this->Top(), this->Bottom())};
     }
     [[nodiscard]] PositionType Center() const { return {pos.x + size.x / 2, pos.y + size.y / 2}; }
-    constexpr bool operator==(const RectBase & other) { return this->pos == other.pos && this->size == other.size; }
-    constexpr bool operator!=(const RectBase & other) { return !this->operator==(other); }
+    constexpr bool operator==(const RectBase & other) const { return this->pos == other.pos && this->size == other.size; }
 };
 
 /* A rectangle in world/level coordinates.*/

@@ -1,4 +1,6 @@
-﻿#pragma once
+#pragma once
+
+#define _SILENCE_CXX23_DENORM_DEPRECATION_WARNING
 
 #include <ecs.hpp/ecs.hpp>
 #include <ranges>

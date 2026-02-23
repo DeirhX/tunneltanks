@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <algorithm>
 #include <cstdint>
 namespace crust
@@ -55,19 +55,19 @@ struct HealthAmount : public ResourceAmount<HealthAmount>
 };
 
 /* Beautiful literals. 10_health, 15_dirt, 35_minerals!  */
-constexpr DirtAmount operator"" _dirt(std::uint64_t dirt_value) noexcept
+constexpr DirtAmount operator""_dirt(std::uint64_t dirt_value) noexcept
 {
     return DirtAmount{static_cast<int>(dirt_value)};
 }
-constexpr MineralsAmount operator"" _minerals(std::uint64_t mineral_value) noexcept
+constexpr MineralsAmount operator""_minerals(std::uint64_t mineral_value) noexcept
 {
     return MineralsAmount{static_cast<int>(mineral_value)};
 }
-constexpr EnergyAmount operator"" _energy(std::uint64_t energy_value) noexcept
+constexpr EnergyAmount operator""_energy(std::uint64_t energy_value) noexcept
 {
     return EnergyAmount{static_cast<int>(energy_value)};
 }
-constexpr HealthAmount operator"" _health(std::uint64_t health_value) noexcept
+constexpr HealthAmount operator""_health(std::uint64_t health_value) noexcept
 {
     return HealthAmount{static_cast<int>(health_value)};
 }
