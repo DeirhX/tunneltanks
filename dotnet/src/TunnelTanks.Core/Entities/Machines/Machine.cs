@@ -15,7 +15,7 @@ public class Machine
     public MachineState State { get; set; } = MachineState.Template;
     public Reactor Reactor { get; }
     public int OwnerColor { get; }
-    public BoundingBox BoundingBox { get; } = new(2, 2);
+    public BoundingBox BoundingBox { get; } = new(Tweaks.Machine.BoundingBoxHalfSize, Tweaks.Machine.BoundingBoxHalfSize);
     public bool IsAlive { get; set; } = true;
 
     private TimeSpan _actionAccumulator;
@@ -36,7 +36,7 @@ public class Machine
     public bool IsBlockingCollision => State == MachineState.Planted;
     public bool TestCollide(Position pos) => BoundingBox.IsInside(pos, Position);
 
-    public void Advance(Terrain terrain, TimeSpan dt)
+    public void Advance(TerrainGrid terrain, TimeSpan dt)
     {
         if (!IsAlive || State != MachineState.Planted) return;
         if (Reactor.Health <= 0) { IsAlive = false; return; }
@@ -49,7 +49,7 @@ public class Machine
             HarvestNearby(terrain);
     }
 
-    private void HarvestNearby(Terrain terrain)
+    private void HarvestNearby(TerrainGrid terrain)
     {
         int range = Tweaks.Machine.HarvestRange;
         for (int dy = -range; dy <= range; dy++)
@@ -73,11 +73,11 @@ public class Machine
         if (!IsAlive) return;
         int half = BoundingBox.HalfWidth;
         uint color = Type == MachineType.Harvester
-            ? new Color(0x00, 0x88, 0x00, 0xff).ToArgb()
-            : new Color(0x4f, 0x4f, 0xff, 0xa0).ToArgb();
+            ? Tweaks.Colors.Harvester.ToArgb()
+            : Tweaks.Colors.Charger.ToArgb();
 
         if (State == MachineState.Template)
-            color = new Color(0x66, 0x66, 0x66, 0x80).ToArgb();
+            color = Tweaks.Colors.MachineTemplate.ToArgb();
 
         for (int dy = -half; dy <= half; dy++)
             for (int dx = -half; dx <= half; dx++)

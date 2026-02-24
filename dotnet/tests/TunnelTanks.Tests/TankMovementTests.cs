@@ -10,17 +10,7 @@ namespace TunnelTanks.Tests;
 
 public class TankMovementTests
 {
-    private const int Seed = 42;
-    private static readonly Size MapSize = new(320, 200);
-
-    private World CreateSeededWorld()
-    {
-        var gen = new ToastGenerator();
-        var (terrain, spawns) = gen.Generate(MapSize, seed: Seed);
-        var world = new World(MapSize);
-        world.Initialize(terrain, spawns, materializeSeed: Seed + 1);
-        return world;
-    }
+    private static World CreateSeededWorld() => TestHelpers.CreateSeededWorld();
 
     /// <summary>
     /// Creates a small world with a controlled terrain layout for precise testing.
@@ -29,7 +19,7 @@ public class TankMovementTests
     private (World world, Position spawn) CreateControlledWorld()
     {
         var size = new Size(100, 100);
-        var terrain = new Terrain(size);
+        var terrain = new TerrainGrid(size);
 
         // Fill everything with blank (open)
         for (int i = 0; i < size.Area; i++)
@@ -151,7 +141,7 @@ public class TankMovementTests
     {
         // Large world so the base doesn't overlap the dig test area
         var size = new Size(200, 200);
-        var terrain = new Terrain(size);
+        var terrain = new TerrainGrid(size);
 
         // Fill everything blank
         for (int i = 0; i < size.Area; i++)

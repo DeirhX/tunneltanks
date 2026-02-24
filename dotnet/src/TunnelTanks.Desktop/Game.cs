@@ -11,7 +11,7 @@ using TunnelTanks.Desktop.Input;
 using TunnelTanks.Desktop.Rendering;
 using System.Diagnostics;
 
-public class Game
+public class Game : IDisposable
 {
     private readonly SdlRenderer _renderer;
     private readonly Sdl _sdl;
@@ -76,71 +76,87 @@ public class Game
 
     public void Run()
     {
-        var frameTimer = Stopwatch.StartNew();
-        var targetFrameTime = Tweaks.World.AdvanceStep;
-
-        while (_isRunning)
+        try
         {
-            if (!_renderer.PollEvents())
-            { _isRunning = false; break; }
+            var frameTimer = Stopwatch.StartNew();
+            var targetFrameTime = Tweaks.World.AdvanceStep;
 
-            if (_world.IsGameOver)
-            { _isRunning = false; break; }
-
-            if (frameTimer.Elapsed >= targetFrameTime)
+            while (_isRunning)
             {
-                frameTimer.Restart();
-                var totalFrameWatch = Stopwatch.StartNew();
+                if (!_renderer.PollEvents())
+                { _isRunning = false; break; }
 
-                var (mx, my, mbuttons) = _renderer.GetMouseState();
-                bool mouseShoot = (mbuttons & 1) != 0;
-                var aimDir = _screen.SetCrosshairScreenPos(mx, my, 0);
+                if (_world.IsGameOver)
+                { _isRunning = false; break; }
 
-                _world.Advance(i =>
+                if (frameTimer.Elapsed >= targetFrameTime)
                 {
-                    if (i == 0)
+                    frameTimer.Restart();
+                    var totalFrameWatch = Stopwatch.StartNew();
+
+                    var (mx, my, mbuttons) = _renderer.GetMouseState();
+                    const uint SdlButtonLeftMask = 1;
+                    bool mouseShoot = (mbuttons & SdlButtonLeftMask) != 0;
+                    var aimDir = _screen.SetCrosshairScreenPos(mx, my, 0);
+
+                    _world.Advance(i =>
                     {
-                        var kb = _p1Controller.Poll();
-                        return new ControllerOutput
+                        if (i == 0)
                         {
-                            MoveSpeed = kb.MoveSpeed,
-                            ShootPrimary = kb.ShootPrimary || mouseShoot,
-                            AimDirection = aimDir ?? default,
-                        };
-                    }
-                    return _p2AI.GetInput(_world.TankList.Tanks[i]);
-                });
+                            var kb = _p1Controller.Poll();
+                            return new ControllerOutput
+                            {
+                                MoveSpeed = kb.MoveSpeed,
+                                ShootPrimary = kb.ShootPrimary || mouseShoot,
+                                AimDirection = aimDir ?? default,
+                            };
+                        }
+                        return _p2AI.GetInput(_world.TankList.Tanks[i]);
+                    });
 
-                { var w = Stopwatch.StartNew(); _world.Terrain.DrawChangesToSurface(_worldPixels); _drawProfile.TerrainDraw += w.Elapsed; }
+                    ProfileSection(ref _drawProfile.TerrainDraw,
+                        () => _world.Terrain.DrawChangesToSurface(_worldPixels));
 
-                {
-                    var w = Stopwatch.StartNew();
-                    Array.Copy(_worldPixels, _compositePixels, _worldPixels.Length);
-                    _world.LinkMap.Draw(_compositePixels, _terrainSize.X, _terrainSize.Y);
-                    _world.Machines.Draw(_compositePixels, _terrainSize.X, _terrainSize.Y);
-                    _world.Projectiles.Draw(_compositePixels, _terrainSize.X, _terrainSize.Y);
-                    _world.Sprites.Draw(_compositePixels, _terrainSize.X, _terrainSize.Y);
-                    _world.TankList.Draw(_compositePixels, _terrainSize.X, _terrainSize.Y);
-                    _drawProfile.ObjectsDraw += w.Elapsed;
+                    ProfileSection(ref _drawProfile.ObjectsDraw, () =>
+                    {
+                        Array.Copy(_worldPixels, _compositePixels, _worldPixels.Length);
+                        _world.LinkMap.Draw(_compositePixels, _terrainSize.X, _terrainSize.Y);
+                        _world.Machines.Draw(_compositePixels, _terrainSize.X, _terrainSize.Y);
+                        _world.Projectiles.Draw(_compositePixels, _terrainSize.X, _terrainSize.Y);
+                        _world.Sprites.Draw(_compositePixels, _terrainSize.X, _terrainSize.Y);
+                        _world.TankList.Draw(_compositePixels, _terrainSize.X, _terrainSize.Y);
+                    });
+
+                    ProfileSection(ref _drawProfile.ScreenDraw,
+                        () => _screen.Draw(_compositePixels, _terrainSize.X, _terrainSize.Y,
+                                           _screenPixels, _renderSize.X, _renderSize.Y));
+
+                    _drawProfile.TotalFrame += totalFrameWatch.Elapsed;
+                    _drawProfile.FrameCount++;
+                    if (_drawProfile.FrameCount >= 100)
+                        _drawProfile.Report();
                 }
 
-                {
-                    var w = Stopwatch.StartNew();
-                    _screen.Draw(_compositePixels, _terrainSize.X, _terrainSize.Y,
-                                 _screenPixels, _renderSize.X, _renderSize.Y);
-                    _drawProfile.ScreenDraw += w.Elapsed;
-                }
-
-                _drawProfile.TotalFrame += totalFrameWatch.Elapsed;
-                _drawProfile.FrameCount++;
-                if (_drawProfile.FrameCount >= 100)
-                    _drawProfile.Report();
+                _renderer.RenderFrame(_screenPixels);
             }
-
-            _renderer.RenderFrame(_screenPixels);
         }
+        finally
+        {
+            _renderer.Dispose();
+        }
+    }
 
+    public void Dispose()
+    {
         _renderer.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    private static void ProfileSection(ref TimeSpan accumulator, Action action)
+    {
+        var w = Stopwatch.StartNew();
+        action();
+        accumulator += w.Elapsed;
     }
 }
 

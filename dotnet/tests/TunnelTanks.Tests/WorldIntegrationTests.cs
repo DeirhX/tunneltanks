@@ -13,12 +13,7 @@ public class WorldIntegrationTests
 
     private (World world, uint[] terrainPixels) SetupWorld()
     {
-        var gen = new ToastGenerator();
-        var (terrain, spawns) = gen.Generate(TestSize);
-
-        var world = new World(TestSize);
-        world.Initialize(terrain, spawns);
-
+        var world = TestHelpers.CreateSeededWorld(TestSize);
         var terrainPixels = new uint[TestSize.Area];
         world.Terrain.DrawAllToSurface(terrainPixels);
         return (world, terrainPixels);

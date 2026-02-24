@@ -39,6 +39,7 @@ public readonly record struct VectorF(float X, float Y)
     public VectorF Normalized => Length > 0 ? new(X / Length, Y / Length) : default;
     public static VectorF operator *(VectorF v, float s) => new(v.X * s, v.Y * s);
     public static VectorF operator +(VectorF a, VectorF b) => new(a.X + b.X, a.Y + b.Y);
+    public static VectorF FromPositions(Position a, Position b) => new(b.X - a.X, b.Y - a.Y);
 }
 
 public readonly record struct DirectionF(float X, float Y)

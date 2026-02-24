@@ -55,6 +55,6 @@ public class TankTurret
         var tip = GetBarrelTip(tankPos);
         int tx = (int)tip.X, ty = (int)tip.Y;
         if (tx >= 0 && ty >= 0 && tx < surfaceWidth && ty < surfaceHeight)
-            surface[tx + ty * surfaceWidth] = new Color(0xf3, 0xeb, 0x1c).ToArgb();
+            surface[tx + ty * surfaceWidth] = Tweaks.Colors.TurretBarrelTip.ToArgb();
     }
 }

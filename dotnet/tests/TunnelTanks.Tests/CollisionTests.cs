@@ -9,7 +9,7 @@ public class CollisionTests
     [Fact]
     public void TestPixel_Rock_IsBlocked()
     {
-        var t = new Terrain(new Size(10, 10));
+        var t = new TerrainGrid(new Size(10, 10));
         t.SetPixelRaw(new Position(5, 5), TerrainPixel.Rock);
         var solver = new CollisionSolver(t);
         Assert.Equal(CollisionType.Blocked, solver.TestPixel(new Position(5, 5)));
@@ -18,7 +18,7 @@ public class CollisionTests
     [Fact]
     public void TestPixel_Dirt_IsSoftCollision()
     {
-        var t = new Terrain(new Size(10, 10));
+        var t = new TerrainGrid(new Size(10, 10));
         t.SetPixelRaw(new Position(5, 5), TerrainPixel.DirtHigh);
         var solver = new CollisionSolver(t);
         Assert.Equal(CollisionType.Dirt, solver.TestPixel(new Position(5, 5)));
@@ -27,7 +27,7 @@ public class CollisionTests
     [Fact]
     public void TestPixel_Blank_IsNone()
     {
-        var t = new Terrain(new Size(10, 10));
+        var t = new TerrainGrid(new Size(10, 10));
         t.SetPixelRaw(new Position(5, 5), TerrainPixel.Blank);
         var solver = new CollisionSolver(t);
         Assert.Equal(CollisionType.None, solver.TestPixel(new Position(5, 5)));
@@ -36,7 +36,7 @@ public class CollisionTests
     [Fact]
     public void TestPixel_OutOfBounds_IsBlocked()
     {
-        var t = new Terrain(new Size(10, 10));
+        var t = new TerrainGrid(new Size(10, 10));
         var solver = new CollisionSolver(t);
         Assert.Equal(CollisionType.Blocked, solver.TestPixel(new Position(-1, 5)));
     }
@@ -44,7 +44,7 @@ public class CollisionTests
     [Fact]
     public void TestShape_NoCollisionInEmptyArea()
     {
-        var t = new Terrain(new Size(20, 20));
+        var t = new TerrainGrid(new Size(20, 20));
         for (int i = 0; i < 400; i++) t[i] = TerrainPixel.Blank;
         var solver = new CollisionSolver(t);
 
@@ -55,7 +55,7 @@ public class CollisionTests
     [Fact]
     public void TestShape_DetectsRockCollision()
     {
-        var t = new Terrain(new Size(20, 20));
+        var t = new TerrainGrid(new Size(20, 20));
         for (int i = 0; i < 400; i++) t[i] = TerrainPixel.Blank;
         t.SetPixelRaw(new Position(11, 10), TerrainPixel.Rock);
         var solver = new CollisionSolver(t);
@@ -67,7 +67,7 @@ public class CollisionTests
     [Fact]
     public void TestShape_DetectsDirtCollision()
     {
-        var t = new Terrain(new Size(20, 20));
+        var t = new TerrainGrid(new Size(20, 20));
         for (int i = 0; i < 400; i++) t[i] = TerrainPixel.Blank;
         t.SetPixelRaw(new Position(11, 10), TerrainPixel.DirtHigh);
         var solver = new CollisionSolver(t);
@@ -79,7 +79,7 @@ public class CollisionTests
     [Fact]
     public void TestShape_SkipsZeroPixels()
     {
-        var t = new Terrain(new Size(20, 20));
+        var t = new TerrainGrid(new Size(20, 20));
         for (int i = 0; i < 400; i++) t[i] = TerrainPixel.Blank;
         t.SetPixelRaw(new Position(9, 9), TerrainPixel.Rock);
         var solver = new CollisionSolver(t);

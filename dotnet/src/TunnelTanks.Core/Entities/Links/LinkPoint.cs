@@ -18,7 +18,7 @@ public class LinkPoint
     {
         Position = position;
         Type = type;
-        Id = _nextId++;
+        Id = Interlocked.Increment(ref _nextId);
         IsPowered = type == LinkPointType.Base;
     }
 }

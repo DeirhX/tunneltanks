@@ -15,6 +15,9 @@ public class TankBase
     public MaterialContainer Materials { get; } = new(0, 0,
         Tweaks.Base.MaterialDirtCapacity, Tweaks.Base.MaterialMineralsCapacity);
 
+    private static int Half => Tweaks.Base.BaseSize / 2;
+    private static int DoorHalf => Tweaks.Base.DoorSize / 2;
+
     public TankBase(Position position, int color)
     {
         Position = position;
@@ -59,70 +62,29 @@ public class TankBase
 
     public void Draw(uint[] surface, int surfaceWidth, int surfaceHeight)
     {
-        int halfW = BoundingBox.HalfWidth;
-        int halfH = BoundingBox.HalfHeight;
-        var outlineColor = new Color(40, 40, 40).ToArgb();
+        var outlineColor = Tweaks.Colors.BaseOutline.ToArgb();
 
-        for (int dy = -halfH; dy <= halfH; dy++)
-            for (int dx = -halfW; dx <= halfW; dx++)
-            {
-                int px = Position.X + dx, py = Position.Y + dy;
-                if (px < 0 || py < 0 || px >= surfaceWidth || py >= surfaceHeight) continue;
-                bool isEdge = Math.Abs(dx) == halfW || Math.Abs(dy) == halfH;
-                if (isEdge)
-                {
-                    bool isDoor = dx >= -Tweaks.Base.DoorSize / 2 && dx <= Tweaks.Base.DoorSize / 2;
-                    if (!isDoor)
-                        surface[px + py * surfaceWidth] = outlineColor;
-                }
-            }
-    }
-}
-
-public class TankBases
-{
-    private readonly List<TankBase> _bases = new();
-
-    public IReadOnlyList<TankBase> Bases => _bases;
-
-    public void AddBase(Position position, int color)
-    {
-        _bases.Add(new TankBase(position, color));
+        ForEachEdgePixel(Position, (px, py, isDoor) =>
+        {
+            if (px < 0 || py < 0 || px >= surfaceWidth || py >= surfaceHeight) return;
+            if (!isDoor)
+                surface[px + py * surfaceWidth] = outlineColor;
+        });
     }
 
-    public TankBase? GetSpawn(int color)
+    public void CreateInTerrain(TerrainGrid terrain, int color)
     {
-        return color >= 0 && color < _bases.Count ? _bases[color] : null;
-    }
-
-    public TankBase? CheckBaseCollision(Position pos)
-    {
-        foreach (var b in _bases)
-            if (b.IsInside(pos))
-                return b;
-        return null;
-    }
-
-    public void CreateBasesInTerrain(Terrain terrain)
-    {
-        for (int i = 0; i < _bases.Count; i++)
-            CreateBaseInTerrain(_bases[i].Position, i, terrain);
-    }
-
-    private void CreateBaseInTerrain(Position pos, int color, Terrain terrain)
-    {
-        int half = Tweaks.Base.BaseSize / 2;
-        int doorHalf = Tweaks.Base.DoorSize / 2;
+        int half = Half;
 
         for (int y = -half; y <= half; y++)
             for (int x = -half; x <= half; x++)
             {
-                var pix = pos + new Offset(x, y);
+                var pix = Position + new Offset(x, y);
                 if (!terrain.IsInside(pix)) continue;
 
-                if (Math.Abs(x) == half || Math.Abs(y) == half)
+                if (IsEdge(x, y))
                 {
-                    if (x >= -doorHalf && x <= doorHalf)
+                    if (IsDoor(x))
                         terrain.SetPixel(pix, TerrainPixel.BaseBarrier);
                     else
                         terrain.SetPixel(pix, (TerrainPixel)((byte)TerrainPixel.BaseMin + color));
@@ -134,9 +96,20 @@ public class TankBases
             }
     }
 
-    public void Advance()
+    private static bool IsEdge(int dx, int dy) => Math.Abs(dx) == Half || Math.Abs(dy) == Half;
+    private static bool IsDoor(int dx) => dx >= -DoorHalf && dx <= DoorHalf;
+
+    /// <summary>
+    /// Iterates edge pixels of the base outline, calling visitor(px, py, isDoor).
+    /// </summary>
+    private static void ForEachEdgePixel(Position center, Action<int, int, bool> visitor)
     {
-        foreach (var b in _bases)
-            b.Advance();
+        int half = Half;
+        for (int dy = -half; dy <= half; dy++)
+            for (int dx = -half; dx <= half; dx++)
+            {
+                if (!IsEdge(dx, dy)) continue;
+                visitor(center.X + dx, center.Y + dy, IsDoor(dx));
+            }
     }
 }

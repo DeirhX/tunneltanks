@@ -12,10 +12,10 @@ public enum LevelGenMode
 
 public class ToastGenerator
 {
-    public (Terrain terrain, Position[] spawns) Generate(Size size, int? seed = null,
+    public (TerrainGrid terrain, Position[] spawns) Generate(Size size, int? seed = null,
         LevelGenMode mode = LevelGenMode.Deterministic)
     {
-        var terrain = new Terrain(size);
+        var terrain = new TerrainGrid(size);
         terrain.Fill(TerrainPixel.LevelGenRock);
 
         var rng = seed.HasValue ? new Random(seed.Value) : new Random();
@@ -38,7 +38,7 @@ public class ToastGenerator
     /// Generates random points, selects spawn positions, then builds a minimum spanning
     /// tree (Kruskal's algorithm with naive union-find) connecting them via dirt tunnels.
     /// </summary>
-    private static Position[] GenerateTree(Terrain terrain, Random rng)
+    private static Position[] GenerateTree(TerrainGrid terrain, Random rng)
     {
         int treeSize = Tweaks.LevelGen.TreeSize;
 
@@ -85,7 +85,7 @@ public class ToastGenerator
 
     #region Deterministic (single-threaded)
 
-    private static void RandomlyExpand(Terrain terrain, Random rng)
+    private static void RandomlyExpand(TerrainGrid terrain, Random rng)
     {
         int w = terrain.Width, h = terrain.Height;
         var queue = new Queue<Position>();
@@ -146,7 +146,7 @@ public class ToastGenerator
         ExpandCleanup(terrain);
     }
 
-    private static void SmoothCavern(Terrain terrain)
+    private static void SmoothCavern(TerrainGrid terrain)
     {
         GeneratorUtils.SetOutside(terrain, TerrainPixel.LevelGenDirt);
 
@@ -159,7 +159,7 @@ public class ToastGenerator
         GeneratorUtils.SetOutside(terrain, TerrainPixel.LevelGenRock);
     }
 
-    private static int SmoothOnce(Terrain terrain)
+    private static int SmoothOnce(TerrainGrid terrain)
     {
         int w = terrain.Width, h = terrain.Height;
         var writes = new List<(int offset, TerrainPixel value)>();
@@ -188,7 +188,7 @@ public class ToastGenerator
 
     #region Optimized (parallel, non-deterministic)
 
-    private static void GenerateOptimized(Terrain terrain, Position[] spawns)
+    private static void GenerateOptimized(TerrainGrid terrain, Position[] spawns)
     {
         int w = terrain.Width, h = terrain.Height;
 
@@ -252,7 +252,7 @@ public class ToastGenerator
         ExpandCleanup(terrain);
     }
 
-    private static void DilatePaths(Terrain terrain, int radius)
+    private static void DilatePaths(TerrainGrid terrain, int radius)
     {
         int w = terrain.Width, h = terrain.Height;
         int area = w * h;
@@ -275,7 +275,7 @@ public class ToastGenerator
         }
     }
 
-    private static int[] DistanceFromDirt(Terrain terrain, int w, int h)
+    private static int[] DistanceFromDirt(TerrainGrid terrain, int w, int h)
     {
         int area = w * h;
         var dist = new int[area];
@@ -311,7 +311,7 @@ public class ToastGenerator
         return dist;
     }
 
-    private static void EnsureConnectivity(Terrain terrain, Position[] spawns)
+    private static void EnsureConnectivity(TerrainGrid terrain, Position[] spawns)
     {
         if (spawns.Length < 2) return;
 
@@ -335,7 +335,7 @@ public class ToastGenerator
         }
     }
 
-    private static void SmoothParallel(Terrain terrain, int passes)
+    private static void SmoothParallel(TerrainGrid terrain, int passes)
     {
         int w = terrain.Width, h = terrain.Height;
 
@@ -394,7 +394,7 @@ public class ToastGenerator
 
     #endregion
 
-    private static void ExpandCleanup(Terrain terrain)
+    private static void ExpandCleanup(TerrainGrid terrain)
     {
         for (int i = 0; i < terrain.Size.Area; i++)
         {

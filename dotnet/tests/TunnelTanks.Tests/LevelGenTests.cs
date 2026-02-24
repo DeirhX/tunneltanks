@@ -15,14 +15,10 @@ public class LevelGenTests
     public void FullGeneration_ProducesCorrectDirtPercentage()
     {
         var gen = new ToastGenerator();
-        var (terrain, spawns) = gen.Generate(_size);
+        var (terrain, _) = gen.Generate(_size);
         terrain.MaterializeTerrain();
 
-        int dirtCount = 0;
-        for (int i = 0; i < _size.Area; i++)
-            if (Pixel.IsDirt(terrain[i])) dirtCount++;
-
-        double pct = 100.0 * dirtCount / _size.Area;
+        double pct = TestHelpers.CountDirtPercentage(terrain, _size);
         Assert.True(pct >= 40 && pct <= 85,
             $"Dirt percentage {pct:F1}% outside expected range [40, 85]");
     }
@@ -81,17 +77,7 @@ public class LevelGenTests
     {
         var gen = new ToastGenerator();
         var (terrain, _) = gen.Generate(_size);
-
-        for (int x = 0; x < W; x++)
-        {
-            Assert.Equal(TerrainPixel.LevelGenRock, terrain.GetPixelRaw(new Position(x, 0)));
-            Assert.Equal(TerrainPixel.LevelGenRock, terrain.GetPixelRaw(new Position(x, H - 1)));
-        }
-        for (int y = 0; y < H; y++)
-        {
-            Assert.Equal(TerrainPixel.LevelGenRock, terrain.GetPixelRaw(new Position(0, y)));
-            Assert.Equal(TerrainPixel.LevelGenRock, terrain.GetPixelRaw(new Position(W - 1, y)));
-        }
+        TestHelpers.AssertBorderIsRock(terrain, W, H);
     }
 
     [Fact]
@@ -100,31 +86,26 @@ public class LevelGenTests
         var gen = new ToastGenerator();
         var (terrain, _) = gen.Generate(_size);
         terrain.MaterializeTerrain();
-
-        for (int i = 0; i < _size.Area; i++)
-        {
-            var pix = terrain[i];
-            Assert.False(pix == TerrainPixel.LevelGenDirt || pix == TerrainPixel.LevelGenRock || pix == TerrainPixel.LevelGenMark,
-                $"LevelGen pixel {pix} survived MaterializeTerrain at offset {i}");
-        }
+        TestHelpers.AssertNoLevelGenPixels(terrain, _size);
     }
 
     [Fact]
     public void GenerateInside_RespectsMargins()
     {
+        int border = Tweaks.LevelGen.BorderWidth;
         var rng = new Random(42);
         for (int i = 0; i < 1000; i++)
         {
-            var pos = GeneratorUtils.GenerateInside(_size, 30, rng);
-            Assert.True(pos.X >= 30 && pos.X < W - 30);
-            Assert.True(pos.Y >= 30 && pos.Y < H - 30);
+            var pos = GeneratorUtils.GenerateInside(_size, border, rng);
+            Assert.True(pos.X >= border && pos.X < W - border);
+            Assert.True(pos.Y >= border && pos.Y < H - border);
         }
     }
 
     [Fact]
     public void DrawLine_ConnectsEndpoints()
     {
-        var terrain = new Terrain(_size);
+        var terrain = new TerrainGrid(_size);
         terrain.Fill(TerrainPixel.LevelGenRock);
 
         var from = new Position(10, 10);
@@ -138,7 +119,7 @@ public class LevelGenTests
     [Fact]
     public void Fill_SetsEveryPixel()
     {
-        var terrain = new Terrain(new Size(16, 16));
+        var terrain = new TerrainGrid(new Size(16, 16));
         terrain.Fill(TerrainPixel.DirtHigh);
 
         for (int i = 0; i < 256; i++)
@@ -148,7 +129,7 @@ public class LevelGenTests
     [Fact]
     public void SetOutside_SetsOnlyBorder()
     {
-        var terrain = new Terrain(new Size(10, 10));
+        var terrain = new TerrainGrid(new Size(10, 10));
         terrain.Fill(TerrainPixel.LevelGenDirt);
         GeneratorUtils.SetOutside(terrain, TerrainPixel.LevelGenRock);
 
@@ -178,7 +159,7 @@ public class LevelGenTests
     public void TargetDirtAmount_MatchesCpp()
     {
         // C++: lvl->GetSize().x * lvl->GetSize().y * DirtTargetPercent / 100
-        int expected = W * H * 65 / 100;
+        int expected = W * H * Tweaks.LevelGen.DirtTargetPercent / 100;
         Assert.Equal(expected, Tweaks.LevelGen.TargetDirtAmount(_size));
     }
 
@@ -203,11 +184,7 @@ public class LevelGenTests
         var (terrain, spawns) = gen.Generate(_size, mode: LevelGenMode.Optimized);
         terrain.MaterializeTerrain(parallel: true);
 
-        int dirtCount = 0;
-        for (int i = 0; i < _size.Area; i++)
-            if (Pixel.IsDirt(terrain[i])) dirtCount++;
-
-        double pct = 100.0 * dirtCount / _size.Area;
+        double pct = TestHelpers.CountDirtPercentage(terrain, _size);
         Assert.True(pct >= 35 && pct <= 85,
             $"Optimized dirt percentage {pct:F1}% outside expected range [35, 85]");
         Assert.True(spawns.Length >= 2, $"Expected at least 2 spawns, got {spawns.Length}");
@@ -218,17 +195,7 @@ public class LevelGenTests
     {
         var gen = new ToastGenerator();
         var (terrain, _) = gen.Generate(_size, mode: LevelGenMode.Optimized);
-
-        for (int x = 0; x < W; x++)
-        {
-            Assert.Equal(TerrainPixel.LevelGenRock, terrain.GetPixelRaw(new Position(x, 0)));
-            Assert.Equal(TerrainPixel.LevelGenRock, terrain.GetPixelRaw(new Position(x, H - 1)));
-        }
-        for (int y = 0; y < H; y++)
-        {
-            Assert.Equal(TerrainPixel.LevelGenRock, terrain.GetPixelRaw(new Position(0, y)));
-            Assert.Equal(TerrainPixel.LevelGenRock, terrain.GetPixelRaw(new Position(W - 1, y)));
-        }
+        TestHelpers.AssertBorderIsRock(terrain, W, H);
     }
 
     [Fact]
@@ -242,19 +209,14 @@ public class LevelGenTests
     [Fact]
     public void OptimizedMode_LargeMap_ProducesValidResult()
     {
-        int lw = 1000, lh = 500;
-        var largeSize = new Size(lw, lh);
+        var largeSize = new Size(1000, 500);
         var gen = new ToastGenerator();
         var (terrain, spawns) = gen.Generate(largeSize, mode: LevelGenMode.Optimized);
         terrain.MaterializeTerrain(parallel: true);
 
         Assert.True(spawns.Length >= 2);
 
-        int dirtCount = 0;
-        for (int i = 0; i < largeSize.Area; i++)
-            if (Pixel.IsDirt(terrain[i])) dirtCount++;
-
-        double pct = 100.0 * dirtCount / largeSize.Area;
+        double pct = TestHelpers.CountDirtPercentage(terrain, largeSize);
         Assert.True(pct >= 40 && pct <= 85,
             $"Large optimized dirt percentage {pct:F1}% outside expected range [40, 85]");
     }
@@ -298,7 +260,7 @@ public class LevelGenTests
             $"Optimized ({optAvg:F1}ms) should not be slower than deterministic ({detAvg:F1}ms)");
     }
 
-    private static void AssertSpawnsReachable(Terrain terrain, Position[] spawns, int w, int h)
+    private static void AssertSpawnsReachable(TerrainGrid terrain, Position[] spawns, int w, int h)
     {
         var visited = new bool[w * h];
         var queue = new Queue<Position>();

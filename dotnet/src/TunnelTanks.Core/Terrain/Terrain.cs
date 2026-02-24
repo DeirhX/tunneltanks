@@ -2,19 +2,34 @@ namespace TunnelTanks.Core.Terrain;
 
 using TunnelTanks.Core.Types;
 
-public class Terrain
+public class TerrainGrid
 {
     private readonly TerrainPixel[] _data;
+    private readonly int[] _neighborOffsets;
     private readonly List<Position> _changeList = new();
 
     public Size Size { get; }
     public int Width => Size.X;
     public int Height => Size.Y;
 
-    public Terrain(Size size)
+    public TerrainGrid(Size size)
     {
         Size = size;
         _data = new TerrainPixel[size.Area];
+        _neighborOffsets = BuildNeighborOffsets(size.X);
+    }
+
+    private static int[] BuildNeighborOffsets(int w)
+    {
+        var offsets = new int[8];
+        int i = 0;
+        for (int dy = -1; dy <= 1; dy++)
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                if (dx == 0 && dy == 0) continue;
+                offsets[i++] = dx + dy * w;
+            }
+        return offsets;
     }
 
     public TerrainPixel this[int offset]
@@ -48,21 +63,14 @@ public class Terrain
 
     public void CommitPixel(Position pos) => _changeList.Add(pos);
 
-    public bool IsInside(Position pos) => pos.X >= 0 && pos.Y >= 0 && pos.X < Width && pos.Y < Height;
+    public bool IsInside(Position pos) => Size.FitsInside(pos);
 
     public int CountDirtNeighbors(Position pos)
     {
-        int x = pos.X, y = pos.Y, w = Width;
+        int offset = pos.X + pos.Y * Width;
         int count = 0;
-        // 8-neighbor check using raw offsets (no bounds check, caller must ensure interior position)
-        if (Pixel.IsDirt(_data[x - 1 + (y - 1) * w])) count++;
-        if (Pixel.IsDirt(_data[x     + (y - 1) * w])) count++;
-        if (Pixel.IsDirt(_data[x + 1 + (y - 1) * w])) count++;
-        if (Pixel.IsDirt(_data[x - 1 + y * w])) count++;
-        if (Pixel.IsDirt(_data[x + 1 + y * w])) count++;
-        if (Pixel.IsDirt(_data[x - 1 + (y + 1) * w])) count++;
-        if (Pixel.IsDirt(_data[x     + (y + 1) * w])) count++;
-        if (Pixel.IsDirt(_data[x + 1 + (y + 1) * w])) count++;
+        for (int i = 0; i < 8; i++)
+            if (Pixel.IsDirt(_data[offset + _neighborOffsets[i]])) count++;
         return count;
     }
 
@@ -72,28 +80,18 @@ public class Terrain
     /// </summary>
     public int CountLevelGenNeighbors(Position pos)
     {
-        int x = pos.X, y = pos.Y, w = Width;
-        return (byte)_data[x - 1 + (y - 1) * w]
-             + (byte)_data[x     + (y - 1) * w]
-             + (byte)_data[x + 1 + (y - 1) * w]
-             + (byte)_data[x - 1 + y * w]
-             + (byte)_data[x + 1 + y * w]
-             + (byte)_data[x - 1 + (y + 1) * w]
-             + (byte)_data[x     + (y + 1) * w]
-             + (byte)_data[x + 1 + (y + 1) * w];
+        int offset = pos.X + pos.Y * Width;
+        int sum = 0;
+        for (int i = 0; i < 8; i++)
+            sum += (byte)_data[offset + _neighborOffsets[i]];
+        return sum;
     }
 
     public bool HasLevelGenNeighbor(int x, int y)
     {
-        int w = Width;
-        if (_data[x - 1 + (y - 1) * w] == TerrainPixel.LevelGenDirt) return true;
-        if (_data[x     + (y - 1) * w] == TerrainPixel.LevelGenDirt) return true;
-        if (_data[x + 1 + (y - 1) * w] == TerrainPixel.LevelGenDirt) return true;
-        if (_data[x - 1 + y * w] == TerrainPixel.LevelGenDirt) return true;
-        if (_data[x + 1 + y * w] == TerrainPixel.LevelGenDirt) return true;
-        if (_data[x - 1 + (y + 1) * w] == TerrainPixel.LevelGenDirt) return true;
-        if (_data[x     + (y + 1) * w] == TerrainPixel.LevelGenDirt) return true;
-        if (_data[x + 1 + (y + 1) * w] == TerrainPixel.LevelGenDirt) return true;
+        int offset = x + y * Width;
+        for (int i = 0; i < 8; i++)
+            if (_data[offset + _neighborOffsets[i]] == TerrainPixel.LevelGenDirt) return true;
         return false;
     }
 
@@ -124,46 +122,39 @@ public class Terrain
     {
         if (parallel)
         {
-            MaterializeTerrainParallel();
+            MaterializeTerrainParallel(seed);
             return;
         }
 
         var rng = seed.HasValue ? new Random(seed.Value) : Random.Shared;
         for (int i = 0; i < _data.Length; i++)
-        {
-            _data[i] = _data[i] switch
-            {
-                TerrainPixel.LevelGenDirt => rng.Next(2) == 0 ? TerrainPixel.DirtHigh : TerrainPixel.DirtLow,
-                TerrainPixel.LevelGenRock => TerrainPixel.Rock,
-                TerrainPixel.LevelGenMark => TerrainPixel.Rock,
-                _ => _data[i],
-            };
-        }
+            _data[i] = MaterializePixel(_data[i], rng);
     }
 
-    private void MaterializeTerrainParallel()
+    private void MaterializeTerrainParallel(int? seed)
     {
-        int chunkSize = 4096;
+        const int chunkSize = 4096;
         int length = _data.Length;
         int chunks = (length + chunkSize - 1) / chunkSize;
+        int baseSeed = seed ?? Environment.TickCount;
 
         Parallel.For(0, chunks, chunk =>
         {
-            var rng = new Random();
+            var rng = new Random(baseSeed + chunk);
             int from = chunk * chunkSize;
             int to = Math.Min(from + chunkSize, length);
             for (int i = from; i < to; i++)
-            {
-                _data[i] = _data[i] switch
-                {
-                    TerrainPixel.LevelGenDirt => rng.Next(2) == 0 ? TerrainPixel.DirtHigh : TerrainPixel.DirtLow,
-                    TerrainPixel.LevelGenRock => TerrainPixel.Rock,
-                    TerrainPixel.LevelGenMark => TerrainPixel.Rock,
-                    _ => _data[i],
-                };
-            }
+                _data[i] = MaterializePixel(_data[i], rng);
         });
     }
+
+    private static TerrainPixel MaterializePixel(TerrainPixel p, Random rng) => p switch
+    {
+        TerrainPixel.LevelGenDirt => rng.Next(2) == 0 ? TerrainPixel.DirtHigh : TerrainPixel.DirtLow,
+        TerrainPixel.LevelGenRock => TerrainPixel.Rock,
+        TerrainPixel.LevelGenMark => TerrainPixel.Rock,
+        _ => p,
+    };
 
     public void Fill(TerrainPixel value) => Array.Fill(_data, value);
 

@@ -3,7 +3,6 @@ namespace TunnelTanks.Core.LevelGen;
 using System.Runtime.CompilerServices;
 using TunnelTanks.Core.Types;
 using TunnelTanks.Core.Terrain;
-using TerrainGrid = TunnelTanks.Core.Terrain.Terrain;
 
 public static class GeneratorUtils
 {

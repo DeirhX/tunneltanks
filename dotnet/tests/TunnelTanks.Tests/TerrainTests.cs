@@ -5,7 +5,7 @@ namespace TunnelTanks.Tests;
 
 public class TerrainTests
 {
-    private Terrain MakeTerrain(int w, int h) => new(new Size(w, h));
+    private TerrainGrid MakeTerrain(int w, int h) => new(new Size(w, h));
 
     [Fact]
     public void SetPixelRaw_GetPixelRaw_Roundtrip()

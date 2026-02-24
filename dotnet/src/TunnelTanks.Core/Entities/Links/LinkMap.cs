@@ -29,7 +29,7 @@ public class LinkMap
         _links.Clear();
     }
 
-    public void Advance(Terrain terrain)
+    public void Advance(TerrainGrid terrain)
     {
         if (_relinkTimer.Elapsed < _nextRelink) return;
         _nextRelink += Tweaks.World.RefreshLinkMapInterval;
@@ -37,7 +37,7 @@ public class LinkMap
         RebuildLinks(terrain);
     }
 
-    private void RebuildLinks(Terrain terrain)
+    private void RebuildLinks(TerrainGrid terrain)
     {
         _links.Clear();
 
@@ -47,7 +47,7 @@ public class LinkMap
             for (int j = i + 1; j < _points.Count; j++)
             {
                 if (!_points[j].IsEnabled) continue;
-                float dist = VectorFExtensions.FromOffset(_points[i].Position, _points[j].Position).Length;
+                float dist = VectorF.FromPositions(_points[i].Position, _points[j].Position).Length;
                 if (dist > Tweaks.World.MaximumTheoreticalLinkDistance) continue;
 
                 var link = new Link(_points[i], _points[j]);
@@ -75,8 +75,8 @@ public class LinkMap
 
     public void Draw(uint[] surface, int surfaceWidth, int surfaceHeight)
     {
-        var liveColor = new Color(0xa0, 0xa0, 0x19).ToArgb();
-        var blockedColor = new Color(0xa0, 0x30, 0x30).ToArgb();
+        var liveColor = Tweaks.Colors.LinkLive.ToArgb();
+        var blockedColor = Tweaks.Colors.LinkBlocked.ToArgb();
 
         foreach (var link in _links)
         {

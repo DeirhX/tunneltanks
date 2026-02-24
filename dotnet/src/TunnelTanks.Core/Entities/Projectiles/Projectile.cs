@@ -8,12 +8,12 @@ public enum ProjectileType { Bullet, Shrapnel, ConcreteFoam, DirtFoam }
 
 public class Projectile
 {
-    public PositionF Position;
-    public VectorF Speed;
-    public bool IsAlive = true;
-    public ProjectileType Type;
-    public int Life;
-    public int OwnerColor = -1;
+    public PositionF Position { get; set; }
+    public VectorF Speed { get; init; }
+    public bool IsAlive { get; set; } = true;
+    public ProjectileType Type { get; init; }
+    public int Life { get; set; }
+    public int OwnerColor { get; init; } = -1;
 
     public static Projectile CreateBullet(Position pos, VectorF speed, int ownerColor) => new()
     {

@@ -13,7 +13,7 @@ using System.Diagnostics;
 
 public class World
 {
-    private readonly Terrain.Terrain _terrain;
+    private readonly TerrainGrid _terrain;
     private readonly TankBases _tankBases = new();
     private readonly TankList _tankList = new();
     private readonly ProjectileList _projectiles = new();
@@ -28,7 +28,7 @@ public class World
     private readonly Stopwatch _regrowTimer = new();
     private bool _gameOver;
 
-    public Terrain.Terrain Terrain => _terrain;
+    public TerrainGrid Terrain => _terrain;
     public TankBases TankBases => _tankBases;
     public TankList TankList => _tankList;
     public ProjectileList Projectiles => _projectiles;
@@ -43,12 +43,12 @@ public class World
 
     public World(Size terrainSize)
     {
-        _terrain = new Terrain.Terrain(terrainSize);
+        _terrain = new TerrainGrid(terrainSize);
         _sectors = new WorldSectors(terrainSize);
         _regrowTimer.Start();
     }
 
-    public void Initialize(Terrain.Terrain generatedTerrain, Position[] spawns,
+    public void Initialize(TerrainGrid generatedTerrain, Position[] spawns,
         int? materializeSeed = null, bool parallelMaterialize = false)
     {
         for (int i = 0; i < generatedTerrain.Size.Area; i++)
@@ -78,13 +78,13 @@ public class World
         _advanceCount++;
         _elapsed += Tweaks.World.AdvanceStep;
 
-        { var w = Stopwatch.StartNew(); RegrowPass(); Profile.Regrow += w.Elapsed; }
-        { var w = Stopwatch.StartNew(); _projectiles.Advance(_terrain, _tankList); Profile.Projectiles += w.Elapsed; }
-        { var w = Stopwatch.StartNew(); _tankList.Advance(this, getInput); Profile.Tanks += w.Elapsed; }
-        { var w = Stopwatch.StartNew(); _machines.Advance(_terrain, Tweaks.World.AdvanceStep); Profile.Harvesters += w.Elapsed; }
-        { var w = Stopwatch.StartNew(); _sprites.Advance(Tweaks.World.AdvanceStep); Profile.Sprites += w.Elapsed; }
-        { var w = Stopwatch.StartNew(); _tankBases.Advance(); Profile.Bases += w.Elapsed; }
-        { var w = Stopwatch.StartNew(); _linkMap.Advance(_terrain); Profile.Links += w.Elapsed; }
+        ProfileSection(ref Profile.Regrow, RegrowPass);
+        ProfileSection(ref Profile.Projectiles, () => _projectiles.Advance(_terrain, _tankList));
+        ProfileSection(ref Profile.Tanks, () => _tankList.Advance(this, getInput));
+        ProfileSection(ref Profile.Harvesters, () => _machines.Advance(_terrain, Tweaks.World.AdvanceStep));
+        ProfileSection(ref Profile.Sprites, () => _sprites.Advance(Tweaks.World.AdvanceStep));
+        ProfileSection(ref Profile.Bases, () => _tankBases.Advance());
+        ProfileSection(ref Profile.Links, () => _linkMap.Advance(_terrain));
 
         Profile.Total += frameWatch.Elapsed;
         Profile.FrameCount++;
@@ -94,6 +94,13 @@ public class World
     }
 
     public void SetGameOver() => _gameOver = true;
+
+    private static void ProfileSection(ref TimeSpan accumulator, Action action)
+    {
+        var w = Stopwatch.StartNew();
+        action();
+        accumulator += w.Elapsed;
+    }
 
     private void RegrowPass()
     {
@@ -119,7 +126,9 @@ public class World
                 if (pix == TerrainPixel.Blank || Pixel.IsScorched(pix))
                 {
                     int neighbors = _terrain.CountDirtNeighbors(pos);
-                    int modifier = pix == TerrainPixel.Blank ? 4 : 1;
+                    int modifier = pix == TerrainPixel.Blank
+                        ? Tweaks.World.DirtRegrowBlankModifier
+                        : Tweaks.World.DirtRegrowScorchedModifier;
                     if (neighbors > 2 && random.Next(1000) < Tweaks.World.DirtRegrowSpeed * neighbors * modifier)
                     {
                         writes.Add((x + y * w, TerrainPixel.DirtGrow));

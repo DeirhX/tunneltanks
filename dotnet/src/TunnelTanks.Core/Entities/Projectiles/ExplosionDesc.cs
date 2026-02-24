@@ -1,6 +1,7 @@
 namespace TunnelTanks.Core.Entities.Projectiles;
 
 using TunnelTanks.Core.Types;
+using TunnelTanks.Core.Config;
 
 public static class ExplosionFactory
 {
@@ -12,7 +13,8 @@ public static class ExplosionFactory
         for (int i = 0; i < count; i++)
         {
             float angle = rng.NextSingle() * MathF.Tau;
-            float s = rng.NextSingle() * speed * 0.9f + speed * 0.1f;
+            float s = rng.NextSingle() * speed * Tweaks.Explosion.SpeedVarianceRange
+                    + speed * Tweaks.Explosion.SpeedVarianceBase;
             var dir = new VectorF(MathF.Cos(angle) * s, MathF.Sin(angle) * s);
             int life = rng.Next(0, frames);
             result.Add(Projectile.CreateShrapnel(center, dir, life));

@@ -1,6 +1,7 @@
 namespace TunnelTanks.Core.Entities;
 
 using TunnelTanks.Core.Types;
+using TunnelTanks.Core.Config;
 
 public class Sprite
 {
@@ -29,9 +30,9 @@ public class Sprite
 
         uint color = Type switch
         {
-            SpriteType.FailedInteraction => new Color(0xff, 0x34, 0x08).ToArgb(),
-            SpriteType.InfoMarker => new Color(0xff, 0xff, 0x4a).ToArgb(),
-            _ => new Color(0xff, 0xff, 0xff).ToArgb(),
+            SpriteType.FailedInteraction => Tweaks.Colors.FailedInteraction.ToArgb(),
+            SpriteType.InfoMarker => Tweaks.Colors.InfoMarker.ToArgb(),
+            _ => Color.White.ToArgb(),
         };
 
         int x = Position.X, y = Position.Y;

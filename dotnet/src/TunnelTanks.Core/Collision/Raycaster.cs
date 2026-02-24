@@ -19,22 +19,15 @@ public static class Raycaster
 
     public static void BresenhamLine(Position from, Position to, Action<Position> visit)
     {
-        int x0 = from.X, y0 = from.Y, x1 = to.X, y1 = to.Y;
-        int dx = Math.Abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-        int dy = -Math.Abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-        int err = dx + dy;
-
-        while (true)
-        {
-            visit(new Position(x0, y0));
-            if (x0 == x1 && y0 == y1) break;
-            int e2 = 2 * err;
-            if (e2 >= dy) { err += dy; x0 += sx; }
-            if (e2 <= dx) { err += dx; y0 += sy; }
-        }
+        WalkBresenham(from, to, pos => { visit(pos); return false; });
     }
 
     public static bool BresenhamLineAny(Position from, Position to, Func<Position, bool> predicate)
+    {
+        return WalkBresenham(from, to, predicate);
+    }
+
+    private static bool WalkBresenham(Position from, Position to, Func<Position, bool> visitor)
     {
         int x0 = from.X, y0 = from.Y, x1 = to.X, y1 = to.Y;
         int dx = Math.Abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
@@ -43,7 +36,7 @@ public static class Raycaster
 
         while (true)
         {
-            if (predicate(new Position(x0, y0))) return true;
+            if (visitor(new Position(x0, y0))) return true;
             if (x0 == x1 && y0 == y1) break;
             int e2 = 2 * err;
             if (e2 >= dy) { err += dy; x0 += sx; }

@@ -15,7 +15,7 @@ public class MachineList
         return machine;
     }
 
-    public void Advance(Terrain terrain, TimeSpan dt)
+    public void Advance(TerrainGrid terrain, TimeSpan dt)
     {
         for (int i = _machines.Count - 1; i >= 0; i--)
         {

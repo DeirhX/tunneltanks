@@ -7,9 +7,9 @@ public enum CollisionType { None, Dirt, Blocked }
 
 public class CollisionSolver
 {
-    private readonly Terrain _terrain;
+    private readonly TerrainGrid _terrain;
 
-    public CollisionSolver(Terrain terrain)
+    public CollisionSolver(TerrainGrid terrain)
     {
         _terrain = terrain;
     }

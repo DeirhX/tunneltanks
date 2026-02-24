@@ -34,58 +34,63 @@ public class Tank
             Tweaks.Tank.EnergyCapacity, Tweaks.Tank.HealthCapacity);
         Resources = new MaterialContainer(0, 0, Tweaks.Tank.ResourceDirtCapacity, Tweaks.Tank.ResourceMineralsCapacity);
         Turret = new TankTurret(color);
-        Direction = Random.Shared.Next(9);
-        if (Direction >= 4) Direction++;
+        Direction = RandomDirection();
     }
 
     public void Advance(World world, ControllerOutput input)
     {
-        if (!IsDead)
-        {
-            Reactor.Exhaust(new ReactorState(Tweaks.Tank.IdleEnergyDrain, 0));
-
-            var baseColl = world.TankBases.CheckBaseCollision(Position);
-            if (baseColl != null)
-            {
-                baseColl.RechargeTank(Reactor, Color);
-                if (baseColl.Color == Color)
-                    baseColl.AbsorbResources(Resources, new MaterialAmount(15, 15));
-            }
-
-            // Set turret direction before movement (matches C++ order)
-            if (input.AimDirection.X != 0 || input.AimDirection.Y != 0)
-                Turret.SetDirection(input.AimDirection);
-            else if (input.MoveSpeed.X != 0 || input.MoveSpeed.Y != 0)
-            {
-                float dx = input.MoveSpeed.X, dy = input.MoveSpeed.Y;
-                float len = MathF.Sqrt(dx * dx + dy * dy);
-                Turret.SetDirection(new DirectionF(dx / len, dy / len));
-            }
-
-            Turret.Update(input.ShootPrimary);
-
-            HandleMove(world.Terrain, input.MoveSpeed, Turret.Direction, input.ShootPrimary);
-
-            if (input.ShootPrimary)
-            {
-                var bullet = Turret.TryShoot(Position, world.Projectiles);
-                if (bullet != null)
-                    Reactor.Exhaust(new ReactorState(Tweaks.Tank.ShootEnergyCost, 0));
-            }
-
-            CollectItems(world.Terrain);
-        }
-        else
+        if (IsDead)
         {
             AdvanceDeath(world);
+            return;
+        }
+
+        Reactor.Exhaust(new ReactorState(Tweaks.Tank.IdleEnergyDrain, 0));
+        AdvanceBaseInteraction(world);
+        AdvanceTurretAim(input);
+        Turret.Update(input.ShootPrimary);
+        HandleMove(world.Terrain, input.MoveSpeed, Turret.Direction, input.ShootPrimary);
+        AdvanceShooting(input, world);
+        CollectItems(world.Terrain);
+    }
+
+    private void AdvanceBaseInteraction(World world)
+    {
+        var baseColl = world.TankBases.CheckBaseCollision(Position);
+        if (baseColl == null) return;
+
+        baseColl.RechargeTank(Reactor, Color);
+        if (baseColl.Color == Color)
+            baseColl.AbsorbResources(Resources, new MaterialAmount(Tweaks.Base.HomeAbsorbDirt, Tweaks.Base.HomeAbsorbMinerals));
+    }
+
+    private void AdvanceTurretAim(ControllerOutput input)
+    {
+        if (input.AimDirection.X != 0 || input.AimDirection.Y != 0)
+        {
+            Turret.SetDirection(input.AimDirection);
+        }
+        else if (input.MoveSpeed.X != 0 || input.MoveSpeed.Y != 0)
+        {
+            float dx = input.MoveSpeed.X, dy = input.MoveSpeed.Y;
+            float len = MathF.Sqrt(dx * dx + dy * dy);
+            Turret.SetDirection(new DirectionF(dx / len, dy / len));
         }
     }
 
-    private void HandleMove(Terrain terrain, Offset speed, DirectionF torchHeading, bool torchUse)
+    private void AdvanceShooting(ControllerOutput input, World world)
+    {
+        if (!input.ShootPrimary) return;
+        var bullet = Turret.TryShoot(Position, world.Projectiles);
+        if (bullet != null)
+            Reactor.Exhaust(new ReactorState(Tweaks.Tank.ShootEnergyCost, 0));
+    }
+
+    private void HandleMove(TerrainGrid terrain, Offset speed, DirectionF torchHeading, bool torchUse)
     {
         if (speed.X == 0 && speed.Y == 0) return;
 
-        int dir = SpeedToDirection(speed);
+        int dir = OffsetToDirection(speed);
         var newPos = Position + speed;
 
         var collision = TestCollision(terrain, newPos, dir);
@@ -93,15 +98,13 @@ public class Tank
         {
             DigTunnel(terrain, newPos, torchUse);
 
-            // Check if torch (turret) is aimed in the same direction as movement
-            int torchDir = SpeedToDirection(new Offset(
+            int torchDir = OffsetToDirection(new Offset(
                 (int)MathF.Round(torchHeading.X),
                 (int)MathF.Round(torchHeading.Y)));
 
             if (!(torchUse && torchDir == dir))
-                return; // Not shooting in movement direction → don't move on dig frame
+                return;
 
-            // Torch aligned: retest collision - may have failed to dig rock
             collision = TestCollision(terrain, newPos, dir);
             if (collision != CollisionType.None)
                 return;
@@ -112,38 +115,27 @@ public class Tank
         Reactor.Exhaust(new ReactorState(Tweaks.Tank.MoveEnergyDrain, 0));
     }
 
-    private CollisionType TestCollision(Terrain terrain, Position pos, int dir)
+    private CollisionType TestCollision(TerrainGrid terrain, Position pos, int dir)
     {
-        dir = Math.Clamp(dir, 0, TankSprites.DirectionCount - 1);
-        var sprite = TankSprites.Sprites[dir];
-        int w = TankSprites.SpriteWidth, h = TankSprites.SpriteHeight;
-        int cx = w / 2, cy = h / 2;
         var result = CollisionType.None;
-
-        for (int sy = 0; sy < h; sy++)
-            for (int sx = 0; sx < w; sx++)
-            {
-                if (sprite[sx + sy * w] == 0) continue;
-                var worldPos = new Position(pos.X - cx + sx, pos.Y - cy + sy);
-                var pix = terrain.GetPixel(worldPos);
-                if (Pixel.IsBlockingCollision(pix)) return CollisionType.Blocked;
-                if (Pixel.IsSoftCollision(pix)) result = CollisionType.Dirt;
-            }
+        ForEachSpritePixel(dir, pos, (_, worldPos) =>
+        {
+            var pix = terrain.GetPixel(worldPos);
+            if (Pixel.IsBlockingCollision(pix)) { result = CollisionType.Blocked; return false; }
+            if (Pixel.IsSoftCollision(pix)) result = CollisionType.Dirt;
+            return true;
+        });
         return result;
     }
 
-    /// <summary>
-    /// Digs a 7x7 area (minus corners) centered on the target position,
-    /// matching the C++ DigTankTunnel behavior. Rock is only torchable
-    /// (destroyed by random chance) when the player is actively shooting.
-    /// </summary>
-    private void DigTunnel(Terrain terrain, Position center, bool torchUse)
+    private void DigTunnel(TerrainGrid terrain, Position center, bool torchUse)
     {
-        for (int ty = center.Y - 3; ty <= center.Y + 3; ty++)
-            for (int tx = center.X - 3; tx <= center.X + 3; tx++)
+        int r = Tweaks.Tank.DigRadius;
+        for (int ty = center.Y - r; ty <= center.Y + r; ty++)
+            for (int tx = center.X - r; tx <= center.X + r; tx++)
             {
-                if ((tx == center.X - 3 || tx == center.X + 3) &&
-                    (ty == center.Y - 3 || ty == center.Y + 3))
+                if ((tx == center.X - r || tx == center.X + r) &&
+                    (ty == center.Y - r || ty == center.Y + r))
                     continue;
 
                 var worldPos = new Position(tx, ty);
@@ -166,31 +158,26 @@ public class Tank
             }
     }
 
-    private void CollectItems(Terrain terrain)
+    private void CollectItems(TerrainGrid terrain)
     {
-        int cx = TankSprites.SpriteWidth / 2, cy = TankSprites.SpriteHeight / 2;
-        var sprite = TankSprites.Sprites[Math.Clamp(Direction, 0, TankSprites.DirectionCount - 1)];
+        ForEachSpritePixel(Direction, Position, (_, worldPos) =>
+        {
+            if (!terrain.IsInside(worldPos)) return true;
 
-        for (int sy = 0; sy < TankSprites.SpriteHeight; sy++)
-            for (int sx = 0; sx < TankSprites.SpriteWidth; sx++)
+            var pix = terrain.GetPixelRaw(worldPos);
+            if (Pixel.IsEnergy(pix))
             {
-                if (sprite[sx + sy * TankSprites.SpriteWidth] == 0) continue;
-                var worldPos = new Position(Position.X - cx + sx, Position.Y - cy + sy);
-                if (!terrain.IsInside(worldPos)) continue;
-
-                var pix = terrain.GetPixelRaw(worldPos);
-                if (Pixel.IsEnergy(pix))
+                terrain.SetPixel(worldPos, TerrainPixel.Blank);
+                int energyGain = pix switch
                 {
-                    terrain.SetPixel(worldPos, TerrainPixel.Blank);
-                    int energyGain = pix switch
-                    {
-                        TerrainPixel.EnergyMedium => Tweaks.Tank.EnergyPickupMedium,
-                        TerrainPixel.EnergyHigh => Tweaks.Tank.EnergyPickupHigh,
-                        _ => Tweaks.Tank.EnergyPickupLow,
-                    };
-                    Reactor.Add(new ReactorState(energyGain, 0));
-                }
+                    TerrainPixel.EnergyMedium => Tweaks.Tank.EnergyPickupMedium,
+                    TerrainPixel.EnergyHigh => Tweaks.Tank.EnergyPickupHigh,
+                    _ => Tweaks.Tank.EnergyPickupLow,
+                };
+                Reactor.Add(new ReactorState(energyGain, 0));
             }
+            return true;
+        });
     }
 
     public void Spawn()
@@ -228,7 +215,26 @@ public class Tank
     public void Draw(uint[] surface, int surfaceWidth, int surfaceHeight)
     {
         if (IsDead) return;
-        int dir = Math.Clamp(Direction, 0, TankSprites.DirectionCount - 1);
+
+        ForEachSpritePixel(Direction, Position, (spriteVal, worldPos) =>
+        {
+            if (worldPos.X < 0 || worldPos.Y < 0 || worldPos.X >= surfaceWidth || worldPos.Y >= surfaceHeight)
+                return true;
+            surface[worldPos.X + worldPos.Y * surfaceWidth] = TankSprites.GetPixelColor(spriteVal, Color).ToArgb();
+            return true;
+        });
+
+        Turret.Draw(surface, surfaceWidth, surfaceHeight, Position);
+    }
+
+    /// <summary>
+    /// Iterates all non-transparent pixels of the sprite for the given direction,
+    /// calling <paramref name="visitor"/> with (spriteByteValue, worldPosition).
+    /// Return false from visitor to break early.
+    /// </summary>
+    private static void ForEachSpritePixel(int dir, Position origin, Func<byte, Position, bool> visitor)
+    {
+        dir = Math.Clamp(dir, 0, TankSprites.DirectionCount - 1);
         var sprite = TankSprites.Sprites[dir];
         int w = TankSprites.SpriteWidth, h = TankSprites.SpriteHeight;
         int cx = w / 2, cy = h / 2;
@@ -238,18 +244,17 @@ public class Tank
             {
                 byte val = sprite[sx + sy * w];
                 if (val == 0) continue;
-                int px = Position.X - cx + sx;
-                int py = Position.Y - cy + sy;
-                if (px < 0 || py < 0 || px >= surfaceWidth || py >= surfaceHeight) continue;
-                surface[px + py * surfaceWidth] = TankSprites.GetPixelColor(val, Color).ToArgb();
+                var worldPos = new Position(origin.X - cx + sx, origin.Y - cy + sy);
+                if (!visitor(val, worldPos)) return;
             }
-
-        Turret.Draw(surface, surfaceWidth, surfaceHeight, Position);
     }
 
-    private static int SpeedToDirection(Offset speed)
+    /// <summary>
+    /// Maps a signed (dx,dy) offset to one of 8 sprite directions.
+    /// Layout: 0=NE, 1=N, 2=NW, 3=E, 5=W, 6=SE, 7=S, 8=SW (index 4 is unused).
+    /// </summary>
+    private static int OffsetToDirection(Offset speed)
     {
-        // 8-direction mapping: 0=NE, 1=N, 2=NW, 3=E, 4=unused, 5=W, 6=SE, 7=S, 8=SW
         int dx = Math.Sign(speed.X), dy = Math.Sign(speed.Y);
         return (dx, dy) switch
         {
@@ -263,5 +268,14 @@ public class Tank
             (-1,  1) => 8,
             _ => 1,
         };
+    }
+
+    /// <summary>
+    /// Picks a random 8-direction index, skipping the unused center index (4).
+    /// </summary>
+    private static int RandomDirection()
+    {
+        int dir = Random.Shared.Next(8);
+        return dir >= 4 ? dir + 1 : dir;
     }
 }

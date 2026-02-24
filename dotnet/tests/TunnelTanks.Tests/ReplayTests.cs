@@ -13,30 +13,22 @@ namespace TunnelTanks.Tests;
 /// </summary>
 public class ReplayTests
 {
-    private const int Seed = 42;
-    private static readonly Size MapSize = new(320, 200);
-
-    private World CreateSeededWorld()
-    {
-        var gen = new ToastGenerator();
-        var (terrain, spawns) = gen.Generate(MapSize, seed: Seed);
-        var world = new World(MapSize);
-        world.Initialize(terrain, spawns, materializeSeed: Seed + 1);
-        return world;
-    }
+    private static World CreateSeededWorld() => TestHelpers.CreateSeededWorld();
 
     [Fact]
     public void SeededGeneration_ProducesIdenticalMap()
     {
         var gen = new ToastGenerator();
-        var (t1, s1) = gen.Generate(MapSize, seed: Seed);
-        var (t2, s2) = gen.Generate(MapSize, seed: Seed);
+        var size = TestHelpers.DefaultMapSize;
+        int seed = TestHelpers.DefaultSeed;
+        var (t1, s1) = gen.Generate(size, seed: seed);
+        var (t2, s2) = gen.Generate(size, seed: seed);
 
         Assert.Equal(s1.Length, s2.Length);
         for (int i = 0; i < s1.Length; i++)
             Assert.Equal(s1[i], s2[i]);
 
-        for (int i = 0; i < MapSize.Area; i++)
+        for (int i = 0; i < size.Area; i++)
             Assert.Equal(t1[i], t2[i]);
     }
 
@@ -44,12 +36,14 @@ public class ReplayTests
     public void SeededMaterialize_ProducesIdenticalTerrain()
     {
         var gen = new ToastGenerator();
-        var (t1, _) = gen.Generate(MapSize, seed: Seed);
-        var (t2, _) = gen.Generate(MapSize, seed: Seed);
-        t1.MaterializeTerrain(seed: Seed + 1);
-        t2.MaterializeTerrain(seed: Seed + 1);
+        var size = TestHelpers.DefaultMapSize;
+        int seed = TestHelpers.DefaultSeed;
+        var (t1, _) = gen.Generate(size, seed: seed);
+        var (t2, _) = gen.Generate(size, seed: seed);
+        t1.MaterializeTerrain(seed: seed + 1);
+        t2.MaterializeTerrain(seed: seed + 1);
 
-        for (int i = 0; i < MapSize.Area; i++)
+        for (int i = 0; i < size.Area; i++)
             Assert.Equal(t1[i], t2[i]);
     }
 
@@ -198,9 +192,6 @@ public class ReplayTests
         var world = CreateSeededWorld();
         var ai1 = new TwitchAI(seed: 99);
         var ai2 = new TwitchAI(seed: 99);
-
-        var positions1 = new List<Position>();
-        var positions2 = new List<Position>();
 
         for (int i = 0; i < 50; i++)
         {

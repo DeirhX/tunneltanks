@@ -21,7 +21,7 @@ public class ProjectileList
         _pending.Clear();
     }
 
-    public void Advance(Terrain terrain, TankList? tankList)
+    public void Advance(TerrainGrid terrain, TankList? tankList)
     {
         _projectiles.AddRange(_pending);
         _pending.Clear();
@@ -48,7 +48,7 @@ public class ProjectileList
             _projectiles.RemoveAll(p => !p.IsAlive);
     }
 
-    private void AdvanceBullet(Projectile p, Terrain terrain, TankList? tankList)
+    private void AdvanceBullet(Projectile p, TerrainGrid terrain, TankList? tankList)
     {
         int steps = Math.Max(1, (int)MathF.Ceiling(p.Speed.Length));
         var stepDir = p.Speed * (1f / steps);
@@ -91,7 +91,7 @@ public class ProjectileList
             Tweaks.Explosion.Normal.Frames));
     }
 
-    private void AdvanceShrapnel(Projectile p, Terrain terrain)
+    private void AdvanceShrapnel(Projectile p, TerrainGrid terrain)
     {
         if (p.Life-- <= 0) { p.IsAlive = false; return; }
 
@@ -115,7 +115,7 @@ public class ProjectileList
         terrain.SetPixel(ipos, Random.Shared.Next(2) == 0 ? TerrainPixel.DecalHigh : TerrainPixel.DecalLow);
     }
 
-    private static void AdvanceFoam(Projectile p, Terrain terrain,
+    private static void AdvanceFoam(Projectile p, TerrainGrid terrain,
         TerrainPixel highPixel, TerrainPixel lowPixel, bool skipConcrete)
     {
         if (p.Life-- <= 0) { p.IsAlive = false; return; }
@@ -136,10 +136,9 @@ public class ProjectileList
 
     public void Draw(uint[] surface, int surfaceWidth, int surfaceHeight)
     {
-        var fireHot = new Color(0xff, 0x34, 0x08).ToArgb();
-        var fireCold = new Color(0xba, 0x00, 0x00).ToArgb();
-        var concreteColor = new Color(0xba, 0xba, 0xcc).ToArgb();
-        var dirtColor = new Color(0xaa, 0x50, 0x03).ToArgb();
+        var fireHot = Tweaks.Colors.FireHot.ToArgb();
+        var concreteColor = Tweaks.Colors.Concrete.ToArgb();
+        var dirtColor = Tweaks.Colors.DirtProjectile.ToArgb();
 
         foreach (var p in _projectiles)
         {

@@ -20,9 +20,9 @@ public class Link
         To = to;
     }
 
-    public float Distance => VectorFExtensions.FromOffset(From.Position, To.Position).Length;
+    public float Distance => VectorF.FromPositions(From.Position, To.Position).Length;
 
-    public void UpdateType(Terrain terrain)
+    public void UpdateType(TerrainGrid terrain)
     {
         if (!From.IsEnabled || !To.IsEnabled || Distance > Tweaks.World.MaximumLiveLinkDistance)
         {
@@ -33,15 +33,7 @@ public class Link
         Type = IsPathBlocked(terrain) ? LinkType.Blocked : LinkType.Live;
     }
 
-    private bool IsPathBlocked(Terrain terrain) =>
+    private bool IsPathBlocked(TerrainGrid terrain) =>
         Raycaster.BresenhamLineAny(From.Position, To.Position,
             pos => Pixel.IsBlockingCollision(terrain.GetPixel(pos)));
-}
-
-public static class VectorFExtensions
-{
-    public static VectorF FromOffset(Position a, Position b)
-    {
-        return new VectorF(b.X - a.X, b.Y - a.Y);
-    }
 }

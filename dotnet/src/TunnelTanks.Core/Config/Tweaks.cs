@@ -32,6 +32,8 @@ public static class Tweaks
         public static readonly TimeSpan DirtRecoverInterval = TimeSpan.FromMilliseconds(250);
         public const int DirtRecoverSpeed = 10;
         public const int DirtRegrowSpeed = 4;
+        public const int DirtRegrowBlankModifier = 4;
+        public const int DirtRegrowScorchedModifier = 1;
         public const int DigThroughRockChance = 250;
         public static readonly TimeSpan RefreshLinkMapInterval = TimeSpan.FromMilliseconds(200);
         public const float MaximumLiveLinkDistance = 100f;
@@ -55,6 +57,8 @@ public static class Tweaks
         public const int HomeRechargeHealth = 3;
         public const int ForeignRechargeEnergy = 90;
         public const int ForeignRechargeHealth = 1;
+        public const int HomeAbsorbDirt = 15;
+        public const int HomeAbsorbMinerals = 15;
     }
 
     public static class Tank
@@ -63,6 +67,7 @@ public static class Tweaks
         public static readonly TimeSpan RespawnDelay = TimeSpan.FromSeconds(3);
         public const int TurretDelay = 3;
         public const int TurretLength = 4;
+        public const int DigRadius = 3;
         public const int InitialEnergy = 24000;
         public const int InitialHealth = 1000;
         public const int EnergyCapacity = 24000;
@@ -94,6 +99,7 @@ public static class Tweaks
         public const int HarvestRange = 20;
         public const int HarvesterDirtCost = 1000;
         public const int ChargerDirtCost = 500;
+        public const int BoundingBoxHalfSize = 2;
     }
 
     public static class Explosion
@@ -101,10 +107,28 @@ public static class Tweaks
         public const float MadnessLevel = 1f;
         public const int ChanceToDestroyConcrete = 50;
         public const int ChanceToDestroyRock = 50;
+        public const float SpeedVarianceBase = 0.1f;
+        public const float SpeedVarianceRange = 0.9f;
 
         public static class Dirt { public const int ShrapnelCount = 10; public const float Speed = 0.375f; public const int Frames = 10; }
         public static class Normal { public const int ShrapnelCount = 14; public const float Speed = 0.56f; public const int Frames = 13; }
         public static class Death { public const int ShrapnelCount = 100; public const float Speed = 0.25f; public const int Frames = 72; }
+    }
+
+    public static class Colors
+    {
+        public static readonly Color BaseOutline = new(40, 40, 40);
+        public static readonly Color TurretBarrelTip = new(0xf3, 0xeb, 0x1c);
+        public static readonly Color FireHot = new(0xff, 0x34, 0x08);
+        public static readonly Color Concrete = new(0xba, 0xba, 0xcc);
+        public static readonly Color DirtProjectile = new(0xaa, 0x50, 0x03);
+        public static readonly Color Harvester = new(0x00, 0x88, 0x00);
+        public static readonly Color Charger = new(0x4f, 0x4f, 0xff, 0xa0);
+        public static readonly Color MachineTemplate = new(0x66, 0x66, 0x66, 0x80);
+        public static readonly Color FailedInteraction = new(0xff, 0x34, 0x08);
+        public static readonly Color InfoMarker = new(0xff, 0xff, 0x4a);
+        public static readonly Color LinkLive = new(0xa0, 0xa0, 0x19);
+        public static readonly Color LinkBlocked = new(0xa0, 0x30, 0x30);
     }
 
     public static class LevelGen
