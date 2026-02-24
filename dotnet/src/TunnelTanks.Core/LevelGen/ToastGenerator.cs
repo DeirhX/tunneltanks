@@ -16,7 +16,7 @@ public class ToastGenerator
         LevelGenMode mode = LevelGenMode.Deterministic)
     {
         var terrain = new Terrain(size);
-        GeneratorUtils.FillAll(terrain, TerrainPixel.LevelGenRock);
+        terrain.Fill(TerrainPixel.LevelGenRock);
 
         var rng = seed.HasValue ? new Random(seed.Value) : new Random();
         var spawns = GenerateTree(terrain, rng);
@@ -34,47 +34,49 @@ public class ToastGenerator
         return (terrain, spawns);
     }
 
-    private Position[] GenerateTree(Terrain terrain, Random rng)
+    /// <summary>
+    /// Generates random points, selects spawn positions, then builds a minimum spanning
+    /// tree (Kruskal's algorithm with naive union-find) connecting them via dirt tunnels.
+    /// </summary>
+    private static Position[] GenerateTree(Terrain terrain, Random rng)
     {
-        const int treeSize = 150;
-        const int borderWidth = 30;
-        const int maxPlayers = 2;
-        const int minDistSq = 150 * 150;
+        int treeSize = Tweaks.LevelGen.TreeSize;
 
         var points = new Position[treeSize];
         for (int i = 0; i < treeSize; i++)
-            points[i] = GeneratorUtils.GenerateInside(terrain.Size, borderWidth, rng);
+            points[i] = GeneratorUtils.GenerateInside(terrain.Size, Tweaks.LevelGen.BorderWidth, rng);
 
         var spawns = new List<Position> { points[0] };
-        for (int i = 1; i < treeSize && spawns.Count < maxPlayers; i++)
+        for (int i = 1; i < treeSize && spawns.Count < Tweaks.LevelGen.MaxPlayers; i++)
         {
             bool tooClose = false;
             foreach (var s in spawns)
             {
-                if (GeneratorUtils.PointDistanceSquared(points[i], s) < minDistSq)
+                if (Position.DistanceSquared(points[i], s) < Tweaks.LevelGen.MinSpawnDistanceSq)
                 { tooClose = true; break; }
             }
             if (!tooClose) spawns.Add(points[i]);
         }
 
-        int[] dsets = new int[treeSize];
-        for (int i = 0; i < treeSize; i++) dsets[i] = i;
+        // Kruskal's MST: each node starts in its own component
+        int[] componentId = new int[treeSize];
+        for (int i = 0; i < treeSize; i++) componentId[i] = i;
 
-        var pairs = new List<(int dist, int a, int b)>();
+        var edges = new List<(int dist, int a, int b)>();
         for (int i = 0; i < treeSize; i++)
             for (int j = i + 1; j < treeSize; j++)
-                pairs.Add((GeneratorUtils.PointDistanceSquared(points[i], points[j]), i, j));
-        pairs.Sort((a, b) => a.dist.CompareTo(b.dist));
+                edges.Add((Position.DistanceSquared(points[i], points[j]), i, j));
+        edges.Sort((a, b) => a.dist.CompareTo(b.dist));
 
-        int edges = 0;
-        foreach (var (_, a, b) in pairs)
+        int edgeCount = 0;
+        foreach (var (_, a, b) in edges)
         {
-            if (edges >= treeSize - 1) break;
-            int aset = dsets[a], bset = dsets[b];
-            if (aset == bset) continue;
-            edges++;
+            if (edgeCount >= treeSize - 1) break;
+            int aComp = componentId[a], bComp = componentId[b];
+            if (aComp == bComp) continue;
+            edgeCount++;
             for (int k = 0; k < treeSize; k++)
-                if (dsets[k] == bset) dsets[k] = aset;
+                if (componentId[k] == bComp) componentId[k] = aComp;
             GeneratorUtils.DrawLine(terrain, points[a], points[b], TerrainPixel.LevelGenDirt);
         }
 
@@ -83,7 +85,7 @@ public class ToastGenerator
 
     #region Deterministic (single-threaded)
 
-    private void RandomlyExpand(Terrain terrain, Random rng)
+    private static void RandomlyExpand(Terrain terrain, Random rng)
     {
         int w = terrain.Width, h = terrain.Height;
         var queue = new Queue<Position>();
@@ -126,7 +128,7 @@ public class ToastGenerator
                         {
                             if (dx == 0 && dy == 0) continue;
                             int nx = pos.X + dx, ny = pos.Y + dy;
-                            if (nx > 0 && nx < w - 1 && ny > 0 && ny < h - 1)
+                            if (GeneratorUtils.IsInterior(nx, ny, w, h))
                             {
                                 var np = new Position(nx, ny);
                                 if (terrain.GetPixelRaw(np) == TerrainPixel.LevelGenRock)
@@ -144,18 +146,20 @@ public class ToastGenerator
         ExpandCleanup(terrain);
     }
 
-    private void SmoothCavern(Terrain terrain)
+    private static void SmoothCavern(Terrain terrain)
     {
         GeneratorUtils.SetOutside(terrain, TerrainPixel.LevelGenDirt);
-        int steps = Tweaks.LevelGen.SmoothingSteps;
-        if (steps < 0)
-            while (SmoothOnce(terrain) > 0) { }
-        else
-            while (SmoothOnce(terrain) > 0 && --steps > 0) { }
+
+        int remaining = Tweaks.LevelGen.SmoothingSteps;
+        while (SmoothOnce(terrain) > 0)
+        {
+            if (remaining >= 0 && --remaining <= 0) break;
+        }
+
         GeneratorUtils.SetOutside(terrain, TerrainPixel.LevelGenRock);
     }
 
-    private int SmoothOnce(Terrain terrain)
+    private static int SmoothOnce(Terrain terrain)
     {
         int w = terrain.Width, h = terrain.Height;
         var writes = new List<(int offset, TerrainPixel value)>();
@@ -166,9 +170,7 @@ public class ToastGenerator
             {
                 var pos = new Position(x, y);
                 var old = terrain.GetPixelRaw(pos);
-                int n = terrain.CountLevelGenNeighbors(pos);
-                bool paintRock = (old != TerrainPixel.LevelGenDirt) ? (n >= 3) : (n > 4);
-                var newVal = paintRock ? TerrainPixel.LevelGenRock : TerrainPixel.LevelGenDirt;
+                var newVal = GeneratorUtils.SmoothPixel(old, terrain.CountLevelGenNeighbors(pos));
                 if (newVal != old)
                 {
                     writes.Add((x + y * w, newVal));
@@ -186,7 +188,7 @@ public class ToastGenerator
 
     #region Optimized (parallel, non-deterministic)
 
-    private void GenerateOptimized(Terrain terrain, Position[] spawns)
+    private static void GenerateOptimized(Terrain terrain, Position[] spawns)
     {
         int w = terrain.Width, h = terrain.Height;
 
@@ -226,7 +228,6 @@ public class ToastGenerator
                 if (terrain.GetPixelRaw(offset) == TerrainPixel.LevelGenDirt)
                     continue;
 
-                // Bilinear interpolation of noise grid
                 float fx = x * invCell;
                 int ix = (int)fx;
                 float tx = fx - ix;
@@ -249,13 +250,10 @@ public class ToastGenerator
             }
         });
 
-        // 4. Fixed-count parallel CA smoothing (7 passes)
-        GeneratorUtils.SetOutside(terrain, TerrainPixel.LevelGenDirt);
-        for (int i = 0; i < 7; i++)
-            SmoothOnceParallel(terrain);
-        GeneratorUtils.SetOutside(terrain, TerrainPixel.LevelGenRock);
+        // 5. Fixed-count parallel CA smoothing (7 passes)
+        SmoothParallel(terrain, passes: 7);
 
-        // 5. Guarantee spawn connectivity (carve tunnels if CA closed any)
+        // 6. Guarantee spawn connectivity (carve tunnels if CA closed any)
         EnsureConnectivity(terrain, spawns);
 
         ExpandCleanup(terrain);
@@ -278,7 +276,7 @@ public class ToastGenerator
                 for (int dx = -radius; dx <= radius; dx++)
                 {
                     int nx = cx + dx, ny = cy + dy;
-                    if (nx > 0 && nx < w - 1 && ny > 0 && ny < h - 1)
+                    if (GeneratorUtils.IsInterior(nx, ny, w, h))
                         terrain.SetPixelRaw(nx + ny * w, TerrainPixel.LevelGenDirt);
                 }
         }
@@ -324,93 +322,60 @@ public class ToastGenerator
     {
         if (spawns.Length < 2) return;
 
-        int w = terrain.Width, h = terrain.Height;
-        var visited = new bool[w * h];
+        int w = terrain.Width;
+        var visited = new bool[w * terrain.Height];
         var queue = new Queue<int>();
 
-        int start = spawns[0].X + spawns[0].Y * w;
-        visited[start] = true;
-        queue.Enqueue(start);
+        // Flood from first spawn to find all reachable dirt
+        GeneratorUtils.FloodFillDirt(terrain, visited, queue, spawns[0].X + spawns[0].Y * w);
 
-        while (queue.Count > 0)
-        {
-            int idx = queue.Dequeue();
-            int cx = idx % w, cy = idx / w;
-            for (int dy = -1; dy <= 1; dy++)
-                for (int dx = -1; dx <= 1; dx++)
-                {
-                    if (dx == 0 && dy == 0) continue;
-                    int nx = cx + dx, ny = cy + dy;
-                    if (nx <= 0 || nx >= w - 1 || ny <= 0 || ny >= h - 1) continue;
-                    int ni = nx + ny * w;
-                    if (visited[ni]) continue;
-                    if (terrain.GetPixelRaw(ni) != TerrainPixel.LevelGenDirt) continue;
-                    visited[ni] = true;
-                    queue.Enqueue(ni);
-                }
-        }
-
+        // Connect any unreachable spawns by carving thick tunnels back to spawn[0]
         for (int i = 1; i < spawns.Length; i++)
         {
             int si = spawns[i].X + spawns[i].Y * w;
             if (!visited[si])
             {
                 GeneratorUtils.DrawThickLine(terrain, spawns[i], spawns[0], TerrainPixel.LevelGenDirt, radius: 3);
-
                 queue.Clear();
-                int s = spawns[i].X + spawns[i].Y * w;
-                if (!visited[s]) { visited[s] = true; queue.Enqueue(s); }
-                while (queue.Count > 0)
-                {
-                    int idx = queue.Dequeue();
-                    int cx = idx % w, cy = idx / w;
-                    for (int dy2 = -1; dy2 <= 1; dy2++)
-                        for (int dx2 = -1; dx2 <= 1; dx2++)
-                        {
-                            if (dx2 == 0 && dy2 == 0) continue;
-                            int nx = cx + dx2, ny = cy + dy2;
-                            if (nx <= 0 || nx >= w - 1 || ny <= 0 || ny >= h - 1) continue;
-                            int ni = nx + ny * w;
-                            if (visited[ni]) continue;
-                            if (terrain.GetPixelRaw(ni) != TerrainPixel.LevelGenDirt) continue;
-                            visited[ni] = true;
-                            queue.Enqueue(ni);
-                        }
-                }
+                GeneratorUtils.FloodFillDirt(terrain, visited, queue, si);
             }
         }
     }
 
-    private void SmoothOnceParallel(Terrain terrain)
+    private static void SmoothParallel(Terrain terrain, int passes)
     {
         int w = terrain.Width, h = terrain.Height;
 
         var stagedWrites = new ThreadLocal<List<(int offset, TerrainPixel value)>>(
             () => new List<(int, TerrainPixel)>(256), trackAllValues: true);
 
-        Parallel.For(1, h - 1, y =>
-        {
-            var writes = stagedWrites.Value!;
-            for (int x = 1; x < w - 1; x++)
-            {
-                var pos = new Position(x, y);
-                var old = terrain.GetPixelRaw(pos);
-                int n = terrain.CountLevelGenNeighbors(pos);
-                bool paintRock = (old != TerrainPixel.LevelGenDirt) ? (n >= 3) : (n > 4);
-                var newVal = paintRock ? TerrainPixel.LevelGenRock : TerrainPixel.LevelGenDirt;
-                if (newVal != old)
-                    writes.Add((x + y * w, newVal));
-            }
-        });
+        GeneratorUtils.SetOutside(terrain, TerrainPixel.LevelGenDirt);
 
-        foreach (var writes in stagedWrites.Values)
+        for (int pass = 0; pass < passes; pass++)
         {
-            foreach (var (offset, value) in writes)
-                terrain.SetPixelRaw(offset, value);
-            writes.Clear();
+            Parallel.For(1, h - 1, y =>
+            {
+                var writes = stagedWrites.Value!;
+                for (int x = 1; x < w - 1; x++)
+                {
+                    var pos = new Position(x, y);
+                    var old = terrain.GetPixelRaw(pos);
+                    var newVal = GeneratorUtils.SmoothPixel(old, terrain.CountLevelGenNeighbors(pos));
+                    if (newVal != old)
+                        writes.Add((x + y * w, newVal));
+                }
+            });
+
+            foreach (var writes in stagedWrites.Values)
+            {
+                foreach (var (offset, value) in writes)
+                    terrain.SetPixelRaw(offset, value);
+                writes.Clear();
+            }
         }
 
         stagedWrites.Dispose();
+        GeneratorUtils.SetOutside(terrain, TerrainPixel.LevelGenRock);
     }
 
     #endregion
@@ -419,7 +384,7 @@ public class ToastGenerator
     {
         for (int i = 0; i < terrain.Size.Area; i++)
         {
-            if (terrain[i] == TerrainPixel.LevelGenMark || terrain[i] == TerrainPixel.LevelGenRock)
+            if (terrain[i] == TerrainPixel.LevelGenMark)
                 terrain[i] = TerrainPixel.LevelGenRock;
         }
     }

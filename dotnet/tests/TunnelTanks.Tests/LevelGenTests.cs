@@ -125,7 +125,7 @@ public class LevelGenTests
     public void DrawLine_ConnectsEndpoints()
     {
         var terrain = new Terrain(_size);
-        GeneratorUtils.FillAll(terrain, TerrainPixel.LevelGenRock);
+        terrain.Fill(TerrainPixel.LevelGenRock);
 
         var from = new Position(10, 10);
         var to = new Position(50, 30);
@@ -136,10 +136,10 @@ public class LevelGenTests
     }
 
     [Fact]
-    public void FillAll_SetsEveryPixel()
+    public void Fill_SetsEveryPixel()
     {
         var terrain = new Terrain(new Size(16, 16));
-        GeneratorUtils.FillAll(terrain, TerrainPixel.DirtHigh);
+        terrain.Fill(TerrainPixel.DirtHigh);
 
         for (int i = 0; i < 256; i++)
             Assert.Equal(TerrainPixel.DirtHigh, terrain[i]);
@@ -149,7 +149,7 @@ public class LevelGenTests
     public void SetOutside_SetsOnlyBorder()
     {
         var terrain = new Terrain(new Size(10, 10));
-        GeneratorUtils.FillAll(terrain, TerrainPixel.LevelGenDirt);
+        terrain.Fill(TerrainPixel.LevelGenDirt);
         GeneratorUtils.SetOutside(terrain, TerrainPixel.LevelGenRock);
 
         // Border should be rock
@@ -170,8 +170,8 @@ public class LevelGenTests
     [Fact]
     public void PointDistanceSquared_Correct()
     {
-        Assert.Equal(25, GeneratorUtils.PointDistanceSquared(new Position(0, 0), new Position(3, 4)));
-        Assert.Equal(0, GeneratorUtils.PointDistanceSquared(new Position(5, 5), new Position(5, 5)));
+        Assert.Equal(25, Position.DistanceSquared(new Position(0, 0), new Position(3, 4)));
+        Assert.Equal(0, Position.DistanceSquared(new Position(5, 5), new Position(5, 5)));
     }
 
     [Fact]

@@ -8,7 +8,6 @@ public class TankTurret
 {
     private DirectionF _direction = new(0, -1);
     private int _cooldown;
-    private int _bulletCount;
     private readonly int _ownerColor;
 
     public DirectionF Direction => _direction;
@@ -36,7 +35,7 @@ public class TankTurret
 
     public Projectile? TryShoot(Position tankPos, ProjectileList projectileList)
     {
-        if (!IsShooting || _cooldown > 0 || _bulletCount >= Tweaks.Tank.BulletMax) return null;
+        if (!IsShooting || _cooldown > 0) return null;
 
         _cooldown = Tweaks.Tank.TurretDelay;
         var barrel = GetBarrelTip(tankPos);
@@ -49,7 +48,6 @@ public class TankTurret
     public void Reset()
     {
         _cooldown = 0;
-        _bulletCount = 0;
     }
 
     public void Draw(uint[] surface, int surfaceWidth, int surfaceHeight, Position tankPos)

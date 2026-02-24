@@ -2,6 +2,7 @@ namespace TunnelTanks.Core.Entities.Links;
 
 using TunnelTanks.Core.Types;
 using TunnelTanks.Core.Config;
+using TunnelTanks.Core.Collision;
 using System.Diagnostics;
 using TunnelTanks.Core.Terrain;
 
@@ -83,21 +84,11 @@ public class LinkMap
 
             uint color = link.Type == LinkType.Live ? liveColor : blockedColor;
 
-            int x0 = link.From.Position.X, y0 = link.From.Position.Y;
-            int x1 = link.To.Position.X, y1 = link.To.Position.Y;
-            int dx = Math.Abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-            int dy = -Math.Abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-            int err = dx + dy;
-
-            while (true)
+            Raycaster.BresenhamLine(link.From.Position, link.To.Position, pos =>
             {
-                if (x0 >= 0 && y0 >= 0 && x0 < surfaceWidth && y0 < surfaceHeight)
-                    surface[x0 + y0 * surfaceWidth] = color;
-                if (x0 == x1 && y0 == y1) break;
-                int e2 = 2 * err;
-                if (e2 >= dy) { err += dy; x0 += sx; }
-                if (e2 <= dx) { err += dx; y0 += sy; }
-            }
+                if (pos.X >= 0 && pos.Y >= 0 && pos.X < surfaceWidth && pos.Y < surfaceHeight)
+                    surface[pos.X + pos.Y * surfaceWidth] = color;
+            });
         }
     }
 }

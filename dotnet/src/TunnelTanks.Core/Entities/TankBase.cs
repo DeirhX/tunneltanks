@@ -10,8 +10,10 @@ public class TankBase
     public Position Position { get; }
     public int Color { get; }
     public BoundingBox BoundingBox { get; } = new(Tweaks.Base.BaseSize / 2, Tweaks.Base.BaseSize / 2);
-    public Reactor Reactor { get; } = new(15000, 2000, 30000, 2000);
-    public MaterialContainer Materials { get; } = new(0, 0, 2000, 20000);
+    public Reactor Reactor { get; } = new(Tweaks.Base.InitialEnergy, Tweaks.Base.InitialHealth,
+        Tweaks.Base.EnergyCapacity, Tweaks.Base.HealthCapacity);
+    public MaterialContainer Materials { get; } = new(0, 0,
+        Tweaks.Base.MaterialDirtCapacity, Tweaks.Base.MaterialMineralsCapacity);
 
     public TankBase(Position position, int color)
     {
@@ -23,15 +25,15 @@ public class TankBase
 
     public void Advance()
     {
-        Reactor.Add(new ReactorState(100, 10));
+        Reactor.Add(new ReactorState(Tweaks.Base.EnergyRegen, Tweaks.Base.HealthRegen));
     }
 
     public void RechargeTank(Reactor tankReactor, int tankColor)
     {
         if (tankColor == Color)
-            GiveReactorResources(tankReactor, new ReactorState(300, 3));
+            GiveReactorResources(tankReactor, new ReactorState(Tweaks.Base.HomeRechargeEnergy, Tweaks.Base.HomeRechargeHealth));
         else
-            GiveReactorResources(tankReactor, new ReactorState(90, 1));
+            GiveReactorResources(tankReactor, new ReactorState(Tweaks.Base.ForeignRechargeEnergy, Tweaks.Base.ForeignRechargeHealth));
     }
 
     private void GiveReactorResources(Reactor target, ReactorState rate)
@@ -55,18 +57,17 @@ public class TankBase
         other.Absorb(absorber);
     }
 
-    public void Draw(uint[] surface, int surfaceWidth)
+    public void Draw(uint[] surface, int surfaceWidth, int surfaceHeight)
     {
         int halfW = BoundingBox.HalfWidth;
         int halfH = BoundingBox.HalfHeight;
-        var energyColor = new Color(60, 200, 60).ToArgb();
         var outlineColor = new Color(40, 40, 40).ToArgb();
 
         for (int dy = -halfH; dy <= halfH; dy++)
             for (int dx = -halfW; dx <= halfW; dx++)
             {
                 int px = Position.X + dx, py = Position.Y + dy;
-                if (px < 0 || py < 0 || px >= surfaceWidth) continue;
+                if (px < 0 || py < 0 || px >= surfaceWidth || py >= surfaceHeight) continue;
                 bool isEdge = Math.Abs(dx) == halfW || Math.Abs(dy) == halfH;
                 if (isEdge)
                 {

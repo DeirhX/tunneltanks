@@ -14,6 +14,7 @@ public static class Tweaks
     {
         public const int TargetFps = 24;
         public const int SectorSize = 64;
+        public const int ProjectileCompactThreshold = 5000;
         public static int ParallelismDegree => Math.Max(1, Environment.ProcessorCount);
     }
 
@@ -42,6 +43,18 @@ public static class Tweaks
         public const int MinDistance = 150;
         public const int BaseSize = 35;
         public const int DoorSize = 7;
+        public const int InitialEnergy = 15000;
+        public const int InitialHealth = 2000;
+        public const int EnergyCapacity = 30000;
+        public const int HealthCapacity = 2000;
+        public const int MaterialDirtCapacity = 2000;
+        public const int MaterialMineralsCapacity = 20000;
+        public const int EnergyRegen = 100;
+        public const int HealthRegen = 10;
+        public const int HomeRechargeEnergy = 300;
+        public const int HomeRechargeHealth = 3;
+        public const int ForeignRechargeEnergy = 90;
+        public const int ForeignRechargeHealth = 1;
     }
 
     public static class Tank
@@ -49,8 +62,19 @@ public static class Tweaks
         public const int MaxLives = 3;
         public static readonly TimeSpan RespawnDelay = TimeSpan.FromSeconds(3);
         public const int TurretDelay = 3;
-        public const int BulletMax = 6;
         public const int TurretLength = 4;
+        public const int InitialEnergy = 24000;
+        public const int InitialHealth = 1000;
+        public const int EnergyCapacity = 24000;
+        public const int HealthCapacity = 1000;
+        public const int ResourceDirtCapacity = 10000;
+        public const int ResourceMineralsCapacity = 10000;
+        public const int IdleEnergyDrain = 3;
+        public const int MoveEnergyDrain = 8;
+        public const int ShootEnergyCost = 160;
+        public const int EnergyPickupLow = 100;
+        public const int EnergyPickupMedium = 200;
+        public const int EnergyPickupHigh = 400;
     }
 
     public static class Weapon
@@ -58,6 +82,18 @@ public static class Tweaks
         public const int CannonBulletSpeed = 3;
         public const float ConcreteBarrelSpeed = 2f;
         public const float DirtBarrelSpeed = 2f;
+        public const int BulletDamage = 160;
+    }
+
+    public static class Machine
+    {
+        public const int ReactorEnergyCapacity = 10000;
+        public const int ReactorHealthCapacity = 1000;
+        public const int HarvesterIntervalMs = 500;
+        public const int ChargerIntervalMs = 200;
+        public const int HarvestRange = 20;
+        public const int HarvesterDirtCost = 1000;
+        public const int ChargerDirtCost = 500;
     }
 
     public static class Explosion

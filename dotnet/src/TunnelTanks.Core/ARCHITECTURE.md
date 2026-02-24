@@ -291,7 +291,7 @@ Nested static classes mirror C++ `tweak::` namespaces:
 | `Screen` | `WindowSize` (1920×1200), `RenderSurfaceSize` (320×200) |
 | `World` | `AdvanceStep`, `DirtRecoverInterval`, `DirtRegrowSpeed`, `DigThroughRockChance` |
 | `Base` | `MinDistance`, `BaseSize`, `DoorSize` |
-| `Tank` | `MaxLives`, `RespawnDelay`, `TurretDelay`, `BulletMax`, `TurretLength` |
+| `Tank` | `MaxLives`, `RespawnDelay`, `TurretDelay`, `TurretLength` |
 | `Weapon` | `CannonBulletSpeed`, barrel speeds |
 | `Explosion` | `Dirt/Normal/Death` (ShrapnelCount, Speed, Frames), `ChanceToDestroy*` |
 | `LevelGen` | `BorderWidth`, `DirtTargetPercent`, `TreeSize`, `SmoothingSteps` |

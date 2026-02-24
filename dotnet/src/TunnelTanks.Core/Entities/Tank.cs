@@ -30,8 +30,9 @@ public class Tank
         Base = tankBase;
         Position = tankBase.Position;
         LivesLeft = Tweaks.Tank.MaxLives;
-        Reactor = new Reactor(24000, 1000, 24000, 1000);
-        Resources = new MaterialContainer(0, 0, 10000, 10000);
+        Reactor = new Reactor(Tweaks.Tank.InitialEnergy, Tweaks.Tank.InitialHealth,
+            Tweaks.Tank.EnergyCapacity, Tweaks.Tank.HealthCapacity);
+        Resources = new MaterialContainer(0, 0, Tweaks.Tank.ResourceDirtCapacity, Tweaks.Tank.ResourceMineralsCapacity);
         Turret = new TankTurret(color);
         Direction = Random.Shared.Next(9);
         if (Direction >= 4) Direction++;
@@ -41,7 +42,7 @@ public class Tank
     {
         if (!IsDead)
         {
-            Reactor.Exhaust(new ReactorState(3, 0));
+            Reactor.Exhaust(new ReactorState(Tweaks.Tank.IdleEnergyDrain, 0));
 
             var baseColl = world.TankBases.CheckBaseCollision(Position);
             if (baseColl != null)
@@ -69,7 +70,7 @@ public class Tank
             {
                 var bullet = Turret.TryShoot(Position, world.Projectiles);
                 if (bullet != null)
-                    Reactor.Exhaust(new ReactorState(160, 0));
+                    Reactor.Exhaust(new ReactorState(Tweaks.Tank.ShootEnergyCost, 0));
             }
 
             CollectItems(world.Terrain);
@@ -108,7 +109,7 @@ public class Tank
 
         Direction = dir;
         Position = newPos;
-        Reactor.Exhaust(new ReactorState(8, 0));
+        Reactor.Exhaust(new ReactorState(Tweaks.Tank.MoveEnergyDrain, 0));
     }
 
     private CollisionType TestCollision(Terrain terrain, Position pos, int dir)
@@ -183,9 +184,9 @@ public class Tank
                     terrain.SetPixel(worldPos, TerrainPixel.Blank);
                     int energyGain = pix switch
                     {
-                        TerrainPixel.EnergyMedium => 200,
-                        TerrainPixel.EnergyHigh => 400,
-                        _ => 100,
+                        TerrainPixel.EnergyMedium => Tweaks.Tank.EnergyPickupMedium,
+                        TerrainPixel.EnergyHigh => Tweaks.Tank.EnergyPickupHigh,
+                        _ => Tweaks.Tank.EnergyPickupLow,
                     };
                     Reactor.Add(new ReactorState(energyGain, 0));
                 }

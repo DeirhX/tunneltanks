@@ -26,10 +26,11 @@ public class Machine
         Position = position;
         Type = type;
         OwnerColor = ownerColor;
-        Reactor = new Reactor(0, 1000, 10000, 1000);
+        Reactor = new Reactor(0, Tweaks.Machine.ReactorHealthCapacity,
+            Tweaks.Machine.ReactorEnergyCapacity, Tweaks.Machine.ReactorHealthCapacity);
         _actionInterval = type == MachineType.Harvester
-            ? TimeSpan.FromMilliseconds(500)
-            : TimeSpan.FromMilliseconds(200);
+            ? TimeSpan.FromMilliseconds(Tweaks.Machine.HarvesterIntervalMs)
+            : TimeSpan.FromMilliseconds(Tweaks.Machine.ChargerIntervalMs);
     }
 
     public bool IsBlockingCollision => State == MachineState.Planted;
@@ -50,7 +51,7 @@ public class Machine
 
     private void HarvestNearby(Terrain terrain)
     {
-        int range = 20;
+        int range = Tweaks.Machine.HarvestRange;
         for (int dy = -range; dy <= range; dy++)
             for (int dx = -range; dx <= range; dx++)
             {

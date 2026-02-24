@@ -35,12 +35,16 @@ public class ProjectileList
             {
                 case ProjectileType.Bullet: AdvanceBullet(p, terrain, tankList); break;
                 case ProjectileType.Shrapnel: AdvanceShrapnel(p, terrain); break;
-                case ProjectileType.ConcreteFoam: AdvanceConcreteFoam(p, terrain); break;
-                case ProjectileType.DirtFoam: AdvanceDirtFoam(p, terrain); break;
+                case ProjectileType.ConcreteFoam:
+                    AdvanceFoam(p, terrain, TerrainPixel.ConcreteHigh, TerrainPixel.ConcreteLow, skipConcrete: true);
+                    break;
+                case ProjectileType.DirtFoam:
+                    AdvanceFoam(p, terrain, TerrainPixel.DirtHigh, TerrainPixel.DirtLow, skipConcrete: false);
+                    break;
             }
         }
 
-        if (_projectiles.Count > 5000)
+        if (_projectiles.Count > Tweaks.Perf.ProjectileCompactThreshold)
             _projectiles.RemoveAll(p => !p.IsAlive);
     }
 
@@ -63,7 +67,7 @@ public class ProjectileList
                 var hitTank = tankList.CheckTankCollision(ipos, p.OwnerColor);
                 if (hitTank != null)
                 {
-                    hitTank.Reactor.Exhaust(new ReactorState(0, 160));
+                    hitTank.Reactor.Exhaust(new ReactorState(0, Tweaks.Weapon.BulletDamage));
                     SpawnNormalExplosion(ipos);
                     p.IsAlive = false;
                     return;
@@ -81,7 +85,10 @@ public class ProjectileList
 
     private void SpawnNormalExplosion(Position pos)
     {
-        AddRange(ExplosionFactory.CreateExplosion(pos, 14, 0.56f, 13));
+        AddRange(ExplosionFactory.CreateExplosion(pos,
+            Tweaks.Explosion.Normal.ShrapnelCount,
+            Tweaks.Explosion.Normal.Speed,
+            Tweaks.Explosion.Normal.Frames));
     }
 
     private void AdvanceShrapnel(Projectile p, Terrain terrain)
@@ -108,7 +115,8 @@ public class ProjectileList
         terrain.SetPixel(ipos, Random.Shared.Next(2) == 0 ? TerrainPixel.DecalHigh : TerrainPixel.DecalLow);
     }
 
-    private void AdvanceConcreteFoam(Projectile p, Terrain terrain)
+    private static void AdvanceFoam(Projectile p, Terrain terrain,
+        TerrainPixel highPixel, TerrainPixel lowPixel, bool skipConcrete)
     {
         if (p.Life-- <= 0) { p.IsAlive = false; return; }
 
@@ -118,31 +126,11 @@ public class ProjectileList
         if (!terrain.IsInside(ipos)) { p.IsAlive = false; return; }
 
         var pix = terrain.GetPixelRaw(ipos);
-        if (Pixel.IsAnyCollision(pix) && !Pixel.IsConcrete(pix))
+        if (Pixel.IsAnyCollision(pix) && !(skipConcrete && Pixel.IsConcrete(pix)))
         {
             if (terrain.IsInside(prevPos))
-                terrain.SetPixel(prevPos, Random.Shared.Next(2) == 0 ? TerrainPixel.ConcreteHigh : TerrainPixel.ConcreteLow);
+                terrain.SetPixel(prevPos, Random.Shared.Next(2) == 0 ? highPixel : lowPixel);
             p.IsAlive = false;
-            return;
-        }
-    }
-
-    private void AdvanceDirtFoam(Projectile p, Terrain terrain)
-    {
-        if (p.Life-- <= 0) { p.IsAlive = false; return; }
-
-        var prevPos = (Position)p.Position;
-        p.Position += p.Speed;
-        var ipos = (Position)p.Position;
-        if (!terrain.IsInside(ipos)) { p.IsAlive = false; return; }
-
-        var pix = terrain.GetPixelRaw(ipos);
-        if (Pixel.IsAnyCollision(pix))
-        {
-            if (terrain.IsInside(prevPos))
-                terrain.SetPixel(prevPos, Random.Shared.Next(2) == 0 ? TerrainPixel.DirtHigh : TerrainPixel.DirtLow);
-            p.IsAlive = false;
-            return;
         }
     }
 
