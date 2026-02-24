@@ -64,7 +64,7 @@ public class WorldIntegrationTests
         // Simulate what the old buggy code did: draw entities directly on terrain buffer
         var composite = new uint[TestSize.Area];
         Array.Copy(terrainPixels, composite, terrainPixels.Length);
-        world.TankList.Draw(composite, TestSize.X, TestSize.Y);
+        world.TankList.Draw(new Surface(composite, TestSize.X, TestSize.Y));
 
         // The composite buffer should now differ (tanks were drawn on it)
         bool anyDifference = false;
@@ -87,7 +87,7 @@ public class WorldIntegrationTests
         // Frame 1: copy terrain, draw entities
         var composite1 = new uint[TestSize.Area];
         Array.Copy(terrainPixels, composite1, terrainPixels.Length);
-        world.TankList.Draw(composite1, TestSize.X, TestSize.Y);
+        world.TankList.Draw(new Surface(composite1, TestSize.X, TestSize.Y));
 
         // Move a tank by advancing with input
         world.Advance(i => i == 0
@@ -98,7 +98,7 @@ public class WorldIntegrationTests
         // Frame 2: rebuild composite from scratch
         var composite2 = new uint[TestSize.Area];
         Array.Copy(terrainPixels, composite2, terrainPixels.Length);
-        world.TankList.Draw(composite2, TestSize.X, TestSize.Y);
+        world.TankList.Draw(new Surface(composite2, TestSize.X, TestSize.Y));
 
         // The composites should differ because the tank moved
         // But the terrain buffer itself should have no tank pixels

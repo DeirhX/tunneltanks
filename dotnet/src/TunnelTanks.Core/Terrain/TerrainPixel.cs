@@ -59,23 +59,65 @@ public static class Pixel
 
         void Set(TerrainPixel p, TerrainBehavior b) => table[(int)p] = b;
 
-        Set(TerrainPixel.Blank,       new(false, false, false, false, false, false, false, false, new Color(0x00, 0x00, 0x00)));
-        Set(TerrainPixel.DirtHigh,    new(false, true,  true,  false, false, false, false, false, new Color(0xc3, 0x79, 0x30)));
-        Set(TerrainPixel.DirtLow,     new(false, true,  true,  false, false, false, false, false, new Color(0xba, 0x59, 0x04)));
-        Set(TerrainPixel.DirtGrow,    new(false, false, true,  false, false, false, false, false, new Color(0x6a, 0x29, 0x02)));
-        Set(TerrainPixel.Rock,        new(true,  false, false, false, true,  false, false, false, new Color(0x9a, 0x9a, 0x9a)));
-        Set(TerrainPixel.DecalHigh,   new(false, false, false, false, false, false, false, true,  new Color(0x48, 0x38, 0x2f)));
-        Set(TerrainPixel.DecalLow,    new(false, false, false, false, false, false, false, true,  new Color(0x28, 0x28, 0x28)));
-        Set(TerrainPixel.ConcreteLow, new(true,  false, false, true,  true,  false, false, false, new Color(0xa0, 0xa0, 0xa5)));
-        Set(TerrainPixel.ConcreteHigh,new(true,  false, false, true,  true,  false, false, false, new Color(0x80, 0x80, 0x85)));
-        Set(TerrainPixel.EnergyLow,   new(false, false, false, false, false, true,  false, false, new Color(0xa0, 0xa0, 0x19)));
-        Set(TerrainPixel.EnergyMedium,new(false, false, false, false, false, true,  false, false, new Color(0xd0, 0xd0, 0x30)));
-        Set(TerrainPixel.EnergyHigh,  new(false, false, false, false, false, true,  false, false, new Color(0xff, 0xff, 0x4a)));
-        Set(TerrainPixel.BaseBarrier, new(false, false, false, false, false, false, false, false, new Color(0x40, 0x40, 0x40)));
+        Set(TerrainPixel.Blank, new(
+            BlocksMovement: false, SoftCollision: false, Diggable: false,
+            Concrete: false, Mineral: false, Energy: false, Base: false, Scorched: false,
+            DisplayColor: new Color(0x00, 0x00, 0x00)));
+        Set(TerrainPixel.DirtHigh, new(
+            BlocksMovement: false, SoftCollision: true, Diggable: true,
+            Concrete: false, Mineral: false, Energy: false, Base: false, Scorched: false,
+            DisplayColor: new Color(0xc3, 0x79, 0x30)));
+        Set(TerrainPixel.DirtLow, new(
+            BlocksMovement: false, SoftCollision: true, Diggable: true,
+            Concrete: false, Mineral: false, Energy: false, Base: false, Scorched: false,
+            DisplayColor: new Color(0xba, 0x59, 0x04)));
+        Set(TerrainPixel.DirtGrow, new(
+            BlocksMovement: false, SoftCollision: false, Diggable: true,
+            Concrete: false, Mineral: false, Energy: false, Base: false, Scorched: false,
+            DisplayColor: new Color(0x6a, 0x29, 0x02)));
+        Set(TerrainPixel.Rock, new(
+            BlocksMovement: true, SoftCollision: false, Diggable: false,
+            Concrete: false, Mineral: true, Energy: false, Base: false, Scorched: false,
+            DisplayColor: new Color(0x9a, 0x9a, 0x9a)));
+        Set(TerrainPixel.DecalHigh, new(
+            BlocksMovement: false, SoftCollision: false, Diggable: false,
+            Concrete: false, Mineral: false, Energy: false, Base: false, Scorched: true,
+            DisplayColor: new Color(0x48, 0x38, 0x2f)));
+        Set(TerrainPixel.DecalLow, new(
+            BlocksMovement: false, SoftCollision: false, Diggable: false,
+            Concrete: false, Mineral: false, Energy: false, Base: false, Scorched: true,
+            DisplayColor: new Color(0x28, 0x28, 0x28)));
+        Set(TerrainPixel.ConcreteLow, new(
+            BlocksMovement: true, SoftCollision: false, Diggable: false,
+            Concrete: true, Mineral: true, Energy: false, Base: false, Scorched: false,
+            DisplayColor: new Color(0xa0, 0xa0, 0xa5)));
+        Set(TerrainPixel.ConcreteHigh, new(
+            BlocksMovement: true, SoftCollision: false, Diggable: false,
+            Concrete: true, Mineral: true, Energy: false, Base: false, Scorched: false,
+            DisplayColor: new Color(0x80, 0x80, 0x85)));
+        Set(TerrainPixel.EnergyLow, new(
+            BlocksMovement: false, SoftCollision: false, Diggable: false,
+            Concrete: false, Mineral: false, Energy: true, Base: false, Scorched: false,
+            DisplayColor: new Color(0xa0, 0xa0, 0x19)));
+        Set(TerrainPixel.EnergyMedium, new(
+            BlocksMovement: false, SoftCollision: false, Diggable: false,
+            Concrete: false, Mineral: false, Energy: true, Base: false, Scorched: false,
+            DisplayColor: new Color(0xd0, 0xd0, 0x30)));
+        Set(TerrainPixel.EnergyHigh, new(
+            BlocksMovement: false, SoftCollision: false, Diggable: false,
+            Concrete: false, Mineral: false, Energy: true, Base: false, Scorched: false,
+            DisplayColor: new Color(0xff, 0xff, 0x4a)));
+        Set(TerrainPixel.BaseBarrier, new(
+            BlocksMovement: false, SoftCollision: false, Diggable: false,
+            Concrete: false, Mineral: false, Energy: false, Base: false, Scorched: false,
+            DisplayColor: new Color(0x40, 0x40, 0x40)));
 
         var baseColor = new Color(0x40, 0x40, 0x40);
         for (byte b = (byte)TerrainPixel.BaseMin; b <= (byte)TerrainPixel.BaseMax; b++)
-            table[b] = new(true, false, false, false, false, false, true, false, baseColor);
+            table[b] = new(
+                BlocksMovement: true, SoftCollision: false, Diggable: false,
+                Concrete: false, Mineral: false, Energy: false, Base: true, Scorched: false,
+                DisplayColor: baseColor);
 
         return table;
     }

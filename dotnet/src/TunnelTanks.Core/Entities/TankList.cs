@@ -23,10 +23,10 @@ public class TankList
             _tanks[i].Advance(world, getInput(i));
     }
 
-    public void Draw(uint[] surface, int surfaceWidth, int surfaceHeight)
+    public void Draw(Surface surface)
     {
         foreach (var tank in _tanks)
-            tank.Draw(surface, surfaceWidth, surfaceHeight);
+            tank.Draw(surface);
     }
 
     public Tank? CheckTankCollision(Position position, int excludeColor)

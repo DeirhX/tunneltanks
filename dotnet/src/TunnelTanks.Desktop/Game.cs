@@ -1,28 +1,30 @@
 namespace TunnelTanks.Desktop;
 
+using Silk.NET.OpenGL;
 using Silk.NET.SDL;
 using TunnelTanks.Core;
 using TunnelTanks.Core.Config;
-using TunnelTanks.Core.Gui;
 using TunnelTanks.Core.Input;
 using TunnelTanks.Core.LevelGen;
 using TunnelTanks.Core.Types;
+using Surface = TunnelTanks.Core.Types.Surface;
+using TunnelTanks.Desktop.Gui;
 using TunnelTanks.Desktop.Input;
 using TunnelTanks.Desktop.Rendering;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 public class Game : IDisposable
 {
     private readonly SdlRenderer _renderer;
-    private readonly Sdl _sdl;
+    private readonly GL _gl;
+    private readonly ImGuiController _imgui;
+    private readonly GameHud _hud;
 
-    private readonly Size _renderSize;
     private readonly Size _terrainSize;
     private readonly World _world;
-    private readonly Screen _screen;
     private readonly uint[] _worldPixels;
     private readonly uint[] _compositePixels;
-    private readonly uint[] _screenPixels;
     private readonly KeyboardController _p1Controller;
     private readonly TwitchAI _p2AI;
     public const int DefaultSeed = 42;
@@ -30,15 +32,20 @@ public class Game : IDisposable
     private readonly DrawProfile _drawProfile = new();
     private bool _isRunning = true;
 
-    public Game(Size? terrainSizeOverride = null, LevelGenMode genMode = LevelGenMode.Deterministic)
+    public unsafe Game(Size? terrainSizeOverride = null, LevelGenMode genMode = LevelGenMode.Deterministic)
     {
-        _renderSize = Tweaks.Screen.RenderSurfaceSize;
-        _terrainSize = terrainSizeOverride ?? _renderSize;
         var windowSize = Tweaks.Screen.WindowSize;
+        _terrainSize = terrainSizeOverride ?? Tweaks.Screen.RenderSurfaceSize;
         bool parallel = genMode == LevelGenMode.Optimized;
 
-        _renderer = new SdlRenderer(Tweaks.System.WindowTitle, windowSize, _renderSize);
-        _sdl = Sdl.GetApi();
+        _renderer = new SdlRenderer(Tweaks.System.WindowTitle, windowSize);
+
+        _gl = GL.GetApi(name =>
+            (nint)_renderer.Sdl.GLGetProcAddress(name));
+
+        _imgui = new ImGuiController(_gl, _renderer.Sdl, _renderer.NativeWindow,
+            windowSize.X, windowSize.Y);
+        _hud = new GameHud();
 
         var modeLabel = parallel ? "optimized" : "deterministic";
         Console.WriteLine($"Generating terrain {_terrainSize.X}x{_terrainSize.Y} ({modeLabel}, seed={DefaultSeed})...");
@@ -55,23 +62,15 @@ public class Game : IDisposable
 
         _worldPixels = new uint[_terrainSize.Area];
         _compositePixels = new uint[_terrainSize.Area];
-        _screenPixels = new uint[_renderSize.Area];
         if (parallel)
             _world.Terrain.DrawAllToSurfaceParallel(_worldPixels);
         else
             _world.Terrain.DrawAllToSurface(_worldPixels);
 
-        _p1Controller = new KeyboardController(_sdl,
-            Scancode.ScancodeA, Scancode.ScancodeD,
-            Scancode.ScancodeW, Scancode.ScancodeS,
-            Scancode.ScancodeSpace);
-
-        _screen = new Screen(_renderSize);
-        var tanks = _world.TankList.Tanks;
-        if (tanks.Count >= 2)
-            _screen.SetupTwoPlayers(tanks[0], tanks[1]);
-        else if (tanks.Count == 1)
-            _screen.SetupSinglePlayer(tanks[0]);
+        _p1Controller = new KeyboardController(_renderer.Sdl, new KeyBindings(
+            Left: Scancode.ScancodeA, Right: Scancode.ScancodeD,
+            Up: Scancode.ScancodeW, Down: Scancode.ScancodeS,
+            Shoot: Scancode.ScancodeSpace));
     }
 
     public void Run()
@@ -80,10 +79,12 @@ public class Game : IDisposable
         {
             var frameTimer = Stopwatch.StartNew();
             var targetFrameTime = Tweaks.World.AdvanceStep;
+            var lastFrameTime = Stopwatch.StartNew();
+            var tanks = _world.TankList.Tanks;
 
             while (_isRunning)
             {
-                if (!_renderer.PollEvents())
+                if (!_renderer.PollEvents(ev => _imgui.ProcessEvent(ev)))
                 { _isRunning = false; break; }
 
                 if (_world.IsGameOver)
@@ -94,10 +95,9 @@ public class Game : IDisposable
                     frameTimer.Restart();
                     var totalFrameWatch = Stopwatch.StartNew();
 
-                    var (mx, my, mbuttons) = _renderer.GetMouseState();
-                    const uint SdlButtonLeftMask = 1;
-                    bool mouseShoot = (mbuttons & SdlButtonLeftMask) != 0;
-                    var aimDir = _screen.SetCrosshairScreenPos(mx, my, 0);
+                    var aimDir = ComputeAimDirection(tanks);
+
+                    bool mouseShoot = IsMouseInViewport(out _, out _) && IsLeftMouseDown();
 
                     _world.Advance(i =>
                     {
@@ -120,16 +120,13 @@ public class Game : IDisposable
                     ProfileSection(ref _drawProfile.ObjectsDraw, () =>
                     {
                         Array.Copy(_worldPixels, _compositePixels, _worldPixels.Length);
-                        _world.LinkMap.Draw(_compositePixels, _terrainSize.X, _terrainSize.Y);
-                        _world.Machines.Draw(_compositePixels, _terrainSize.X, _terrainSize.Y);
-                        _world.Projectiles.Draw(_compositePixels, _terrainSize.X, _terrainSize.Y);
-                        _world.Sprites.Draw(_compositePixels, _terrainSize.X, _terrainSize.Y);
-                        _world.TankList.Draw(_compositePixels, _terrainSize.X, _terrainSize.Y);
+                        var compositeSurface = new Surface(_compositePixels, _terrainSize.X, _terrainSize.Y);
+                        _world.LinkMap.Draw(compositeSurface);
+                        _world.Machines.Draw(compositeSurface);
+                        _world.Projectiles.Draw(compositeSurface);
+                        _world.Sprites.Draw(compositeSurface);
+                        _world.TankList.Draw(compositeSurface);
                     });
-
-                    ProfileSection(ref _drawProfile.ScreenDraw,
-                        () => _screen.Draw(_compositePixels, _terrainSize.X, _terrainSize.Y,
-                                           _screenPixels, _renderSize.X, _renderSize.Y));
 
                     _drawProfile.TotalFrame += totalFrameWatch.Elapsed;
                     _drawProfile.FrameCount++;
@@ -137,17 +134,92 @@ public class Game : IDisposable
                         _drawProfile.Report();
                 }
 
-                _renderer.RenderFrame(_screenPixels);
+                RenderImGuiFrame(tanks);
             }
         }
         finally
         {
+            _imgui.Dispose();
             _renderer.Dispose();
         }
     }
 
+    private void RenderImGuiFrame(IReadOnlyList<Core.Entities.Tank> tanks)
+    {
+        var (winW, winH) = _renderer.GetWindowSize();
+        float dt = 1f / Tweaks.Perf.TargetFps;
+
+        _imgui.UploadGamePixels(_compositePixels, _terrainSize.X, _terrainSize.Y);
+
+        _gl.Viewport(0, 0, (uint)winW, (uint)winH);
+        _gl.ClearColor(0.1f, 0.1f, 0.1f, 1f);
+        _gl.Clear(ClearBufferMask.ColorBufferBit);
+
+        _imgui.NewFrame(winW, winH, dt);
+
+        var player = tanks.Count > 0 ? tanks[0] : null;
+        if (player != null)
+        {
+            var (mx, my, _) = _renderer.GetMouseState();
+            var vp = _hud.ViewportRect;
+            if (vp.w > 0 && vp.h > 0 &&
+                mx >= vp.x && my >= vp.y && mx < vp.x + vp.w && my < vp.y + vp.h)
+                _hud.CrosshairScreenPos = (mx, my);
+            else
+                _hud.CrosshairScreenPos = null;
+
+            _hud.Draw((nint)_imgui.GameTextureId, _terrainSize.X, _terrainSize.Y, player, _world);
+        }
+
+        _imgui.Render();
+        _renderer.SwapWindow();
+    }
+
+    private DirectionF? ComputeAimDirection(IReadOnlyList<Core.Entities.Tank> tanks)
+    {
+        if (tanks.Count == 0) return null;
+        var tank = tanks[0];
+
+        if (!IsMouseInViewport(out float normX, out float normY))
+            return null;
+
+        float aimWorldX = normX * _terrainSize.X;
+        float aimWorldY = normY * _terrainSize.Y;
+
+        float dx = aimWorldX - tank.Position.X;
+        float dy = aimWorldY - tank.Position.Y;
+        float len = MathF.Sqrt(dx * dx + dy * dy);
+        if (len < 0.001f) return null;
+        return new DirectionF(dx / len, dy / len);
+    }
+
+    private bool IsMouseInViewport(out float normX, out float normY)
+    {
+        var (mx, my, _) = _renderer.GetMouseState();
+        var vp = _hud.ViewportRect;
+
+        normX = 0; normY = 0;
+        if (vp.w <= 0 || vp.h <= 0) return false;
+
+        float relX = mx - vp.x;
+        float relY = my - vp.y;
+        if (relX < 0 || relY < 0 || relX >= vp.w || relY >= vp.h)
+            return false;
+
+        normX = relX / vp.w;
+        normY = relY / vp.h;
+        return true;
+    }
+
+    private bool IsLeftMouseDown()
+    {
+        var (_, _, buttons) = _renderer.GetMouseState();
+        return (buttons & 1) != 0;
+    }
+
     public void Dispose()
     {
+        _imgui.Dispose();
         _renderer.Dispose();
         GC.SuppressFinalize(this);
     }

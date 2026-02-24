@@ -27,8 +27,9 @@ public class Machine
         Type = type;
         Behavior = MachineBehaviors.Get(type);
         OwnerColor = ownerColor;
-        Reactor = new Reactor(0, Tweaks.Machine.ReactorHealthCapacity,
-            Tweaks.Machine.ReactorEnergyCapacity, Tweaks.Machine.ReactorHealthCapacity);
+        Reactor = new Reactor(
+            initial: new ReactorState(0, Tweaks.Machine.ReactorHealthCapacity),
+            capacity: new ReactorState(Tweaks.Machine.ReactorEnergyCapacity, Tweaks.Machine.ReactorHealthCapacity));
     }
 
     public bool IsBlockingCollision => State == MachineState.Planted;
@@ -46,7 +47,7 @@ public class Machine
         Behavior.PerformAction?.Invoke(this, terrain);
     }
 
-    public void Draw(uint[] surface, int surfaceWidth, int surfaceHeight)
+    public void Draw(Surface surface)
     {
         if (!IsAlive) return;
         int half = BoundingBox.HalfWidth;
@@ -58,10 +59,10 @@ public class Machine
             for (int dx = -half; dx <= half; dx++)
             {
                 int px = Position.X + dx, py = Position.Y + dy;
-                if (px < 0 || py < 0 || px >= surfaceWidth || py >= surfaceHeight) continue;
+                if (!surface.IsInside(px, py)) continue;
                 bool edge = Math.Abs(dx) == half || Math.Abs(dy) == half;
                 if (edge)
-                    surface[px + py * surfaceWidth] = color;
+                    surface.Pixels[px + py * surface.Width] = color;
             }
     }
 }

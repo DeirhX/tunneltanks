@@ -24,7 +24,7 @@ public class Sprite
             IsAlive = false;
     }
 
-    public void Draw(uint[] surface, int surfaceWidth, int surfaceHeight)
+    public void Draw(Surface surface)
     {
         if (!IsAlive) return;
 
@@ -37,8 +37,8 @@ public class Sprite
 
         int x = Position.X, y = Position.Y;
         void SetPx(int px, int py) {
-            if (px >= 0 && py >= 0 && px < surfaceWidth && py < surfaceHeight)
-                surface[px + py * surfaceWidth] = color;
+            if (surface.IsInside(px, py))
+                surface.Pixels[px + py * surface.Width] = color;
         }
 
         if (Type == SpriteType.FailedInteraction)
@@ -72,10 +72,10 @@ public class SpriteList
         }
     }
 
-    public void Draw(uint[] surface, int surfaceWidth, int surfaceHeight)
+    public void Draw(Surface surface)
     {
         foreach (var sprite in _sprites)
-            sprite.Draw(surface, surfaceWidth, surfaceHeight);
+            sprite.Draw(surface);
     }
 
     public void RemoveAll() => _sprites.Clear();

@@ -30,9 +30,12 @@ public class Tank
         Base = tankBase;
         Position = tankBase.Position;
         LivesLeft = Tweaks.Tank.MaxLives;
-        Reactor = new Reactor(Tweaks.Tank.InitialEnergy, Tweaks.Tank.InitialHealth,
-            Tweaks.Tank.EnergyCapacity, Tweaks.Tank.HealthCapacity);
-        Resources = new MaterialContainer(0, 0, Tweaks.Tank.ResourceDirtCapacity, Tweaks.Tank.ResourceMineralsCapacity);
+        Reactor = new Reactor(
+            initial: new ReactorState(Tweaks.Tank.InitialEnergy, Tweaks.Tank.InitialHealth),
+            capacity: new ReactorState(Tweaks.Tank.EnergyCapacity, Tweaks.Tank.HealthCapacity));
+        Resources = new MaterialContainer(
+            initial: new MaterialAmount(0, 0),
+            capacity: new MaterialAmount(Tweaks.Tank.ResourceDirtCapacity, Tweaks.Tank.ResourceMineralsCapacity));
         Turret = new TankTurret(color);
         Direction = RandomDirection();
     }
@@ -194,9 +197,7 @@ public class Tank
         _respawning = true;
         _respawnTimer = Tweaks.Tank.RespawnDelay;
 
-        projectiles?.AddRange(ExplosionFactory.CreateExplosion(
-            Position, Tweaks.Explosion.Death.ShrapnelCount,
-            Tweaks.Explosion.Death.Speed, Tweaks.Explosion.Death.Frames));
+        projectiles?.AddRange(ExplosionFactory.CreateExplosion(Position, Tweaks.Explosion.Death));
     }
 
     private void AdvanceDeath(World world)
@@ -212,19 +213,19 @@ public class Tank
         }
     }
 
-    public void Draw(uint[] surface, int surfaceWidth, int surfaceHeight)
+    public void Draw(Surface surface)
     {
         if (IsDead) return;
 
         ForEachSpritePixel(Direction, Position, (spriteVal, worldPos) =>
         {
-            if (worldPos.X < 0 || worldPos.Y < 0 || worldPos.X >= surfaceWidth || worldPos.Y >= surfaceHeight)
+            if (!surface.IsInside(worldPos.X, worldPos.Y))
                 return true;
-            surface[worldPos.X + worldPos.Y * surfaceWidth] = TankSprites.GetPixelColor(spriteVal, Color).ToArgb();
+            surface.Pixels[worldPos.X + worldPos.Y * surface.Width] = TankSprites.GetPixelColor(spriteVal, Color).ToArgb();
             return true;
         });
 
-        Turret.Draw(surface, surfaceWidth, surfaceHeight, Position);
+        Turret.Draw(surface, Position);
     }
 
     /// <summary>

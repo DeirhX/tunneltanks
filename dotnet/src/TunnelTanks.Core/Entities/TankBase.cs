@@ -10,10 +10,12 @@ public class TankBase
     public Position Position { get; }
     public int Color { get; }
     public BoundingBox BoundingBox { get; } = new(Tweaks.Base.BaseSize / 2, Tweaks.Base.BaseSize / 2);
-    public Reactor Reactor { get; } = new(Tweaks.Base.InitialEnergy, Tweaks.Base.InitialHealth,
-        Tweaks.Base.EnergyCapacity, Tweaks.Base.HealthCapacity);
-    public MaterialContainer Materials { get; } = new(0, 0,
-        Tweaks.Base.MaterialDirtCapacity, Tweaks.Base.MaterialMineralsCapacity);
+    public Reactor Reactor { get; } = new(
+        initial: new ReactorState(Tweaks.Base.InitialEnergy, Tweaks.Base.InitialHealth),
+        capacity: new ReactorState(Tweaks.Base.EnergyCapacity, Tweaks.Base.HealthCapacity));
+    public MaterialContainer Materials { get; } = new(
+        initial: new MaterialAmount(0, 0),
+        capacity: new MaterialAmount(Tweaks.Base.MaterialDirtCapacity, Tweaks.Base.MaterialMineralsCapacity));
 
     private static int Half => Tweaks.Base.BaseSize / 2;
     private static int DoorHalf => Tweaks.Base.DoorSize / 2;
@@ -41,7 +43,7 @@ public class TankBase
 
     private void GiveReactorResources(Reactor target, ReactorState rate)
     {
-        var absorber = new Reactor(0, 0, rate.Energy, rate.Health);
+        var absorber = new Reactor(initial: default, capacity: rate);
         absorber.Absorb(Reactor);
         target.Absorb(absorber);
         Reactor.Absorb(absorber);
@@ -54,21 +56,21 @@ public class TankBase
 
     public void AbsorbResources(MaterialContainer other, MaterialAmount rate)
     {
-        var absorber = new MaterialContainer(0, 0, rate.Dirt, rate.Minerals);
+        var absorber = new MaterialContainer(initial: default, capacity: rate);
         absorber.Absorb(other);
         Materials.Absorb(absorber);
         other.Absorb(absorber);
     }
 
-    public void Draw(uint[] surface, int surfaceWidth, int surfaceHeight)
+    public void Draw(Surface surface)
     {
         var outlineColor = Tweaks.Colors.BaseOutline.ToArgb();
 
         ForEachEdgePixel(Position, (px, py, isDoor) =>
         {
-            if (px < 0 || py < 0 || px >= surfaceWidth || py >= surfaceHeight) return;
+            if (!surface.IsInside(px, py)) return;
             if (!isDoor)
-                surface[px + py * surfaceWidth] = outlineColor;
+                surface.Pixels[px + py * surface.Width] = outlineColor;
         });
     }
 

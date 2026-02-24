@@ -24,7 +24,7 @@ public class TankView
         new(screenPos.X - ScreenRect.X - ScreenRect.Width / 2 + _tank.Position.X,
             screenPos.Y - ScreenRect.Y - ScreenRect.Height / 2 + _tank.Position.Y);
 
-    public void Draw(uint[] worldSurface, int worldW, int worldH, uint[] screenSurface, int screenW)
+    public void Draw(Surface worldSurface, Surface screenSurface)
     {
         int halfW = ScreenRect.Width / 2;
         int halfH = ScreenRect.Height / 2;
@@ -44,20 +44,21 @@ public class TankView
                 if (screenX < 0) continue;
 
                 uint pixel;
-                if (worldX >= 0 && worldX < worldW && worldY >= 0 && worldY < worldH)
-                    pixel = worldSurface[worldX + worldY * worldW];
+                if (worldSurface.IsInside(worldX, worldY))
+                    pixel = worldSurface.Pixels[worldX + worldY * worldSurface.Width];
                 else
                     pixel = 0xFF505050;
 
-                screenSurface[screenX + screenY * screenW] = pixel;
+                if (screenSurface.IsInside(screenX, screenY))
+                    screenSurface.Pixels[screenX + screenY * screenSurface.Width] = pixel;
             }
         }
 
         if (_tank.IsDead)
-            DrawStatic(screenSurface, screenW);
+            DrawStatic(screenSurface);
     }
 
-    private void DrawStatic(uint[] screenSurface, int screenW)
+    private void DrawStatic(Surface screenSurface)
     {
         _staticCounter++;
         var rng = new Random(_staticCounter);
@@ -68,8 +69,8 @@ public class TankView
             for (int sx = 0; sx < ScreenRect.Width; sx++)
             {
                 int screenX = ScreenRect.X + sx;
-                if (rng.Next(1000) < 700)
-                    screenSurface[screenX + screenY * screenW] = 0xFF000000;
+                if (rng.Next(1000) < 700 && screenSurface.IsInside(screenX, screenY))
+                    screenSurface.Pixels[screenX + screenY * screenSurface.Width] = 0xFF000000;
             }
         }
     }

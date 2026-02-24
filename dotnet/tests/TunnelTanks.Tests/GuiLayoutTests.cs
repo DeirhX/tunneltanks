@@ -102,7 +102,7 @@ public class GuiLayoutTests
     {
         var screen = new Screen(RenderSize);
         var surface = new uint[RenderSize.Area];
-        screen.FillBackground(surface, RenderSize.X, RenderSize.Y);
+        screen.FillBackground(new Surface(surface, RenderSize.X, RenderSize.Y));
 
         uint bg = GuiColors.BackgroundArgb;
         uint dot = GuiColors.BackgroundDotArgb;

@@ -2,6 +2,8 @@ namespace TunnelTanks.Core.Config;
 
 using TunnelTanks.Core.Types;
 
+public readonly record struct ExplosionParams(int ShrapnelCount, float Speed, int Frames);
+
 public static class Tweaks
 {
     public static class System
@@ -110,9 +112,9 @@ public static class Tweaks
         public const float SpeedVarianceBase = 0.1f;
         public const float SpeedVarianceRange = 0.9f;
 
-        public static class Dirt { public const int ShrapnelCount = 10; public const float Speed = 0.375f; public const int Frames = 10; }
-        public static class Normal { public const int ShrapnelCount = 14; public const float Speed = 0.56f; public const int Frames = 13; }
-        public static class Death { public const int ShrapnelCount = 100; public const float Speed = 0.25f; public const int Frames = 72; }
+        public static readonly ExplosionParams Dirt = new(ShrapnelCount: 10, Speed: 0.375f, Frames: 10);
+        public static readonly ExplosionParams Normal = new(ShrapnelCount: 14, Speed: 0.56f, Frames: 13);
+        public static readonly ExplosionParams Death = new(ShrapnelCount: 100, Speed: 0.25f, Frames: 72);
     }
 
     public static class Colors

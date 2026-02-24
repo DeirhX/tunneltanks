@@ -30,8 +30,7 @@ public static class FontRenderer
         [' '] = new byte[] { 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0 },
     };
 
-    public static void DrawString(uint[] surface, int surfaceWidth, int surfaceHeight,
-        int x, int y, string text, Color color)
+    public static void DrawString(Surface surface, int x, int y, string text, Color color)
     {
         uint argb = color.ToArgb();
         int cx = x;
@@ -44,8 +43,8 @@ public static class FontRenderer
                     {
                         if (glyph[gx + gy * CharWidth] == 0) continue;
                         int px = cx + gx, py = y + gy;
-                        if (px >= 0 && py >= 0 && px < surfaceWidth && py < surfaceHeight)
-                            surface[px + py * surfaceWidth] = argb;
+                        if (px >= 0 && py >= 0 && px < surface.Width && py < surface.Height)
+                            surface.Pixels[px + py * surface.Width] = argb;
                     }
             }
             cx += CharWidth + Spacing;

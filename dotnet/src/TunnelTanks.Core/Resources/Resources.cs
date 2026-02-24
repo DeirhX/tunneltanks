@@ -1,16 +1,31 @@
 namespace TunnelTanks.Core.Resources;
 
+public readonly record struct Energy(int Value)
+{
+    public static implicit operator int(Energy e) => e.Value;
+    public static Energy operator +(Energy a, Energy b) => new(a.Value + b.Value);
+    public static Energy operator -(Energy a, Energy b) => new(a.Value - b.Value);
+}
+
+public readonly record struct Health(int Value)
+{
+    public static implicit operator int(Health h) => h.Value;
+    public static Health operator +(Health a, Health b) => new(a.Value + b.Value);
+    public static Health operator -(Health a, Health b) => new(a.Value - b.Value);
+}
+
 public struct ReactorState
 {
-    public int Energy;
-    public int Health;
+    public Energy Energy;
+    public Health Health;
 
-    public ReactorState(int energy, int health) { Energy = energy; Health = health; }
+    public ReactorState(Energy energy, Health health) { Energy = energy; Health = health; }
+    public ReactorState(int energy, int health) { Energy = new(energy); Health = new(health); }
 
     public static ReactorState operator +(ReactorState a, ReactorState b) => new(a.Energy + b.Energy, a.Health + b.Health);
     public static ReactorState operator -(ReactorState a, ReactorState b) => new(a.Energy - b.Energy, a.Health - b.Health);
     public bool IsNegative => Energy < 0 || Health < 0;
-    public void TrimNegative() { Energy = Math.Max(0, Energy); Health = Math.Max(0, Health); }
+    public void TrimNegative() { Energy = new(Math.Max(0, Energy)); Health = new(Math.Max(0, Health)); }
 }
 
 public struct MaterialAmount
@@ -31,16 +46,16 @@ public class Reactor
     public ReactorState Current;
     public ReactorState Capacity;
 
-    public Reactor(int energy, int health, int energyCap, int healthCap)
+    public Reactor(ReactorState initial, ReactorState capacity)
     {
-        Current = new(energy, health);
-        Capacity = new(energyCap, healthCap);
+        Current = initial;
+        Capacity = capacity;
     }
 
-    public int Energy => Current.Energy;
-    public int Health => Current.Health;
-    public int EnergyCapacity => Capacity.Energy;
-    public int HealthCapacity => Capacity.Health;
+    public Energy Energy => Current.Energy;
+    public Health Health => Current.Health;
+    public Energy EnergyCapacity => Capacity.Energy;
+    public Health HealthCapacity => Capacity.Health;
 
     public bool CanPay(ReactorState cost) => !(Current - cost).IsNegative;
 
@@ -83,10 +98,10 @@ public class MaterialContainer
     public MaterialAmount Current;
     public MaterialAmount Capacity;
 
-    public MaterialContainer(int dirt, int minerals, int dirtCap, int mineralsCap)
+    public MaterialContainer(MaterialAmount initial, MaterialAmount capacity)
     {
-        Current = new(dirt, minerals);
-        Capacity = new(dirtCap, mineralsCap);
+        Current = initial;
+        Capacity = capacity;
     }
 
     public int Dirt => Current.Dirt;

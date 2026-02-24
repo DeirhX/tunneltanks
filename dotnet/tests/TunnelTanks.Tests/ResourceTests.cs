@@ -7,7 +7,7 @@ public class ResourceTests
     [Fact]
     public void Reactor_Pay_DeductsWhenAffordable()
     {
-        var r = new Reactor(100, 50, 200, 100);
+        var r = new Reactor(new ReactorState(100, 50), new ReactorState(200, 100));
         var cost = new ReactorState(30, 10);
         Assert.True(r.Pay(cost));
         Assert.Equal(70, r.Energy);
@@ -17,7 +17,7 @@ public class ResourceTests
     [Fact]
     public void Reactor_Pay_RefusesWhenUnaffordable()
     {
-        var r = new Reactor(10, 50, 200, 100);
+        var r = new Reactor(new ReactorState(10, 50), new ReactorState(200, 100));
         var cost = new ReactorState(30, 10);
         Assert.False(r.Pay(cost));
         Assert.Equal(10, r.Energy); // unchanged
@@ -26,7 +26,7 @@ public class ResourceTests
     [Fact]
     public void Reactor_Add_ClampsToCapacity()
     {
-        var r = new Reactor(180, 90, 200, 100);
+        var r = new Reactor(new ReactorState(180, 90), new ReactorState(200, 100));
         r.Add(new ReactorState(50, 30));
         Assert.Equal(200, r.Energy);
         Assert.Equal(100, r.Health);
@@ -35,7 +35,7 @@ public class ResourceTests
     [Fact]
     public void Reactor_Exhaust_ClampsToZero()
     {
-        var r = new Reactor(10, 5, 200, 100);
+        var r = new Reactor(new ReactorState(10, 5), new ReactorState(200, 100));
         bool survived = r.Exhaust(new ReactorState(20, 10));
         Assert.False(survived);
         Assert.Equal(0, r.Energy);
@@ -45,7 +45,7 @@ public class ResourceTests
     [Fact]
     public void Reactor_Exhaust_ReturnsTrueIfNotNegative()
     {
-        var r = new Reactor(30, 20, 200, 100);
+        var r = new Reactor(new ReactorState(30, 20), new ReactorState(200, 100));
         bool survived = r.Exhaust(new ReactorState(10, 5));
         Assert.True(survived);
         Assert.Equal(20, r.Energy);
@@ -55,13 +55,12 @@ public class ResourceTests
     [Fact]
     public void Reactor_Absorb_TransfersAndClamps()
     {
-        var a = new Reactor(150, 80, 200, 100);
-        var b = new Reactor(100, 40, 200, 100);
+        var a = new Reactor(new ReactorState(150, 80), new ReactorState(200, 100));
+        var b = new Reactor(new ReactorState(100, 40), new ReactorState(200, 100));
         a.Absorb(b);
 
         Assert.Equal(200, a.Energy);
         Assert.Equal(100, a.Health);
-        // Overflow goes back to source
         Assert.Equal(50, b.Energy);
         Assert.Equal(20, b.Health);
     }
@@ -69,7 +68,7 @@ public class ResourceTests
     [Fact]
     public void MaterialContainer_Pay_Works()
     {
-        var mc = new MaterialContainer(50, 30, 100, 100);
+        var mc = new MaterialContainer(new MaterialAmount(50, 30), new MaterialAmount(100, 100));
         Assert.True(mc.Pay(new MaterialAmount(20, 10)));
         Assert.Equal(30, mc.Dirt);
         Assert.Equal(20, mc.Minerals);
@@ -78,7 +77,7 @@ public class ResourceTests
     [Fact]
     public void MaterialContainer_Pay_RefusesInsufficient()
     {
-        var mc = new MaterialContainer(10, 30, 100, 100);
+        var mc = new MaterialContainer(new MaterialAmount(10, 30), new MaterialAmount(100, 100));
         Assert.False(mc.Pay(new MaterialAmount(20, 10)));
         Assert.Equal(10, mc.Dirt); // unchanged
     }
@@ -86,7 +85,7 @@ public class ResourceTests
     [Fact]
     public void MaterialContainer_Add_ClampsToCapacity()
     {
-        var mc = new MaterialContainer(90, 80, 100, 100);
+        var mc = new MaterialContainer(new MaterialAmount(90, 80), new MaterialAmount(100, 100));
         mc.Add(new MaterialAmount(30, 40));
         Assert.Equal(100, mc.Dirt);
         Assert.Equal(100, mc.Minerals);
@@ -95,8 +94,8 @@ public class ResourceTests
     [Fact]
     public void MaterialContainer_Absorb_TransfersAndClamps()
     {
-        var a = new MaterialContainer(80, 70, 100, 100);
-        var b = new MaterialContainer(50, 60, 100, 100);
+        var a = new MaterialContainer(new MaterialAmount(80, 70), new MaterialAmount(100, 100));
+        var b = new MaterialContainer(new MaterialAmount(50, 60), new MaterialAmount(100, 100));
         a.Absorb(b);
 
         Assert.Equal(100, a.Dirt);

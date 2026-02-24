@@ -107,10 +107,7 @@ public class ProjectileList
 
     private void SpawnNormalExplosion(Position pos)
     {
-        AddRange(ExplosionFactory.CreateExplosion(pos,
-            Tweaks.Explosion.Normal.ShrapnelCount,
-            Tweaks.Explosion.Normal.Speed,
-            Tweaks.Explosion.Normal.Frames));
+        AddRange(ExplosionFactory.CreateExplosion(pos, Tweaks.Explosion.Normal));
     }
 
     private static void AdvanceShrapnel(Projectile p, CollisionSolver solver, ProjectileList self)
@@ -157,15 +154,15 @@ public class ProjectileList
         }
     }
 
-    public void Draw(uint[] surface, int surfaceWidth, int surfaceHeight)
+    public void Draw(Surface surface)
     {
         foreach (var p in _projectiles)
         {
             if (!p.IsAlive) continue;
             var ipos = (Position)p.Position;
-            if (ipos.X < 0 || ipos.Y < 0 || ipos.X >= surfaceWidth || ipos.Y >= surfaceHeight) continue;
+            if (!surface.IsInside(ipos.X, ipos.Y)) continue;
 
-            surface[ipos.X + ipos.Y * surfaceWidth] = Behaviors[(int)p.Type].DrawColor.ToArgb();
+            surface.Pixels[ipos.X + ipos.Y * surface.Width] = Behaviors[(int)p.Type].DrawColor.ToArgb();
         }
     }
 }

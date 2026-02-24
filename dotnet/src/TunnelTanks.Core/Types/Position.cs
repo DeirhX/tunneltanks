@@ -73,3 +73,18 @@ public readonly record struct BoundingBox(int HalfWidth, int HalfHeight)
         Math.Abs(tested.X - origin.X) < HalfWidth && Math.Abs(tested.Y - origin.Y) < HalfHeight;
     public Size Size => new(HalfWidth * 2, HalfHeight * 2);
 }
+
+public readonly struct Surface(uint[] pixels, int width, int height)
+{
+    public readonly uint[] Pixels = pixels;
+    public readonly int Width = width;
+    public readonly int Height = height;
+
+    public uint this[int x, int y]
+    {
+        get => Pixels[x + y * Width];
+        set => Pixels[x + y * Width] = value;
+    }
+
+    public bool IsInside(int x, int y) => x >= 0 && y >= 0 && x < Width && y < Height;
+}

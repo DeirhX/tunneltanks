@@ -50,11 +50,11 @@ public class TankTurret
         _cooldown = 0;
     }
 
-    public void Draw(uint[] surface, int surfaceWidth, int surfaceHeight, Position tankPos)
+    public void Draw(Surface surface, Position tankPos)
     {
         var tip = GetBarrelTip(tankPos);
         int tx = (int)tip.X, ty = (int)tip.Y;
-        if (tx >= 0 && ty >= 0 && tx < surfaceWidth && ty < surfaceHeight)
-            surface[tx + ty * surfaceWidth] = Tweaks.Colors.TurretBarrelTip.ToArgb();
+        if (surface.IsInside(tx, ty))
+            surface.Pixels[tx + ty * surface.Width] = Tweaks.Colors.TurretBarrelTip.ToArgb();
     }
 }

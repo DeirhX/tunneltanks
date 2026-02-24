@@ -73,7 +73,7 @@ public class LinkMap
         }
     }
 
-    public void Draw(uint[] surface, int surfaceWidth, int surfaceHeight)
+    public void Draw(Surface surface)
     {
         var liveColor = Tweaks.Colors.LinkLive.ToArgb();
         var blockedColor = Tweaks.Colors.LinkBlocked.ToArgb();
@@ -86,8 +86,8 @@ public class LinkMap
 
             Raycaster.BresenhamLine(link.From.Position, link.To.Position, pos =>
             {
-                if (pos.X >= 0 && pos.Y >= 0 && pos.X < surfaceWidth && pos.Y < surfaceHeight)
-                    surface[pos.X + pos.Y * surfaceWidth] = color;
+                if (surface.IsInside(pos.X, pos.Y))
+                    surface.Pixels[pos.X + pos.Y * surface.Width] = color;
             });
         }
     }

@@ -35,7 +35,7 @@ public class Screen
         _views.Add(new TankView(viewRect, player));
 
         var statusRect = new Rect(9, H - 2 - 11, W - 16, 11);
-        _statusBars.Add(new StatusBar(statusRect, player, true));
+        _statusBars.Add(new StatusBar(statusRect, player, BarDirection.DecreasesToLeft));
 
         _letterBitmaps.Add(new LetterBitmap(3, statusRect.Y, 'E', GuiColors.StatusEnergy));
         _letterBitmaps.Add(new LetterBitmap(3, statusRect.Y + 6, 'H', GuiColors.StatusHealth));
@@ -62,8 +62,8 @@ public class Screen
         int statusW = viewW - 2 - 2 - 2 - 1; // 150
         var status1 = new Rect(2, statusY, statusW, 11);
         var status2 = new Rect(status1.Right + 1 + 4 + 4 + 3 + 2 + 3, statusY, statusW, 11);
-        _statusBars.Add(new StatusBar(status1, player1, false));
-        _statusBars.Add(new StatusBar(status2, player2, true));
+        _statusBars.Add(new StatusBar(status1, player1, BarDirection.DecreasesToRight));
+        _statusBars.Add(new StatusBar(status2, player2, BarDirection.DecreasesToLeft));
 
         int centerX = W / 2 - 2;
         _letterBitmaps.Add(new LetterBitmap(centerX, statusY, 'E', GuiColors.StatusEnergy));
@@ -76,14 +76,14 @@ public class Screen
         _resourceOverlays.Add(new ResourceOverlay(new Rect(view2.Right - 20, view2.Y, 20, 20), player2, HorizontalAlign.Right));
     }
 
-    public void FillBackground(uint[] surface, int w, int h)
+    public void FillBackground(Surface surface)
     {
         uint bg = GuiColors.BackgroundArgb;
         uint dot = GuiColors.BackgroundDotArgb;
-        Array.Fill(surface, bg);
-        for (int y = 0; y < h; y++)
-            for (int x = (y % 2) * 2; x < w; x += 4)
-                surface[x + y * w] = dot;
+        Array.Fill(surface.Pixels, bg);
+        for (int y = 0; y < surface.Height; y++)
+            for (int x = (y % 2) * 2; x < surface.Width; x += 4)
+                surface.Pixels[x + y * surface.Width] = dot;
     }
 
     /// <summary>
@@ -112,29 +112,29 @@ public class Screen
 
     public void ClearCrosshair() => _crosshairScreenPos = null;
 
-    public void Draw(uint[] worldSurface, int worldW, int worldH, uint[] screenSurface, int screenW, int screenH)
+    public void Draw(Surface worldSurface, Surface screenSurface)
     {
-        FillBackground(screenSurface, screenW, screenH);
+        FillBackground(screenSurface);
 
         foreach (var view in _views)
-            view.Draw(worldSurface, worldW, worldH, screenSurface, screenW);
+            view.Draw(worldSurface, screenSurface);
 
         foreach (var bar in _statusBars)
-            bar.Draw(screenSurface, screenW);
+            bar.Draw(screenSurface);
 
         foreach (var dots in _livesDots)
-            dots.Draw(screenSurface, screenW, screenH);
+            dots.Draw(screenSurface);
 
         foreach (var letter in _letterBitmaps)
-            letter.Draw(screenSurface, screenW, screenH);
+            letter.Draw(screenSurface);
 
         foreach (var overlay in _resourceOverlays)
-            overlay.Draw(screenSurface, screenW, screenH);
+            overlay.Draw(screenSurface);
 
-        DrawCrosshair(screenSurface, screenW, screenH);
+        DrawCrosshair(screenSurface);
     }
 
-    private void DrawCrosshair(uint[] surface, int w, int h)
+    private void DrawCrosshair(Surface surface)
     {
         if (_crosshairScreenPos == null) return;
         int cx = _crosshairScreenPos.Value.X;
@@ -142,16 +142,16 @@ public class Screen
         uint color = 0xFFFFFFFF; // white
 
         // 3x3 cross pattern: top, left, right, bottom (no center)
-        SetPxSafe(surface, w, h, cx, cy - 1, color);
-        SetPxSafe(surface, w, h, cx - 1, cy, color);
-        SetPxSafe(surface, w, h, cx + 1, cy, color);
-        SetPxSafe(surface, w, h, cx, cy + 1, color);
+        SetPxSafe(surface, cx, cy - 1, color);
+        SetPxSafe(surface, cx - 1, cy, color);
+        SetPxSafe(surface, cx + 1, cy, color);
+        SetPxSafe(surface, cx, cy + 1, color);
     }
 
-    private static void SetPxSafe(uint[] surface, int w, int h, int x, int y, uint color)
+    private static void SetPxSafe(Surface surface, int x, int y, uint color)
     {
-        if (x >= 0 && y >= 0 && x < w && y < h)
-            surface[x + y * w] = color;
+        if (surface.IsInside(x, y))
+            surface.Pixels[x + y * surface.Width] = color;
     }
 
     private void ClearAll()
@@ -173,7 +173,7 @@ public class LivesDots
 
     public LivesDots(int x, int y, Tank tank) { _x = x; _y = y; _tank = tank; }
 
-    public void Draw(uint[] surface, int surfaceW, int surfaceH)
+    public void Draw(Surface surface)
     {
         uint active = GuiColors.StatusHealthArgb;
         uint inactive = GuiColors.BlankArgb;
@@ -185,8 +185,8 @@ public class LivesDots
                 for (int dx = 0; dx < 2; dx++)
                 {
                     int px = _x + dx, py = _y + yPos + dy;
-                    if (px >= 0 && py >= 0 && px < surfaceW && py < surfaceH)
-                        surface[px + py * surfaceW] = color;
+                    if (surface.IsInside(px, py))
+                        surface.Pixels[px + py * surface.Width] = color;
                 }
             yPos += 3; // 2px dot + 1px spacing
         }
@@ -209,15 +209,15 @@ public class LetterBitmap
         _color = color.ToArgb();
     }
 
-    public void Draw(uint[] surface, int surfaceW, int surfaceH)
+    public void Draw(Surface surface)
     {
         for (int gy = 0; gy < 5; gy++)
             for (int gx = 0; gx < 4; gx++)
             {
                 if (_data[gx + gy * 4] == 0) continue;
                 int px = _x + gx, py = _y + gy;
-                if (px >= 0 && py >= 0 && px < surfaceW && py < surfaceH)
-                    surface[px + py * surfaceW] = _color;
+                if (surface.IsInside(px, py))
+                    surface.Pixels[px + py * surface.Width] = _color;
             }
     }
 }
@@ -231,7 +231,7 @@ public class ResourceOverlay
     public ResourceOverlay(Rect rect, Tank tank, HorizontalAlign align)
     { _rect = rect; _tank = tank; _align = align; }
 
-    public void Draw(uint[] surface, int surfaceW, int surfaceH)
+    public void Draw(Surface surface)
     {
         uint bgColor = new Color(0, 0, 0, 0x80).ToArgb();
         uint outlineColor = new Color(0xFF, 0xFF, 0xFF, 0xA0).ToArgb();
@@ -239,32 +239,30 @@ public class ResourceOverlay
         // Draw outline
         for (int x = _rect.X; x < _rect.Right; x++)
         {
-            SetPx(surface, surfaceW, surfaceH, x, _rect.Y, outlineColor);
-            SetPx(surface, surfaceW, surfaceH, x, _rect.Bottom - 1, outlineColor);
+            SetPx(surface, x, _rect.Y, outlineColor);
+            SetPx(surface, x, _rect.Bottom - 1, outlineColor);
         }
         for (int y = _rect.Y + 1; y < _rect.Bottom - 1; y++)
         {
-            SetPx(surface, surfaceW, surfaceH, _rect.X, y, outlineColor);
-            SetPx(surface, surfaceW, surfaceH, _rect.Right - 1, y, outlineColor);
+            SetPx(surface, _rect.X, y, outlineColor);
+            SetPx(surface, _rect.Right - 1, y, outlineColor);
         }
         // Fill interior
         for (int y = _rect.Y + 1; y < _rect.Bottom - 1; y++)
             for (int x = _rect.X + 1; x < _rect.Right - 1; x++)
-                SetPx(surface, surfaceW, surfaceH, x, y, bgColor);
+                SetPx(surface, x, y, bgColor);
 
         string dirtText = (_tank.Resources.Dirt / 10).ToString();
         string baseDirt = (_tank.Base?.Materials.Dirt ?? 0).ToString();
 
         int textX = _rect.X + 2;
-        FontRenderer.DrawString(surface, surfaceW, surfaceH,
-            textX, _rect.Y + 2, dirtText, GuiColors.StatusEnergy);
-        FontRenderer.DrawString(surface, surfaceW, surfaceH,
-            textX, _rect.Y + 11, baseDirt, GuiColors.StatusHealth);
+        FontRenderer.DrawString(surface, textX, _rect.Y + 2, dirtText, GuiColors.StatusEnergy);
+        FontRenderer.DrawString(surface, textX, _rect.Y + 11, baseDirt, GuiColors.StatusHealth);
     }
 
-    private static void SetPx(uint[] surface, int w, int h, int x, int y, uint color)
+    private static void SetPx(Surface surface, int x, int y, uint color)
     {
-        if (x >= 0 && y >= 0 && x < w && y < h)
-            surface[x + y * w] = color;
+        if (surface.IsInside(x, y))
+            surface.Pixels[x + y * surface.Width] = color;
     }
 }

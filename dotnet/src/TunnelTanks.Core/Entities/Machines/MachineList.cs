@@ -32,10 +32,10 @@ public class MachineList
         return null;
     }
 
-    public void Draw(uint[] surface, int surfaceWidth, int surfaceHeight)
+    public void Draw(Surface surface)
     {
         foreach (var m in _machines)
-            m.Draw(surface, surfaceWidth, surfaceHeight);
+            m.Draw(surface);
     }
 
     public void RemoveAll() => _machines.Clear();

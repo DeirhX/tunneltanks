@@ -3,6 +3,8 @@ namespace TunnelTanks.Core.Gui;
 using TunnelTanks.Core.Types;
 using TunnelTanks.Core.Entities;
 
+public enum BarDirection { DecreasesToRight, DecreasesToLeft }
+
 public class StatusBar
 {
     public Rect ScreenRect { get; }
@@ -11,14 +13,14 @@ public class StatusBar
 
     private const int Border = 1;
 
-    public StatusBar(Rect screenRect, Tank tank, bool decreasesToLeft)
+    public StatusBar(Rect screenRect, Tank tank, BarDirection direction)
     {
         ScreenRect = screenRect;
         _tank = tank;
-        _decreasesToLeft = decreasesToLeft;
+        _decreasesToLeft = direction == BarDirection.DecreasesToLeft;
     }
 
-    public void Draw(uint[] surface, int surfaceWidth)
+    public void Draw(Surface surface)
     {
         int w = ScreenRect.Width;
         int h = ScreenRect.Height;
@@ -54,7 +56,7 @@ public class StatusBar
             {
                 int sx = ScreenRect.X + x;
                 int sy = ScreenRect.Y + y;
-                if (sx < 0 || sy < 0 || sx >= surfaceWidth) continue;
+                if (sx < 0 || sy < 0 || sx >= surface.Width) continue;
 
                 // Rounded outer corners
                 if ((x == 0 || x == w - 1) && (y == 0 || y == h - 1))
@@ -81,7 +83,7 @@ public class StatusBar
                 else
                     c = blankColor;
 
-                surface[sx + sy * surfaceWidth] = c;
+                surface.Pixels[sx + sy * surface.Width] = c;
             }
         }
     }
