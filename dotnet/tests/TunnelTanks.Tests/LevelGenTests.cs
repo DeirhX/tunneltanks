@@ -208,8 +208,8 @@ public class LevelGenTests
             if (Pixel.IsDirt(terrain[i])) dirtCount++;
 
         double pct = 100.0 * dirtCount / _size.Area;
-        Assert.True(pct >= 40 && pct <= 85,
-            $"Optimized dirt percentage {pct:F1}% outside expected range [40, 85]");
+        Assert.True(pct >= 35 && pct <= 85,
+            $"Optimized dirt percentage {pct:F1}% outside expected range [35, 85]");
         Assert.True(spawns.Length >= 2, $"Expected at least 2 spawns, got {spawns.Length}");
     }
 

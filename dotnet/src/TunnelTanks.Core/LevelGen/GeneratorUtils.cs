@@ -1,5 +1,6 @@
 namespace TunnelTanks.Core.LevelGen;
 
+using System.Runtime.CompilerServices;
 using TunnelTanks.Core.Types;
 using TunnelTanks.Core.Terrain;
 using TerrainGrid = TunnelTanks.Core.Terrain.Terrain;
@@ -13,27 +14,31 @@ public static class GeneratorUtils
             rng.Next(border, size.Y - border));
     }
 
-    public static int PointDistanceSquared(Position a, Position b)
-    {
-        int dx = a.X - b.X, dy = a.Y - b.Y;
-        return dx * dx + dy * dy;
-    }
+    public static int PointDistanceSquared(Position a, Position b) => Position.DistanceSquared(a, b);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsInterior(int x, int y, int w, int h) =>
+        x > 0 && x < w - 1 && y > 0 && y < h - 1;
 
     public static void DrawLine(TerrainGrid terrain, Position from, Position to, TerrainPixel value)
     {
-        int x0 = from.X, y0 = from.Y, x1 = to.X, y1 = to.Y;
-        int dx = Math.Abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-        int dy = -Math.Abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-        int err = dx + dy;
+        WalkBresenham(from, to, (x, y) =>
+            terrain.SetPixelRaw(new Position(x, y), value));
+    }
 
-        while (true)
+    public static void DrawThickLine(TerrainGrid terrain, Position from, Position to, TerrainPixel value, int radius)
+    {
+        int w = terrain.Width, h = terrain.Height;
+        WalkBresenham(from, to, (cx, cy) =>
         {
-            terrain.SetPixelRaw(new Position(x0, y0), value);
-            if (x0 == x1 && y0 == y1) break;
-            int e2 = 2 * err;
-            if (e2 >= dy) { err += dy; x0 += sx; }
-            if (e2 <= dx) { err += dx; y0 += sy; }
-        }
+            for (int dy = -radius; dy <= radius; dy++)
+                for (int dx = -radius; dx <= radius; dx++)
+                {
+                    int nx = cx + dx, ny = cy + dy;
+                    if (IsInterior(nx, ny, w, h))
+                        terrain.SetPixelRaw(new Position(nx, ny), value);
+                }
+        });
     }
 
     public static void FillAll(TerrainGrid terrain, TerrainPixel value)
@@ -44,7 +49,32 @@ public static class GeneratorUtils
     public static void SetOutside(TerrainGrid terrain, TerrainPixel value)
     {
         int w = terrain.Width, h = terrain.Height;
-        for (int x = 0; x < w; x++) { terrain.SetPixelRaw(new Position(x, 0), value); terrain.SetPixelRaw(new Position(x, h - 1), value); }
-        for (int y = 1; y < h - 1; y++) { terrain.SetPixelRaw(new Position(0, y), value); terrain.SetPixelRaw(new Position(w - 1, y), value); }
+        for (int x = 0; x < w; x++)
+        {
+            terrain.SetPixelRaw(new Position(x, 0), value);
+            terrain.SetPixelRaw(new Position(x, h - 1), value);
+        }
+        for (int y = 1; y < h - 1; y++)
+        {
+            terrain.SetPixelRaw(new Position(0, y), value);
+            terrain.SetPixelRaw(new Position(w - 1, y), value);
+        }
+    }
+
+    private static void WalkBresenham(Position from, Position to, Action<int, int> visit)
+    {
+        int x0 = from.X, y0 = from.Y, x1 = to.X, y1 = to.Y;
+        int dx = Math.Abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+        int dy = -Math.Abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+        int err = dx + dy;
+
+        while (true)
+        {
+            visit(x0, y0);
+            if (x0 == x1 && y0 == y1) break;
+            int e2 = 2 * err;
+            if (e2 >= dy) { err += dy; x0 += sx; }
+            if (e2 <= dx) { err += dx; y0 += sy; }
+        }
     }
 }

@@ -20,3 +20,5 @@ foreach (var arg in args)
 var mode = fastGen ? LevelGenMode.Optimized : LevelGenMode.Deterministic;
 var game = new TunnelTanks.Desktop.Game(terrainSize, mode);
 game.Run();
+
+

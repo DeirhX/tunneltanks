@@ -66,6 +66,10 @@ public class Terrain
         return count;
     }
 
+    /// <summary>
+    /// Sums the byte values of 8 neighbors. During level generation, LevelGenDirt=0 and
+    /// LevelGenRock=1, so the result equals the number of rock neighbors (0..8).
+    /// </summary>
     public int CountLevelGenNeighbors(Position pos)
     {
         int x = pos.X, y = pos.Y, w = Width;

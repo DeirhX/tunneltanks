@@ -78,6 +78,8 @@ public static class Tweaks
         public const int DirtSpawnProgression = 70;
         public const int DirtTargetPercent = 65;
         public const int TreeSize = 150;
+        public const int MaxPlayers = 2;
+        public const int MinSpawnDistanceSq = 150 * 150;
         public const int SmoothingSteps = -1; // -1 = smooth until convergence (matches C++)
         public static int TargetDirtAmount(Size size) => size.X * size.Y * DirtTargetPercent / 100;
     }
