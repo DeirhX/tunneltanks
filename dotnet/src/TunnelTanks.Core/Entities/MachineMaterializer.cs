@@ -1,7 +1,6 @@
 namespace TunnelTanks.Core.Entities;
 
 using TunnelTanks.Core.Types;
-using TunnelTanks.Core.Config;
 using TunnelTanks.Core.Resources;
 using TunnelTanks.Core.Entities.Machines;
 
@@ -21,10 +20,7 @@ public class MachineMaterializer
     {
         if (_carrying != null) return;
 
-        var cost = type == MachineType.Harvester
-            ? new MaterialAmount(Tweaks.Machine.HarvesterDirtCost, 0)
-            : new MaterialAmount(Tweaks.Machine.ChargerDirtCost, 0);
-
+        var cost = MachineBehaviors.Get(type).BuildCost;
         if (!resources.CanPay(cost)) return;
         resources.Pay(cost);
 

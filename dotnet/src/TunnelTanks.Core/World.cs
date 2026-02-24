@@ -20,7 +20,7 @@ public class World
     private readonly MachineList _machines = new();
     private readonly LinkMap _linkMap = new();
     private readonly SpriteList _sprites = new();
-    private readonly WorldSectors _sectors;
+    private readonly CollisionSolver _collisionSolver;
 
     private int _advanceCount;
     private TimeSpan _elapsed;
@@ -35,7 +35,7 @@ public class World
     public MachineList Machines => _machines;
     public LinkMap LinkMap => _linkMap;
     public SpriteList Sprites => _sprites;
-    public WorldSectors Sectors => _sectors;
+    public CollisionSolver CollisionSolver => _collisionSolver;
     public int AdvanceCount => _advanceCount;
     public bool IsGameOver => _gameOver;
 
@@ -44,7 +44,7 @@ public class World
     public World(Size terrainSize)
     {
         _terrain = new TerrainGrid(terrainSize);
-        _sectors = new WorldSectors(terrainSize);
+        _collisionSolver = new CollisionSolver(_terrain);
         _regrowTimer.Start();
     }
 
@@ -78,8 +78,10 @@ public class World
         _advanceCount++;
         _elapsed += Tweaks.World.AdvanceStep;
 
+        _collisionSolver.Update(_tankList, _machines);
+
         ProfileSection(ref Profile.Regrow, RegrowPass);
-        ProfileSection(ref Profile.Projectiles, () => _projectiles.Advance(_terrain, _tankList));
+        ProfileSection(ref Profile.Projectiles, () => _projectiles.Advance(_collisionSolver));
         ProfileSection(ref Profile.Tanks, () => _tankList.Advance(this, getInput));
         ProfileSection(ref Profile.Harvesters, () => _machines.Advance(_terrain, Tweaks.World.AdvanceStep));
         ProfileSection(ref Profile.Sprites, () => _sprites.Advance(Tweaks.World.AdvanceStep));

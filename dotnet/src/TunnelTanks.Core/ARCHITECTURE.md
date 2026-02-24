@@ -12,31 +12,33 @@ TunnelTanks.Core/
 │   ├── Tweaks.cs               # All tuning constants
 │   └── RandomGenerator.cs      # Seeded RNG wrapper
 ├── Terrain/
-│   ├── Terrain.cs              # Grid, pixel ops, change list, drawing
-│   └── TerrainPixel.cs         # Pixel enum and classification queries
+│   ├── Terrain.cs              # TerrainGrid: pixel ops, change list, drawing
+│   └── TerrainPixel.cs         # Pixel enum, TerrainBehavior lookup, classification
 ├── LevelGen/
 │   ├── ToastGenerator.cs       # Procedural cavern generator
 │   └── GeneratorUtils.cs       # Shared helpers (lines, fills, borders)
 ├── Entities/
 │   ├── Tank.cs                 # Player tank (movement, dig, shoot, respawn)
 │   ├── TankBase.cs             # Fixed bases (reactor, materials)
+│   ├── TankBases.cs            # Base collection
 │   ├── TankTurret.cs           # Turret aim, fire, cooldown
 │   ├── TankList.cs             # Tank collection
 │   ├── MachineMaterializer.cs  # Build-mode for machines
 │   ├── Sprite.cs               # Short-lived visual effects
 │   ├── Projectiles/
 │   │   ├── Projectile.cs       # Projectile types (Bullet, Shrapnel, Foam)
-│   │   ├── ProjectileList.cs   # Projectile container with pending list
+│   │   ├── ProjectileList.cs   # Projectile container + ProjectileBehavior strategies
 │   │   └── ExplosionDesc.cs    # Explosion factories
 │   ├── Machines/
-│   │   ├── Machine.cs          # Harvester and Charger
+│   │   ├── Machine.cs          # Machine entity (uses MachineBehavior)
+│   │   ├── MachineBehavior.cs  # Per-type machine strategy records
 │   │   └── MachineList.cs      # Machine collection
 │   └── Links/
 │       ├── Link.cs             # Power connection (Live/Blocked/Theoretical)
 │       ├── LinkPoint.cs        # Network node
 │       └── LinkMap.cs          # Power grid graph and solver
 ├── Collision/
-│   ├── CollisionSolver.cs      # Terrain collision queries
+│   ├── CollisionSolver.cs      # Unified collision API (visitor pattern + sectors)
 │   ├── Raycaster.cs            # Bresenham line and ray helpers
 │   └── WorldSectors.cs         # Spatial partitioning (64px buckets)
 ├── Input/
@@ -56,11 +58,63 @@ TunnelTanks.Core/
     └── Position.cs             # Position, Offset, Size, PositionF, VectorF, DirectionF, Color, Rect, BoundingBox
 ```
 
+## Extensibility patterns
+
+Three strategy-based patterns make adding new types a single-place change:
+
+### Adding a new projectile type
+
+1. Add enum value to `ProjectileType` in `Projectile.cs`
+2. Add one entry to `ProjectileList.BuildBehaviors()` with advance logic and draw color
+3. Add a factory method to `Projectile` (optional convenience)
+
+```csharp
+// In ProjectileList.BuildBehaviors():
+behaviors[(int)ProjectileType.Laser] = new(AdvanceLaser, Tweaks.Colors.LaserBeam);
+```
+
+### Adding a new machine type
+
+1. Add enum value to `MachineType` in `Machine.cs`
+2. Add one entry to `MachineBehaviors` with interval, action, color, and build cost
+
+```csharp
+public static readonly MachineBehavior Turret = new(
+    TimeSpan.FromMilliseconds(Tweaks.Machine.TurretIntervalMs),
+    FireAtNearbyEnemies,
+    Tweaks.Colors.Turret,
+    new MaterialAmount(Tweaks.Machine.TurretCost, 0));
+```
+
+### Adding a new terrain type
+
+1. Add enum value to `TerrainPixel`
+2. Add one entry to `Pixel.BuildBehaviorTable()` with all classification flags and display color
+3. All `Pixel.Is*` methods automatically work via the lookup table
+
+```csharp
+Set(TerrainPixel.Lava, new(true, false, false, false, false, false, false, false, new Color(0xff, 0x40, 0x00)));
+```
+
+### Collision queries for new entity types
+
+`CollisionSolver.TestPoint` accepts optional visitor callbacks per entity type.
+To add a new collidable entity type, add a new optional parameter:
+
+```csharp
+public bool TestPoint(Position pos,
+    Func<Tank, bool>? onTank = null,
+    Func<Machine, bool>? onMachine = null,
+    Func<Turret, bool>? onTurret = null,      // new
+    Func<TerrainPixel, bool>? onTerrain = null)
+```
+
 ## World — simulation orchestrator
 
 `World.cs` owns all subsystems and drives `Advance(Func<int, ControllerOutput> getInput)`:
 
 ```
+CollisionSolver    Rebuild sector indices for broad-phase queries
 RegrowPass         Cellular automata: Blank→DirtGrow→DirtHigh/Low
 Projectiles        Movement, terrain impact, explosions, spawn shrapnel
 Tanks              Input → turret → HandleMove → DigTunnel → shoot
@@ -85,28 +139,25 @@ LinkMap            Solve power graph via Bresenham visibility
 - `_changeList: List<Position>` — positions modified since last `DrawChangesToSurface`
 - `GetPixel(x, y)` / `SetPixel(Position, TerrainPixel)` — SetPixel appends to change list
 
-### TerrainPixel enum
+### TerrainPixel enum and TerrainBehavior
 
-| Category | Values |
-|----------|--------|
-| Empty | `Blank` |
-| Dirt | `DirtHigh`, `DirtLow`, `DirtGrow` |
-| Rock | `Rock` |
-| Decal | `DecalHigh`, `DecalLow` |
-| Concrete | `ConcreteLow`, `ConcreteHigh` |
-| Energy | `EnergyLow`, `EnergyMedium`, `EnergyHigh` |
-| Structure | `Base` |
-| Generator markers | `LevelGenDirt`, `LevelGenRock`, `LevelGenMark` |
-| Damage | `Scorched` |
+Each `TerrainPixel` value maps to a `TerrainBehavior` record via `Pixel.GetBehavior()`:
 
-### Pixel classification (`Pixel` static class)
+| Flag | Meaning |
+|------|---------|
+| `BlocksMovement` | Impassable (Rock, Concrete, Base walls) |
+| `SoftCollision` | Passable but counts as collision (Dirt) |
+| `Diggable` | Cleared by tank dig (Dirt, DirtGrow) |
+| `Mineral` | Yields minerals (Rock, Concrete) |
+| `Concrete` | Is concrete specifically |
+| `Energy` | Collectible energy |
+| `Base` | Player base wall |
+| `Scorched` | Explosion decal |
+| `DisplayColor` | Render color |
 
-- `IsDirt` — DirtHigh, DirtLow, DirtGrow
-- `IsDiggable` — dirt + decal + energy + scorched
-- `IsBlockingCollision` — everything except Blank
-- `IsTorchable` — Rock (destroyed only while shooting, random chance)
-- `IsMineral` — EnergyLow/Medium/High (collected on dig)
-- `IsBase` — Base pixel
+Derived properties: `IsAnyCollision`, `Torchable`, `Rock`, `Dirt`.
+
+All `Pixel.Is*()` methods are single-lookup into the behavior table (256-element array indexed by byte value).
 
 ### Materialization
 
@@ -123,7 +174,7 @@ LinkMap            Solve power graph via Bresenham visibility
 
 ## Level generation (Toast algorithm)
 
-`ToastGenerator.Generate(Size, int? seed)` → `(Terrain, Position[] spawns)`:
+`ToastGenerator.Generate(Size, int? seed)` → `(TerrainGrid, Position[] spawns)`:
 
 1. **Random points**: Place `N` points within padded bounds
 2. **MST**: Prim's algorithm to connect all points
@@ -180,11 +231,17 @@ For each pixel in the shape:
 
 ## Projectiles
 
+### Strategy pattern
+
+`ProjectileBehavior` records define per-type behavior (advance logic + draw color).
+All behaviors are registered in `ProjectileList.Behaviors[]`, indexed by `(int)ProjectileType`.
+The `Advance` loop dispatches via array lookup — no switch statements, no virtual calls.
+
 ### Types
 
 | Type | Behavior |
 |------|----------|
-| `Bullet` | Fast, linear, explodes on terrain hit |
+| `Bullet` | Fast, linear, explodes on terrain/tank hit (via CollisionSolver) |
 | `Shrapnel` | Short-lived, spawned by explosions |
 | `ConcreteFoam` | Spawns concrete terrain on impact |
 | `DirtFoam` | Spawns dirt terrain on impact |
@@ -193,8 +250,8 @@ For each pixel in the shape:
 
 - `_projectiles`: active list
 - `_pending`: newly spawned this frame (added at end of Advance to avoid mutation during iteration)
-- `Advance`: move each projectile, test terrain collision, handle impact
-- `Draw`: render fire-colored pixels at projectile positions
+- `Advance(CollisionSolver)`: move each projectile, test collision via solver, handle impact
+- `Draw`: render colored pixels at projectile positions using per-type DrawColor
 
 ### Explosions (`ExplosionDesc`)
 
@@ -205,6 +262,11 @@ Factory methods create explosion configs:
 - `Fan` — directional spray
 
 ## Machines
+
+### Strategy pattern
+
+`MachineBehavior` records define per-type behavior (action interval, action logic, color, build cost).
+Adding a new machine type = one entry in `MachineBehaviors`.
 
 - **Harvester**: Planted near energy deposits. Drains energy pixels within radius, adds to owner's reactor.
 - **Charger**: Planted on power link. Charges owner's reactor from the grid.
@@ -222,12 +284,25 @@ Factory methods create explosion configs:
 
 ## Collision
 
-`CollisionSolver.TestCollision(terrain, position, direction)`:
-- Walks pixels in a 7×7 footprint around the proposed position
-- Returns `CollisionType.None`, `CollisionType.Terrain`, or `CollisionType.Boundary`
-- Used by `HandleMove` to decide whether to move or dig
+### CollisionSolver (visitor pattern)
 
-`WorldSectors` (64px spatial buckets) available for broad-phase queries but currently unused by the C# port (collision is all terrain-pixel based).
+`CollisionSolver.TestPoint(pos, onTank?, onMachine?, onTerrain?)`:
+- Central collision API with optional visitor callbacks per entity type
+- Callers pass only the callbacks they care about
+- Tank queries use `WorldSectors` broad-phase (only nearby sectors checked)
+- Machine queries use linear scan (few entities)
+- Terrain queries are direct pixel lookups
+
+Rebuilt each frame via `Update(TankList, MachineList)` which populates sector indices.
+
+### WorldSectors
+
+64px spatial partitioning buckets. Entities are indexed by sector position.
+`ForEachNearbyEntity(pos, visitor)` iterates the 3×3 neighborhood around a position.
+
+### Raycaster
+
+Bresenham line helpers with early-exit (`BresenhamLineAny`) and full-walk (`BresenhamLine`) variants.
 
 ## Input
 
@@ -290,8 +365,10 @@ Nested static classes mirror C++ `tweak::` namespaces:
 | `Perf` | `TargetFps` (24), `SectorSize` (64) |
 | `Screen` | `WindowSize` (1920×1200), `RenderSurfaceSize` (320×200) |
 | `World` | `AdvanceStep`, `DirtRecoverInterval`, `DirtRegrowSpeed`, `DigThroughRockChance` |
-| `Base` | `MinDistance`, `BaseSize`, `DoorSize` |
-| `Tank` | `MaxLives`, `RespawnDelay`, `TurretDelay`, `TurretLength` |
-| `Weapon` | `CannonBulletSpeed`, barrel speeds |
+| `Base` | `MinDistance`, `BaseSize`, `DoorSize`, reactor and material capacities |
+| `Tank` | `MaxLives`, `RespawnDelay`, `TurretDelay`, energy/health/resource capacities |
+| `Weapon` | `CannonBulletSpeed`, barrel speeds, `BulletDamage` |
+| `Machine` | Reactor caps, intervals, harvest range, build costs |
 | `Explosion` | `Dirt/Normal/Death` (ShrapnelCount, Speed, Frames), `ChanceToDestroy*` |
+| `Colors` | Centralized color constants for all entities and effects |
 | `LevelGen` | `BorderWidth`, `DirtTargetPercent`, `TreeSize`, `SmoothingSteps` |

@@ -5,11 +5,47 @@ using TunnelTanks.Core.Terrain;
 using TunnelTanks.Core.Config;
 using TunnelTanks.Core.Entities;
 using TunnelTanks.Core.Resources;
+using TunnelTanks.Core.Collision;
+
+/// <summary>
+/// Defines per-type projectile behavior: how it advances and what color it draws.
+/// Adding a new projectile type = one entry in <see cref="ProjectileList.Behaviors"/>.
+/// </summary>
+public record ProjectileBehavior(
+    Action<Projectile, CollisionSolver, ProjectileList> Advance,
+    Color DrawColor);
 
 public class ProjectileList
 {
     private readonly List<Projectile> _projectiles = new();
     private readonly List<Projectile> _pending = new();
+
+    /// <summary>
+    /// Single source of truth for per-type projectile behavior.
+    /// To add a new projectile type: add the enum value, then add one entry here.
+    /// </summary>
+    public static readonly ProjectileBehavior[] Behaviors = BuildBehaviors();
+
+    private static ProjectileBehavior[] BuildBehaviors()
+    {
+        var values = Enum.GetValues<ProjectileType>();
+        int max = 0;
+        foreach (var v in values)
+            max = Math.Max(max, (int)v);
+
+        var behaviors = new ProjectileBehavior[max + 1];
+        behaviors[(int)ProjectileType.Bullet] = new(AdvanceBullet, Tweaks.Colors.FireHot);
+        behaviors[(int)ProjectileType.Shrapnel] = new(AdvanceShrapnel, Tweaks.Colors.FireHot);
+        behaviors[(int)ProjectileType.ConcreteFoam] = new(
+            (p, solver, self) => AdvanceFoam(p, solver.Terrain,
+                TerrainPixel.ConcreteHigh, TerrainPixel.ConcreteLow, skipConcrete: true),
+            Tweaks.Colors.Concrete);
+        behaviors[(int)ProjectileType.DirtFoam] = new(
+            (p, solver, self) => AdvanceFoam(p, solver.Terrain,
+                TerrainPixel.DirtHigh, TerrainPixel.DirtLow, skipConcrete: false),
+            Tweaks.Colors.DirtProjectile);
+        return behaviors;
+    }
 
     public int Count => _projectiles.Count + _pending.Count;
     public void Add(Projectile p) => _pending.Add(p);
@@ -21,7 +57,7 @@ public class ProjectileList
         _pending.Clear();
     }
 
-    public void Advance(TerrainGrid terrain, TankList? tankList)
+    public void Advance(CollisionSolver solver)
     {
         _projectiles.AddRange(_pending);
         _pending.Clear();
@@ -31,25 +67,16 @@ public class ProjectileList
             var p = _projectiles[i];
             if (!p.IsAlive) { _projectiles.RemoveAt(i); continue; }
 
-            switch (p.Type)
-            {
-                case ProjectileType.Bullet: AdvanceBullet(p, terrain, tankList); break;
-                case ProjectileType.Shrapnel: AdvanceShrapnel(p, terrain); break;
-                case ProjectileType.ConcreteFoam:
-                    AdvanceFoam(p, terrain, TerrainPixel.ConcreteHigh, TerrainPixel.ConcreteLow, skipConcrete: true);
-                    break;
-                case ProjectileType.DirtFoam:
-                    AdvanceFoam(p, terrain, TerrainPixel.DirtHigh, TerrainPixel.DirtLow, skipConcrete: false);
-                    break;
-            }
+            Behaviors[(int)p.Type].Advance(p, solver, this);
         }
 
         if (_projectiles.Count > Tweaks.Perf.ProjectileCompactThreshold)
             _projectiles.RemoveAll(p => !p.IsAlive);
     }
 
-    private void AdvanceBullet(Projectile p, TerrainGrid terrain, TankList? tankList)
+    private static void AdvanceBullet(Projectile p, CollisionSolver solver, ProjectileList self)
     {
+        var terrain = solver.Terrain;
         int steps = Math.Max(1, (int)MathF.Ceiling(p.Speed.Length));
         var stepDir = p.Speed * (1f / steps);
 
@@ -60,23 +87,18 @@ public class ProjectileList
 
             if (!terrain.IsInside(ipos)) { p.IsAlive = false; return; }
 
-            var pix = terrain.GetPixelRaw(ipos);
-
-            if (tankList != null)
-            {
-                var hitTank = tankList.CheckTankCollision(ipos, p.OwnerColor);
-                if (hitTank != null)
+            bool hit = solver.TestPoint(ipos,
+                onTank: tank =>
                 {
-                    hitTank.Reactor.Exhaust(new ReactorState(0, Tweaks.Weapon.BulletDamage));
-                    SpawnNormalExplosion(ipos);
-                    p.IsAlive = false;
-                    return;
-                }
-            }
+                    if (tank.Color == p.OwnerColor) return false;
+                    tank.Reactor.Exhaust(new ReactorState(0, Tweaks.Weapon.BulletDamage));
+                    return true;
+                },
+                onTerrain: pix => Pixel.IsAnyCollision(pix));
 
-            if (Pixel.IsAnyCollision(pix))
+            if (hit)
             {
-                SpawnNormalExplosion(ipos);
+                self.SpawnNormalExplosion(ipos);
                 p.IsAlive = false;
                 return;
             }
@@ -91,8 +113,9 @@ public class ProjectileList
             Tweaks.Explosion.Normal.Frames));
     }
 
-    private void AdvanceShrapnel(Projectile p, TerrainGrid terrain)
+    private static void AdvanceShrapnel(Projectile p, CollisionSolver solver, ProjectileList self)
     {
+        var terrain = solver.Terrain;
         if (p.Life-- <= 0) { p.IsAlive = false; return; }
 
         p.Position += p.Speed;
@@ -136,26 +159,13 @@ public class ProjectileList
 
     public void Draw(uint[] surface, int surfaceWidth, int surfaceHeight)
     {
-        var fireHot = Tweaks.Colors.FireHot.ToArgb();
-        var concreteColor = Tweaks.Colors.Concrete.ToArgb();
-        var dirtColor = Tweaks.Colors.DirtProjectile.ToArgb();
-
         foreach (var p in _projectiles)
         {
             if (!p.IsAlive) continue;
             var ipos = (Position)p.Position;
             if (ipos.X < 0 || ipos.Y < 0 || ipos.X >= surfaceWidth || ipos.Y >= surfaceHeight) continue;
 
-            uint color = p.Type switch
-            {
-                ProjectileType.Bullet => fireHot,
-                ProjectileType.Shrapnel => fireHot,
-                ProjectileType.ConcreteFoam => concreteColor,
-                ProjectileType.DirtFoam => dirtColor,
-                _ => fireHot,
-            };
-
-            surface[ipos.X + ipos.Y * surfaceWidth] = color;
+            surface[ipos.X + ipos.Y * surfaceWidth] = Behaviors[(int)p.Type].DrawColor.ToArgb();
         }
     }
 }

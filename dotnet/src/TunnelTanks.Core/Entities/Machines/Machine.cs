@@ -12,6 +12,7 @@ public class Machine
 {
     public Position Position { get; set; }
     public MachineType Type { get; }
+    public MachineBehavior Behavior { get; }
     public MachineState State { get; set; } = MachineState.Template;
     public Reactor Reactor { get; }
     public int OwnerColor { get; }
@@ -19,18 +20,15 @@ public class Machine
     public bool IsAlive { get; set; } = true;
 
     private TimeSpan _actionAccumulator;
-    private readonly TimeSpan _actionInterval;
 
     public Machine(Position position, MachineType type, int ownerColor)
     {
         Position = position;
         Type = type;
+        Behavior = MachineBehaviors.Get(type);
         OwnerColor = ownerColor;
         Reactor = new Reactor(0, Tweaks.Machine.ReactorHealthCapacity,
             Tweaks.Machine.ReactorEnergyCapacity, Tweaks.Machine.ReactorHealthCapacity);
-        _actionInterval = type == MachineType.Harvester
-            ? TimeSpan.FromMilliseconds(Tweaks.Machine.HarvesterIntervalMs)
-            : TimeSpan.FromMilliseconds(Tweaks.Machine.ChargerIntervalMs);
     }
 
     public bool IsBlockingCollision => State == MachineState.Planted;
@@ -42,42 +40,19 @@ public class Machine
         if (Reactor.Health <= 0) { IsAlive = false; return; }
 
         _actionAccumulator += dt;
-        if (_actionAccumulator < _actionInterval) return;
-        _actionAccumulator -= _actionInterval;
+        if (_actionAccumulator < Behavior.ActionInterval) return;
+        _actionAccumulator -= Behavior.ActionInterval;
 
-        if (Type == MachineType.Harvester)
-            HarvestNearby(terrain);
-    }
-
-    private void HarvestNearby(TerrainGrid terrain)
-    {
-        int range = Tweaks.Machine.HarvestRange;
-        for (int dy = -range; dy <= range; dy++)
-            for (int dx = -range; dx <= range; dx++)
-            {
-                if (dx * dx + dy * dy > range * range) continue;
-                var pos = new Position(Position.X + dx, Position.Y + dy);
-                if (!terrain.IsInside(pos)) continue;
-
-                var pix = terrain.GetPixelRaw(pos);
-                if (Pixel.IsDirt(pix))
-                {
-                    terrain.SetPixel(pos, TerrainPixel.Blank);
-                    return;
-                }
-            }
+        Behavior.PerformAction?.Invoke(this, terrain);
     }
 
     public void Draw(uint[] surface, int surfaceWidth, int surfaceHeight)
     {
         if (!IsAlive) return;
         int half = BoundingBox.HalfWidth;
-        uint color = Type == MachineType.Harvester
-            ? Tweaks.Colors.Harvester.ToArgb()
-            : Tweaks.Colors.Charger.ToArgb();
-
-        if (State == MachineState.Template)
-            color = Tweaks.Colors.MachineTemplate.ToArgb();
+        uint color = State == MachineState.Template
+            ? Tweaks.Colors.MachineTemplate.ToArgb()
+            : Behavior.ActiveColor.ToArgb();
 
         for (int dy = -half; dy <= half; dy++)
             for (int dx = -half; dx <= half; dx++)

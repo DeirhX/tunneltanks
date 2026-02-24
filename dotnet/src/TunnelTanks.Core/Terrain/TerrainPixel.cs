@@ -25,37 +25,80 @@ public enum TerrainPixel : byte
     EnergyHigh = (byte)'F',
 }
 
+/// <summary>
+/// Single source of truth for terrain classification.
+/// Adding a new terrain pixel = one entry in <see cref="Pixel.BuildBehaviorTable"/>.
+/// All <c>Pixel.Is*</c> methods delegate to this table.
+/// </summary>
+public readonly record struct TerrainBehavior(
+    bool BlocksMovement,
+    bool SoftCollision,
+    bool Diggable,
+    bool Concrete,
+    bool Mineral,
+    bool Energy,
+    bool Base,
+    bool Scorched,
+    Color DisplayColor)
+{
+    public bool IsAnyCollision => BlocksMovement || SoftCollision;
+    public bool Torchable => Diggable || Mineral;
+    public bool Rock => Mineral && !Concrete;
+    public bool Dirt => SoftCollision;
+}
+
 public static class Pixel
 {
-    public static bool IsDirt(TerrainPixel p) => p == TerrainPixel.DirtHigh || p == TerrainPixel.DirtLow;
-    public static bool IsDiggable(TerrainPixel p) => p == TerrainPixel.DirtHigh || p == TerrainPixel.DirtLow || p == TerrainPixel.DirtGrow;
-    public static bool IsTorchable(TerrainPixel p) => IsDiggable(p) || IsMineral(p);
-    public static bool IsSoftCollision(TerrainPixel p) => IsDirt(p);
-    public static bool IsBlockingCollision(TerrainPixel p) => p == TerrainPixel.Rock || IsConcrete(p) || IsBase(p);
-    public static bool IsAnyCollision(TerrainPixel p) => IsSoftCollision(p) || IsBlockingCollision(p);
-    public static bool IsBase(TerrainPixel p) => p >= TerrainPixel.BaseMin && p <= TerrainPixel.BaseMax;
-    public static bool IsScorched(TerrainPixel p) => p == TerrainPixel.DecalHigh || p == TerrainPixel.DecalLow;
-    public static bool IsConcrete(TerrainPixel p) => p == TerrainPixel.ConcreteHigh || p == TerrainPixel.ConcreteLow;
-    public static bool IsRock(TerrainPixel p) => p == TerrainPixel.Rock;
-    public static bool IsMineral(TerrainPixel p) => IsConcrete(p) || IsRock(p);
-    public static bool IsEnergy(TerrainPixel p) => p == TerrainPixel.EnergyLow || p == TerrainPixel.EnergyMedium || p == TerrainPixel.EnergyHigh;
+    private static readonly TerrainBehavior[] _behaviors = BuildBehaviorTable();
+
+    private static readonly Color MagentaFallback = new(0xff, 0x00, 0xff);
+
+    private static TerrainBehavior[] BuildBehaviorTable()
+    {
+        var table = new TerrainBehavior[256];
+
+        void Set(TerrainPixel p, TerrainBehavior b) => table[(int)p] = b;
+
+        Set(TerrainPixel.Blank,       new(false, false, false, false, false, false, false, false, new Color(0x00, 0x00, 0x00)));
+        Set(TerrainPixel.DirtHigh,    new(false, true,  true,  false, false, false, false, false, new Color(0xc3, 0x79, 0x30)));
+        Set(TerrainPixel.DirtLow,     new(false, true,  true,  false, false, false, false, false, new Color(0xba, 0x59, 0x04)));
+        Set(TerrainPixel.DirtGrow,    new(false, false, true,  false, false, false, false, false, new Color(0x6a, 0x29, 0x02)));
+        Set(TerrainPixel.Rock,        new(true,  false, false, false, true,  false, false, false, new Color(0x9a, 0x9a, 0x9a)));
+        Set(TerrainPixel.DecalHigh,   new(false, false, false, false, false, false, false, true,  new Color(0x48, 0x38, 0x2f)));
+        Set(TerrainPixel.DecalLow,    new(false, false, false, false, false, false, false, true,  new Color(0x28, 0x28, 0x28)));
+        Set(TerrainPixel.ConcreteLow, new(true,  false, false, true,  true,  false, false, false, new Color(0xa0, 0xa0, 0xa5)));
+        Set(TerrainPixel.ConcreteHigh,new(true,  false, false, true,  true,  false, false, false, new Color(0x80, 0x80, 0x85)));
+        Set(TerrainPixel.EnergyLow,   new(false, false, false, false, false, true,  false, false, new Color(0xa0, 0xa0, 0x19)));
+        Set(TerrainPixel.EnergyMedium,new(false, false, false, false, false, true,  false, false, new Color(0xd0, 0xd0, 0x30)));
+        Set(TerrainPixel.EnergyHigh,  new(false, false, false, false, false, true,  false, false, new Color(0xff, 0xff, 0x4a)));
+        Set(TerrainPixel.BaseBarrier, new(false, false, false, false, false, false, false, false, new Color(0x40, 0x40, 0x40)));
+
+        var baseColor = new Color(0x40, 0x40, 0x40);
+        for (byte b = (byte)TerrainPixel.BaseMin; b <= (byte)TerrainPixel.BaseMax; b++)
+            table[b] = new(true, false, false, false, false, false, true, false, baseColor);
+
+        return table;
+    }
+
+    public static ref readonly TerrainBehavior GetBehavior(TerrainPixel p) => ref _behaviors[(int)p];
+
+    public static bool IsDirt(TerrainPixel p) => _behaviors[(int)p].Dirt;
+    public static bool IsDiggable(TerrainPixel p) => _behaviors[(int)p].Diggable;
+    public static bool IsTorchable(TerrainPixel p) => _behaviors[(int)p].Torchable;
+    public static bool IsSoftCollision(TerrainPixel p) => _behaviors[(int)p].SoftCollision;
+    public static bool IsBlockingCollision(TerrainPixel p) => _behaviors[(int)p].BlocksMovement;
+    public static bool IsAnyCollision(TerrainPixel p) => _behaviors[(int)p].IsAnyCollision;
+    public static bool IsBase(TerrainPixel p) => _behaviors[(int)p].Base;
+    public static bool IsScorched(TerrainPixel p) => _behaviors[(int)p].Scorched;
+    public static bool IsConcrete(TerrainPixel p) => _behaviors[(int)p].Concrete;
+    public static bool IsRock(TerrainPixel p) => _behaviors[(int)p].Rock;
+    public static bool IsMineral(TerrainPixel p) => _behaviors[(int)p].Mineral;
+    public static bool IsEnergy(TerrainPixel p) => _behaviors[(int)p].Energy;
     public static bool IsEmpty(TerrainPixel p) => p == TerrainPixel.Blank;
 
-    public static Color GetColor(TerrainPixel p) => p switch
+    public static Color GetColor(TerrainPixel p)
     {
-        TerrainPixel.Blank => new Color(0x00, 0x00, 0x00),
-        TerrainPixel.DirtHigh => new Color(0xc3, 0x79, 0x30),
-        TerrainPixel.DirtLow => new Color(0xba, 0x59, 0x04),
-        TerrainPixel.DirtGrow => new Color(0x6a, 0x29, 0x02),
-        TerrainPixel.Rock => new Color(0x9a, 0x9a, 0x9a),
-        TerrainPixel.DecalHigh => new Color(0x48, 0x38, 0x2f),
-        TerrainPixel.DecalLow => new Color(0x28, 0x28, 0x28),
-        TerrainPixel.ConcreteLow => new Color(0xa0, 0xa0, 0xa5),
-        TerrainPixel.ConcreteHigh => new Color(0x80, 0x80, 0x85),
-        TerrainPixel.EnergyLow => new Color(0xa0, 0xa0, 0x19),
-        TerrainPixel.EnergyMedium => new Color(0xd0, 0xd0, 0x30),
-        TerrainPixel.EnergyHigh => new Color(0xff, 0xff, 0x4a),
-        _ when Pixel.IsBase(p) => new Color(0x40, 0x40, 0x40),
-        _ => new Color(0xff, 0x00, 0xff),
-    };
+        var c = _behaviors[(int)p].DisplayColor;
+        return c == default ? MagentaFallback : c;
+    }
 }
