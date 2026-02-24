@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TunnelTanks.Core/TunnelTanks.Core.csproj" />
+    <Project Path="src/TunnelTanks.Desktop/TunnelTanks.Desktop.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TunnelTanks.Tests/TunnelTanks.Tests.csproj" />
+  </Folder>
+</Solution>

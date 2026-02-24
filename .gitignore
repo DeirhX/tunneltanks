@@ -1,62 +1,54 @@
 # Build output
-/build/
-/Build/
-/obj/
-
-# CMake (Linux/macOS build)
-CMakeCache.txt
-CMakeFiles/*
-Makefile
-cmake_install.cmake
-cmake-build-debug/
-
-# IDE
-**/.vs/
-/.idea/
+build/
 
 # Visual Studio
-*.vcxproj.user
-*.user
+.vs/
 *.suo
-*.sdf
-*.opensdf
-*.db
+*.user
+*.userosscache
+*.sln.docstates
 *.opendb
+*.db
 *.ipch
 
-# VS build intermediates (if built outside /build/)
+# C++ intermediate
 *.obj
+*.pch
 *.pdb
 *.ilk
 *.exp
+*.lib
 *.iobj
 *.ipdb
+*.log
+*.tlog
+*.lastbuildstate
+*.recipe
+*.FileListAbsolute.txt
 
-# NuGet (restored on build)
-/packages/
+# .NET
+dotnet/**/obj/
+dotnet/**/bin/
+*.nupkg
+*.snupkg
+project.assets.json
 
-# Debug snapshots
-/debug_*.bmp
+# NuGet
+**/packages/
 
 # Profiling
-/VTune Profiler Results/
+VTune Profiler Results/
 
-# Android build
-android/ant.properties
-android/bin/*
-android/gen/*
-android/libs/*
-android/local.properties
-android/obj/*
+# Debug artifacts
+debug_*.bmp
 
-# CPack
-pack/*.cpack
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
 
-# Orphaned nanogui directories (no longer submodules, kept locally only)
-/libs/nanogui-sdl/
-/libs/nanogui-sdl2/
-
-# Executables in root
-tunneltanks
-tunneltanks.exe
-crust.exe
+# IDE
+*.swp
+*~
+.idea/
