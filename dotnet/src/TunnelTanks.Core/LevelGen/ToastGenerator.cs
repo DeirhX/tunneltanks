@@ -198,52 +198,45 @@ public class ToastGenerator
         // 2. Distance transform from path pixels (Manhattan, two-pass)
         var dist = DistanceFromDirt(terrain, w, h);
 
-        // 3. Build a low-frequency noise grid for spatially coherent rock formations.
-        //    Each cell covers ~cellSize pixels; bilinear interpolation smooths between cells.
-        int cellSize = Math.Max(8, Math.Min(w, h) / 18);
-        int gw = (w + cellSize - 1) / cellSize + 2;
-        int gh = (h + cellSize - 1) / cellSize + 2;
-        float[] noiseGrid = new float[gw * gh];
+        // 3. Two-octave noise grids for spatially coherent rock formations.
+        //    Small noise: local texture (~11px cells on 320x200).
+        //    Large noise: map-spanning rock formations (~40px cells on 320x200).
         var gridRng = new Random();
-        for (int i = 0; i < noiseGrid.Length; i++)
-            noiseGrid[i] = gridRng.NextSingle();
+        int smallCell = Math.Max(8, Math.Min(w, h) / 18);
+        float[] smallNoise = BuildNoiseGrid(w, h, smallCell, gridRng);
+        int smallGw = (w + smallCell - 1) / smallCell + 2;
 
-        // 4. Stochastic fill: spatially coherent noise + distance boost near paths.
-        //    The coherent noise creates large rock/dirt zones that CA shapes into partitions.
-        //    The distance boost ensures tunnel corridors near MST paths survive.
+        int largeCell = Math.Max(16, Math.Min(w, h) / 4);
+        float[] largeNoise = BuildNoiseGrid(w, h, largeCell, gridRng);
+        int largeGw = (w + largeCell - 1) / largeCell + 2;
+
+        // 4. Stochastic fill: combined noise controls rock/dirt tendency per region.
+        //    Large noise creates broad formations; small noise adds irregular edges.
+        //    Distance boost keeps tunnels near MST paths clear.
         int progression = Tweaks.LevelGen.DirtSpawnProgression;
         float decayRadius = Math.Min(w, h) * 0.12f;
-        float invCell = 1f / cellSize;
+        float invSmall = 1f / smallCell;
+        float invLarge = 1f / largeCell;
 
         Parallel.For(1, h - 1, y =>
         {
             var rng = new Random();
-            float fy = y * invCell;
-            int iy = (int)fy;
-            float ty = fy - iy;
-
             for (int x = 1; x < w - 1; x++)
             {
                 int offset = x + y * w;
                 if (terrain.GetPixelRaw(offset) == TerrainPixel.LevelGenDirt)
                     continue;
 
-                float fx = x * invCell;
-                int ix = (int)fx;
-                float tx = fx - ix;
-                float n00 = noiseGrid[ix + iy * gw];
-                float n10 = noiseGrid[ix + 1 + iy * gw];
-                float n01 = noiseGrid[ix + (iy + 1) * gw];
-                float n11 = noiseGrid[ix + 1 + (iy + 1) * gw];
-                float noise = n00 * (1 - tx) * (1 - ty) + n10 * tx * (1 - ty)
-                            + n01 * (1 - tx) * ty + n11 * tx * ty;
+                float sn = SampleNoise(smallNoise, smallGw, x, y, invSmall);
+                float ln = SampleNoise(largeNoise, largeGw, x, y, invLarge);
+                float combined = ln * 0.60f + sn * 0.40f;
 
                 float d = dist[offset];
                 float distBoost = 1f / (1f + d * d / (decayRadius * decayRadius));
                 float edgeX = MathF.Min(w - x, x) / (float)progression;
                 float edgeY = MathF.Min(h - y, y) / (float)progression;
                 float edgeFactor = MathF.Min(MathF.Min(edgeX, edgeY), 1f);
-                float prob = (0.30f + noise * 0.40f + distBoost * 0.35f) * edgeFactor;
+                float prob = (0.15f + combined * 0.50f + distBoost * 0.40f) * edgeFactor;
 
                 if (rng.NextSingle() < prob)
                     terrain.SetPixelRaw(offset, TerrainPixel.LevelGenDirt);
@@ -376,6 +369,27 @@ public class ToastGenerator
 
         stagedWrites.Dispose();
         GeneratorUtils.SetOutside(terrain, TerrainPixel.LevelGenRock);
+    }
+
+    private static float[] BuildNoiseGrid(int w, int h, int cellSize, Random rng)
+    {
+        int gw = (w + cellSize - 1) / cellSize + 2;
+        int gh = (h + cellSize - 1) / cellSize + 2;
+        float[] grid = new float[gw * gh];
+        for (int i = 0; i < grid.Length; i++)
+            grid[i] = rng.NextSingle();
+        return grid;
+    }
+
+    private static float SampleNoise(float[] grid, int gw, int x, int y, float invCell)
+    {
+        float fx = x * invCell, fy = y * invCell;
+        int ix = (int)fx, iy = (int)fy;
+        float tx = fx - ix, ty = fy - iy;
+        return grid[ix + iy * gw] * (1 - tx) * (1 - ty)
+             + grid[ix + 1 + iy * gw] * tx * (1 - ty)
+             + grid[ix + (iy + 1) * gw] * (1 - tx) * ty
+             + grid[ix + 1 + (iy + 1) * gw] * tx * ty;
     }
 
     #endregion
