@@ -30,29 +30,36 @@ public class Game
     private readonly DrawProfile _drawProfile = new();
     private bool _isRunning = true;
 
-    public Game(Size? terrainSizeOverride = null)
+    public Game(Size? terrainSizeOverride = null, LevelGenMode genMode = LevelGenMode.Deterministic)
     {
         _renderSize = Tweaks.Screen.RenderSurfaceSize;
         _terrainSize = terrainSizeOverride ?? _renderSize;
         var windowSize = Tweaks.Screen.WindowSize;
+        bool parallel = genMode == LevelGenMode.Optimized;
 
         _renderer = new SdlRenderer(Tweaks.System.WindowTitle, windowSize, _renderSize);
         _sdl = Sdl.GetApi();
 
-        Console.WriteLine($"Generating terrain {_terrainSize.X}x{_terrainSize.Y} (seed={DefaultSeed})...");
+        var modeLabel = parallel ? "optimized" : "deterministic";
+        Console.WriteLine($"Generating terrain {_terrainSize.X}x{_terrainSize.Y} ({modeLabel}, seed={DefaultSeed})...");
         var genWatch = Stopwatch.StartNew();
         var generator = new ToastGenerator();
-        var (terrain, spawns) = generator.Generate(_terrainSize, DefaultSeed);
+        int? seed = parallel ? null : DefaultSeed;
+        var (terrain, spawns) = generator.Generate(_terrainSize, seed, genMode);
         Console.WriteLine($"Level generated in {genWatch.Elapsed.TotalMilliseconds:F0} ms, {spawns.Length} spawns");
 
         _world = new World(_terrainSize);
-        _world.Initialize(terrain, spawns, materializeSeed: DefaultSeed + 1);
-        _p2AI = new TwitchAI(seed: DefaultSeed + 2);
+        int? matSeed = parallel ? null : DefaultSeed + 1;
+        _world.Initialize(terrain, spawns, materializeSeed: matSeed, parallelMaterialize: parallel);
+        _p2AI = new TwitchAI(seed: parallel ? null : DefaultSeed + 2);
 
         _worldPixels = new uint[_terrainSize.Area];
         _compositePixels = new uint[_terrainSize.Area];
         _screenPixels = new uint[_renderSize.Area];
-        _world.Terrain.DrawAllToSurface(_worldPixels);
+        if (parallel)
+            _world.Terrain.DrawAllToSurfaceParallel(_worldPixels);
+        else
+            _world.Terrain.DrawAllToSurface(_worldPixels);
 
         _p1Controller = new KeyboardController(_sdl,
             Scancode.ScancodeA, Scancode.ScancodeD,

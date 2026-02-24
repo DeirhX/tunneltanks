@@ -38,8 +38,7 @@ public static class GeneratorUtils
 
     public static void FillAll(TerrainGrid terrain, TerrainPixel value)
     {
-        for (int i = 0; i < terrain.Size.Area; i++)
-            terrain[i] = value;
+        terrain.Fill(value);
     }
 
     public static void SetOutside(TerrainGrid terrain, TerrainPixel value)

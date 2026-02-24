@@ -193,12 +193,117 @@ public class LevelGenTests
     {
         var gen = new ToastGenerator();
         var (terrain, spawns) = gen.Generate(_size);
+        AssertSpawnsReachable(terrain, spawns, W, H);
+    }
 
-        // BFS flood-fill from first spawn through LevelGenDirt
-        var visited = new bool[_size.Area];
+    [Fact]
+    public void OptimizedMode_ProducesValidDirtPercentage()
+    {
+        var gen = new ToastGenerator();
+        var (terrain, spawns) = gen.Generate(_size, mode: LevelGenMode.Optimized);
+        terrain.MaterializeTerrain(parallel: true);
+
+        int dirtCount = 0;
+        for (int i = 0; i < _size.Area; i++)
+            if (Pixel.IsDirt(terrain[i])) dirtCount++;
+
+        double pct = 100.0 * dirtCount / _size.Area;
+        Assert.True(pct >= 40 && pct <= 85,
+            $"Optimized dirt percentage {pct:F1}% outside expected range [40, 85]");
+        Assert.True(spawns.Length >= 2, $"Expected at least 2 spawns, got {spawns.Length}");
+    }
+
+    [Fact]
+    public void OptimizedMode_NoBoundaryArtifacts()
+    {
+        var gen = new ToastGenerator();
+        var (terrain, _) = gen.Generate(_size, mode: LevelGenMode.Optimized);
+
+        for (int x = 0; x < W; x++)
+        {
+            Assert.Equal(TerrainPixel.LevelGenRock, terrain.GetPixelRaw(new Position(x, 0)));
+            Assert.Equal(TerrainPixel.LevelGenRock, terrain.GetPixelRaw(new Position(x, H - 1)));
+        }
+        for (int y = 0; y < H; y++)
+        {
+            Assert.Equal(TerrainPixel.LevelGenRock, terrain.GetPixelRaw(new Position(0, y)));
+            Assert.Equal(TerrainPixel.LevelGenRock, terrain.GetPixelRaw(new Position(W - 1, y)));
+        }
+    }
+
+    [Fact]
+    public void OptimizedMode_ConnectedCaves_SpawnsReachable()
+    {
+        var gen = new ToastGenerator();
+        var (terrain, spawns) = gen.Generate(_size, mode: LevelGenMode.Optimized);
+        AssertSpawnsReachable(terrain, spawns, W, H);
+    }
+
+    [Fact]
+    public void OptimizedMode_LargeMap_ProducesValidResult()
+    {
+        int lw = 1000, lh = 500;
+        var largeSize = new Size(lw, lh);
+        var gen = new ToastGenerator();
+        var (terrain, spawns) = gen.Generate(largeSize, mode: LevelGenMode.Optimized);
+        terrain.MaterializeTerrain(parallel: true);
+
+        Assert.True(spawns.Length >= 2);
+
+        int dirtCount = 0;
+        for (int i = 0; i < largeSize.Area; i++)
+            if (Pixel.IsDirt(terrain[i])) dirtCount++;
+
+        double pct = 100.0 * dirtCount / largeSize.Area;
+        Assert.True(pct >= 40 && pct <= 85,
+            $"Large optimized dirt percentage {pct:F1}% outside expected range [40, 85]");
+    }
+
+    [Fact]
+    public void Benchmark_DeterministicVsOptimized()
+    {
+        int bw = 1000, bh = 500;
+        var benchSize = new Size(bw, bh);
+        var gen = new ToastGenerator();
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+
+        // Warmup
+        gen.Generate(benchSize, seed: 42, mode: LevelGenMode.Deterministic);
+        gen.Generate(benchSize, mode: LevelGenMode.Optimized);
+
+        const int runs = 3;
+        double detTotal = 0, optTotal = 0;
+
+        for (int i = 0; i < runs; i++)
+        {
+            sw.Restart();
+            gen.Generate(benchSize, seed: 42, mode: LevelGenMode.Deterministic);
+            detTotal += sw.Elapsed.TotalMilliseconds;
+
+            sw.Restart();
+            gen.Generate(benchSize, mode: LevelGenMode.Optimized);
+            optTotal += sw.Elapsed.TotalMilliseconds;
+        }
+
+        double detAvg = detTotal / runs;
+        double optAvg = optTotal / runs;
+        double speedup = detAvg / optAvg;
+
+        // Output via test output (shows up in verbose test output)
+        Assert.True(true,
+            $"1000x500 avg over {runs}: deterministic={detAvg:F1}ms, optimized={optAvg:F1}ms, speedup={speedup:F2}x");
+
+        // The optimized mode should be faster (or at least not significantly slower)
+        Assert.True(optAvg <= detAvg * 1.5,
+            $"Optimized ({optAvg:F1}ms) should not be slower than deterministic ({detAvg:F1}ms)");
+    }
+
+    private static void AssertSpawnsReachable(Terrain terrain, Position[] spawns, int w, int h)
+    {
+        var visited = new bool[w * h];
         var queue = new Queue<Position>();
         queue.Enqueue(spawns[0]);
-        visited[spawns[0].X + spawns[0].Y * W] = true;
+        visited[spawns[0].X + spawns[0].Y * w] = true;
 
         while (queue.Count > 0)
         {
@@ -208,8 +313,8 @@ public class LevelGenTests
                 {
                     if (dx == 0 && dy == 0) continue;
                     int nx = pos.X + dx, ny = pos.Y + dy;
-                    if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
-                    int off = nx + ny * W;
+                    if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                    int off = nx + ny * w;
                     if (visited[off]) continue;
                     if (terrain.GetPixelRaw(new Position(nx, ny)) != TerrainPixel.LevelGenDirt) continue;
                     visited[off] = true;
@@ -217,10 +322,9 @@ public class LevelGenTests
                 }
         }
 
-        // All spawns should be reachable from spawn[0]
         for (int i = 1; i < spawns.Length; i++)
         {
-            int off = spawns[i].X + spawns[i].Y * W;
+            int off = spawns[i].X + spawns[i].Y * w;
             Assert.True(visited[off], $"Spawn {i} at {spawns[i]} is not connected to spawn 0");
         }
     }

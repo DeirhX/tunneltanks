@@ -1,10 +1,14 @@
+using TunnelTanks.Core.LevelGen;
 using TunnelTanks.Core.Types;
 
 Size? terrainSize = null;
+bool fastGen = false;
 foreach (var arg in args)
 {
     if (arg == "--large")
         terrainSize = new Size(1500, 750);
+    else if (arg == "--fast")
+        fastGen = true;
     else if (arg.StartsWith("--size="))
     {
         var parts = arg[7..].Split('x');
@@ -13,5 +17,6 @@ foreach (var arg in args)
     }
 }
 
-var game = new TunnelTanks.Desktop.Game(terrainSize);
+var mode = fastGen ? LevelGenMode.Optimized : LevelGenMode.Deterministic;
+var game = new TunnelTanks.Desktop.Game(terrainSize, mode);
 game.Run();

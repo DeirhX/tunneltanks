@@ -116,8 +116,14 @@ public class Terrain
             }
     }
 
-    public void MaterializeTerrain(int? seed = null)
+    public void MaterializeTerrain(int? seed = null, bool parallel = false)
     {
+        if (parallel)
+        {
+            MaterializeTerrainParallel();
+            return;
+        }
+
         var rng = seed.HasValue ? new Random(seed.Value) : Random.Shared;
         for (int i = 0; i < _data.Length; i++)
         {
@@ -129,6 +135,46 @@ public class Terrain
                 _ => _data[i],
             };
         }
+    }
+
+    private void MaterializeTerrainParallel()
+    {
+        int chunkSize = 4096;
+        int length = _data.Length;
+        int chunks = (length + chunkSize - 1) / chunkSize;
+
+        Parallel.For(0, chunks, chunk =>
+        {
+            var rng = new Random();
+            int from = chunk * chunkSize;
+            int to = Math.Min(from + chunkSize, length);
+            for (int i = from; i < to; i++)
+            {
+                _data[i] = _data[i] switch
+                {
+                    TerrainPixel.LevelGenDirt => rng.Next(2) == 0 ? TerrainPixel.DirtHigh : TerrainPixel.DirtLow,
+                    TerrainPixel.LevelGenRock => TerrainPixel.Rock,
+                    TerrainPixel.LevelGenMark => TerrainPixel.Rock,
+                    _ => _data[i],
+                };
+            }
+        });
+    }
+
+    public void Fill(TerrainPixel value) => Array.Fill(_data, value);
+
+    public void DrawAllToSurfaceParallel(uint[] surface)
+    {
+        int w = Width, h = Height;
+        Parallel.For(0, h, y =>
+        {
+            int rowOffset = y * w;
+            for (int x = 0; x < w; x++)
+            {
+                var color = Pixel.GetColor(_data[rowOffset + x]);
+                surface[rowOffset + x] = color.ToArgb();
+            }
+        });
     }
 
     public ReadOnlySpan<TerrainPixel> Data => _data;

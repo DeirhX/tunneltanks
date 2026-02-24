@@ -48,12 +48,13 @@ public class World
         _regrowTimer.Start();
     }
 
-    public void Initialize(Terrain.Terrain generatedTerrain, Position[] spawns, int? materializeSeed = null)
+    public void Initialize(Terrain.Terrain generatedTerrain, Position[] spawns,
+        int? materializeSeed = null, bool parallelMaterialize = false)
     {
         for (int i = 0; i < generatedTerrain.Size.Area; i++)
             _terrain[i] = generatedTerrain[i];
 
-        _terrain.MaterializeTerrain(materializeSeed);
+        _terrain.MaterializeTerrain(materializeSeed, parallel: parallelMaterialize);
 
         for (int i = 0; i < spawns.Length; i++)
             _tankBases.AddBase(spawns[i], i);
