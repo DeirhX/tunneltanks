@@ -27,7 +27,7 @@ public class Game : IDisposable
     private readonly uint[] _worldPixels;
     private readonly uint[] _compositePixels;
     private readonly KeyboardController _p1Controller;
-    private readonly TwitchAI _p2AI;
+    private readonly BotTankAI _p2AI;
     public const int DefaultSeed = 42;
 
     private readonly DrawProfile _drawProfile = new();
@@ -61,7 +61,7 @@ public class Game : IDisposable
         _world = new World(_terrainSize);
         int? matSeed = parallel ? null : DefaultSeed + 1;
         _world.Initialize(terrain, spawns, materializeSeed: matSeed, parallelMaterialize: parallel);
-        _p2AI = new TwitchAI(seed: parallel ? null : DefaultSeed + 2);
+        _p2AI = new BotTankAI(seed: parallel ? null : DefaultSeed + 2);
 
         _worldPixels = new uint[_terrainSize.Area];
         _compositePixels = new uint[_terrainSize.Area];
@@ -114,7 +114,8 @@ public class Game : IDisposable
                                 AimDirection = aimDir ?? default,
                             };
                         }
-                        return _p2AI.GetInput(_world.TankList.Tanks[i]);
+                        var enemy = tanks.Count > 0 ? tanks[0] : null;
+                        return _p2AI.GetInput(_world.TankList.Tanks[i], enemy, _world.Terrain);
                     });
 
                     ProfileSection(ref _drawProfile.TerrainDraw,

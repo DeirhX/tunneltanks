@@ -187,16 +187,16 @@ public class ReplayTests
     }
 
     [Fact]
-    public void ScriptedReplay_P2TwitchAI_DeterministicWithSeed()
+    public void ScriptedReplay_P2BotTankAI_DeterministicWithSeed()
     {
         var world = CreateSeededWorld();
-        var ai1 = new TwitchAI(seed: 99);
-        var ai2 = new TwitchAI(seed: 99);
+        var ai1 = new BotTankAI(seed: 99);
+        var ai2 = new BotTankAI(seed: 99);
 
         for (int i = 0; i < 50; i++)
         {
-            var input1 = ai1.GetInput(world.TankList.Tanks[1]);
-            var input2 = ai2.GetInput(world.TankList.Tanks[1]);
+            var input1 = ai1.GetInput(world.TankList.Tanks[1], world.TankList.Tanks[0], world.Terrain);
+            var input2 = ai2.GetInput(world.TankList.Tanks[1], world.TankList.Tanks[0], world.Terrain);
             Assert.Equal(input1.MoveSpeed, input2.MoveSpeed);
             Assert.Equal(input1.ShootPrimary, input2.ShootPrimary);
         }

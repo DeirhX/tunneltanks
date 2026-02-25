@@ -43,7 +43,7 @@ Tunnerer.Core/
 │   └── WorldSectors.cs         # Spatial partitioning (64px buckets)
 ├── Input/
 │   ├── Controller.cs           # ControllerOutput struct
-│   └── TwitchAI.cs             # AI state machine
+│   └── BotTankAI.cs             # AI state machine
 ├── Gui/
 │   ├── Screen.cs               # Screen layout, viewports, GUI widgets, crosshair
 │   ├── TankView.cs             # Tank-centered world viewport
@@ -318,7 +318,7 @@ struct ControllerOutput
 }
 ```
 
-### TwitchAI
+### BotTankAI
 
 State machine for AI-controlled tanks:
 - **Start**: Initial delay at base

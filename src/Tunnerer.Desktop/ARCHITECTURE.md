@@ -31,7 +31,7 @@ Creates and runs `Game(terrainSize?)`.
 2. Set terrain size (defaults to render surface size if not overridden)
 3. Generate level: `ToastGenerator.Generate(terrainSize, seed: 42)`
 4. Initialize `World` with terrain, spawns, materialization seed
-5. Create `Screen`, `KeyboardController`, `TwitchAI(seed: 44)`
+5. Create `Screen`, `KeyboardController`, `BotTankAI(seed: 44)`
 6. Allocate pixel buffers: `worldPixels`, `compositePixels`, `screenPixels`
 7. Initial `Terrain.DrawAllToSurface(worldPixels)`
 
@@ -58,7 +58,7 @@ loop:
   World.Advance(getInput)
     → runs full simulation step
     → player 0: merged keyboard + mouse input
-    → player 1: TwitchAI output
+    → player 1: BotTankAI output
 
   Terrain.DrawChangesToSurface(worldPixels)
     → incremental terrain render
@@ -96,7 +96,7 @@ All random sources use deterministic seeds for reproducible behavior:
 |-----------|------|
 | `ToastGenerator` | `DefaultSeed` (42) |
 | `Terrain.MaterializeTerrain` | `DefaultSeed + 1` (43) |
-| `TwitchAI` | `DefaultSeed + 2` (44) |
+| `BotTankAI` | `DefaultSeed + 2` (44) |
 
 ## KeyboardController.cs — keyboard input
 
