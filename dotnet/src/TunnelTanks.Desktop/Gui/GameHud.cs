@@ -10,7 +10,7 @@ using TunnelTanks.Core.Entities;
 /// </summary>
 public class GameHud
 {
-    public const float BottomPanelHeight = 320f;
+    public const float BottomPanelHeight = 223f;
     private static readonly uint PanelBgU = ToAbgr(0.05f, 0.05f, 0.07f, 0.96f);
     private static readonly uint PanelTopLineU = ToAbgr(0.40f, 0.50f, 0.60f, 0.50f);
 
@@ -42,7 +42,7 @@ public class GameHud
     {
         var displaySize = ImGui.GetIO().DisplaySize;
         float viewW = displaySize.X;
-        float viewH = displaySize.Y - BottomPanelHeight;
+        float viewH = displaySize.Y;
 
         ImGui.SetNextWindowPos(Vector2.Zero, ImGuiCond.Always);
         ImGui.SetNextWindowSize(new Vector2(viewW, viewH), ImGuiCond.Always);
@@ -102,59 +102,23 @@ public class GameHud
     private void DrawBottomPanel()
     {
         var displaySize = ImGui.GetIO().DisplaySize;
-        float panelY = displaySize.Y - BottomPanelHeight;
+        var dl = ImGui.GetForegroundDrawList();
 
-        ImGui.SetNextWindowPos(new Vector2(0, panelY), ImGuiCond.Always);
-        ImGui.SetNextWindowSize(new Vector2(displaySize.X, BottomPanelHeight), ImGuiCond.Always);
+        const float eW = 245f, sW = 145f, mW = 230f, bW = 404f;
+        const float h = 223f;
+        const float stripW = eW + sW + mW + bW; // 1024
 
-        var flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize |
-                    ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoScrollbar |
-                    ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoCollapse |
-                    ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoBackground;
+        float startX = MathF.Floor((displaySize.X - stripW) * 0.5f);
+        float drawY = displaySize.Y - h;
 
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0f);
-
-        if (ImGui.Begin("##BottomPanel", flags))
-        {
-            var dl = ImGui.GetWindowDrawList();
-            float totalW = displaySize.X;
-            dl.AddRectFilled(new Vector2(0, panelY), new Vector2(totalW, displaySize.Y), PanelBgU);
-            dl.AddLine(new Vector2(0, panelY), new Vector2(totalW, panelY), PanelTopLineU, 2f);
-
-            // Source pixel widths (all 486px tall from same Y band):
-            const float srcEnergyW = 245f;
-            const float srcShieldW = 145f;
-            const float srcMatW = 230f;
-            const float srcBuildW = 404f;
-            const float srcH = 486f;
-            const float srcTotalW = srcEnergyW + srcShieldW + srcMatW + srcBuildW; // 1024
-
-            // Scale uniformly so the strip height fits the panel (with small margin)
-            float scale = (BottomPanelHeight - 8f) / srcH;
-
-            float contentW = srcTotalW * scale;
-            float startX = (totalW - contentW) * 0.5f;
-            float drawY = panelY + 4f;
-            float drawH = srcH * scale;
-
-            float x = startX;
-            float eW = srcEnergyW * scale;
-            float sW = srcShieldW * scale;
-            float mW = srcMatW * scale;
-            float bW = srcBuildW * scale;
-
-            dl.AddImage(_energyIconTex, new Vector2(x, drawY), new Vector2(x + eW, drawY + drawH));
-            x += eW;
-            dl.AddImage(_shieldIconTex, new Vector2(x, drawY), new Vector2(x + sW, drawY + drawH));
-            x += sW;
-            dl.AddImage(_panelFrameTex, new Vector2(x, drawY), new Vector2(x + mW, drawY + drawH));
-            x += mW;
-            dl.AddImage(_buildPanelTex, new Vector2(x, drawY), new Vector2(x + bW, drawY + drawH));
-        }
-
-        ImGui.End();
-        ImGui.PopStyleVar(2);
+        float x = startX;
+        dl.AddImage(_energyIconTex, new Vector2(x, drawY), new Vector2(x + eW, drawY + h));
+        x += eW;
+        dl.AddImage(_shieldIconTex, new Vector2(x, drawY), new Vector2(x + sW, drawY + h));
+        x += sW;
+        dl.AddImage(_panelFrameTex, new Vector2(x, drawY), new Vector2(x + mW, drawY + h));
+        x += mW;
+        dl.AddImage(_buildPanelTex, new Vector2(x, drawY), new Vector2(x + bW, drawY + h));
     }
 
     private static uint ToAbgr(float r, float g, float b, float a)
