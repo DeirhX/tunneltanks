@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Tunnerer.Core/Tunnerer.Core.csproj" />
+    <Project Path="src/Tunnerer.Desktop/Tunnerer.Desktop.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Tunnerer.Tests/Tunnerer.Tests.csproj" />
+  </Folder>
+</Solution>

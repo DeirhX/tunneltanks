@@ -1,0 +1,58 @@
+---
+description: How to build, run, and develop the TunnelTanks/Crust C++ project on Windows
+alwaysApply: true
+---
+
+# Build System
+
+This is a C++20 Windows project built with MSBuild (Visual Studio). Do NOT use CMake on Windows — CMakeLists.txt is for Linux/macOS only.
+
+## Build Command
+
+Use VS 2026 MSBuild. The exact command:
+
+```
+& "C:\Program Files\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe" "e:\Projects\New\tunnerer\legacy\crust.vcxproj" /p:Configuration=Debug /p:Platform=x64 /m /verbosity:minimal
+```
+
+- Debug output: `legacy\build\bin\Debug\crust.exe`
+- Release output: `legacy\build\bin\Release\tunneltanks.exe` (named differently)
+- Build config is in `legacy\config\Build.Defaults.props` (controls OutDir, IntDir)
+
+## Runtime Dependencies
+
+Before running `crust.exe`, these must be in `legacy\build\bin\Debug\`:
+- `nanogui.dll` — copy from `legacy\libs\nanogui\out\build\x64-Debug (default)\nanogui.dll`
+- `glfw3.dll` — copy from `legacy\libs\nanogui\out\build\x64-Debug (default)\ext_build\glfw\src\glfw3.dll`
+- `resources\fonts\broddmin_5x10.bmp` — copy from `legacy\resources\fonts\`
+
+## Project Structure
+
+- Toolset: v145 (VS 2026), SDK: 10.0.26100.0, Language: `/std:c++latest`
+- Precompiled header: `legacy/src/pch.h` (created by `legacy/src/pch.cpp`)
+- Unity build enabled (`EnableUnitySupport`)
+- Warnings as errors (`/WX`, `/W4`) — all warnings must be fixed, not suppressed
+- Preprocessor: `USE_SDL_GAMELIB`, `DEBUG_TRACE_LEVEL=5`, `NOMINMAX`
+
+## Solution Projects (crust.sln)
+
+| Project | Path | Type |
+|---------|------|------|
+| crust (main) | `legacy\crust.vcxproj` | Application |
+| SDL2 | `legacy\libs\sdl2\VisualC\SDL\SDL.vcxproj` | Static lib |
+| SDL2main | `legacy\libs\sdl2\VisualC\SDLmain\SDLmain.vcxproj` | Static lib |
+| nanogui | `legacy\libs\nanogui\nanogui.vcxproj` | DLL (pre-built, CMake-generated — MSBuild rebuild fails) |
+| ecs_test | `legacy\libs\ecs\untests\ecs_test.vcxproj` | Test executable |
+
+The nanogui vcxproj has a broken custom build step referencing a non-existent absolute path. It can't be rebuilt via MSBuild — use the pre-built DLL.
+
+## Git Submodules
+
+| Submodule | Path | Remote |
+|-----------|------|--------|
+| ecs.hpp | `legacy/libs/ecs` | `https://github.com/DeirhX/ecs.hpp.git` (branch: main) |
+| nanogui-sdl2 | `legacy/libs/nanogui` | `https://github.com/DeirhX/nanogui-sdl2.git` (branch: master) |
+
+When modifying files inside submodules, commit inside the submodule first, then stage+commit the submodule reference in the parent repo. Push submodules before pushing the parent.
+
+Submodules may need `git config --global --add safe.directory <path>` due to ownership mismatch.

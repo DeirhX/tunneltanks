@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="crust::Position">
+    <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+  </Type>
+  <Type Name="crust::Size">
+    <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+  </Type>
+  <Type Name="crust::Speed">
+    <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+  </Type>
+  <Type Name="crust::Vector">
+    <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+  </Type>
+  <Type Name="crust::Offset">
+    <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+  </Type>
+  <Type Name="crust::PositionF">
+    <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+  </Type>
+  <Type Name="crust::OffsetF">
+    <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+  </Type>
+  <Type Name="crust::SpeedF">
+    <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+  </Type>
+  <Type Name="crust::VectorF">
+    <DisplayString>{{ x={x}, y={y} }}</DisplayString>
+  </Type>
+  <Type Name="crust::Color">
+    <DisplayString>{{ r={r}, g={g}, b={b}, a={a} }}</DisplayString>
+  </Type>
+  <Type Name="crust::Rect">
+    <DisplayString>{{ pos={pos}, size={size} }}</DisplayString>
+  </Type>
+  <Type Name="crust::MaterialAmount">
+    <DisplayString>{{ dirt={first.amount}, minerals={second.amount} }}</DisplayString>
+  </Type>
+  <Type Name="crust::ReactorState">
+    <DisplayString>{{ energy={first.amount}, health={second.amount} }}</DisplayString>
+  </Type>
+  
+</AutoVisualizer>

@@ -1,25 +1,54 @@
-CMakeCache.txt
-CMakeFiles/*
-Makefile
-android/ant.properties
-android/bin/*
-android/gen/*
-android/libs/*
-android/local.properties
-android/obj/*
-cmake_install.cmake
-pack/*.cpack
-tunneltanks
-/SDL/docs/
-/Build/
-/build/
-/obj/
-*.vcxproj.user
-**/.vs/
-/packages/
-/sdl2/test/**/*.bmp
-/debug_*.bmp
-/sdl2/**/*.bmp
-/cmake-build-debug/**
-/.idea/**
+# Build output
+build/
+
+# Visual Studio
+.vs/
+*.suo
 *.user
+*.userosscache
+*.sln.docstates
+*.opendb
+*.db
+*.ipch
+
+# C++ intermediate
+*.obj
+*.pch
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.iobj
+*.ipdb
+*.log
+*.tlog
+*.lastbuildstate
+*.recipe
+*.FileListAbsolute.txt
+
+# .NET
+**/obj/
+**/bin/
+*.nupkg
+*.snupkg
+project.assets.json
+
+# NuGet
+**/packages/
+
+# Profiling
+VTune Profiler Results/
+
+# Debug artifacts
+debug_*.bmp
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# IDE
+*.swp
+*~
+.idea/

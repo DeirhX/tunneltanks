@@ -1,0 +1,23 @@
+# Normalize line endings: LF in repo, CRLF in Windows working copy
+* text=auto
+
+# Force LF for shell scripts (cross-platform compat)
+*.sh text eol=lf
+
+# Force CRLF for Windows-specific files
+*.sln text eol=crlf
+*.vcxproj text eol=crlf
+*.vcxproj.filters text eol=crlf
+*.props text eol=crlf
+*.targets text eol=crlf
+*.bat text eol=crlf
+
+# Binary files
+*.bmp binary
+*.png binary
+*.jpg binary
+*.exe binary
+*.dll binary
+*.lib binary
+*.pdb binary
+*.obj binary

@@ -1,0 +1,507 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{2bec0e26-c4c7-4941-abaf-a7a2598710dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\draw">
+      <UniqueIdentifier>{dc449966-8eec-4ca1-9645-b36d258feb90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\system">
+      <UniqueIdentifier>{cdf7d363-2a5e-41e2-a730-2dd0fade8d7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ai">
+      <UniqueIdentifier>{1af2aa61-44c2-412a-82ba-27609ae744f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\game_entity">
+      <UniqueIdentifier>{906cc533-fa4c-4f62-8198-653d69786463}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sdl_interface">
+      <UniqueIdentifier>{4e67f530-6514-4333-a5cb-f806424c4517}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\draw\fonts">
+      <UniqueIdentifier>{d4faa46d-c8aa-4fca-ae95-0081bbfa39cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\draw\shapes">
+      <UniqueIdentifier>{00147b0f-82eb-4495-a394-9ed3cfc6f956}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\draw\gui">
+      <UniqueIdentifier>{1ad5f5d5-d9a1-49b8-bad6-5e697d05464c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\terrain">
+      <UniqueIdentifier>{684fc746-a32c-4590-97fe-45bd00fc7ff2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\terrain\generators">
+      <UniqueIdentifier>{a902ab77-261a-4b60-979e-8934b705060d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\machinery">
+      <UniqueIdentifier>{d6045a99-e0a1-4e2b-bd5b-060e474c782f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\phys">
+      <UniqueIdentifier>{c40f99e2-ca32-4a21-91fd-de98a72478d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\draw\sprites">
+      <UniqueIdentifier>{6a4601b7-be3f-4e73-84fd-91c854b0edbe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\world">
+      <UniqueIdentifier>{81e037a0-95f0-4b1a-b4b2-e27ef3256469}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\system\containers">
+      <UniqueIdentifier>{0ac64f55-bac4-44ec-af62-11e86873b1ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\component">
+      <UniqueIdentifier>{fd2b9ce9-1517-41c3-9bf5-46fc62be7250}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\exceptions.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
+    <ClCompile Include="src\projectile_list.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gui_widgets.cpp">
+      <Filter>src\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\bitmap.cpp">
+      <Filter>sdl_interface</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\control.cpp">
+      <Filter>sdl_interface</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\events.cpp">
+      <Filter>sdl_interface</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\logging.cpp">
+      <Filter>sdl_interface</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\sdldata.cpp">
+      <Filter>sdl_interface</Filter>
+    </ClCompile>
+    <ClCompile Include="src\level_view.cpp">
+      <Filter>src\ai</Filter>
+    </ClCompile>
+    <ClCompile Include="src\screen.cpp">
+      <Filter>src\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tank.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\memalloc.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
+    <ClCompile Include="src\random.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgenutil.cpp">
+      <Filter>src\terrain\generators</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgen.cpp">
+      <Filter>src\terrain\generators</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bitmaps.cpp">
+      <Filter>src\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\weapon.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\sdl_renderer.cpp">
+      <Filter>sdl_interface</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\sdl_system.cpp">
+      <Filter>sdl_interface</Filter>
+    </ClCompile>
+    <ClCompile Include="src\color_palette.cpp">
+      <Filter>src\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\font_renderer.cpp">
+      <Filter>src\draw\fonts</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bitmap_loader.cpp">
+      <Filter>src\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mymath.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
+    <ClCompile Include="src\shape_renderer.cpp">
+      <Filter>src\draw\shapes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render_surface.cpp">
+      <Filter>src\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamelib\SDL\sdl_controller.cpp">
+      <Filter>sdl_interface</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tank_turret.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\duration.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgen_braid.cpp">
+      <Filter>src\terrain\generators</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgen_maze.cpp">
+      <Filter>src\terrain\generators</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgen_simple.cpp">
+      <Filter>src\terrain\generators</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelgen_toast.cpp">
+      <Filter>src\terrain\generators</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tank_list.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\resources.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tank_base.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sprite.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sprite_list.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
+    <ClCompile Include="src\swarm_ai.cpp">
+      <Filter>src\ai</Filter>
+    </ClCompile>
+    <ClCompile Include="src\twitch_ai.cpp">
+      <Filter>src\ai</Filter>
+    </ClCompile>
+    <ClCompile Include="src\item_list_adaptor.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
+    <ClCompile Include="src\controllable.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\swarmer_creature.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\machine.cpp">
+      <Filter>src\machinery</Filter>
+    </ClCompile>
+    <ClCompile Include="src\machine_list.cpp">
+      <Filter>src\machinery</Filter>
+    </ClCompile>
+    <ClCompile Include="src\machine_materializer.cpp">
+      <Filter>src\machinery</Filter>
+    </ClCompile>
+    <ClCompile Include="src\link.cpp">
+      <Filter>src\machinery</Filter>
+    </ClCompile>
+    <ClCompile Include="src\collision_solver.cpp">
+      <Filter>src\phys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tank_sprites.cpp">
+      <Filter>src\draw\sprites</Filter>
+    </ClCompile>
+    <ClCompile Include="src\projectiles.cpp">
+      <Filter>src\game_entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world.cpp">
+      <Filter>src\world</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scene.cpp">
+      <Filter>src\world</Filter>
+    </ClCompile>
+    <ClCompile Include="src\entity.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
+    <ClCompile Include="src\terrain.cpp">
+      <Filter>src\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="src\terrain_adjacency.cpp">
+      <Filter>src\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="src\terrain_pixel_surface.cpp">
+      <Filter>src\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer.cpp">
+      <Filter>src\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pch.cpp" />
+    <ClCompile Include="src\collision_component.cpp">
+      <Filter>src\component</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gui.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world_sector.cpp">
+      <Filter>src\world</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vector_2d.cpp">
+      <Filter>src\system\containers</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\gamelib\SDL\require_sdl.h">
+      <Filter>sdl_interface</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamelib\SDL\sdldata.h">
+      <Filter>sdl_interface</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamelib\SDL\control.h">
+      <Filter>sdl_interface</Filter>
+    </ClInclude>
+    <ClInclude Include="src\levelgen.h">
+      <Filter>src\terrain\generators</Filter>
+    </ClInclude>
+    <ClInclude Include="src\levelgenutil.h">
+      <Filter>src\terrain\generators</Filter>
+    </ClInclude>
+    <ClInclude Include="src\screen.h">
+      <Filter>src\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\iterators.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\containers.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\exceptions.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\memalloc.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\parallelism.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\random.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\types.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tweak.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\trace.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamelib.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\level_view.h">
+      <Filter>src\ai</Filter>
+    </ClInclude>
+    <ClInclude Include="src\projectile_list.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tank.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\controller.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gui_widgets.h">
+      <Filter>src\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bitmaps.h">
+      <Filter>src\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamelib\SDL\bitmap.h">
+      <Filter>sdl_interface</Filter>
+    </ClInclude>
+    <ClInclude Include="src\containers_queue.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mymath.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\weapon.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamelib\SDL\sdl_renderer.h">
+      <Filter>sdl_interface</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamelib\SDL\sdl_system.h">
+      <Filter>sdl_interface</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_config.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game_system.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\color_palette.h">
+      <Filter>src\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\color.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\font_renderer.h">
+      <Filter>src\draw\fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bitmap_loader.h">
+      <Filter>src\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\shape_renderer.h">
+      <Filter>src\draw\shapes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render_surface.h">
+      <Filter>src\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamelib\SDL\sdl_controller.h">
+      <Filter>sdl_interface</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tank_turret.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\duration.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\levelgen_braid.h">
+      <Filter>src\terrain\generators</Filter>
+    </ClInclude>
+    <ClInclude Include="src\levelgen_maze.h">
+      <Filter>src\terrain\generators</Filter>
+    </ClInclude>
+    <ClInclude Include="src\levelgen_simple.h">
+      <Filter>src\terrain\generators</Filter>
+    </ClInclude>
+    <ClInclude Include="src\levelgen_toast.h">
+      <Filter>src\terrain\generators</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tank_list.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\resources.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tank_base.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core_concepts.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sprite_list.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sprite.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\item_list_adaptor.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\swarm_ai.h">
+      <Filter>src\ai</Filter>
+    </ClInclude>
+    <ClInclude Include="src\twitch_ai.h">
+      <Filter>src\ai</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ai_controller.h">
+      <Filter>src\ai</Filter>
+    </ClInclude>
+    <ClInclude Include="src\controllable.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\swarmer_creature.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\machine.h">
+      <Filter>src\machinery</Filter>
+    </ClInclude>
+    <ClInclude Include="src\machine_list.h">
+      <Filter>src\machinery</Filter>
+    </ClInclude>
+    <ClInclude Include="src\machine_materializer.h">
+      <Filter>src\machinery</Filter>
+    </ClInclude>
+    <ClInclude Include="src\link.h">
+      <Filter>src\machinery</Filter>
+    </ClInclude>
+    <ClInclude Include="src\collision_solver.h">
+      <Filter>src\phys</Filter>
+    </ClInclude>
+    <ClInclude Include="src\raycaster.h">
+      <Filter>src\phys</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tank_sprites.h">
+      <Filter>src\draw\sprites</Filter>
+    </ClInclude>
+    <ClInclude Include="src\projectiles.h">
+      <Filter>src\game_entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world.h">
+      <Filter>src\world</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scene.h">
+      <Filter>src\world</Filter>
+    </ClInclude>
+    <ClInclude Include="src\entity.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\flat_set_map.h">
+      <Filter>src\system\containers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\terrain.h">
+      <Filter>src\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="src\terrain_pixel.h">
+      <Filter>src\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="src\terrain_algorithm.h">
+      <Filter>src\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="src\terrain_adjacency.h">
+      <Filter>src\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="src\terrain_pixel_surface.h">
+      <Filter>src\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="src\levelgen_type.h">
+      <Filter>src\terrain\generators</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer.h">
+      <Filter>src\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\collision_component.h">
+      <Filter>src\component</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gui.h">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\position_component.h">
+      <Filter>src\component</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world_sector.h">
+      <Filter>src\world</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vector_2d.h">
+      <Filter>src\system\containers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render_component.h">
+      <Filter>src\component</Filter>
+    </ClInclude>
+    <ClInclude Include="src\image_data.h">
+      <Filter>src\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\line_component.h">
+      <Filter>src\component</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".clang-format" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="Debugging.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="to_do.txt" />
+  </ItemGroup>
+</Project>
