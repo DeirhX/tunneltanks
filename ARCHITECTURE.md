@@ -1,94 +1,110 @@
-# TunnelTanks Architecture
+# C# Rewrite Architecture (`root`)
 
-A 2D tank combat game where players dig through procedurally generated caverns, collect resources, build machines, and fight. Two parallel codebases implement the same game:
+A port of the C++ Tunnerer engine to C# / .NET 10. Uses Silk.NET for SDL2 bindings. The simulation logic is platform-independent (`Tunnerer.Core`); the platform layer is isolated (`Tunnerer.Desktop`).
 
-| Codebase | Path | Stack | Status |
-|----------|------|-------|--------|
-| C++ (original) | `src/`, `crust.sln` | C++20, MSVC, SDL2, ecs.hpp, NanoGUI | Complete, all features |
-| C# (rewrite) | `dotnet/` | .NET 10, Silk.NET (SDL2), xUnit | Core simulation + rendering |
-
-## Game overview
-
-- **Terrain**: A large grid of `TerrainPixel` values (dirt, rock, blank, concrete, energy, etc.)
-- **Level generation**: "Toast" algorithm — MST of random points → Bresenham lines → random expansion → cellular automata smoothing
-- **Tanks**: Move through caverns, dig through dirt (7×7 minus corners), shoot projectiles
-- **Torch mechanic**: Shooting in the movement direction allows moving through dirt at full speed; otherwise movement pauses on dig frames. Rock is only destructible while shooting.
-- **Bases**: Fixed structures that recharge tanks and absorb collected resources
-- **Machines**: Harvesters (collect energy) and Chargers (provide power) built by tanks
-- **Links**: Power network connecting bases, machines, and tanks via line-of-sight
-- **Regrow**: Blank/scorched terrain slowly recovers to dirt via parallel cellular automata
-
-## Frame loop
-
-Both codebases follow the same structure:
-
-```
-1. Poll input (keyboard/mouse/gamepad → ControllerOutput)
-2. World.Advance():
-   a. RegrowPass (parallel, staged writes)
-   b. Projectiles.Advance
-   c. Tanks.Advance (movement, digging, shooting, turret)
-   d. Machines.Advance
-   e. Sprites.Advance
-   f. Bases.Advance
-   g. LinkMap.Advance
-3. Render:
-   a. Terrain.DrawChangesToSurface (incremental via change list)
-   b. Copy terrain → composite buffer
-   c. Draw entities onto composite (links, machines, projectiles, sprites, tanks)
-   d. Screen.Draw: viewport blitting, GUI widgets → screen buffer
-   e. SDL_UpdateTexture → SDL_RenderCopy → SDL_RenderPresent
-```
-
-## Key design decisions
-
-- **Software rendering**: All pixel operations in CPU arrays; one `SDL_UpdateTexture` per frame uploads to GPU. No shaders or GPU drawing.
-- **Terrain as source of truth**: Terrain pixels determine collision, digging, resource collection. Entities don't own collision shapes — they test against terrain.
-- **Change list**: Only modified terrain pixels are redrawn each frame, making terrain rendering O(changes) not O(width × height).
-- **Staged writes for parallelism**: Parallel passes (regrow, smoothing) write to thread-local buffers, then commit sequentially. This avoids data races without locks.
-- **Deterministic seeds**: Generator, materialization, and AI accept optional seeds for reproducible testing.
-
-## Profiling
-
-Both versions print `[Profile]` (simulation) and `[Draw]` (rendering) timings every 100 frames:
-
-```
-[Profile] regrow=X.XXX proj=X.XXX tanks=X.XXX harv=X.XXX spr=X.XXX bases=X.XXX links=X.XXX | total=X.XXX ms
-[Draw]    terrain=X.XXX objects=X.XXX screen=X.XXX | total=X.XXX ms
-```
-
-C++ additionally profiles `terrain_advance` (change list processing) and `ecs` (entity system overhead).
-
-## Directory structure
+## Solution structure
 
 ```
 tunnerer/
-├── ARCHITECTURE.md          ← you are here
-├── .gitignore
-├── crust.sln                # C++ solution
-├── crust.vcxproj            # C++ main project
-├── src/                     # C++ source (see src/ARCHITECTURE.md)
-│   └── gamelib/sdl/         # SDL platform layer
-├── libs/                    # C++ submodules
-│   ├── ecs/                 # ecs.hpp (entity-component system)
-│   ├── nanogui/             # NanoGUI (debug UI, pre-built DLL)
-│   └── sdl2/                # SDL2 (static lib)
-├── config/                  # C++ MSBuild property sheets
-├── resources/               # Fonts, bitmaps
-├── dotnet/                  # C# rewrite (see dotnet/ARCHITECTURE.md)
-│   ├── src/
-│   │   ├── TunnelTanks.Core/     # Simulation (platform-independent)
-│   │   └── TunnelTanks.Desktop/  # SDL rendering + input
-│   └── tests/
-│       └── TunnelTanks.Tests/    # xUnit (141 tests)
-└── build/                   # Output (gitignored)
+├── ARCHITECTURE.md              ← you are here
+├── Tunnerer.slnx
+├── src/
+│   ├── Tunnerer.Core/        # Simulation, entities, terrain, GUI (no SDL dependency)
+│   │   └── ARCHITECTURE.md      # Detailed design
+│   └── Tunnerer.Desktop/     # SDL window, rendering, keyboard input, game loop
+│       └── ARCHITECTURE.md      # Detailed design
+└── tests/
+    └── Tunnerer.Tests/       # xUnit tests (141 tests)
 ```
 
-## Build
+## Design principles
 
-See `.cursor/skills/build-tunneltanks/SKILL.md` for exact commands. Quick reference:
+- **Core has no platform dependencies**: `Tunnerer.Core` operates on `uint[]` pixel buffers and `ControllerOutput` structs. It knows nothing about SDL, windows, or real input devices.
+- **Desktop is a thin shell**: `Tunnerer.Desktop` creates the SDL window, polls events, maps keyboard/mouse to `ControllerOutput`, and uploads the final pixel buffer to a texture.
+- **Faithful C++ port**: Subsystem execution order, terrain pixel types, movement mechanics, dig shapes, torch logic, color palette, and profiling categories all match the C++ original.
+- **Deterministic seeds**: `ToastGenerator`, `Terrain.MaterializeTerrain`, and `TwitchAI` accept optional `int? seed` parameters for reproducible maps and AI behavior.
 
-- **C++ Release**: `MSBuild.exe crust.vcxproj /p:Configuration=Release /p:Platform=x64`
-- **C# Release**: `dotnet build --configuration Release` (from `dotnet/`)
-- **C# Tests**: `dotnet test --configuration Release` (from `dotnet/`)
-- **C# Large map**: `dotnet run --project src/TunnelTanks.Desktop -- --size=1000x500`
+## Frame loop (`Game.Run`)
+
+```
+while (!quit):
+  1. SdlRenderer.PollEvents()          → resize, close
+  2. KeyboardController.Update()       → ControllerOutput (keyboard)
+  3. SdlRenderer.GetMouseState()       → aim direction + mouse shoot
+  4. TwitchAI.GetOutput()              → ControllerOutput (AI)
+  5. World.Advance(getInput)           → full simulation step
+  6. Terrain.DrawChangesToSurface()    → incremental terrain render
+  7. Copy worldPixels → compositePixels
+  8. Draw entities → compositePixels   (links, machines, projectiles, sprites, tanks)
+  9. Screen.Draw(composite → screen)   → viewports, GUI widgets
+  10. SdlRenderer.RenderFrame(screen)  → SDL_UpdateTexture → present
+  11. Profile report every 100 frames
+  12. Frame pacing (24 FPS target)
+```
+
+## Simulation order (`World.Advance`)
+
+Matches the C++ exactly:
+
+1. **RegrowPass** — dirt recovery via cellular automata
+2. **Projectiles** — movement, terrain impact, explosions
+3. **Tanks** — input → turret → movement → dig → shoot
+4. **Machines** — harvest energy, charge reactor
+5. **Sprites** — decrement lifetime, remove expired
+6. **Bases** — reactor recharge
+7. **LinkMap** — power grid solve (Bresenham visibility)
+
+## Rendering pipeline
+
+```
+Terrain._data
+    ↓ DrawChangesToSurface (change list)
+worldPixels[w×h]
+    ↓ Array.Copy
+compositePixels[w×h]
+    ↓ Draw entities (in painter's order)
+compositePixels[w×h]
+    ↓ Screen.Draw (viewport blit + GUI)
+screenPixels[320×200]
+    ↓ SdlRenderer.RenderFrame
+SDL_Texture (ARGB8888)
+    ↓ SDL_RenderCopy (nearest-neighbor upscale)
+Window
+```
+
+The composite buffer prevents entity rendering from corrupting the terrain surface, which would cause ghosting artifacts.
+
+## Key differences from C++
+
+| Area | C++ | C# |
+|------|-----|-----|
+| ECS | `ecs.hpp` library with components/aspects | No ECS; entities are plain classes |
+| Parallelism | `parallel_for` + staged writes | `Parallel.For` in `RegrowPass` and level gen |
+| Surface types | `WorldRenderSurface` with change lists | `uint[]` arrays; change list on `Terrain` only |
+| Input | Keyboard, mouse, gamepad controllers | Keyboard + mouse (no gamepad yet) |
+| Level generators | 4 (Simple, Maze, Braid, Toast) | 1 (Toast only) |
+| GUI framework | Widgets via `gui_widgets.h` | Inline in `Screen.cs` |
+| Memory | Custom allocators, `Container2D` | Managed arrays, `Span<T>` |
+
+## Dependencies
+
+- **Silk.NET.SDL** — SDL2 P/Invoke bindings (window, renderer, texture, input)
+- **xUnit** — test framework
+- **.NET 10** — target framework
+
+## Tests
+
+141 tests across 10 files covering:
+
+| File | Coverage |
+|------|----------|
+| `CollisionTests` | CollisionSolver, pixel blocking queries |
+| `TerrainTests` | Terrain grid, change list, materialization |
+| `TerrainPixelTests` | Pixel classification (IsDirt, IsBlocking, etc.) |
+| `LevelGenTests` | Toast generator, connectivity, border walls |
+| `TypeTests` | Position, Offset, Size, VectorF, Rect |
+| `ResourceTests` | Reactor, MaterialContainer |
+| `GuiLayoutTests` | Screen layout for 1P and 2P modes |
+| `WorldIntegrationTests` | World.Advance, level init, draw pipeline |
+| `ReplayTests` | Deterministic seeded replays (map + simulation) |
+| `TankMovementTests` | Movement, digging, torch, corridor, crosshair |

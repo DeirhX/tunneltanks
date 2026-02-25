@@ -1,6 +1,6 @@
 ---
 description: C++ conformance rules and known issues for MSVC v145 (VS 2026)
-globs: src/**/*.h, src/**/*.cpp
+globs: legacy/src/**/*.h, legacy/src/**/*.cpp
 alwaysApply: false
 ---
 

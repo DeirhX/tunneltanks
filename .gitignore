@@ -27,8 +27,8 @@ build/
 *.FileListAbsolute.txt
 
 # .NET
-dotnet/**/obj/
-dotnet/**/bin/
+**/obj/
+**/bin/
 *.nupkg
 *.snupkg
 project.assets.json
