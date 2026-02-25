@@ -187,7 +187,8 @@ public class Game : IDisposable
             energyIcon: Load("energy_icon.png"),
             shieldIcon: Load("shield_icon.png"),
             panelFrame: Load("panel_frame.png"),
-            buildPanel: Load("build_panel.png"));
+            buildPanel: Load("build_panel.png"),
+            digitStrip: _textures.LoadTexture(Path.Combine(baseDir, "digits.png")));
     }
 
     private DirectionF? ComputeAimDirection(IReadOnlyList<Core.Entities.Tank> tanks)

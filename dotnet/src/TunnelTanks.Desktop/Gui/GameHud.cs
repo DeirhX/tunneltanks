@@ -5,37 +5,39 @@ using ImGuiNET;
 using TunnelTanks.Core;
 using TunnelTanks.Core.Entities;
 
-/// <summary>
-/// Bitmap-only HUD composition based on extracted reference sprites.
-/// </summary>
 public class GameHud
 {
     public const float BottomPanelHeight = 223f;
-    private static readonly uint PanelBgU = ToAbgr(0.05f, 0.05f, 0.07f, 0.96f);
-    private static readonly uint PanelTopLineU = ToAbgr(0.40f, 0.50f, 0.60f, 0.50f);
 
     private nint _energyIconTex, _shieldIconTex;
     private nint _panelFrameTex, _buildPanelTex;
+    private nint _digitStripTex;
+
+    private const int DigitCount = 10;
+    private const int DigitCellW = 17;
+    private const int DigitCellH = 20;
+    private const int DigitStripW = DigitCellW * DigitCount; // 170
+    private const float DigitSpacing = 1f;
 
     public (float x, float y, float w, float h) ViewportRect { get; private set; }
     public (float x, float y)? CrosshairScreenPos { get; set; }
 
-    public void Init(nint energyIcon, nint shieldIcon, nint panelFrame, nint buildPanel)
+    public void Init(nint energyIcon, nint shieldIcon, nint panelFrame, nint buildPanel, nint digitStrip)
     {
         _energyIconTex = energyIcon;
         _shieldIconTex = shieldIcon;
         _panelFrameTex = panelFrame;
         _buildPanelTex = buildPanel;
+        _digitStripTex = digitStrip;
     }
 
     public void Draw(nint gameTextureId, int texW, int texH, Tank player, World world, float deltaTime)
     {
-        _ = player;
         _ = world;
         _ = deltaTime;
         DrawGameViewport(gameTextureId, texW, texH);
         DrawCrosshair();
-        DrawBottomPanel();
+        DrawBottomPanel(player);
     }
 
     private void DrawGameViewport(nint gameTextureId, int texW, int texH)
@@ -99,7 +101,7 @@ public class GameHud
         dl.AddLine(new Vector2(pos.x, pos.y + gap), new Vector2(pos.x, pos.y + armLen), col, 2f);
     }
 
-    private void DrawBottomPanel()
+    private void DrawBottomPanel(Tank player)
     {
         var displaySize = ImGui.GetIO().DisplaySize;
         var dl = ImGui.GetForegroundDrawList();
@@ -119,6 +121,48 @@ public class GameHud
         dl.AddImage(_panelFrameTex, new Vector2(x, drawY), new Vector2(x + mW, drawY + h));
         x += mW;
         dl.AddImage(_buildPanelTex, new Vector2(x, drawY), new Vector2(x + bW, drawY + h));
+
+        // Energy value: inside the green label plate below "ENERGY" text
+        int energy = player.Reactor.Energy;
+        float plateX = startX + 105f;
+        float plateW = 130f;
+        float plateY = drawY + 168f;
+        DrawNumberCentered(dl, energy, plateX, plateY, plateW);
+
+        // Shield/health value: inside the blue label plate below "SHIELD" text
+        int health = player.Reactor.Health;
+        float sPlateX = startX + eW + 10f;
+        float sPlateW = 125f;
+        float sPlateY = drawY + 166f;
+        DrawNumberCentered(dl, health, sPlateX, sPlateY, sPlateW);
+    }
+
+    private void DrawNumberCentered(ImDrawListPtr dl, int value, float areaX, float areaY, float areaW)
+    {
+        string text = value.ToString();
+        float totalW = text.Length > 0
+            ? text.Length * DigitCellW + (text.Length - 1) * DigitSpacing
+            : 0f;
+        float x = MathF.Floor(areaX + (areaW - totalW) * 0.5f);
+        float y = MathF.Floor(areaY);
+
+        foreach (char c in text)
+        {
+            if (c is >= '0' and <= '9')
+            {
+                int idx = c - '0';
+                // Half-texel inset prevents sampling bleed from neighbor digits.
+                float texelU = 0.5f / DigitStripW;
+                float u0 = (float)(idx * DigitCellW) / DigitStripW + texelU;
+                float u1 = (float)((idx + 1) * DigitCellW) / DigitStripW - texelU;
+                dl.AddImage(_digitStripTex,
+                    new Vector2(x, y),
+                    new Vector2(x + DigitCellW, y + DigitCellH),
+                    new Vector2(u0, 0f),
+                    new Vector2(u1, 1f));
+            }
+            x += DigitCellW + DigitSpacing;
+        }
     }
 
     private static uint ToAbgr(float r, float g, float b, float a)

@@ -22,11 +22,11 @@ public sealed unsafe class TextureManager : IDisposable
     /// <summary>
     /// Load a PNG/JPG from disk and return the GL texture ID (castable to nint for ImGui).
     /// </summary>
-    public nint LoadTexture(string path)
+    public nint LoadTexture(string path, bool linear = false)
     {
         using var stream = File.OpenRead(path);
         var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
-        return CreateGlTexture(image.Data, image.Width, image.Height);
+        return CreateGlTexture(image.Data, image.Width, image.Height, linear);
     }
 
     /// <summary>
@@ -37,12 +37,13 @@ public sealed unsafe class TextureManager : IDisposable
         return CreateGlTexture(rgba, width, height);
     }
 
-    private nint CreateGlTexture(byte[] pixels, int width, int height)
+    private nint CreateGlTexture(byte[] pixels, int width, int height, bool linear = false)
     {
         uint tex = _gl.GenTexture();
         _gl.BindTexture(TextureTarget.Texture2D, tex);
-        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Nearest);
-        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Nearest);
+        var filter = linear ? GLEnum.Linear : GLEnum.Nearest;
+        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)filter);
+        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)filter);
         _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
         _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
 
