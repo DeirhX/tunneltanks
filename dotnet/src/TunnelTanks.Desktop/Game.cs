@@ -19,6 +19,7 @@ public class Game : IDisposable
     private readonly SdlRenderer _renderer;
     private readonly GL _gl;
     private readonly ImGuiController _imgui;
+    private readonly TextureManager _textures;
     private readonly GameHud _hud;
 
     private readonly Size _terrainSize;
@@ -45,7 +46,9 @@ public class Game : IDisposable
 
         _imgui = new ImGuiController(_gl, _renderer.Sdl, _renderer.NativeWindow,
             windowSize.X, windowSize.Y);
+        _textures = new TextureManager(_gl);
         _hud = new GameHud();
+        LoadHudSprites();
 
         var modeLabel = parallel ? "optimized" : "deterministic";
         Console.WriteLine($"Generating terrain {_terrainSize.X}x{_terrainSize.Y} ({modeLabel}, seed={DefaultSeed})...");
@@ -168,11 +171,23 @@ public class Game : IDisposable
             else
                 _hud.CrosshairScreenPos = null;
 
-            _hud.Draw((nint)_imgui.GameTextureId, _terrainSize.X, _terrainSize.Y, player, _world);
+            _hud.Draw((nint)_imgui.GameTextureId, _terrainSize.X, _terrainSize.Y, player, _world, dt);
         }
 
         _imgui.Render();
         _renderer.SwapWindow();
+    }
+
+    private void LoadHudSprites()
+    {
+        string baseDir = Path.Combine(AppContext.BaseDirectory, "resources", "hud");
+        nint Load(string name) => _textures.LoadTexture(Path.Combine(baseDir, name));
+
+        _hud.Init(
+            energyIcon: Load("energy_icon.png"),
+            shieldIcon: Load("shield_icon.png"),
+            panelFrame: Load("panel_frame.png"),
+            buildPanel: Load("build_panel.png"));
     }
 
     private DirectionF? ComputeAimDirection(IReadOnlyList<Core.Entities.Tank> tanks)
@@ -219,6 +234,7 @@ public class Game : IDisposable
 
     public void Dispose()
     {
+        _textures.Dispose();
         _imgui.Dispose();
         _renderer.Dispose();
         GC.SuppressFinalize(this);
