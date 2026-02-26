@@ -31,7 +31,8 @@ public sealed unsafe class ImGuiController : IDisposable
     private uint _eboHandle;
     private uint _vaoHandle;
 
-    private uint _gameTexture;
+    private readonly uint[] _gameTextures = new uint[2];
+    private int _gameTexIndex;
     private int _gameTexW;
     private int _gameTexH;
 
@@ -40,7 +41,7 @@ public sealed unsafe class ImGuiController : IDisposable
     private bool _disposed;
 
     public GL Gl => _gl;
-    public uint GameTextureId => _gameTexture;
+    public uint GameTextureId => _gameTextures[_gameTexIndex];
 
     public ImGuiController(GL gl, Sdl sdl, Window* window, int windowW, int windowH)
     {
@@ -140,22 +141,25 @@ public sealed unsafe class ImGuiController : IDisposable
         RenderDrawData(ImGui.GetDrawData());
     }
 
-    public void EnsureGameTexture(int width, int height)
+    public void EnsureGameTextures(int width, int height)
     {
-        if (_gameTexture != 0 && _gameTexW == width && _gameTexH == height)
+        if (_gameTextures[0] != 0 && _gameTexW == width && _gameTexH == height)
             return;
 
-        if (_gameTexture != 0)
-            _gl.DeleteTexture(_gameTexture);
+        for (int i = 0; i < 2; i++)
+        {
+            if (_gameTextures[i] != 0)
+                _gl.DeleteTexture(_gameTextures[i]);
 
-        _gameTexture = _gl.GenTexture();
-        _gl.BindTexture(TextureTarget.Texture2D, _gameTexture);
-        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Nearest);
-        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Nearest);
-        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
-        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
-        _gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8,
-            (uint)width, (uint)height, 0, GL_PixelFormat.Bgra, GL_PixelType.UnsignedByte, null);
+            _gameTextures[i] = _gl.GenTexture();
+            _gl.BindTexture(TextureTarget.Texture2D, _gameTextures[i]);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Nearest);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Nearest);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
+            _gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8,
+                (uint)width, (uint)height, 0, GL_PixelFormat.Bgra, GL_PixelType.UnsignedByte, null);
+        }
         _gl.BindTexture(TextureTarget.Texture2D, 0);
 
         _gameTexW = width;
@@ -164,14 +168,16 @@ public sealed unsafe class ImGuiController : IDisposable
 
     public void UploadGamePixels(uint[] pixels, int width, int height)
     {
-        EnsureGameTexture(width, height);
-        _gl.BindTexture(TextureTarget.Texture2D, _gameTexture);
+        EnsureGameTextures(width, height);
+        int uploadIdx = 1 - _gameTexIndex;
+        _gl.BindTexture(TextureTarget.Texture2D, _gameTextures[uploadIdx]);
         fixed (uint* ptr = pixels)
         {
             _gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0,
                 (uint)width, (uint)height, GL_PixelFormat.Bgra, GL_PixelType.UnsignedByte, ptr);
         }
         _gl.BindTexture(TextureTarget.Texture2D, 0);
+        _gameTexIndex = uploadIdx;
     }
 
     private void CreateDeviceObjects()
@@ -415,7 +421,8 @@ void main() {
         ImGui.DestroyContext();
 
         if (_fontTexture != 0) _gl.DeleteTexture(_fontTexture);
-        if (_gameTexture != 0) _gl.DeleteTexture(_gameTexture);
+        for (int i = 0; i < 2; i++)
+            if (_gameTextures[i] != 0) _gl.DeleteTexture(_gameTextures[i]);
         if (_shaderProgram != 0) _gl.DeleteProgram(_shaderProgram);
         if (_vboHandle != 0) _gl.DeleteBuffer(_vboHandle);
         if (_eboHandle != 0) _gl.DeleteBuffer(_eboHandle);

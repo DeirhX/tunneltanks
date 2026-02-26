@@ -25,6 +25,10 @@ public static class Tweaks
         public static readonly Size WindowSize = new(1920, 1200);
         public static readonly Size RenderSurfaceSize = new(320, 200);
         public const float DrawStaticFuelThreshold = 0.2f;
+        public const int PixelScale = 6;
+        public const int HiResInitialQuality = 2; // 0=Low, 1=Medium, 2=High
+        public const float HiResRenderBudgetMs = 3.0f;
+        public const int HiResBudgetHysteresisFrames = 12;
     }
 
     public static class World
