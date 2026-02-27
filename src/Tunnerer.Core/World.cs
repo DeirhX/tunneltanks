@@ -116,9 +116,19 @@ public class World
 
     private void RegrowPass()
     {
-        if (_regrowTimer.Elapsed < _regrowAccumulator + Tweaks.World.DirtRecoverInterval)
-            return;
-        _regrowAccumulator += Tweaks.World.DirtRecoverInterval;
+        if (_deterministicSimulation)
+        {
+            _regrowAccumulator += Tweaks.World.AdvanceStep;
+            if (_regrowAccumulator < Tweaks.World.DirtRecoverInterval)
+                return;
+            _regrowAccumulator -= Tweaks.World.DirtRecoverInterval;
+        }
+        else
+        {
+            if (_regrowTimer.Elapsed < _regrowAccumulator + Tweaks.World.DirtRecoverInterval)
+                return;
+            _regrowAccumulator += Tweaks.World.DirtRecoverInterval;
+        }
 
         _terrain.CoolDown(Tweaks.World.HeatCooldownPerTick, Tweaks.World.HeatDiffuseRate);
 

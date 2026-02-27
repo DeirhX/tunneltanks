@@ -219,4 +219,90 @@ public class ReplayTests
             script.Add(default);
         return script.ToArray();
     }
+
+    [Fact]
+    public void ScriptedReplay_TwoRuns_IdenticalStateHashEveryFrame()
+    {
+        var script = BuildScript();
+        var w1 = CreateSeededWorld();
+        var w2 = CreateSeededWorld();
+
+        for (int frame = 0; frame < 240; frame++)
+        {
+            var input = script[frame % script.Length];
+            w1.Advance(i => i == 0 ? input : default);
+            w2.Advance(i => i == 0 ? input : default);
+
+            ulong h1 = ComputeWorldStateHash(w1);
+            ulong h2 = ComputeWorldStateHash(w2);
+            Assert.Equal(h1, h2);
+        }
+    }
+
+    [Fact]
+    public void DeterministicIdleReplay_TwoRuns_IdenticalStateHashEveryFrame()
+    {
+        var w1 = CreateSeededWorld();
+        var w2 = CreateSeededWorld();
+
+        for (int frame = 0; frame < 320; frame++)
+        {
+            w1.Advance(_ => default);
+            w2.Advance(_ => default);
+
+            ulong h1 = ComputeWorldStateHash(w1);
+            ulong h2 = ComputeWorldStateHash(w2);
+            Assert.Equal(h1, h2);
+        }
+    }
+
+    private static ulong ComputeWorldStateHash(World world)
+    {
+        const ulong offset = 1469598103934665603UL;
+        const ulong prime = 1099511628211UL;
+        ulong hash = offset;
+
+        ulong Mix(ulong h, uint value)
+        {
+            h ^= value;
+            h *= prime;
+            return h;
+        }
+
+        var terrain = world.Terrain.Data;
+        for (int i = 0; i < terrain.Length; i++)
+            hash = Mix(hash, (uint)terrain[i]);
+
+        hash = Mix(hash, (uint)world.AdvanceCount);
+        hash = Mix(hash, (uint)world.Projectiles.Count);
+
+        var tanks = world.TankList.Tanks;
+        hash = Mix(hash, (uint)tanks.Count);
+        for (int i = 0; i < tanks.Count; i++)
+        {
+            var t = tanks[i];
+            hash = Mix(hash, (uint)t.Position.X);
+            hash = Mix(hash, (uint)t.Position.Y);
+            hash = Mix(hash, (uint)t.Direction);
+            hash = Mix(hash, (uint)t.LivesLeft);
+            hash = Mix(hash, (uint)(int)t.Reactor.Energy);
+            hash = Mix(hash, (uint)(int)t.Reactor.Health);
+            hash = Mix(hash, (uint)t.Resources.Dirt);
+            hash = Mix(hash, (uint)t.Resources.Minerals);
+            hash = Mix(hash, (uint)BitConverter.SingleToInt32Bits(t.Heat));
+            hash = Mix(hash, t.IsDead ? 1u : 0u);
+        }
+
+        // Hash a composited entity layer so projectile/sprite state differences are also captured.
+        int w = world.Terrain.Width, h = world.Terrain.Height;
+        var pix = new uint[w * h];
+        var surface = new Surface(pix, w, h);
+        world.Projectiles.Draw(surface);
+        world.Sprites.Draw(surface);
+        world.TankList.Draw(surface);
+        for (int i = 0; i < pix.Length; i++)
+            hash = Mix(hash, pix[i]);
+
+        return hash;
+    }
 }
