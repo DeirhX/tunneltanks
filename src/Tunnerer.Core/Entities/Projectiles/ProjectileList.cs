@@ -99,7 +99,7 @@ public class ProjectileList
             if (hit)
             {
                 self.SpawnNormalExplosion(ipos);
-                terrain.AddHeatRadius(ipos, 255, 5);
+                terrain.AddHeatRadius(ipos, Tweaks.Explosion.BulletHeatAmount, Tweaks.Explosion.BulletHeatRadius);
                 p.IsAlive = false;
                 return;
             }
@@ -129,13 +129,13 @@ public class ProjectileList
             {
                 terrain.SetPixel(ipos, TerrainPixel.DecalHigh);
             }
-            terrain.AddHeat(ipos, 200);
+            terrain.AddHeat(ipos, Tweaks.Explosion.ShrapnelHitHeat);
             p.IsAlive = false;
             return;
         }
 
         terrain.SetPixel(ipos, TerrainPixel.DecalHigh);
-        terrain.AddHeatRadius(ipos, 255, 3);
+        terrain.AddHeatRadius(ipos, Tweaks.Explosion.ShrapnelDigHeatAmount, Tweaks.Explosion.ShrapnelDigHeatRadius);
     }
 
     private static void AdvanceFoam(Projectile p, TerrainGrid terrain,

@@ -5,6 +5,22 @@ namespace Tunnerer.Desktop.Rendering;
 
 public sealed class HiResEntityRenderer
 {
+    private const float ShadowDarken = 0.82f;
+    private const float EdgeFeather = 0.22f;
+    private const float FlickerFreq = 8f;
+    private const float FlickerMin = 0.85f;
+    private const float FlickerRange = 0.15f;
+    private const float GlowCoreRadius = 0.35f;
+    private const float GlowOuterRadius = 0.85f;
+    private const float GlowCoreBrighten = 1.3f;
+    private const float GlowFalloffAlpha = 0.7f;
+    private const float TankHeatGlowMinHeat = 5f;
+    private const float TankHeatGlowBaseRadius = 2.5f;
+    private const float TankHeatGlowScaleRadius = 2.5f;
+    private const float TankHeatGlowR = 200f;
+    private const float TankHeatGlowG = 60f;
+    private const float TankHeatGlowB = 10f;
+
     public void Render(
         uint[] targetPixels,
         int targetWidth,
@@ -52,7 +68,7 @@ public sealed class HiResEntityRenderer
                 {
                     int row = py * targetWidth;
                     for (int px = sx0; px < sx1; px++)
-                        targetPixels[row + px] = DarkenPixel(targetPixels[row + px], 0.82f);
+                        targetPixels[row + px] = DarkenPixel(targetPixels[row + px], ShadowDarken);
                 }
             }
         }
@@ -84,7 +100,7 @@ public sealed class HiResEntityRenderer
                 {
                     uint cellSeed = (uint)(wx * 374761393 + wy * 668265263);
                     float phase = (cellSeed & 0xFFu) / 255f * 6.28f;
-                    float flicker = 0.85f + 0.15f * MathF.Sin(time * 8f + phase);
+                    float flicker = FlickerMin + FlickerRange * MathF.Sin(time * FlickerFreq + phase);
                     RenderGlowEntity(targetPixels, targetWidth, targetHeight,
                         baseScreenX, baseScreenY, pixelScale, objectColor, flicker);
                 }
@@ -103,7 +119,7 @@ public sealed class HiResEntityRenderer
         int bx, int by, int scale, uint entityColor,
         bool nLeft, bool nRight, bool nUp, bool nDown)
     {
-        float feather = 0.22f;
+        float feather = EdgeFeather;
 
         for (int py = 0; py < scale; py++)
         {
@@ -135,8 +151,8 @@ public sealed class HiResEntityRenderer
     {
         float cx = bx + scale * 0.5f;
         float cy = by + scale * 0.5f;
-        float coreR = scale * 0.35f;
-        float glowR = scale * 0.85f * flicker;
+        float coreR = scale * GlowCoreRadius;
+        float glowR = scale * GlowOuterRadius * flicker;
 
         int minPx = Math.Max(0, bx - scale / 2);
         int maxPx = Math.Min(tw - 1, bx + scale + scale / 2);
@@ -154,12 +170,12 @@ public sealed class HiResEntityRenderer
 
                 if (r <= coreR)
                 {
-                    target[row + px] = BrightenPixel(entityColor, 1.3f);
+                    target[row + px] = BrightenPixel(entityColor, GlowCoreBrighten);
                 }
                 else if (r <= glowR)
                 {
                     float t = (r - coreR) / (glowR - coreR);
-                    float alpha = (1f - t) * (1f - t) * 0.7f;
+                    float alpha = (1f - t) * (1f - t) * GlowFalloffAlpha;
                     target[row + px] = BlendPixel(target[row + px], entityColor, alpha);
                 }
             }
@@ -230,11 +246,11 @@ public sealed class HiResEntityRenderer
         for (int i = 0; i < tanks.Count; i++)
         {
             var tank = tanks[i];
-            if (tank.IsDead || tank.Heat < 5f) continue;
+            if (tank.IsDead || tank.Heat < TankHeatGlowMinHeat) continue;
 
             float t = tank.Heat / Tweaks.Tank.HeatMax;
             float intensity = t * t;
-            int glowRadius = (int)(pixelScale * (2.5f + 2.5f * t));
+            int glowRadius = (int)(pixelScale * (TankHeatGlowBaseRadius + TankHeatGlowScaleRadius * t));
 
             float cx = (tank.Position.X + 0.5f) * pixelScale - camPixelX;
             float cy = (tank.Position.Y + 0.5f) * pixelScale - camPixelY;
@@ -259,9 +275,9 @@ public sealed class HiResEntityRenderer
                     falloff *= falloff;
 
                     float glow = intensity * falloff;
-                    int addR = (int)(200f * glow);
-                    int addG = (int)(60f * glow * t);
-                    int addB = (int)(10f * glow * t * t);
+                    int addR = (int)(TankHeatGlowR * glow);
+                    int addG = (int)(TankHeatGlowG * glow * t);
+                    int addB = (int)(TankHeatGlowB * glow * t * t);
 
                     uint c = targetPixels[row + px];
                     int fr = Math.Min(255, (int)((c >> 16) & 0xFF) + addR);

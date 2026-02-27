@@ -131,6 +131,12 @@ public static class Tweaks
         public static readonly ExplosionParams Dirt = new(ShrapnelCount: 10, Speed: 0.375f, Frames: 10);
         public static readonly ExplosionParams Normal = new(ShrapnelCount: 14, Speed: 0.56f, Frames: 13);
         public static readonly ExplosionParams Death = new(ShrapnelCount: 100, Speed: 0.25f, Frames: 72);
+
+        public const int BulletHeatAmount = 255;
+        public const int BulletHeatRadius = 5;
+        public const int ShrapnelHitHeat = 200;
+        public const int ShrapnelDigHeatAmount = 255;
+        public const int ShrapnelDigHeatRadius = 3;
     }
 
     public static class Colors
@@ -160,5 +166,12 @@ public static class Tweaks
         public const int MinSpawnDistanceSq = 150 * 150;
         public const int SmoothingSteps = -1; // -1 = smooth until convergence (matches C++)
         public static int TargetDirtAmount(Size size) => size.X * size.Y * DirtTargetPercent / 100;
+
+        public const int EnergyVeinCountDivisor = 40;
+        public const int EnergyVeinMinLength = 5;
+        public const int EnergyVeinMaxLength = 16;
+        public const int RuinAreaPerRuin = 16000;
+        public const int RuinWallMinLength = 2;
+        public const int RuinWallMaxLength = 5;
     }
 }

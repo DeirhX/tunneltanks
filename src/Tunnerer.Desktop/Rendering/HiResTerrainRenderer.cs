@@ -15,6 +15,64 @@ public sealed class HiResTerrainRenderer
 {
     private const uint BackgroundColor = 0xFF161414;
 
+    // Bloom
+    private const int BloomBrightThreshold = 330;
+    private const int BloomDownscale = 4;
+    private const int BloomRadius = 3;
+    private const float BloomStrength = 0.45f;
+
+    // Vignette
+    private const float VignetteDarken = 0.18f;
+
+    // SDF edge
+    private const float EdgeHalfLow = 0.20f;
+    private const float EdgeHalfHigh = 0.35f;
+    private const float IsolatedSolidAlpha = 0.35f;
+
+    // Lighting
+    private const float GaussianSigma = 1.8f;
+    private const float AmbientWeight = 0.22f;
+    private const float DiffuseWeight = 0.68f;
+    private const float MacroNormalStrength = 1.8f;
+
+    // Edge effects
+    private const float OutlineThicknessLow = 0.10f;
+    private const float OutlineThicknessHigh = 0.14f;
+    private const float OutlineDarken = 0.45f;
+    private const float SolidEdgeRange = 0.60f;
+    private const float SolidEdgeDarken = 0.35f;
+    private const float CaveShadowRange = 0.65f;
+    private const float CaveShadowDarken = 0.50f;
+    private const float AoDarken = 0.45f;
+
+    // Rim lighting
+    private const float RimDistMax = 0.30f;
+    private const float RimDistMin = 0.02f;
+    private const float RimStrength = 0.12f;
+
+    // Depth darkening
+    private const float DepthDarkenStart = -0.25f;
+    private const float DepthDarkenFloor = 0.45f;
+
+    // Emissive
+    private const float EmissivePulseFreq = 3.0f;
+    private const float EmissivePulseMin = 0.8f;
+    private const float EmissivePulseRange = 0.2f;
+
+    // Heat glow
+    private const float HeatGlowR = 220f;
+    private const float HeatGlowG = 80f;
+    private const float HeatGlowB = 15f;
+    private const float HeatGlowThreshold = 0.01f;
+
+    // Material boundary
+    private const float MaterialBlendAlphaMin = 0.1f;
+    private const float MaterialBlendStrength = 0.7f;
+
+    // Scorch
+    private const float ScorchHeatFactor = 0.6f;
+    private const float ScorchResidualMin = 0.2f;
+
     private float[]? _blurField;
     private int _blurW;
     private int _blurH;
@@ -43,7 +101,7 @@ public sealed class HiResTerrainRenderer
         s_halfZ = hz / hLen;
 
         Gauss5x5 = new float[25];
-        const float sigma = 1.8f;
+        const float sigma = GaussianSigma;
         for (int ky = -2; ky <= 2; ky++)
             for (int kx = -2; kx <= 2; kx++)
                 Gauss5x5[(ky + 2) * 5 + (kx + 2)] =
@@ -190,10 +248,10 @@ public sealed class HiResTerrainRenderer
 
     private static void ApplyBloom(uint[] pixels, int w, int h)
     {
-        const int brightThreshold = 330;
-        const int downscale = 4;
-        const int radius = 3;
-        const float bloomStr = 0.45f;
+        const int brightThreshold = BloomBrightThreshold;
+        const int downscale = BloomDownscale;
+        const int radius = BloomRadius;
+        const float bloomStr = BloomStrength;
         int dw = w / downscale, dh = h / downscale;
         int dLen = dw * dh;
 
@@ -309,7 +367,7 @@ public sealed class HiResTerrainRenderer
             for (int x = 0; x < w; x++)
             {
                 float d2 = (dxSq[x] + dyy) * invMaxDist2;
-                float darken = 1f - d2 * 0.18f;
+                float darken = 1f - d2 * VignetteDarken;
 
                 uint c = pixels[row + x];
                 int r = (int)(((c >> 16) & 0xFF) * darken);
@@ -433,7 +491,7 @@ public sealed class HiResTerrainRenderer
                 }
 
                 // SDF edge blend
-                float edgeHalf = quality == HiResRenderQuality.Low ? 0.20f : 0.35f;
+                float edgeHalf = quality == HiResRenderQuality.Low ? EdgeHalfLow : EdgeHalfHigh;
                 float alpha;
                 if (dist > edgeHalf) alpha = 1f;
                 else if (dist < -edgeHalf) alpha = 0f;
@@ -459,7 +517,7 @@ public sealed class HiResTerrainRenderer
                 // Isolated solid pixels inside cave (SDF says empty but pixel is solid)
                 bool centerIsSolid = IsSolidTerrain(centerPixel);
                 if (alpha <= 0f && centerIsSolid)
-                    alpha = 0.35f;
+                    alpha = IsolatedSolidAlpha;
 
                 if (alpha >= 1f)
                 {
@@ -492,7 +550,7 @@ public sealed class HiResTerrainRenderer
                 }
 
                 // --- Material-to-material boundary blending ---
-                if (useTextures && alpha > 0.1f)
+                if (useTextures && alpha > MaterialBlendAlphaMin)
                 {
                     var centerMat = centerMatClass;
                     var mc00 = s00 ? TerrainTextureAtlas.Classify(p00) : centerMat;
@@ -522,7 +580,7 @@ public sealed class HiResTerrainRenderer
                         float proximity = MathF.Max(
                             MathF.Abs(fracX - 0.5f),
                             MathF.Abs(fracY - 0.5f)) * 2f;
-                        float blendT = Smoothstep(0f, 1f, proximity) * 0.7f;
+                        float blendT = Smoothstep(0f, 1f, proximity) * MaterialBlendStrength;
                         blended = LerpColor(blended, bilinearCol, blendT);
                     }
                 }
@@ -551,7 +609,7 @@ public sealed class HiResTerrainRenderer
 
                     float dBlurDx = (SampleBlur(worldX + 1, worldY) - SampleBlur(worldX - 1, worldY)) * 0.5f;
                     float dBlurDy = (SampleBlur(worldX, worldY + 1) - SampleBlur(worldX, worldY - 1)) * 0.5f;
-                    float macroStr = 1.8f;
+                    float macroStr = MacroNormalStrength;
                     float nx = tnx - dBlurDx * macroStr;
                     float ny = tny - dBlurDy * macroStr;
                     float nz = tnz;
@@ -572,9 +630,9 @@ public sealed class HiResTerrainRenderer
                     float ambG = activeMat.AmbientTint.G / 128f;
                     float ambB = activeMat.AmbientTint.B / 128f;
 
-                    float litR = rF * (0.22f * ambR + 0.68f * diffuse) + 255f * specular;
-                    float litG = gF * (0.22f * ambG + 0.68f * diffuse) + 255f * specular;
-                    float litB = bF * (0.22f * ambB + 0.68f * diffuse) + 255f * specular;
+                    float litR = rF * (AmbientWeight * ambR + DiffuseWeight * diffuse) + 255f * specular;
+                    float litG = gF * (AmbientWeight * ambG + DiffuseWeight * diffuse) + 255f * specular;
+                    float litB = bF * (AmbientWeight * ambB + DiffuseWeight * diffuse) + 255f * specular;
 
                     rF = litR;
                     gF = litG;
@@ -590,52 +648,52 @@ public sealed class HiResTerrainRenderer
 
                 // Solid-side edge proximity darkening: dirt gradually darkens
                 // approaching cave boundaries (dist 0.0..0.6 = near edge)
-                if (dist > 0f && dist < 0.60f)
+                if (dist > 0f && dist < SolidEdgeRange)
                 {
-                    float proximity = 1f - dist / 0.60f;
-                    float edgeDarken = 1f - proximity * proximity * 0.35f;
+                    float proximity = 1f - dist / SolidEdgeRange;
+                    float edgeDarken = 1f - proximity * proximity * SolidEdgeDarken;
                     rF *= edgeDarken; gF *= edgeDarken; bF *= edgeDarken;
                 }
 
                 // Wall outline (narrow band right at the boundary)
                 float absDist = MathF.Abs(dist);
-                float outlineThick = quality == HiResRenderQuality.Low ? 0.10f : 0.14f;
+                float outlineThick = quality == HiResRenderQuality.Low ? OutlineThicknessLow : OutlineThicknessHigh;
                 if (absDist < outlineThick)
                 {
                     float t = 1f - absDist / outlineThick;
-                    float darken = 1f - t * t * 0.45f;
+                    float darken = 1f - t * t * OutlineDarken;
                     rF *= darken; gF *= darken; bF *= darken;
                 }
 
                 // Cave-side shadow gradient (wider, smoother falloff)
-                if (dist < 0f && dist > -0.65f)
+                if (dist < 0f && dist > -CaveShadowRange)
                 {
-                    float t = 1f + dist / 0.65f;
-                    float darken = 1f - t * t * 0.50f;
+                    float t = 1f + dist / CaveShadowRange;
+                    float darken = 1f - t * t * CaveShadowDarken;
                     rF *= darken; gF *= darken; bF *= darken;
                 }
 
                 // AO on empty cells
                 if (!IsSolidTerrain(centerPixel))
                 {
-                    float aoDarken = 1f - aoValue * 0.45f;
+                    float aoDarken = 1f - aoValue * AoDarken;
                     rF *= aoDarken; gF *= aoDarken; bF *= aoDarken;
                 }
 
                 // Rim lighting at terrain edges
-                if (useNormals && absDist < 0.30f && absDist > 0.02f)
+                if (useNormals && absDist < RimDistMax && absDist > RimDistMin)
                 {
-                    float rimT = 1f - absDist / 0.30f;
-                    float rim = rimT * rimT * rimT * 0.12f;
+                    float rimT = 1f - absDist / RimDistMax;
+                    float rim = rimT * rimT * rimT * RimStrength;
                     rF += 255f * rim;
                     gF += 255f * rim;
                     bF += 255f * rim;
                 }
 
                 // Depth darkening for deep tunnels (complete fade to black)
-                if (dist < -0.25f)
+                if (dist < DepthDarkenStart)
                 {
-                    float depthFactor = Remap(dist, -1f, -0.25f, 0.45f, 1f);
+                    float depthFactor = Remap(dist, -1f, DepthDarkenStart, DepthDarkenFloor, 1f);
                     rF *= depthFactor; gF *= depthFactor; bF *= depthFactor;
                 }
 
@@ -644,7 +702,7 @@ public sealed class HiResTerrainRenderer
                 {
                     uint cellHash = Hash2((uint)worldX, (uint)worldY);
                     float phase = (cellHash & 0xFFu) / 255f * 6.28f;
-                    float pulse = 0.8f + 0.2f * MathF.Sin(time * 3.0f + phase);
+                    float pulse = EmissivePulseMin + EmissivePulseRange * MathF.Sin(time * EmissivePulseFreq + phase);
                     float emStr = activeMat.EmissiveIntensity * pulse;
                     rF += activeMat.EmissiveColor.R * emStr;
                     gF += activeMat.EmissiveColor.G * emStr;
@@ -652,12 +710,12 @@ public sealed class HiResTerrainRenderer
                 }
 
                 // Heat glow: smooth emission from bilinearly interpolated heat
-                if (heat > 0.01f)
+                if (heat > HeatGlowThreshold)
                 {
                     float t2 = heat * heat;
-                    rF += 220f * t2;
-                    gF += 80f * t2 * heat;
-                    bF += 15f * t2 * t2;
+                    rF += HeatGlowR * t2;
+                    gF += HeatGlowG * t2 * heat;
+                    bF += HeatGlowB * t2 * t2;
                 }
 
                 targetPixels[writeIndex] = PackRGB(rF, gF, bF);
@@ -695,9 +753,9 @@ public sealed class HiResTerrainRenderer
     private Color SampleCave(float texU, float texV, int worldX, int worldY,
         bool useTextures, float heat = 0f, bool isScorched = false)
     {
-        float scorchBlend = heat * 0.6f;
+        float scorchBlend = heat * ScorchHeatFactor;
         if (isScorched)
-            scorchBlend = MathF.Max(scorchBlend, 0.2f);
+            scorchBlend = MathF.Max(scorchBlend, ScorchResidualMin);
 
         if (!useTextures)
         {

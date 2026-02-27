@@ -1,5 +1,6 @@
 namespace Tunnerer.Core.Terrain;
 
+using Tunnerer.Core.Config;
 using Tunnerer.Core.Types;
 
 public class TerrainGrid
@@ -354,7 +355,7 @@ public class TerrainGrid
             }
         }
 
-        int veinCount = Math.Max(6, rockBoundary.Count / 40);
+        int veinCount = Math.Max(6, rockBoundary.Count / Tweaks.LevelGen.EnergyVeinCountDivisor);
         for (int v = 0; v < veinCount && rockBoundary.Count > 0; v++)
         {
             int pick = rng.Next(rockBoundary.Count);
@@ -362,7 +363,7 @@ public class TerrainGrid
             int vx = co % w, vy = co / w;
 
             // Thin snaking vein: single-cell wide, longer walk
-            int veinLen = rng.Next(5, 16);
+            int veinLen = rng.Next(Tweaks.LevelGen.EnergyVeinMinLength, Tweaks.LevelGen.EnergyVeinMaxLength);
             int dirX = rng.Next(-1, 2), dirY = rng.Next(-1, 2);
             if (dirX == 0 && dirY == 0) dirX = 1;
 
@@ -392,7 +393,7 @@ public class TerrainGrid
 
     private void PlaceConcreteRuins(Random rng, int w, int h)
     {
-        int ruinCount = (w * h) / 16000;
+        int ruinCount = (w * h) / Tweaks.LevelGen.RuinAreaPerRuin;
 
         for (int r = 0; r < ruinCount; r++)
         {
@@ -402,7 +403,7 @@ public class TerrainGrid
             if (!IsCaveFloor(_data[cx + cy * w])) continue;
 
             // Short wall fragment
-            int len = rng.Next(2, 5);
+            int len = rng.Next(Tweaks.LevelGen.RuinWallMinLength, Tweaks.LevelGen.RuinWallMaxLength);
             bool horizontal = rng.Next(2) == 0;
             for (int i = 0; i < len; i++)
             {
