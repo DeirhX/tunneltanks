@@ -82,10 +82,8 @@ public class ProjectileList
 
         for (int s = 0; s < steps; s++)
         {
-            p.Position += stepDir;
-            var ipos = (Position)p.Position;
-
-            if (!terrain.IsInside(ipos)) { p.IsAlive = false; return; }
+            if (!TryAdvanceInside(terrain, p, stepDir, out var ipos))
+                return;
 
             bool hit = solver.TestPoint(ipos,
                 onTank: tank =>
@@ -158,6 +156,18 @@ public class ProjectileList
     private static bool TryAdvanceInside(TerrainGrid terrain, Projectile p, out Position ipos)
     {
         p.Position += p.Speed;
+        ipos = (Position)p.Position;
+        if (!terrain.IsInside(ipos))
+        {
+            p.IsAlive = false;
+            return false;
+        }
+        return true;
+    }
+
+    private static bool TryAdvanceInside(TerrainGrid terrain, Projectile p, VectorF step, out Position ipos)
+    {
+        p.Position += step;
         ipos = (Position)p.Position;
         if (!terrain.IsInside(ipos))
         {

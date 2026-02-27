@@ -457,8 +457,7 @@ public sealed class HiResTerrainRenderer
                 float b10 = SampleBlur(cx1, cy0);
                 float b01 = SampleBlur(cx0, cy1);
                 float b11 = SampleBlur(cx1, cy1);
-                float dist = b00 * (1f - lx) * (1f - ly) + b10 * lx * (1f - ly) +
-                             b01 * (1f - lx) * ly + b11 * lx * ly;
+                float dist = RenderingMath.Bilinear(b00, b10, b01, b11, lx, ly);
 
                 // Raw terrain for material classification
                 var p00 = SafeGet(terrain, cx0, cy0, w, h);
@@ -498,8 +497,7 @@ public sealed class HiResTerrainRenderer
                 float ht10 = SampleHeat(terrain, cx1, cy0, w, h);
                 float ht01 = SampleHeat(terrain, cx0, cy1, w, h);
                 float ht11 = SampleHeat(terrain, cx1, cy1, w, h);
-                float heat = ht00 * (1f - lx) * (1f - ly) + ht10 * lx * (1f - ly) +
-                             ht01 * (1f - lx) * ly + ht11 * lx * ly;
+                float heat = RenderingMath.Bilinear(ht00, ht10, ht01, ht11, lx, ly);
                 bool isScorched = Pixel.IsScorched(centerPixel);
 
                 // --- Color blending ---

@@ -18,4 +18,13 @@ public static class RenderingMath
         h ^= h >> 16;
         return h;
     }
+
+    public static float Bilinear(float v00, float v10, float v01, float v11, float lx, float ly)
+    {
+        float w00 = (1f - lx) * (1f - ly);
+        float w10 = lx * (1f - ly);
+        float w01 = (1f - lx) * ly;
+        float w11 = lx * ly;
+        return v00 * w00 + v10 * w10 + v01 * w01 + v11 * w11;
+    }
 }

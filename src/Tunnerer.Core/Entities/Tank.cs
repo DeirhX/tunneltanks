@@ -194,34 +194,19 @@ public class Tank
 
     private void AdvanceHeat(World world)
     {
-        // Heat from actions this frame
-        Heat += _frameDugPixels * Tweaks.Tank.HeatDigPerPixel;
-        if (_frameShotFired)
-            Heat += Tweaks.Tank.HeatShootPerShot;
+        Heat += TankHeatModel.ComputeActionHeat(_frameDugPixels, _frameShotFired);
 
-        // Absorb heat from nearby hot terrain
         float terrainHeat = world.Terrain.SampleAverageHeat(Position, Tweaks.Tank.DigRadius);
-        Heat += terrainHeat * Tweaks.Tank.HeatTerrainAbsorb * Tweaks.Tank.HeatMax;
+        Heat += TankHeatModel.ComputeTerrainAbsorb(terrainHeat);
 
-        // Natural cooling
-        float cooling = Tweaks.Tank.HeatCoolPerFrame;
-
-        // Bonus cooling at own base
         var baseColl = world.TankBases.CheckBaseCollision(Position);
-        if (baseColl != null && baseColl.Color == Color)
-            cooling += Tweaks.Tank.HeatBaseCoolBonus;
+        bool atOwnBase = baseColl != null && baseColl.Color == Color;
+        Heat -= TankHeatModel.ComputeCooling(atOwnBase);
+        Heat = TankHeatModel.ClampHeat(Heat);
 
-        Heat = MathF.Max(0f, Heat - cooling);
-        Heat = MathF.Min(Heat, Tweaks.Tank.HeatMax);
-
-        // Overheat damage
-        if (Heat > Tweaks.Tank.HeatOverheatThreshold)
-        {
-            float excess = Heat - Tweaks.Tank.HeatOverheatThreshold;
-            int damage = (int)(excess * Tweaks.Tank.HeatDamagePerFrame);
-            if (damage > 0)
-                Reactor.Exhaust(new ReactorState(0, damage));
-        }
+        int damage = TankHeatModel.ComputeOverheatDamage(Heat);
+        if (damage > 0)
+            Reactor.Exhaust(new ReactorState(0, damage));
 
         _frameDugPixels = 0;
         _frameShotFired = false;
