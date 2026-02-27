@@ -55,6 +55,7 @@ public class World
             _terrain[i] = generatedTerrain[i];
 
         _terrain.MaterializeTerrain(materializeSeed, parallel: parallelMaterialize);
+        _terrain.DecorateTerrain(materializeSeed.HasValue ? materializeSeed.Value + 100 : null);
 
         for (int i = 0; i < spawns.Length; i++)
             _tankBases.AddBase(spawns[i], i);

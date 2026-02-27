@@ -39,6 +39,7 @@ public class Game : IDisposable
         (HiResRenderQuality)Math.Clamp(Tweaks.Screen.HiResInitialQuality, 0, 2);
     private int _overBudgetFrames;
     private int _underBudgetFrames;
+    private readonly Stopwatch _gameTimer = Stopwatch.StartNew();
 
     private int _camPixelX;
     private int _camPixelY;
@@ -191,12 +192,13 @@ public class Game : IDisposable
         ProfileSection(ref _drawProfile.ScreenDraw, () =>
         {
             var hiResWatch = Stopwatch.StartNew();
+            float renderTime = (float)_gameTimer.Elapsed.TotalSeconds;
             if (_hiResTerrainNeedsFullRender ||
                 Math.Abs(dx) >= viewW || Math.Abs(dy) >= viewH)
             {
                 _hiResTerrainRenderer.Render(_world.Terrain, _hiResTerrainPixels,
                     _hiResSize.X, _hiResSize.Y, _hiResQuality,
-                    _camPixelX, _camPixelY, scale);
+                    _camPixelX, _camPixelY, scale, renderTime);
                 _hiResTerrainNeedsFullRender = false;
             }
             else if (cameraMoved)
@@ -210,7 +212,7 @@ public class Game : IDisposable
                 _hiResTerrainRenderer.RenderDirty(_world.Terrain, _hiResTerrainPixels,
                     _hiResSize.X, _hiResSize.Y, _hiResQuality,
                     _camPixelX, _camPixelY, scale,
-                    _terrainDirtyCells);
+                    _terrainDirtyCells, renderTime);
                 _terrainDirtyCells.Clear();
             }
 
@@ -223,7 +225,9 @@ public class Game : IDisposable
                 _hiResPixels, _hiResSize.X, _hiResSize.Y,
                 _worldPixels, _compositePixels,
                 _terrainSize.X, _terrainSize.Y,
-                _camPixelX, _camPixelY, scale);
+                _camPixelX, _camPixelY, scale, renderTime);
+
+            HiResTerrainRenderer.PostProcess(_hiResPixels, _hiResSize.X, _hiResSize.Y, _hiResQuality);
             _drawProfile.ScreenHiResEntities += hiResWatch.Elapsed;
             double entityMs = hiResWatch.Elapsed.TotalMilliseconds;
 

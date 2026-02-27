@@ -12,7 +12,8 @@ public sealed class HiResEntityRenderer
         int worldHeight,
         int camPixelX,
         int camPixelY,
-        int pixelScale)
+        int pixelScale,
+        float time = 0f)
     {
         int cellMinX = Math.Max(0, camPixelX / pixelScale);
         int cellMinY = Math.Max(0, camPixelY / pixelScale);
@@ -78,8 +79,11 @@ public sealed class HiResEntityRenderer
 
                 if (isIsolated)
                 {
+                    uint cellSeed = (uint)(wx * 374761393 + wy * 668265263);
+                    float phase = (cellSeed & 0xFFu) / 255f * 6.28f;
+                    float flicker = 0.85f + 0.15f * MathF.Sin(time * 8f + phase);
                     RenderGlowEntity(targetPixels, targetWidth, targetHeight,
-                        baseScreenX, baseScreenY, pixelScale, objectColor);
+                        baseScreenX, baseScreenY, pixelScale, objectColor, flicker);
                 }
                 else
                 {
@@ -124,12 +128,12 @@ public sealed class HiResEntityRenderer
 
     private static void RenderGlowEntity(
         uint[] target, int tw, int th,
-        int bx, int by, int scale, uint entityColor)
+        int bx, int by, int scale, uint entityColor, float flicker = 1f)
     {
         float cx = bx + scale * 0.5f;
         float cy = by + scale * 0.5f;
         float coreR = scale * 0.35f;
-        float glowR = scale * 0.85f;
+        float glowR = scale * 0.85f * flicker;
 
         int minPx = Math.Max(0, bx - scale / 2);
         int maxPx = Math.Min(tw - 1, bx + scale + scale / 2);

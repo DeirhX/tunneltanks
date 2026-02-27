@@ -2,6 +2,7 @@ namespace Tunnerer.Desktop.Rendering;
 
 using Tunnerer.Core.Terrain;
 using Tunnerer.Core.Types;
+using Tunnerer.Desktop.Rendering.Textures;
 
 public enum HiResRenderQuality
 {
@@ -14,22 +15,44 @@ public sealed class HiResTerrainRenderer
 {
     private const uint BackgroundColor = 0xFF161414;
 
-    private readonly MaterialTextures _tex = new();
-
     private float[]? _blurField;
     private int _blurW;
     private int _blurH;
 
-    private static readonly float[] Gauss5x5;
+    private readonly TerrainTextureAtlas _atlas = new();
+
+    // Directional light (top-left, slightly forward) — normalized at static init
+    private const float LightDirX = -0.35f;
+    private const float LightDirY = -0.55f;
+    private const float LightDirZ = 0.70f;
+    private static readonly float s_lightX, s_lightY, s_lightZ;
+    // Pre-computed half-vector (light + view(0,0,1)), normalized
+    private static readonly float s_halfX, s_halfY, s_halfZ;
+
     static HiResTerrainRenderer()
     {
-        const float sigma = 1.4f;
+        float len = MathF.Sqrt(LightDirX * LightDirX + LightDirY * LightDirY + LightDirZ * LightDirZ);
+        s_lightX = LightDirX / len;
+        s_lightY = LightDirY / len;
+        s_lightZ = LightDirZ / len;
+
+        float hx = s_lightX, hy = s_lightY, hz = s_lightZ + 1f;
+        float hLen = MathF.Sqrt(hx * hx + hy * hy + hz * hz);
+        s_halfX = hx / hLen;
+        s_halfY = hy / hLen;
+        s_halfZ = hz / hLen;
+
         Gauss5x5 = new float[25];
+        const float sigma = 1.8f;
         for (int ky = -2; ky <= 2; ky++)
             for (int kx = -2; kx <= 2; kx++)
                 Gauss5x5[(ky + 2) * 5 + (kx + 2)] =
                     MathF.Exp(-(kx * kx + ky * ky) / (2f * sigma * sigma));
     }
+
+    private static readonly float[] Gauss5x5;
+
+    private const float TexTileDensity = 0.08f;
 
     // ------------------------------------------------------------------
     //  Blur-field management
@@ -52,11 +75,7 @@ public sealed class HiResTerrainRenderer
 
     public void UpdateBlurField(TerrainGrid terrain, IReadOnlyList<Position> dirtyCells)
     {
-        if (_blurField == null)
-        {
-            RebuildBlurField(terrain);
-            return;
-        }
+        if (_blurField == null) { RebuildBlurField(terrain); return; }
 
         int w = _blurW, h = _blurH;
         for (int i = 0; i < dirtyCells.Count; i++)
@@ -98,8 +117,7 @@ public sealed class HiResTerrainRenderer
 
     private float SampleBlur(int x, int y)
     {
-        if ((uint)x >= (uint)_blurW || (uint)y >= (uint)_blurH)
-            return 1f;
+        if ((uint)x >= (uint)_blurW || (uint)y >= (uint)_blurH) return 1f;
         return _blurField![y * _blurW + x];
     }
 
@@ -108,116 +126,253 @@ public sealed class HiResTerrainRenderer
     // ------------------------------------------------------------------
 
     public void Render(
-        TerrainGrid terrain,
-        uint[] targetPixels,
-        int targetWidth,
-        int targetHeight,
-        HiResRenderQuality quality,
-        int camPixelX,
-        int camPixelY,
-        int pixelScale)
+        TerrainGrid terrain, uint[] targetPixels, int targetWidth, int targetHeight,
+        HiResRenderQuality quality, int camPixelX, int camPixelY, int pixelScale,
+        float time = 0f)
     {
         RebuildBlurField(terrain);
         RenderRegion(terrain, targetPixels, targetWidth, targetHeight, quality,
-            camPixelX, camPixelY, pixelScale, 0, 0, targetWidth - 1, targetHeight - 1);
+            camPixelX, camPixelY, pixelScale, 0, 0, targetWidth - 1, targetHeight - 1, time);
     }
 
     public void RenderStrip(
-        TerrainGrid terrain,
-        uint[] targetPixels,
-        int targetWidth,
-        int targetHeight,
-        HiResRenderQuality quality,
-        int camPixelX,
-        int camPixelY,
-        int pixelScale,
-        int minX,
-        int minY,
-        int maxX,
-        int maxY)
+        TerrainGrid terrain, uint[] targetPixels, int targetWidth, int targetHeight,
+        HiResRenderQuality quality, int camPixelX, int camPixelY, int pixelScale,
+        int minX, int minY, int maxX, int maxY, float time = 0f)
     {
         RenderRegion(terrain, targetPixels, targetWidth, targetHeight, quality,
-            camPixelX, camPixelY, pixelScale, minX, minY, maxX, maxY);
+            camPixelX, camPixelY, pixelScale, minX, minY, maxX, maxY, time);
     }
 
     public void RenderDirty(
-        TerrainGrid terrain,
-        uint[] targetPixels,
-        int targetWidth,
-        int targetHeight,
-        HiResRenderQuality quality,
-        int camPixelX,
-        int camPixelY,
-        int pixelScale,
-        IReadOnlyList<Position> dirtyCells)
+        TerrainGrid terrain, uint[] targetPixels, int targetWidth, int targetHeight,
+        HiResRenderQuality quality, int camPixelX, int camPixelY, int pixelScale,
+        IReadOnlyList<Position> dirtyCells, float time = 0f)
     {
         if (dirtyCells.Count == 0) return;
-
         UpdateBlurField(terrain, dirtyCells);
 
         const int pad = 3;
         for (int i = 0; i < dirtyCells.Count; i++)
         {
             var p = dirtyCells[i];
-            int screenMinX = (p.X - pad) * pixelScale - camPixelX;
-            int screenMaxX = (p.X + pad + 1) * pixelScale - 1 - camPixelX;
-            int screenMinY = (p.Y - pad) * pixelScale - camPixelY;
-            int screenMaxY = (p.Y + pad + 1) * pixelScale - 1 - camPixelY;
+            int screenMinX = Clamp((p.X - pad) * pixelScale - camPixelX, 0, targetWidth - 1);
+            int screenMaxX = Clamp((p.X + pad + 1) * pixelScale - 1 - camPixelX, 0, targetWidth - 1);
+            int screenMinY = Clamp((p.Y - pad) * pixelScale - camPixelY, 0, targetHeight - 1);
+            int screenMaxY = Clamp((p.Y + pad + 1) * pixelScale - 1 - camPixelY, 0, targetHeight - 1);
 
-            screenMinX = Clamp(screenMinX, 0, targetWidth - 1);
-            screenMaxX = Clamp(screenMaxX, 0, targetWidth - 1);
-            screenMinY = Clamp(screenMinY, 0, targetHeight - 1);
-            screenMaxY = Clamp(screenMaxY, 0, targetHeight - 1);
-
-            if (screenMinX > screenMaxX || screenMinY > screenMaxY)
-                continue;
+            if (screenMinX > screenMaxX || screenMinY > screenMaxY) continue;
 
             RenderRegion(terrain, targetPixels, targetWidth, targetHeight, quality,
-                camPixelX, camPixelY, pixelScale, screenMinX, screenMinY, screenMaxX, screenMaxY);
+                camPixelX, camPixelY, pixelScale, screenMinX, screenMinY, screenMaxX, screenMaxY, time);
         }
     }
 
     // ------------------------------------------------------------------
-    //  Core render loop: texture-blended SDF rendering
+    //  Post-processing: bloom + vignette (call after entity compositing)
+    // ------------------------------------------------------------------
+
+    private static int[] _bloomBuf = Array.Empty<int>();
+
+    public static void PostProcess(uint[] pixels, int width, int height, HiResRenderQuality quality)
+    {
+        if (quality < HiResRenderQuality.High) return;
+        ApplyBloom(pixels, width, height);
+        ApplyVignette(pixels, width, height);
+    }
+
+    private static void ApplyBloom(uint[] pixels, int w, int h)
+    {
+        const int brightThreshold = 420;
+        const int downscale = 4;
+        const int radius = 2;
+        const float bloomStr = 0.35f;
+        int dw = w / downscale, dh = h / downscale;
+        int dLen = dw * dh;
+
+        int bloomBufSize = dLen * 6;
+        if (_bloomBuf.Length < bloomBufSize)
+            _bloomBuf = new int[bloomBufSize];
+        var buf = _bloomBuf;
+        int oR = 0, oG = dLen, oB = dLen * 2;
+        int tR = dLen * 3, tG = dLen * 4, tB = dLen * 5;
+        Array.Clear(buf, 0, dLen * 6);
+
+        int brightCount = 0;
+        for (int dy = 0; dy < dh; dy++)
+        {
+            int srcY = dy * downscale;
+            int dRow = dy * dw;
+            for (int dx = 0; dx < dw; dx++)
+            {
+                uint c = pixels[srcY * w + dx * downscale];
+                int sr = (int)((c >> 16) & 0xFF);
+                int sg = (int)((c >> 8) & 0xFF);
+                int sb = (int)(c & 0xFF);
+                if (sr + sg + sb >= brightThreshold)
+                {
+                    buf[oR + dRow + dx] = sr;
+                    buf[oG + dRow + dx] = sg;
+                    buf[oB + dRow + dx] = sb;
+                    brightCount++;
+                }
+            }
+        }
+        if (brightCount < 2) return;
+
+        // Horizontal blur
+        for (int dy = 0; dy < dh; dy++)
+        {
+            int row = dy * dw;
+            for (int dx = 0; dx < dw; dx++)
+            {
+                int rr = 0, gg = 0, bb = 0, cnt = 0;
+                for (int k = -radius; k <= radius; k++)
+                {
+                    int nx = dx + k;
+                    if ((uint)nx >= (uint)dw) continue;
+                    int idx = row + nx;
+                    if (buf[oR + idx] == 0 && buf[oG + idx] == 0 && buf[oB + idx] == 0) continue;
+                    rr += buf[oR + idx]; gg += buf[oG + idx]; bb += buf[oB + idx]; cnt++;
+                }
+                if (cnt > 0) { buf[tR + row + dx] = rr / cnt; buf[tG + row + dx] = gg / cnt; buf[tB + row + dx] = bb / cnt; }
+            }
+        }
+
+        // Vertical blur + additive blend (parallelized)
+        Parallel.For(0, dh, dy2 =>
+        {
+            int srcY = dy2 * downscale;
+            for (int dx2 = 0; dx2 < dw; dx2++)
+            {
+                int rr = 0, gg = 0, bb = 0, cnt = 0;
+                for (int k = -radius; k <= radius; k++)
+                {
+                    int ny = dy2 + k;
+                    if ((uint)ny >= (uint)dh) continue;
+                    int idx = ny * dw + dx2;
+                    if (buf[tR + idx] == 0 && buf[tG + idx] == 0 && buf[tB + idx] == 0) continue;
+                    rr += buf[tR + idx]; gg += buf[tG + idx]; bb += buf[tB + idx]; cnt++;
+                }
+                if (cnt == 0) return;
+
+                int addR = (int)(rr / cnt * bloomStr);
+                int addG = (int)(gg / cnt * bloomStr);
+                int addB = (int)(bb / cnt * bloomStr);
+
+                int srcX = dx2 * downscale;
+                int endY = Math.Min(srcY + downscale, h);
+                int endX = Math.Min(srcX + downscale, w);
+                for (int py = srcY; py < endY; py++)
+                {
+                    int rowOff = py * w;
+                    for (int px = srcX; px < endX; px++)
+                    {
+                        uint c = pixels[rowOff + px];
+                        int fr = Math.Min(255, (int)((c >> 16) & 0xFF) + addR);
+                        int fg = Math.Min(255, (int)((c >> 8) & 0xFF) + addG);
+                        int fb = Math.Min(255, (int)(c & 0xFF) + addB);
+                        pixels[rowOff + px] = 0xFF000000u | ((uint)fr << 16) | ((uint)fg << 8) | (uint)fb;
+                    }
+                }
+            }
+        });
+    }
+
+    private static float[] _vignetteRow = Array.Empty<float>();
+
+    private static void ApplyVignette(uint[] pixels, int w, int h)
+    {
+        float cx = w * 0.5f;
+        float cy = h * 0.5f;
+        float invMaxDist2 = 1f / (cx * cx + cy * cy);
+
+        if (_vignetteRow.Length < w) _vignetteRow = new float[w];
+        for (int x = 0; x < w; x++)
+        {
+            float dx = x - cx;
+            _vignetteRow[x] = dx * dx;
+        }
+
+        var dxSq = _vignetteRow;
+        Parallel.For(0, h, y =>
+        {
+            float dyy = (y - cy) * (y - cy);
+            int row = y * w;
+            for (int x = 0; x < w; x++)
+            {
+                float d2 = (dxSq[x] + dyy) * invMaxDist2;
+                float darken = 1f - d2 * 0.18f;
+
+                uint c = pixels[row + x];
+                int r = (int)(((c >> 16) & 0xFF) * darken);
+                int g = (int)(((c >> 8) & 0xFF) * darken);
+                int b = (int)((c & 0xFF) * darken);
+                pixels[row + x] = 0xFF000000u | ((uint)r << 16) | ((uint)g << 8) | (uint)b;
+            }
+        });
+    }
+
+    // ------------------------------------------------------------------
+    //  Core render loop: textured SDF + full lighting pipeline
     // ------------------------------------------------------------------
 
     private void RenderRegion(
-        TerrainGrid terrain,
-        uint[] targetPixels,
-        int targetWidth,
-        int targetHeight,
+        TerrainGrid terrain, uint[] targetPixels,
+        int targetWidth, int targetHeight,
         HiResRenderQuality quality,
-        int camPixelX,
-        int camPixelY,
-        int pixelScale,
-        int minX,
-        int minY,
-        int maxX,
-        int maxY)
+        int camPixelX, int camPixelY, int pixelScale,
+        int minX, int minY, int maxX, int maxY, float time)
     {
         int w = terrain.Width;
         int h = terrain.Height;
         float invScale = 1f / pixelScale;
+        bool useTextures = quality != HiResRenderQuality.Low;
+        bool useNormals = quality == HiResRenderQuality.High;
 
+        int rowCount = maxY - minY + 1;
+        bool useParallel = useNormals && rowCount > 32;
+
+        if (useParallel)
+        {
+            Parallel.For(minY, maxY + 1, y =>
+                RenderRow(terrain, targetPixels, targetWidth, w, h, invScale,
+                    useTextures, useNormals, camPixelX, camPixelY, quality, time,
+                    minX, maxX, y));
+        }
+        else
+        {
+            for (int y = minY; y <= maxY; y++)
+                RenderRow(terrain, targetPixels, targetWidth, w, h, invScale,
+                    useTextures, useNormals, camPixelX, camPixelY, quality, time,
+                    minX, maxX, y);
+        }
+    }
+
+    private void RenderRow(
+        TerrainGrid terrain, uint[] targetPixels, int targetWidth,
+        int w, int h, float invScale,
+        bool useTextures, bool useNormals,
+        int camPixelX, int camPixelY, HiResRenderQuality quality, float time,
+        int minX, int maxX, int y)
+    {
+        float worldYf = (camPixelY + y + 0.5f) * invScale;
+        int worldY = (int)worldYf;
+
+        if (worldY < -1 || worldY > h)
+        {
+            int row = y * targetWidth;
+            for (int x = minX; x <= maxX; x++)
+                targetPixels[row + x] = BackgroundColor;
+            return;
+        }
+
+        float fracY = worldYf - worldY;
+        int writeIndex = minX + y * targetWidth;
         int prevCellX = int.MinValue, prevCellY = int.MinValue;
         float aoValue = 0f;
 
-        for (int y = minY; y <= maxY; y++)
-        {
-            float worldYf = (camPixelY + y + 0.5f) * invScale;
-            int worldY = (int)worldYf;
-
-            if (worldY < -1 || worldY > h)
-            {
-                int row = y * targetWidth;
-                for (int x = minX; x <= maxX; x++)
-                    targetPixels[row + x] = BackgroundColor;
-                continue;
-            }
-
-            int writeIndex = minX + y * targetWidth;
-
-            for (int x = minX; x <= maxX; x++, writeIndex++)
+        for (int x = minX; x <= maxX; x++, writeIndex++)
             {
                 float worldXf = (camPixelX + x + 0.5f) * invScale;
                 int worldX = (int)worldXf;
@@ -229,9 +384,8 @@ public sealed class HiResTerrainRenderer
                 }
 
                 float fracX = worldXf - worldX;
-                float fracY = worldYf - worldY;
 
-                // Bilinear interpolation of the Gaussian-blurred SDF
+                // Bilinear SDF interpolation from Gaussian blur field
                 float sx = fracX - 0.5f;
                 float sy = fracY - 0.5f;
                 int ox = sx >= 0f ? 0 : -1;
@@ -249,10 +403,21 @@ public sealed class HiResTerrainRenderer
                 float dist = b00 * (1f - lx) * (1f - ly) + b10 * lx * (1f - ly) +
                              b01 * (1f - lx) * ly + b11 * lx * ly;
 
-                // Raw terrain for material type determination
-                var centerPixel = SafeGet(terrain, worldX, worldY, w, h);
+                // Raw terrain for material classification
+                var p00 = SafeGet(terrain, cx0, cy0, w, h);
+                var p10 = SafeGet(terrain, cx1, cy0, w, h);
+                var p01 = SafeGet(terrain, cx0, cy1, w, h);
+                var p11 = SafeGet(terrain, cx1, cy1, w, h);
+                bool s00 = IsSolidTerrain(p00);
+                bool s10 = IsSolidTerrain(p10);
+                bool s01 = IsSolidTerrain(p01);
+                bool s11 = IsSolidTerrain(p11);
 
-                // Ambient occlusion (cached per cell)
+                var centerPixel = SafeGet(terrain, worldX, worldY, w, h);
+                var centerMatClass = TerrainTextureAtlas.Classify(centerPixel);
+                var centerMatTex = _atlas.Get(centerMatClass);
+
+                // AO (cached per cell)
                 if (worldX != prevCellX || worldY != prevCellY)
                 {
                     prevCellX = worldX;
@@ -260,113 +425,281 @@ public sealed class HiResTerrainRenderer
                     aoValue = ComputeAO(terrain, worldX, worldY, w, h);
                 }
 
-                // SDF-based blend between solid texture and cave texture
-                float edgeHalf = quality == HiResRenderQuality.Low ? 0.18f : 0.28f;
+                // SDF edge blend
+                float edgeHalf = quality == HiResRenderQuality.Low ? 0.20f : 0.35f;
                 float alpha;
-                if (dist > edgeHalf)
-                    alpha = 1f;
-                else if (dist < -edgeHalf)
-                    alpha = 0f;
-                else
-                    alpha = Smoothstep(-edgeHalf, edgeHalf, dist);
+                if (dist > edgeHalf) alpha = 1f;
+                else if (dist < -edgeHalf) alpha = 0f;
+                else alpha = Smoothstep(-edgeHalf, edgeHalf, dist);
 
+                // Texture UV
+                float texU = worldXf * TexTileDensity;
+                float texV = worldYf * TexTileDensity;
+
+                // --- Color blending ---
                 Color blended;
+                MaterialTexture activeMat = centerMatTex;
+
                 if (alpha >= 1f)
                 {
-                    blended = SampleSolidTexture(centerPixel, worldX, worldY, worldXf, worldYf);
+                    blended = SampleMaterial(centerPixel, texU, texV, worldX, worldY, useTextures);
                 }
                 else if (alpha <= 0f)
                 {
-                    blended = MaterialTextures.Sample(_tex.Cave, worldXf, worldYf);
+                    blended = SampleCave(texU, texV, worldX, worldY, useTextures, centerPixel);
+                    activeMat = _atlas.Get(MaterialClass.Cave);
                 }
                 else
                 {
                     Color solidCol;
+                    MaterialTexture solidMat;
                     if (IsSolidTerrain(centerPixel))
                     {
-                        solidCol = SampleSolidTexture(centerPixel, worldX, worldY, worldXf, worldYf);
+                        solidCol = SampleMaterial(centerPixel, texU, texV, worldX, worldY, useTextures);
+                        solidMat = centerMatTex;
                     }
                     else
                     {
-                        var nearest = FindNearestSolid(terrain, cx0, cy0, cx1, cy1, w, h);
-                        solidCol = SampleSolidTexture(nearest, worldX, worldY, worldXf, worldYf);
+                        var solidPixel = s00 ? p00 : s10 ? p10 : s01 ? p01 : s11 ? p11 : TerrainPixel.DirtHigh;
+                        solidCol = SampleMaterial(solidPixel, texU, texV, worldX, worldY, useTextures);
+                        solidMat = _atlas.Get(TerrainTextureAtlas.Classify(solidPixel));
                     }
-                    Color caveCol = MaterialTextures.Sample(_tex.Cave, worldXf, worldYf);
+                    Color caveCol = SampleCave(texU, texV, worldX, worldY, useTextures, centerPixel);
                     blended = LerpColor(caveCol, solidCol, alpha);
+
+                    // Blend material properties by alpha for lighting
+                    activeMat = alpha >= 0.5f ? solidMat : _atlas.Get(MaterialClass.Cave);
                 }
 
-                // Brightness modifiers
-                float brightness = 1f;
+                // --- Material-to-material boundary blending ---
+                if (useTextures && alpha > 0.5f)
+                {
+                    var centerMat = centerMatClass;
+                    var mc00 = s00 ? TerrainTextureAtlas.Classify(p00) : MaterialClass.Cave;
+                    var mc10 = s10 ? TerrainTextureAtlas.Classify(p10) : MaterialClass.Cave;
+                    var mc01 = s01 ? TerrainTextureAtlas.Classify(p01) : MaterialClass.Cave;
+                    var mc11 = s11 ? TerrainTextureAtlas.Classify(p11) : MaterialClass.Cave;
 
-                // Subtle per-cell variation to break up texture tiling
-                brightness += CellVariation(worldX, worldY) * 0.08f;
+                    MaterialClass neighborMat = centerMat;
+                    if (s00 && mc00 != centerMat) neighborMat = mc00;
+                    else if (s10 && mc10 != centerMat) neighborMat = mc10;
+                    else if (s01 && mc01 != centerMat) neighborMat = mc01;
+                    else if (s11 && mc11 != centerMat) neighborMat = mc11;
 
-                // Wall outline along boundary
+                    if (neighborMat != centerMat)
+                    {
+                        var neighborTex = _atlas.Get(neighborMat);
+                        Color neighborCol = neighborTex.SampleColor(texU, texV);
+                        float bx = fracX < 0.5f ? (0.5f - fracX) : (fracX - 0.5f);
+                        float by = fracY < 0.5f ? (0.5f - fracY) : (fracY - 0.5f);
+                        float blendT = MathF.Max(bx, by) * 0.6f;
+                        blended = LerpColor(blended, neighborCol, Smoothstep(0f, 0.5f, blendT) * 0.35f);
+                    }
+                }
+
+                // -------------------------------------------------------
+                //  Lighting pipeline
+                // -------------------------------------------------------
+                float rF = blended.R;
+                float gF = blended.G;
+                float bF = blended.B;
+
+                if (useNormals)
+                {
+                    // Normal: blend texture normal + SDF macro curvature
+                    var (tnx, tny, tnz) = activeMat.SampleNormal(texU, texV);
+
+                    // At solid/cave boundary, blend normals (Phase 3: normal blending)
+                    if (alpha > 0f && alpha < 1f)
+                    {
+                        var caveMat = _atlas.Get(MaterialClass.Cave);
+                        var (cnx, cny, cnz) = caveMat.SampleNormal(texU, texV);
+                        tnx = tnx * alpha + cnx * (1f - alpha);
+                        tny = tny * alpha + cny * (1f - alpha);
+                        tnz = tnz * alpha + cnz * (1f - alpha);
+                    }
+
+                    float dBlurDx = (SampleBlur(worldX + 1, worldY) - SampleBlur(worldX - 1, worldY)) * 0.5f;
+                    float dBlurDy = (SampleBlur(worldX, worldY + 1) - SampleBlur(worldX, worldY - 1)) * 0.5f;
+                    float macroStr = 1.8f;
+                    float nx = tnx - dBlurDx * macroStr;
+                    float ny = tny - dBlurDy * macroStr;
+                    float nz = tnz;
+                    float nLen = MathF.Sqrt(nx * nx + ny * ny + nz * nz);
+                    if (nLen > 0.001f) { nx /= nLen; ny /= nLen; nz /= nLen; }
+
+                    // Diffuse (Half-Lambert)
+                    float ndotl = nx * s_lightX + ny * s_lightY + nz * s_lightZ;
+                    float diffuse = MathF.Max(0f, ndotl) * 0.6f + 0.4f;
+
+                    // Specular (Blinn-Phong)
+                    float ndoth = nx * s_halfX + ny * s_halfY + nz * s_halfZ;
+                    ndoth = MathF.Max(0f, ndoth);
+                    float specular = MathF.Pow(ndoth, activeMat.Shininess) * activeMat.SpecularIntensity;
+
+                    // Per-material ambient color tint
+                    float ambR = activeMat.AmbientTint.R / 128f;
+                    float ambG = activeMat.AmbientTint.G / 128f;
+                    float ambB = activeMat.AmbientTint.B / 128f;
+
+                    float litR = rF * (0.22f * ambR + 0.68f * diffuse) + 255f * specular;
+                    float litG = gF * (0.22f * ambG + 0.68f * diffuse) + 255f * specular;
+                    float litB = bF * (0.22f * ambB + 0.68f * diffuse) + 255f * specular;
+
+                    rF = litR;
+                    gF = litG;
+                    bF = litB;
+                }
+                else if (quality == HiResRenderQuality.Medium)
+                {
+                    float brightness = 1f + CellVariation(worldX, worldY) + LocalRelief(worldXf, worldYf);
+                    rF *= brightness;
+                    gF *= brightness;
+                    bF *= brightness;
+                }
+
+                // Solid-side edge proximity darkening: dirt gradually darkens
+                // approaching cave boundaries (dist 0.0..0.6 = near edge)
+                if (dist > 0f && dist < 0.60f)
+                {
+                    float proximity = 1f - dist / 0.60f;
+                    float edgeDarken = 1f - proximity * proximity * 0.35f;
+                    rF *= edgeDarken; gF *= edgeDarken; bF *= edgeDarken;
+                }
+
+                // Wall outline (narrow band right at the boundary)
                 float absDist = MathF.Abs(dist);
-                float outlineThick = quality == HiResRenderQuality.Low ? 0.10f : 0.16f;
+                float outlineThick = quality == HiResRenderQuality.Low ? 0.10f : 0.14f;
                 if (absDist < outlineThick)
                 {
                     float t = 1f - absDist / outlineThick;
-                    brightness -= t * t * 0.50f;
+                    float darken = 1f - t * t * 0.45f;
+                    rF *= darken; gF *= darken; bF *= darken;
                 }
 
-                // Inner tunnel shadow
-                if (dist < 0f && dist > -0.45f)
+                // Cave-side shadow gradient (wider, smoother falloff)
+                if (dist < 0f && dist > -0.65f)
                 {
-                    float t = 1f + dist / 0.45f;
-                    brightness -= t * t * 0.35f;
+                    float t = 1f + dist / 0.65f;
+                    float darken = 1f - t * t * 0.50f;
+                    rF *= darken; gF *= darken; bF *= darken;
                 }
 
-                // Ambient occlusion on empty cells
+                // AO on empty cells
                 if (!IsSolidTerrain(centerPixel))
-                    brightness -= aoValue * 0.45f;
+                {
+                    float aoDarken = 1f - aoValue * 0.45f;
+                    rF *= aoDarken; gF *= aoDarken; bF *= aoDarken;
+                }
 
-                targetPixels[writeIndex] = ApplyBrightness(blended, brightness);
+                // Rim lighting at terrain edges
+                if (useNormals && absDist < 0.30f && absDist > 0.02f)
+                {
+                    float rimT = 1f - absDist / 0.30f;
+                    float rim = rimT * rimT * rimT * 0.12f;
+                    rF += 255f * rim;
+                    gF += 255f * rim;
+                    bF += 255f * rim;
+                }
+
+                // Depth darkening for deep tunnels (complete fade to black)
+                if (dist < -0.25f)
+                {
+                    float depthFactor = Remap(dist, -1f, -0.25f, 0.45f, 1f);
+                    rF *= depthFactor; gF *= depthFactor; bF *= depthFactor;
+                }
+
+                // Emissive (energy glow, scorched embers)
+                if (activeMat.EmissiveIntensity > 0f)
+                {
+                    uint cellHash = Hash2((uint)worldX, (uint)worldY);
+                    float phase = (cellHash & 0xFFu) / 255f * 6.28f;
+                    float pulse = 0.8f + 0.2f * MathF.Sin(time * 3.0f + phase);
+                    float emStr = activeMat.EmissiveIntensity * pulse;
+                    rF += activeMat.EmissiveColor.R * emStr;
+                    gF += activeMat.EmissiveColor.G * emStr;
+                    bF += activeMat.EmissiveColor.B * emStr;
+                }
+
+                targetPixels[writeIndex] = PackRGB(rF, gF, bF);
             }
-        }
     }
 
     // ------------------------------------------------------------------
-    //  Texture sampling for materials
+    //  Material sampling
     // ------------------------------------------------------------------
 
-    private Color SampleSolidTexture(TerrainPixel pixel, int worldX, int worldY, float worldXf, float worldYf)
+    private Color SampleMaterial(
+        TerrainPixel pixel, float texU, float texV,
+        int worldX, int worldY, bool useTextures)
     {
-        uint[] tex = GetTextureForPixel(pixel);
-        if (tex == _tex.Cave)
+        if (!useTextures)
+            return FallbackMaterialColor(pixel, worldX, worldY);
+
+        var matClass = TerrainTextureAtlas.Classify(pixel);
+        var matTex = _atlas.Get(matClass);
+        Color texColor = matTex.SampleColor(texU, texV);
+
+        uint h = Hash2((uint)worldX, (uint)worldY);
+        float cellVar = ((h & 0xFFu) / 255f - 0.5f) * 0.10f;
+        float brightness = 1f + cellVar;
+
+        if (pixel == TerrainPixel.DirtGrow)
+            texColor = LerpColor(texColor, new Color(94, 126, 74), 0.22f);
+
+        return new Color(
+            ScaleByte(texColor.R, brightness),
+            ScaleByte(texColor.G, brightness),
+            ScaleByte(texColor.B, brightness));
+    }
+
+    private Color SampleCave(float texU, float texV, int worldX, int worldY,
+        bool useTextures, TerrainPixel pixel = TerrainPixel.Blank)
+    {
+        if (!useTextures)
         {
-            // Base pixels: tint with the pixel's own color
-            Color baseColor = Pixel.GetColor(pixel);
-            Color texColor = MaterialTextures.Sample(_tex.Dirt, worldXf, worldYf);
-            return LerpColor(baseColor, texColor, 0.25f);
+            uint ch = Hash2((uint)worldX, (uint)worldY);
+            float t = (ch & 255u) / 255f;
+            if (Pixel.IsScorched(pixel))
+                return LerpColor(new Color(22, 18, 14), new Color(38, 30, 22), t * 0.5f);
+            return LerpColor(new Color(14, 14, 16), new Color(24, 22, 26), t * 0.4f);
         }
-        return MaterialTextures.Sample(tex, worldXf, worldYf);
+
+        if (Pixel.IsScorched(pixel))
+        {
+            Color cave = _atlas.Get(MaterialClass.Cave).SampleColor(texU, texV);
+            Color scorch = _atlas.Get(MaterialClass.Scorched).SampleColor(texU, texV);
+            float blendT = pixel == TerrainPixel.DecalHigh ? 0.55f : 0.35f;
+            return LerpColor(cave, scorch, blendT);
+        }
+
+        return _atlas.Get(MaterialClass.Cave).SampleColor(texU, texV);
     }
 
-    private uint[] GetTextureForPixel(TerrainPixel pixel)
+    private static Color FallbackMaterialColor(TerrainPixel pixel, int worldX, int worldY)
     {
-        if (pixel == TerrainPixel.DirtGrow) return _tex.DirtGrow;
-        if (Pixel.IsDirt(pixel)) return _tex.Dirt;
-        if (Pixel.IsRock(pixel)) return _tex.Rock;
-        if (Pixel.IsConcrete(pixel)) return _tex.Concrete;
-        if (Pixel.IsScorched(pixel)) return _tex.Scorched;
-        if (Pixel.IsEnergy(pixel)) return _tex.Energy;
-        if (Pixel.IsBase(pixel)) return _tex.Cave; // sentinel: handled specially
-        return _tex.Dirt;
-    }
+        uint h = Hash2((uint)worldX, (uint)worldY);
+        float t = (h & 1023u) / 1023f;
 
-    private static TerrainPixel FindNearestSolid(
-        TerrainGrid terrain, int cx0, int cy0, int cx1, int cy1, int w, int h)
-    {
-        var p = SafeGet(terrain, cx0, cy0, w, h);
-        if (IsSolidTerrain(p)) return p;
-        p = SafeGet(terrain, cx1, cy0, w, h);
-        if (IsSolidTerrain(p)) return p;
-        p = SafeGet(terrain, cx0, cy1, w, h);
-        if (IsSolidTerrain(p)) return p;
-        p = SafeGet(terrain, cx1, cy1, w, h);
-        if (IsSolidTerrain(p)) return p;
-        return TerrainPixel.DirtHigh;
+        if (pixel == TerrainPixel.Blank)
+            return LerpColor(new Color(14, 14, 16), new Color(24, 22, 26), t * 0.3f);
+        if (Pixel.IsScorched(pixel))
+            return LerpColor(new Color(32, 30, 30), new Color(50, 42, 38), t * 0.35f);
+        if (Pixel.IsDirt(pixel) || pixel == TerrainPixel.DirtGrow)
+        {
+            Color dirt = LerpColor(new Color(178, 114, 56), new Color(148, 88, 38), t * 0.65f);
+            if (pixel == TerrainPixel.DirtGrow) dirt = LerpColor(dirt, new Color(94, 126, 74), 0.22f);
+            return dirt;
+        }
+        if (Pixel.IsConcrete(pixel))
+            return LerpColor(new Color(124, 124, 132), new Color(92, 92, 104), t * 0.7f);
+        if (Pixel.IsRock(pixel))
+            return LerpColor(new Color(94, 88, 82), new Color(72, 68, 64), t * 0.75f);
+        if (Pixel.IsBase(pixel))
+            return LerpColor(new Color(62, 62, 68), new Color(48, 48, 54), t * 0.25f);
+        if (Pixel.IsEnergy(pixel))
+            return LerpColor(new Color(150, 168, 48), new Color(240, 240, 96), t * 0.5f);
+        return Pixel.GetColor(pixel);
     }
 
     // ------------------------------------------------------------------
@@ -375,8 +708,7 @@ public sealed class HiResTerrainRenderer
 
     private static TerrainPixel SafeGet(TerrainGrid terrain, int x, int y, int w, int h)
     {
-        if ((uint)x >= (uint)w || (uint)y >= (uint)h)
-            return TerrainPixel.Rock;
+        if ((uint)x >= (uint)w || (uint)y >= (uint)h) return TerrainPixel.Rock;
         return terrain.GetPixelRaw(x + y * w);
     }
 
@@ -386,6 +718,13 @@ public sealed class HiResTerrainRenderer
         if (t <= 0f) return 0f;
         if (t >= 1f) return 1f;
         return t * t * (3f - 2f * t);
+    }
+
+    private static float Remap(float value, float fromMin, float fromMax, float toMin, float toMax)
+    {
+        float t = (value - fromMin) / (fromMax - fromMin);
+        t = MathF.Max(0f, MathF.Min(1f, t));
+        return toMin + t * (toMax - toMin);
     }
 
     private static float ComputeAO(TerrainGrid terrain, int cx, int cy, int w, int h)
@@ -411,20 +750,29 @@ public sealed class HiResTerrainRenderer
 
     private static float CellVariation(int x, int y)
     {
-        uint h = (uint)x * 374761393u + (uint)y * 668265263u + 0x9E3779B9u;
-        h ^= h >> 13;
-        h *= 1274126177u;
-        h ^= h >> 16;
-        return ((h & 0xFFFFu) / 65535f) - 0.5f;
+        uint h = Hash2((uint)x, (uint)y);
+        return ((h & 0xFFFFu) / 65535f - 0.5f) * 0.14f;
+    }
+
+    private static float LocalRelief(float worldXf, float worldYf)
+    {
+        int nx = (int)(worldXf * 2.0f);
+        int ny = (int)(worldYf * 2.0f);
+        return ((Hash2((uint)nx, (uint)ny) & 1023u) / 1023f - 0.5f) * 0.014f;
+    }
+
+    private static uint PackRGB(float r, float g, float b)
+    {
+        byte rb = (byte)(r < 0 ? 0 : r > 255 ? 255 : (int)(r + 0.5f));
+        byte gb = (byte)(g < 0 ? 0 : g > 255 ? 255 : (int)(g + 0.5f));
+        byte bb = (byte)(b < 0 ? 0 : b > 255 ? 255 : (int)(b + 0.5f));
+        return 0xFF000000u | ((uint)rb << 16) | ((uint)gb << 8) | bb;
     }
 
     private static uint ApplyBrightness(Color color, float brightness)
     {
         brightness = MathF.Max(0.2f, MathF.Min(1.8f, brightness));
-        byte r = ScaleByte(color.R, brightness);
-        byte g = ScaleByte(color.G, brightness);
-        byte b = ScaleByte(color.B, brightness);
-        return 0xFF000000u | ((uint)r << 16) | ((uint)g << 8) | b;
+        return PackRGB(color.R * brightness, color.G * brightness, color.B * brightness);
     }
 
     private static byte ScaleByte(byte value, float scale)
@@ -433,26 +781,32 @@ public sealed class HiResTerrainRenderer
         return (byte)(v < 0 ? 0 : v > 255 ? 255 : v);
     }
 
+    private static uint Hash2(uint x, uint y)
+    {
+        uint h = x * 374761393u + y * 668265263u + 0x9E3779B9u;
+        h ^= h >> 13;
+        h *= 1274126177u;
+        h ^= h >> 16;
+        return h;
+    }
+
+    private static bool IsSolidTerrain(TerrainPixel p)
+    {
+        if (p == TerrainPixel.Blank) return false;
+        if (Pixel.IsScorched(p)) return false;
+        return true;
+    }
+
     private static int Clamp(int value, int min, int max)
     {
         if (value < min) return min;
         return value > max ? max : value;
     }
 
-    private static bool IsSolidTerrain(TerrainPixel p)
-    {
-        if (p == TerrainPixel.Blank) return false;
-        if (Pixel.IsScorched(p) || Pixel.IsEnergy(p)) return false;
-        return true;
-    }
-
     private static Color LerpColor(Color a, Color b, float t)
     {
         t = MathF.Max(0f, MathF.Min(1f, t));
-        return new Color(
-            LerpByte(a.R, b.R, t),
-            LerpByte(a.G, b.G, t),
-            LerpByte(a.B, b.B, t));
+        return new Color(LerpByte(a.R, b.R, t), LerpByte(a.G, b.G, t), LerpByte(a.B, b.B, t));
     }
 
     private static byte LerpByte(byte a, byte b, float t)
