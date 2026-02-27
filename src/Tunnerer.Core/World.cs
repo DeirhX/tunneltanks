@@ -131,13 +131,13 @@ public class World
                 if (pix == TerrainPixel.Blank)
                 {
                     int neighbors = _terrain.CountDirtNeighbors(pos);
-                    if (neighbors > 2 && random.Next(1000) < Tweaks.World.DirtRegrowSpeed * neighbors * Tweaks.World.DirtRegrowBlankModifier)
+                    if (TryQueueDirtRegrow(random, neighbors, Tweaks.World.DirtRegrowBlankModifier))
                         writes.Add((x + y * w, TerrainPixel.DirtGrow));
                 }
                 else if (Pixel.IsScorched(pix))
                 {
                     int neighbors = _terrain.CountDirtNeighbors(pos);
-                    if (neighbors > 2 && random.Next(1000) < Tweaks.World.DirtRegrowSpeed * neighbors * Tweaks.World.DirtRegrowScorchedModifier)
+                    if (TryQueueDirtRegrow(random, neighbors, Tweaks.World.DirtRegrowScorchedModifier))
                     {
                         writes.Add((x + y * w, TerrainPixel.DirtGrow));
                     }
@@ -172,6 +172,13 @@ public class World
 
         stagedWrites.Dispose();
         rng.Dispose();
+    }
+
+    private static bool TryQueueDirtRegrow(Random random, int neighbors, int modifier)
+    {
+        if (neighbors <= 2) return false;
+        int chance = Tweaks.World.DirtRegrowSpeed * neighbors * modifier;
+        return random.Next(1000) < chance;
     }
 }
 

@@ -817,10 +817,7 @@ public sealed class HiResTerrainRenderer
 
     private static float Smoothstep(float lo, float hi, float x)
     {
-        float t = (x - lo) / (hi - lo);
-        if (t <= 0f) return 0f;
-        if (t >= 1f) return 1f;
-        return t * t * (3f - 2f * t);
+        return RenderingMath.Smoothstep(lo, hi, x);
     }
 
     private static float Remap(float value, float fromMin, float fromMax, float toMin, float toMax)
@@ -886,11 +883,7 @@ public sealed class HiResTerrainRenderer
 
     private static uint Hash2(uint x, uint y)
     {
-        uint h = x * 374761393u + y * 668265263u + 0x9E3779B9u;
-        h ^= h >> 13;
-        h *= 1274126177u;
-        h ^= h >> 16;
-        return h;
+        return RenderingMath.Hash2(x, y);
     }
 
     private static bool IsSolidTerrain(TerrainPixel p)

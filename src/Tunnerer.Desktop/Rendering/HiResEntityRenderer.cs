@@ -232,10 +232,7 @@ public sealed class HiResEntityRenderer
 
     private static float Smoothstep(float edge0, float edge1, float x)
     {
-        float t = (x - edge0) / (edge1 - edge0);
-        if (t <= 0f) return 0f;
-        if (t >= 1f) return 1f;
-        return t * t * (3f - 2f * t);
+        return RenderingMath.Smoothstep(edge0, edge1, x);
     }
 
     public static void RenderTankHeatGlow(

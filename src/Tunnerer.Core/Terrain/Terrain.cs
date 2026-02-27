@@ -45,25 +45,18 @@ public class TerrainGrid
 
     public void AddHeatRadius(Position center, int amount, int radius)
     {
-        int w = Width, h = Height;
-        for (int dy = -radius; dy <= radius; dy++)
+        int radiusSq = radius * radius;
+        ForEachInRadius(center, radius, (nx, ny, dx, dy) =>
         {
-            int ny = center.Y + dy;
-            if ((uint)ny >= (uint)h) continue;
-            for (int dx = -radius; dx <= radius; dx++)
-            {
-                int nx = center.X + dx;
-                if ((uint)nx >= (uint)w) continue;
-                int dist2 = dx * dx + dy * dy;
-                if (dist2 > radius * radius) continue;
-                float falloff = 1f - (float)dist2 / (radius * radius);
-                int scaled = (int)(amount * falloff);
-                if (scaled <= 0) continue;
-                int offset = nx + ny * w;
-                int val = _heat[offset] + scaled;
-                _heat[offset] = (byte)(val > 255 ? 255 : val);
-            }
-        }
+            int dist2 = dx * dx + dy * dy;
+            if (dist2 > radiusSq) return;
+            float falloff = 1f - (float)dist2 / radiusSq;
+            int scaled = (int)(amount * falloff);
+            if (scaled <= 0) return;
+            int offset = nx + ny * Width;
+            int val = _heat[offset] + scaled;
+            _heat[offset] = (byte)(val > 255 ? 255 : val);
+        });
     }
 
     private byte[]? _heatTemp;
@@ -109,22 +102,29 @@ public class TerrainGrid
 
     public float SampleAverageHeat(Position center, int radius)
     {
-        int w = Width, h = Height;
         int sum = 0, count = 0;
+        ForEachInRadius(center, radius, (nx, ny, _, _) =>
+        {
+            sum += _heat[ny * Width + nx];
+            count++;
+        });
+        return count > 0 ? sum / (count * 255f) : 0f;
+    }
+
+    private void ForEachInRadius(Position center, int radius, Action<int, int, int, int> visitor)
+    {
+        int w = Width, h = Height;
         for (int dy = -radius; dy <= radius; dy++)
         {
             int ny = center.Y + dy;
             if ((uint)ny >= (uint)h) continue;
-            int row = ny * w;
             for (int dx = -radius; dx <= radius; dx++)
             {
                 int nx = center.X + dx;
                 if ((uint)nx >= (uint)w) continue;
-                sum += _heat[row + nx];
-                count++;
+                visitor(nx, ny, dx, dy);
             }
         }
-        return count > 0 ? sum / (count * 255f) : 0f;
     }
 
     private static int[] BuildNeighborOffsets(int w)
