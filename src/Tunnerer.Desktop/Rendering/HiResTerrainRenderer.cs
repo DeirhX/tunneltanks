@@ -333,11 +333,7 @@ public sealed class HiResTerrainRenderer
                     int rowOff = py * w;
                     for (int px = srcX; px < endX; px++)
                     {
-                        uint c = pixels[rowOff + px];
-                        int fr = Math.Min(255, (int)((c >> 16) & 0xFF) + addR);
-                        int fg = Math.Min(255, (int)((c >> 8) & 0xFF) + addG);
-                        int fb = Math.Min(255, (int)(c & 0xFF) + addB);
-                        pixels[rowOff + px] = 0xFF000000u | ((uint)fr << 16) | ((uint)fg << 8) | (uint)fb;
+                        pixels[rowOff + px] = RenderingPixels.Additive(pixels[rowOff + px], addR, addG, addB);
                     }
                 }
             }
@@ -369,11 +365,7 @@ public sealed class HiResTerrainRenderer
                 float d2 = (dxSq[x] + dyy) * invMaxDist2;
                 float darken = 1f - d2 * VignetteDarken;
 
-                uint c = pixels[row + x];
-                int r = (int)(((c >> 16) & 0xFF) * darken);
-                int g = (int)(((c >> 8) & 0xFF) * darken);
-                int b = (int)((c & 0xFF) * darken);
-                pixels[row + x] = 0xFF000000u | ((uint)r << 16) | ((uint)g << 8) | (uint)b;
+                pixels[row + x] = RenderingPixels.Darken(pixels[row + x], darken);
             }
         });
     }
@@ -718,7 +710,7 @@ public sealed class HiResTerrainRenderer
                     bF += HeatGlowB * t2 * t2;
                 }
 
-                targetPixels[writeIndex] = PackRGB(rF, gF, bF);
+                targetPixels[writeIndex] = RenderingPixels.PackRgb(rF, gF, bF);
             }
     }
 
@@ -861,18 +853,10 @@ public sealed class HiResTerrainRenderer
         return ((Hash2((uint)nx, (uint)ny) & 1023u) / 1023f - 0.5f) * 0.014f;
     }
 
-    private static uint PackRGB(float r, float g, float b)
-    {
-        byte rb = (byte)(r < 0 ? 0 : r > 255 ? 255 : (int)(r + 0.5f));
-        byte gb = (byte)(g < 0 ? 0 : g > 255 ? 255 : (int)(g + 0.5f));
-        byte bb = (byte)(b < 0 ? 0 : b > 255 ? 255 : (int)(b + 0.5f));
-        return 0xFF000000u | ((uint)rb << 16) | ((uint)gb << 8) | bb;
-    }
-
     private static uint ApplyBrightness(Color color, float brightness)
     {
         brightness = MathF.Max(0.2f, MathF.Min(1.8f, brightness));
-        return PackRGB(color.R * brightness, color.G * brightness, color.B * brightness);
+        return RenderingPixels.PackRgb(color.R * brightness, color.G * brightness, color.B * brightness);
     }
 
     private static byte ScaleByte(byte value, float scale)

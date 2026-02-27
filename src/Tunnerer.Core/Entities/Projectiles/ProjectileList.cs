@@ -116,9 +116,8 @@ public class ProjectileList
         var terrain = solver.Terrain;
         if (p.Life-- <= 0) { p.IsAlive = false; return; }
 
-        p.Position += p.Speed;
-        var ipos = (Position)p.Position;
-        if (!terrain.IsInside(ipos)) { p.IsAlive = false; return; }
+        if (!TryAdvanceInside(terrain, p, out var ipos))
+            return;
 
         var pix = terrain.GetPixelRaw(ipos);
         if (Pixel.IsBlockingCollision(pix))
@@ -144,9 +143,8 @@ public class ProjectileList
         if (p.Life-- <= 0) { p.IsAlive = false; return; }
 
         var prevPos = (Position)p.Position;
-        p.Position += p.Speed;
-        var ipos = (Position)p.Position;
-        if (!terrain.IsInside(ipos)) { p.IsAlive = false; return; }
+        if (!TryAdvanceInside(terrain, p, out var ipos))
+            return;
 
         var pix = terrain.GetPixelRaw(ipos);
         if (Pixel.IsAnyCollision(pix) && !(skipConcrete && Pixel.IsConcrete(pix)))
@@ -155,6 +153,18 @@ public class ProjectileList
                 terrain.SetPixel(prevPos, Random.Shared.Next(2) == 0 ? highPixel : lowPixel);
             p.IsAlive = false;
         }
+    }
+
+    private static bool TryAdvanceInside(TerrainGrid terrain, Projectile p, out Position ipos)
+    {
+        p.Position += p.Speed;
+        ipos = (Position)p.Position;
+        if (!terrain.IsInside(ipos))
+        {
+            p.IsAlive = false;
+            return false;
+        }
+        return true;
     }
 
     public void Draw(Surface surface)

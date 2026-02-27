@@ -68,7 +68,7 @@ public sealed class HiResEntityRenderer
                 {
                     int row = py * targetWidth;
                     for (int px = sx0; px < sx1; px++)
-                        targetPixels[row + px] = DarkenPixel(targetPixels[row + px], ShadowDarken);
+                        targetPixels[row + px] = RenderingPixels.Darken(targetPixels[row + px], ShadowDarken);
                 }
             }
         }
@@ -98,7 +98,7 @@ public sealed class HiResEntityRenderer
 
                 if (isIsolated)
                 {
-                    uint cellSeed = (uint)(wx * 374761393 + wy * 668265263);
+                    uint cellSeed = RenderingMath.Hash2((uint)wx, (uint)wy);
                     float phase = (cellSeed & 0xFFu) / 255f * 6.28f;
                     float flicker = FlickerMin + FlickerRange * MathF.Sin(time * FlickerFreq + phase);
                     RenderGlowEntity(targetPixels, targetWidth, targetHeight,
@@ -140,7 +140,7 @@ public sealed class HiResEntityRenderer
                 if (!nUp)     alpha = MathF.Min(alpha, Smoothstep(0f, feather, fy));
                 if (!nDown)   alpha = MathF.Min(alpha, Smoothstep(0f, feather, 1f - fy));
 
-                target[row + sx] = BlendPixel(target[row + sx], entityColor, alpha);
+                target[row + sx] = RenderingPixels.Blend(target[row + sx], entityColor, alpha);
             }
         }
     }
@@ -170,13 +170,13 @@ public sealed class HiResEntityRenderer
 
                 if (r <= coreR)
                 {
-                    target[row + px] = BrightenPixel(entityColor, GlowCoreBrighten);
+                    target[row + px] = RenderingPixels.Brighten(entityColor, GlowCoreBrighten);
                 }
                 else if (r <= glowR)
                 {
                     float t = (r - coreR) / (glowR - coreR);
                     float alpha = (1f - t) * (1f - t) * GlowFalloffAlpha;
-                    target[row + px] = BlendPixel(target[row + px], entityColor, alpha);
+                    target[row + px] = RenderingPixels.Blend(target[row + px], entityColor, alpha);
                 }
             }
         }
@@ -192,42 +192,6 @@ public sealed class HiResEntityRenderer
         if (wy > 0 && composite[idx - ww] != terrain[idx - ww]) return false;
         if (wy < wh - 1 && composite[idx + ww] != terrain[idx + ww]) return false;
         return true;
-    }
-
-    private static uint BlendPixel(uint under, uint over, float alpha)
-    {
-        if (alpha >= 1f) return (under & 0xFF000000u) | (over & 0x00FFFFFFu);
-        if (alpha <= 0f) return under;
-
-        int ur = (int)((under >> 16) & 0xFF);
-        int ug = (int)((under >> 8) & 0xFF);
-        int ub = (int)(under & 0xFF);
-
-        int or2 = (int)((over >> 16) & 0xFF);
-        int og = (int)((over >> 8) & 0xFF);
-        int ob = (int)(over & 0xFF);
-
-        int r = ur + (int)((or2 - ur) * alpha + 0.5f);
-        int g = ug + (int)((og - ug) * alpha + 0.5f);
-        int b = ub + (int)((ob - ub) * alpha + 0.5f);
-
-        return 0xFF000000u | ((uint)r << 16) | ((uint)g << 8) | (uint)b;
-    }
-
-    private static uint DarkenPixel(uint color, float factor)
-    {
-        int r = (int)(((color >> 16) & 0xFF) * factor);
-        int g = (int)(((color >> 8) & 0xFF) * factor);
-        int b = (int)((color & 0xFF) * factor);
-        return 0xFF000000u | ((uint)r << 16) | ((uint)g << 8) | (uint)b;
-    }
-
-    private static uint BrightenPixel(uint color, float factor)
-    {
-        int r = Math.Min(255, (int)(((color >> 16) & 0xFF) * factor));
-        int g = Math.Min(255, (int)(((color >> 8) & 0xFF) * factor));
-        int b = Math.Min(255, (int)((color & 0xFF) * factor));
-        return 0xFF000000u | ((uint)r << 16) | ((uint)g << 8) | (uint)b;
     }
 
     private static float Smoothstep(float edge0, float edge1, float x)

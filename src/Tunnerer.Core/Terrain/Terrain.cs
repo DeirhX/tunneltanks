@@ -218,12 +218,7 @@ public class TerrainGrid
 
     public void DrawAllToSurface(uint[] surface)
     {
-        for (int y = 0; y < Height; y++)
-            for (int x = 0; x < Width; x++)
-            {
-                var color = Pixel.GetColor(_data[x + y * Width]);
-                surface[x + y * Width] = color.ToArgb();
-            }
+        DrawAllToSurfaceInternal(surface, parallel: false);
     }
 
     public void MaterializeTerrain(int? seed = null, bool parallel = false)
@@ -421,8 +416,27 @@ public class TerrainGrid
 
     public void DrawAllToSurfaceParallel(uint[] surface)
     {
+        DrawAllToSurfaceInternal(surface, parallel: true);
+    }
+
+    private void DrawAllToSurfaceInternal(uint[] surface, bool parallel)
+    {
         int w = Width, h = Height;
-        Parallel.For(0, h, y =>
+        if (parallel)
+        {
+            Parallel.For(0, h, y =>
+            {
+                int rowOffset = y * w;
+                for (int x = 0; x < w; x++)
+                {
+                    var color = Pixel.GetColor(_data[rowOffset + x]);
+                    surface[rowOffset + x] = color.ToArgb();
+                }
+            });
+            return;
+        }
+
+        for (int y = 0; y < h; y++)
         {
             int rowOffset = y * w;
             for (int x = 0; x < w; x++)
@@ -430,7 +444,7 @@ public class TerrainGrid
                 var color = Pixel.GetColor(_data[rowOffset + x]);
                 surface[rowOffset + x] = color.ToArgb();
             }
-        });
+        }
     }
 
     public ReadOnlySpan<TerrainPixel> Data => _data;
