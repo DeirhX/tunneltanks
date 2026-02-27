@@ -121,6 +121,12 @@ public sealed class HiResTerrainRenderer
         return _blurField![y * _blurW + x];
     }
 
+    private static float SampleHeat(TerrainGrid terrain, int x, int y, int w, int h)
+    {
+        if ((uint)x >= (uint)w || (uint)y >= (uint)h) return 0f;
+        return terrain.GetHeat(x + y * w) / 255f;
+    }
+
     // ------------------------------------------------------------------
     //  Public render entry points
     // ------------------------------------------------------------------
@@ -176,17 +182,18 @@ public sealed class HiResTerrainRenderer
 
     public static void PostProcess(uint[] pixels, int width, int height, HiResRenderQuality quality)
     {
-        if (quality < HiResRenderQuality.High) return;
-        ApplyBloom(pixels, width, height);
-        ApplyVignette(pixels, width, height);
+        if (quality >= HiResRenderQuality.Medium)
+            ApplyBloom(pixels, width, height);
+        if (quality >= HiResRenderQuality.High)
+            ApplyVignette(pixels, width, height);
     }
 
     private static void ApplyBloom(uint[] pixels, int w, int h)
     {
-        const int brightThreshold = 420;
+        const int brightThreshold = 330;
         const int downscale = 4;
-        const int radius = 2;
-        const float bloomStr = 0.35f;
+        const int radius = 3;
+        const float bloomStr = 0.45f;
         int dw = w / downscale, dh = h / downscale;
         int dLen = dw * dh;
 
@@ -254,7 +261,7 @@ public sealed class HiResTerrainRenderer
                     if (buf[tR + idx] == 0 && buf[tG + idx] == 0 && buf[tB + idx] == 0) continue;
                     rr += buf[tR + idx]; gg += buf[tG + idx]; bb += buf[tB + idx]; cnt++;
                 }
-                if (cnt == 0) return;
+                if (cnt == 0) continue;
 
                 int addR = (int)(rr / cnt * bloomStr);
                 int addG = (int)(gg / cnt * bloomStr);
@@ -436,9 +443,23 @@ public sealed class HiResTerrainRenderer
                 float texU = worldXf * TexTileDensity;
                 float texV = worldYf * TexTileDensity;
 
+                // Bilinear heat interpolation (reuses SDF sample coordinates)
+                float ht00 = SampleHeat(terrain, cx0, cy0, w, h);
+                float ht10 = SampleHeat(terrain, cx1, cy0, w, h);
+                float ht01 = SampleHeat(terrain, cx0, cy1, w, h);
+                float ht11 = SampleHeat(terrain, cx1, cy1, w, h);
+                float heat = ht00 * (1f - lx) * (1f - ly) + ht10 * lx * (1f - ly) +
+                             ht01 * (1f - lx) * ly + ht11 * lx * ly;
+                bool isScorched = Pixel.IsScorched(centerPixel);
+
                 // --- Color blending ---
                 Color blended;
                 MaterialTexture activeMat = centerMatTex;
+
+                // Isolated solid pixels inside cave (SDF says empty but pixel is solid)
+                bool centerIsSolid = IsSolidTerrain(centerPixel);
+                if (alpha <= 0f && centerIsSolid)
+                    alpha = 0.35f;
 
                 if (alpha >= 1f)
                 {
@@ -446,14 +467,14 @@ public sealed class HiResTerrainRenderer
                 }
                 else if (alpha <= 0f)
                 {
-                    blended = SampleCave(texU, texV, worldX, worldY, useTextures, centerPixel);
+                    blended = SampleCave(texU, texV, worldX, worldY, useTextures, heat, isScorched);
                     activeMat = _atlas.Get(MaterialClass.Cave);
                 }
                 else
                 {
                     Color solidCol;
                     MaterialTexture solidMat;
-                    if (IsSolidTerrain(centerPixel))
+                    if (centerIsSolid)
                     {
                         solidCol = SampleMaterial(centerPixel, texU, texV, worldX, worldY, useTextures);
                         solidMat = centerMatTex;
@@ -464,36 +485,45 @@ public sealed class HiResTerrainRenderer
                         solidCol = SampleMaterial(solidPixel, texU, texV, worldX, worldY, useTextures);
                         solidMat = _atlas.Get(TerrainTextureAtlas.Classify(solidPixel));
                     }
-                    Color caveCol = SampleCave(texU, texV, worldX, worldY, useTextures, centerPixel);
+                    Color caveCol = SampleCave(texU, texV, worldX, worldY, useTextures, heat, isScorched);
                     blended = LerpColor(caveCol, solidCol, alpha);
 
-                    // Blend material properties by alpha for lighting
                     activeMat = alpha >= 0.5f ? solidMat : _atlas.Get(MaterialClass.Cave);
                 }
 
                 // --- Material-to-material boundary blending ---
-                if (useTextures && alpha > 0.5f)
+                if (useTextures && alpha > 0.1f)
                 {
                     var centerMat = centerMatClass;
-                    var mc00 = s00 ? TerrainTextureAtlas.Classify(p00) : MaterialClass.Cave;
-                    var mc10 = s10 ? TerrainTextureAtlas.Classify(p10) : MaterialClass.Cave;
-                    var mc01 = s01 ? TerrainTextureAtlas.Classify(p01) : MaterialClass.Cave;
-                    var mc11 = s11 ? TerrainTextureAtlas.Classify(p11) : MaterialClass.Cave;
+                    var mc00 = s00 ? TerrainTextureAtlas.Classify(p00) : centerMat;
+                    var mc10 = s10 ? TerrainTextureAtlas.Classify(p10) : centerMat;
+                    var mc01 = s01 ? TerrainTextureAtlas.Classify(p01) : centerMat;
+                    var mc11 = s11 ? TerrainTextureAtlas.Classify(p11) : centerMat;
 
-                    MaterialClass neighborMat = centerMat;
-                    if (s00 && mc00 != centerMat) neighborMat = mc00;
-                    else if (s10 && mc10 != centerMat) neighborMat = mc10;
-                    else if (s01 && mc01 != centerMat) neighborMat = mc01;
-                    else if (s11 && mc11 != centerMat) neighborMat = mc11;
-
-                    if (neighborMat != centerMat)
+                    bool hasBoundary = mc00 != centerMat || mc10 != centerMat ||
+                                       mc01 != centerMat || mc11 != centerMat;
+                    if (hasBoundary)
                     {
-                        var neighborTex = _atlas.Get(neighborMat);
-                        Color neighborCol = neighborTex.SampleColor(texU, texV);
-                        float bx = fracX < 0.5f ? (0.5f - fracX) : (fracX - 0.5f);
-                        float by = fracY < 0.5f ? (0.5f - fracY) : (fracY - 0.5f);
-                        float blendT = MathF.Max(bx, by) * 0.6f;
-                        blended = LerpColor(blended, neighborCol, Smoothstep(0f, 0.5f, blendT) * 0.35f);
+                        float w00 = (1f - lx) * (1f - ly);
+                        float w10 = lx * (1f - ly);
+                        float w01 = (1f - lx) * ly;
+                        float w11 = lx * ly;
+
+                        Color c00 = _atlas.Get(mc00).SampleColor(texU, texV);
+                        Color c10 = _atlas.Get(mc10).SampleColor(texU, texV);
+                        Color c01 = _atlas.Get(mc01).SampleColor(texU, texV);
+                        Color c11 = _atlas.Get(mc11).SampleColor(texU, texV);
+
+                        int blR = (int)(c00.R * w00 + c10.R * w10 + c01.R * w01 + c11.R * w11 + 0.5f);
+                        int blG = (int)(c00.G * w00 + c10.G * w10 + c01.G * w01 + c11.G * w11 + 0.5f);
+                        int blB = (int)(c00.B * w00 + c10.B * w10 + c01.B * w01 + c11.B * w11 + 0.5f);
+                        Color bilinearCol = new((byte)blR, (byte)blG, (byte)blB);
+
+                        float proximity = MathF.Max(
+                            MathF.Abs(fracX - 0.5f),
+                            MathF.Abs(fracY - 0.5f)) * 2f;
+                        float blendT = Smoothstep(0f, 1f, proximity) * 0.7f;
+                        blended = LerpColor(blended, bilinearCol, blendT);
                     }
                 }
 
@@ -621,6 +651,15 @@ public sealed class HiResTerrainRenderer
                     bF += activeMat.EmissiveColor.B * emStr;
                 }
 
+                // Heat glow: smooth emission from bilinearly interpolated heat
+                if (heat > 0.01f)
+                {
+                    float t2 = heat * heat;
+                    rF += 220f * t2;
+                    gF += 80f * t2 * heat;
+                    bF += 15f * t2 * t2;
+                }
+
                 targetPixels[writeIndex] = PackRGB(rF, gF, bF);
             }
     }
@@ -654,26 +693,32 @@ public sealed class HiResTerrainRenderer
     }
 
     private Color SampleCave(float texU, float texV, int worldX, int worldY,
-        bool useTextures, TerrainPixel pixel = TerrainPixel.Blank)
+        bool useTextures, float heat = 0f, bool isScorched = false)
     {
+        float scorchBlend = heat * 0.6f;
+        if (isScorched)
+            scorchBlend = MathF.Max(scorchBlend, 0.2f);
+
         if (!useTextures)
         {
             uint ch = Hash2((uint)worldX, (uint)worldY);
             float t = (ch & 255u) / 255f;
-            if (Pixel.IsScorched(pixel))
-                return LerpColor(new Color(22, 18, 14), new Color(38, 30, 22), t * 0.5f);
-            return LerpColor(new Color(14, 14, 16), new Color(24, 22, 26), t * 0.4f);
+            Color baseCave = LerpColor(new Color(14, 14, 16), new Color(24, 22, 26), t * 0.4f);
+            if (scorchBlend > 0.01f)
+            {
+                Color scorch = LerpColor(new Color(22, 18, 14), new Color(38, 30, 22), t * 0.5f);
+                return LerpColor(baseCave, scorch, scorchBlend);
+            }
+            return baseCave;
         }
 
-        if (Pixel.IsScorched(pixel))
+        Color cave = _atlas.Get(MaterialClass.Cave).SampleColor(texU, texV);
+        if (scorchBlend > 0.01f)
         {
-            Color cave = _atlas.Get(MaterialClass.Cave).SampleColor(texU, texV);
             Color scorch = _atlas.Get(MaterialClass.Scorched).SampleColor(texU, texV);
-            float blendT = pixel == TerrainPixel.DecalHigh ? 0.55f : 0.35f;
-            return LerpColor(cave, scorch, blendT);
+            return LerpColor(cave, scorch, scorchBlend);
         }
-
-        return _atlas.Get(MaterialClass.Cave).SampleColor(texU, texV);
+        return cave;
     }
 
     private static Color FallbackMaterialColor(TerrainPixel pixel, int worldX, int worldY)

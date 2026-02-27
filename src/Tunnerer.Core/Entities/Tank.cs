@@ -20,9 +20,12 @@ public class Tank
     public bool IsDead => Reactor.Health <= 0 || Reactor.Energy <= 0;
     public TankBase? Base { get; }
     public TankTurret Turret { get; }
+    public float Heat { get; set; }
 
     private TimeSpan _respawnTimer;
     private bool _respawning;
+    private int _frameDugPixels;
+    private bool _frameShotFired;
 
     public Tank(int color, TankBase tankBase)
     {
@@ -55,6 +58,7 @@ public class Tank
         HandleMove(world.Terrain, input.MoveSpeed, Turret.Direction, input.ShootPrimary);
         AdvanceShooting(input, world);
         CollectItems(world.Terrain);
+        AdvanceHeat(world);
     }
 
     private void AdvanceBaseInteraction(World world)
@@ -86,7 +90,10 @@ public class Tank
         if (!input.ShootPrimary) return;
         var bullet = Turret.TryShoot(Position, world.Projectiles);
         if (bullet != null)
+        {
             Reactor.Exhaust(new ReactorState(Tweaks.Tank.ShootEnergyCost, 0));
+            _frameShotFired = true;
+        }
     }
 
     private void HandleMove(TerrainGrid terrain, Offset speed, DirectionF torchHeading, bool torchUse)
@@ -148,6 +155,7 @@ public class Tank
                 if (Pixel.IsDiggable(pix))
                 {
                     terrain.SetPixel(worldPos, TerrainPixel.Blank);
+                    _frameDugPixels++;
                     if (Pixel.IsDirt(pix))
                         Resources.Add(new MaterialAmount(1, 0));
                 }
@@ -155,6 +163,7 @@ public class Tank
                          Random.Shared.Next(1000) < Tweaks.World.DigThroughRockChance)
                 {
                     terrain.SetPixel(worldPos, TerrainPixel.Blank);
+                    _frameDugPixels += 2;
                     if (Pixel.IsMineral(pix))
                         Resources.Add(new MaterialAmount(0, 1));
                 }
@@ -183,11 +192,47 @@ public class Tank
         });
     }
 
+    private void AdvanceHeat(World world)
+    {
+        // Heat from actions this frame
+        Heat += _frameDugPixels * Tweaks.Tank.HeatDigPerPixel;
+        if (_frameShotFired)
+            Heat += Tweaks.Tank.HeatShootPerShot;
+
+        // Absorb heat from nearby hot terrain
+        float terrainHeat = world.Terrain.SampleAverageHeat(Position, Tweaks.Tank.DigRadius);
+        Heat += terrainHeat * Tweaks.Tank.HeatTerrainAbsorb * Tweaks.Tank.HeatMax;
+
+        // Natural cooling
+        float cooling = Tweaks.Tank.HeatCoolPerFrame;
+
+        // Bonus cooling at own base
+        var baseColl = world.TankBases.CheckBaseCollision(Position);
+        if (baseColl != null && baseColl.Color == Color)
+            cooling += Tweaks.Tank.HeatBaseCoolBonus;
+
+        Heat = MathF.Max(0f, Heat - cooling);
+        Heat = MathF.Min(Heat, Tweaks.Tank.HeatMax);
+
+        // Overheat damage
+        if (Heat > Tweaks.Tank.HeatOverheatThreshold)
+        {
+            float excess = Heat - Tweaks.Tank.HeatOverheatThreshold;
+            int damage = (int)(excess * Tweaks.Tank.HeatDamagePerFrame);
+            if (damage > 0)
+                Reactor.Exhaust(new ReactorState(0, damage));
+        }
+
+        _frameDugPixels = 0;
+        _frameShotFired = false;
+    }
+
     public void Spawn()
     {
         if (Base == null) return;
         Reactor.Add(new ReactorState(Reactor.EnergyCapacity, Reactor.HealthCapacity));
         Position = Base.Position;
+        Heat = 0f;
         _respawning = false;
     }
 

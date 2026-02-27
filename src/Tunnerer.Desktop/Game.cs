@@ -227,6 +227,10 @@ public class Game : IDisposable
                 _terrainSize.X, _terrainSize.Y,
                 _camPixelX, _camPixelY, scale, renderTime);
 
+            HiResEntityRenderer.RenderTankHeatGlow(
+                _hiResPixels, _hiResSize.X, _hiResSize.Y,
+                _world.TankList.Tanks, _camPixelX, _camPixelY, scale);
+
             HiResTerrainRenderer.PostProcess(_hiResPixels, _hiResSize.X, _hiResSize.Y, _hiResQuality);
             _drawProfile.ScreenHiResEntities += hiResWatch.Elapsed;
             double entityMs = hiResWatch.Elapsed.TotalMilliseconds;

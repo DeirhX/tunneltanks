@@ -1,3 +1,6 @@
+using Tunnerer.Core.Entities;
+using Tunnerer.Core.Config;
+
 namespace Tunnerer.Desktop.Rendering;
 
 public sealed class HiResEntityRenderer
@@ -217,5 +220,56 @@ public sealed class HiResEntityRenderer
         if (t <= 0f) return 0f;
         if (t >= 1f) return 1f;
         return t * t * (3f - 2f * t);
+    }
+
+    public static void RenderTankHeatGlow(
+        uint[] targetPixels, int tw, int th,
+        IReadOnlyList<Tank> tanks,
+        int camPixelX, int camPixelY, int pixelScale)
+    {
+        for (int i = 0; i < tanks.Count; i++)
+        {
+            var tank = tanks[i];
+            if (tank.IsDead || tank.Heat < 5f) continue;
+
+            float t = tank.Heat / Tweaks.Tank.HeatMax;
+            float intensity = t * t;
+            int glowRadius = (int)(pixelScale * (2.5f + 2.5f * t));
+
+            float cx = (tank.Position.X + 0.5f) * pixelScale - camPixelX;
+            float cy = (tank.Position.Y + 0.5f) * pixelScale - camPixelY;
+
+            int x0 = Math.Max(0, (int)(cx - glowRadius));
+            int y0 = Math.Max(0, (int)(cy - glowRadius));
+            int x1 = Math.Min(tw - 1, (int)(cx + glowRadius));
+            int y1 = Math.Min(th - 1, (int)(cy + glowRadius));
+            float invR2 = 1f / (glowRadius * glowRadius);
+
+            for (int py = y0; py <= y1; py++)
+            {
+                float dy = py - cy;
+                float dy2 = dy * dy;
+                int row = py * tw;
+                for (int px = x0; px <= x1; px++)
+                {
+                    float dx = px - cx;
+                    float dist2 = dx * dx + dy2;
+                    float falloff = 1f - dist2 * invR2;
+                    if (falloff <= 0f) continue;
+                    falloff *= falloff;
+
+                    float glow = intensity * falloff;
+                    int addR = (int)(200f * glow);
+                    int addG = (int)(60f * glow * t);
+                    int addB = (int)(10f * glow * t * t);
+
+                    uint c = targetPixels[row + px];
+                    int fr = Math.Min(255, (int)((c >> 16) & 0xFF) + addR);
+                    int fg = Math.Min(255, (int)((c >> 8) & 0xFF) + addG);
+                    int fb = Math.Min(255, (int)(c & 0xFF) + addB);
+                    targetPixels[row + px] = 0xFF000000u | ((uint)fr << 16) | ((uint)fg << 8) | (uint)fb;
+                }
+            }
+        }
     }
 }

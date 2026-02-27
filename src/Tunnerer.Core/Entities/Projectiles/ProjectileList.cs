@@ -99,6 +99,7 @@ public class ProjectileList
             if (hit)
             {
                 self.SpawnNormalExplosion(ipos);
+                terrain.AddHeatRadius(ipos, 255, 5);
                 p.IsAlive = false;
                 return;
             }
@@ -126,13 +127,15 @@ public class ProjectileList
             if ((Pixel.IsConcrete(pix) && rng.Next(1000) < Tweaks.Explosion.ChanceToDestroyConcrete) ||
                 (Pixel.IsRock(pix) && rng.Next(1000) < Tweaks.Explosion.ChanceToDestroyRock))
             {
-                terrain.SetPixel(ipos, rng.Next(2) == 0 ? TerrainPixel.DecalHigh : TerrainPixel.DecalLow);
+                terrain.SetPixel(ipos, TerrainPixel.DecalHigh);
             }
+            terrain.AddHeat(ipos, 200);
             p.IsAlive = false;
             return;
         }
 
-        terrain.SetPixel(ipos, Random.Shared.Next(2) == 0 ? TerrainPixel.DecalHigh : TerrainPixel.DecalLow);
+        terrain.SetPixel(ipos, TerrainPixel.DecalHigh);
+        terrain.AddHeatRadius(ipos, 255, 3);
     }
 
     private static void AdvanceFoam(Projectile p, TerrainGrid terrain,

@@ -40,6 +40,9 @@ public static class Tweaks
         public const int DirtRegrowSpeed = 4;
         public const int DirtRegrowBlankModifier = 4;
         public const int DirtRegrowScorchedModifier = 1;
+        public const int DecalDecaySpeed = 40;
+        public const int HeatCooldownPerTick = 1;
+        public const float HeatDiffuseRate = 0.18f;
         public const int DigThroughRockChance = 250;
         public static readonly TimeSpan RefreshLinkMapInterval = TimeSpan.FromMilliseconds(200);
         public const float MaximumLiveLinkDistance = 100f;
@@ -86,6 +89,15 @@ public static class Tweaks
         public const int EnergyPickupLow = 100;
         public const int EnergyPickupMedium = 200;
         public const int EnergyPickupHigh = 400;
+
+        public const float HeatMax = 100f;
+        public const float HeatDigPerPixel = 0.008f;
+        public const float HeatShootPerShot = 1.8f;
+        public const float HeatTerrainAbsorb = 0.008f;
+        public const float HeatCoolPerFrame = 0.18f;
+        public const float HeatBaseCoolBonus = 0.30f;
+        public const float HeatOverheatThreshold = 70f;
+        public const float HeatDamagePerFrame = 0.5f;
     }
 
     public static class Weapon

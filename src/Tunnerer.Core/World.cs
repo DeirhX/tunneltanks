@@ -111,6 +111,8 @@ public class World
             return;
         _regrowAccumulator += Tweaks.World.DirtRecoverInterval;
 
+        _terrain.CoolDown(Tweaks.World.HeatCooldownPerTick, Tweaks.World.HeatDiffuseRate);
+
         int w = _terrain.Width, h = _terrain.Height;
         var stagedWrites = new ThreadLocal<List<(int offset, TerrainPixel value)>>(
             () => new List<(int, TerrainPixel)>(), trackAllValues: true);
@@ -126,15 +128,26 @@ public class World
                 var pos = new Position(x, y);
                 var pix = _terrain.GetPixelRaw(pos);
 
-                if (pix == TerrainPixel.Blank || Pixel.IsScorched(pix))
+                if (pix == TerrainPixel.Blank)
                 {
                     int neighbors = _terrain.CountDirtNeighbors(pos);
-                    int modifier = pix == TerrainPixel.Blank
-                        ? Tweaks.World.DirtRegrowBlankModifier
-                        : Tweaks.World.DirtRegrowScorchedModifier;
-                    if (neighbors > 2 && random.Next(1000) < Tweaks.World.DirtRegrowSpeed * neighbors * modifier)
+                    if (neighbors > 2 && random.Next(1000) < Tweaks.World.DirtRegrowSpeed * neighbors * Tweaks.World.DirtRegrowBlankModifier)
+                        writes.Add((x + y * w, TerrainPixel.DirtGrow));
+                }
+                else if (Pixel.IsScorched(pix))
+                {
+                    int neighbors = _terrain.CountDirtNeighbors(pos);
+                    if (neighbors > 2 && random.Next(1000) < Tweaks.World.DirtRegrowSpeed * neighbors * Tweaks.World.DirtRegrowScorchedModifier)
                     {
                         writes.Add((x + y * w, TerrainPixel.DirtGrow));
+                    }
+                    else if (pix == TerrainPixel.DecalHigh && random.Next(1000) < Tweaks.World.DecalDecaySpeed)
+                    {
+                        writes.Add((x + y * w, TerrainPixel.DecalLow));
+                    }
+                    else if (pix == TerrainPixel.DecalLow && random.Next(1000) < Tweaks.World.DecalDecaySpeed)
+                    {
+                        writes.Add((x + y * w, TerrainPixel.Blank));
                     }
                 }
                 else if (pix == TerrainPixel.DirtGrow)

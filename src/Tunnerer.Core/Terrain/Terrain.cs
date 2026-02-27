@@ -5,6 +5,7 @@ using Tunnerer.Core.Types;
 public class TerrainGrid
 {
     private readonly TerrainPixel[] _data;
+    private readonly byte[] _heat;
     private readonly int[] _neighborOffsets;
     private readonly List<Position> _changeList = new();
 
@@ -16,7 +17,113 @@ public class TerrainGrid
     {
         Size = size;
         _data = new TerrainPixel[size.Area];
+        _heat = new byte[size.Area];
         _neighborOffsets = BuildNeighborOffsets(size.X);
+    }
+
+    // ------------------------------------------------------------------
+    //  Heat map: continuous temperature per pixel (0=cold, 255=max)
+    // ------------------------------------------------------------------
+
+    public byte GetHeat(int offset) => _heat[offset];
+
+    public byte GetHeat(Position pos)
+    {
+        int offset = pos.X + pos.Y * Width;
+        return (uint)offset < (uint)_heat.Length ? _heat[offset] : (byte)0;
+    }
+
+    public void AddHeat(Position pos, int amount)
+    {
+        int offset = pos.X + pos.Y * Width;
+        if ((uint)offset >= (uint)_heat.Length) return;
+        int val = _heat[offset] + amount;
+        _heat[offset] = (byte)(val > 255 ? 255 : val);
+        CommitPixel(pos);
+    }
+
+    public void AddHeatRadius(Position center, int amount, int radius)
+    {
+        int w = Width, h = Height;
+        for (int dy = -radius; dy <= radius; dy++)
+        {
+            int ny = center.Y + dy;
+            if ((uint)ny >= (uint)h) continue;
+            for (int dx = -radius; dx <= radius; dx++)
+            {
+                int nx = center.X + dx;
+                if ((uint)nx >= (uint)w) continue;
+                int dist2 = dx * dx + dy * dy;
+                if (dist2 > radius * radius) continue;
+                float falloff = 1f - (float)dist2 / (radius * radius);
+                int scaled = (int)(amount * falloff);
+                if (scaled <= 0) continue;
+                int offset = nx + ny * w;
+                int val = _heat[offset] + scaled;
+                _heat[offset] = (byte)(val > 255 ? 255 : val);
+            }
+        }
+    }
+
+    private byte[]? _heatTemp;
+
+    public void CoolDown(int decayAmount, float diffuseRate = 0.12f)
+    {
+        int w = Width, h = Height;
+        int len = w * h;
+
+        if (_heatTemp == null || _heatTemp.Length < len)
+            _heatTemp = new byte[len];
+
+        for (int y = 0; y < h; y++)
+        {
+            int row = y * w;
+            for (int x = 0; x < w; x++)
+            {
+                int idx = row + x;
+                int center = _heat[idx];
+                if (center == 0 && x > 0 && x < w - 1 && y > 0 && y < h - 1)
+                {
+                    int neighborSum = _heat[idx - 1] + _heat[idx + 1] +
+                                      _heat[idx - w] + _heat[idx + w];
+                    if (neighborSum == 0) { _heatTemp[idx] = 0; continue; }
+                }
+
+                int sum = center * 4;
+                int cnt = 4;
+                if (x > 0) { sum += _heat[idx - 1]; cnt++; }
+                if (x < w - 1) { sum += _heat[idx + 1]; cnt++; }
+                if (y > 0) { sum += _heat[idx - w]; cnt++; }
+                if (y < h - 1) { sum += _heat[idx + w]; cnt++; }
+
+                float blurred = sum / (float)cnt;
+                float mixed = center + (blurred - center) * diffuseRate;
+                int val = (int)(mixed + 0.5f) - decayAmount;
+                _heatTemp[idx] = (byte)(val < 0 ? 0 : val > 255 ? 255 : val);
+            }
+        }
+
+        Array.Copy(_heatTemp, _heat, len);
+    }
+
+    public float SampleAverageHeat(Position center, int radius)
+    {
+        int w = Width, h = Height;
+        int sum = 0, count = 0;
+        for (int dy = -radius; dy <= radius; dy++)
+        {
+            int ny = center.Y + dy;
+            if ((uint)ny >= (uint)h) continue;
+            int row = ny * w;
+            for (int dx = -radius; dx <= radius; dx++)
+            {
+                int nx = center.X + dx;
+                if ((uint)nx >= (uint)w) continue;
+                sum += _heat[row + nx];
+                count++;
+            }
+        }
+        return count > 0 ? sum / (count * 255f) : 0f;
     }
 
     private static int[] BuildNeighborOffsets(int w)
