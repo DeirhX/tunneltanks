@@ -26,8 +26,9 @@ public class Tank
     private bool _respawning;
     private int _frameDugPixels;
     private bool _frameShotFired;
+    private FastRandom _rng;
 
-    public Tank(int color, TankBase tankBase)
+    public Tank(int color, TankBase tankBase, int rngSeed = 0)
     {
         Color = color;
         Base = tankBase;
@@ -40,6 +41,8 @@ public class Tank
             initial: new MaterialAmount(0, 0),
             capacity: new MaterialAmount(Tweaks.Tank.ResourceDirtCapacity, Tweaks.Tank.ResourceMineralsCapacity));
         Turret = new TankTurret(color);
+        int fallbackSeed = Environment.TickCount ^ HashSeed(color, tankBase.Position);
+        _rng = new FastRandom(rngSeed != 0 ? rngSeed : fallbackSeed);
         Direction = RandomDirection();
     }
 
@@ -160,7 +163,7 @@ public class Tank
                         Resources.Add(new MaterialAmount(1, 0));
                 }
                 else if (Pixel.IsTorchable(pix) && torchUse &&
-                         Random.Shared.Next(1000) < Tweaks.World.DigThroughRockChance)
+                         _rng.Chance1000(Tweaks.World.DigThroughRockChance))
                 {
                     terrain.SetPixel(worldPos, TerrainPixel.Blank);
                     _frameDugPixels += 2;
@@ -227,7 +230,7 @@ public class Tank
         _respawning = true;
         _respawnTimer = Tweaks.Tank.RespawnDelay;
 
-        projectiles?.AddRange(ExplosionFactory.CreateExplosion(Position, Tweaks.Explosion.Death));
+        projectiles?.AddExplosion(Position, Tweaks.Explosion.Death);
     }
 
     private void AdvanceDeath(World world)
@@ -304,9 +307,15 @@ public class Tank
     /// <summary>
     /// Picks a random 8-direction index, skipping the unused center index (4).
     /// </summary>
-    private static int RandomDirection()
+    private int RandomDirection()
     {
-        int dir = Random.Shared.Next(8);
+        int dir = _rng.NextInt(8);
         return dir >= 4 ? dir + 1 : dir;
+    }
+
+    private static int HashSeed(int color, Position pos)
+    {
+        uint mixed = (uint)(color * 73856093) ^ (uint)(pos.X * 19349663) ^ (uint)(pos.Y * 83492791);
+        return (int)FastRandom.Hash32(mixed);
     }
 }

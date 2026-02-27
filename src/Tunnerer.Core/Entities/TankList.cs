@@ -10,9 +10,9 @@ public class TankList
 
     public IReadOnlyList<Tank> Tanks => _tanks;
 
-    public Tank AddTank(int color, TankBase tankBase)
+    public Tank AddTank(int color, TankBase tankBase, int rngSeed = 0)
     {
-        var tank = new Tank(color, tankBase);
+        var tank = new Tank(color, tankBase, rngSeed);
         _tanks.Add(tank);
         return tank;
     }

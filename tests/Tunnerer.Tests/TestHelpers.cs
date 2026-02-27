@@ -15,7 +15,7 @@ internal static class TestHelpers
         var mapSize = size ?? DefaultMapSize;
         var gen = new ToastGenerator();
         var (terrain, spawns) = gen.Generate(mapSize, seed: seed);
-        var world = new World(mapSize);
+        var world = new World(mapSize, deterministicSimulation: true, simulationSeed: seed);
         world.Initialize(terrain, spawns, materializeSeed: seed + 1);
         return world;
     }

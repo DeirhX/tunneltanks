@@ -19,6 +19,7 @@ public class ProjectileList
 {
     private readonly List<Projectile> _projectiles = new();
     private readonly List<Projectile> _pending = new();
+    private FastRandom _rng;
 
     /// <summary>
     /// Single source of truth for per-type projectile behavior.
@@ -37,14 +38,21 @@ public class ProjectileList
         behaviors[(int)ProjectileType.Bullet] = new(AdvanceBullet, Tweaks.Colors.FireHot);
         behaviors[(int)ProjectileType.Shrapnel] = new(AdvanceShrapnel, Tweaks.Colors.FireHot);
         behaviors[(int)ProjectileType.ConcreteFoam] = new(
-            (p, solver, self) => AdvanceFoam(p, solver.Terrain,
+            (p, solver, self) => AdvanceFoam(p, solver.Terrain, self,
                 TerrainPixel.ConcreteHigh, TerrainPixel.ConcreteLow, skipConcrete: true),
             Tweaks.Colors.Concrete);
         behaviors[(int)ProjectileType.DirtFoam] = new(
-            (p, solver, self) => AdvanceFoam(p, solver.Terrain,
+            (p, solver, self) => AdvanceFoam(p, solver.Terrain, self,
                 TerrainPixel.DirtHigh, TerrainPixel.DirtLow, skipConcrete: false),
             Tweaks.Colors.DirtProjectile);
         return behaviors;
+    }
+
+    public ProjectileList(int? seed = null)
+    {
+        _rng = seed.HasValue
+            ? new FastRandom(seed.Value)
+            : new FastRandom((uint)Environment.TickCount);
     }
 
     public int Count => _projectiles.Count + _pending.Count;
@@ -106,7 +114,12 @@ public class ProjectileList
 
     private void SpawnNormalExplosion(Position pos)
     {
-        AddRange(ExplosionFactory.CreateExplosion(pos, Tweaks.Explosion.Normal));
+        AddRange(ExplosionFactory.CreateExplosion(pos, Tweaks.Explosion.Normal, ref _rng));
+    }
+
+    public void AddExplosion(Position pos, ExplosionParams p)
+    {
+        AddRange(ExplosionFactory.CreateExplosion(pos, p, ref _rng));
     }
 
     private static void AdvanceShrapnel(Projectile p, CollisionSolver solver, ProjectileList self)
@@ -120,9 +133,8 @@ public class ProjectileList
         var pix = terrain.GetPixelRaw(ipos);
         if (Pixel.IsBlockingCollision(pix))
         {
-            var rng = Random.Shared;
-            if ((Pixel.IsConcrete(pix) && rng.Next(1000) < Tweaks.Explosion.ChanceToDestroyConcrete) ||
-                (Pixel.IsRock(pix) && rng.Next(1000) < Tweaks.Explosion.ChanceToDestroyRock))
+            if ((Pixel.IsConcrete(pix) && self._rng.Chance1000(Tweaks.Explosion.ChanceToDestroyConcrete)) ||
+                (Pixel.IsRock(pix) && self._rng.Chance1000(Tweaks.Explosion.ChanceToDestroyRock)))
             {
                 terrain.SetPixel(ipos, TerrainPixel.DecalHigh);
             }
@@ -135,7 +147,7 @@ public class ProjectileList
         terrain.AddHeatRadius(ipos, Tweaks.Explosion.ShrapnelDigHeatAmount, Tweaks.Explosion.ShrapnelDigHeatRadius);
     }
 
-    private static void AdvanceFoam(Projectile p, TerrainGrid terrain,
+    private static void AdvanceFoam(Projectile p, TerrainGrid terrain, ProjectileList self,
         TerrainPixel highPixel, TerrainPixel lowPixel, bool skipConcrete)
     {
         if (p.Life-- <= 0) { p.IsAlive = false; return; }
@@ -148,7 +160,7 @@ public class ProjectileList
         if (Pixel.IsAnyCollision(pix) && !(skipConcrete && Pixel.IsConcrete(pix)))
         {
             if (terrain.IsInside(prevPos))
-                terrain.SetPixel(prevPos, Random.Shared.Next(2) == 0 ? highPixel : lowPixel);
+                terrain.SetPixel(prevPos, self._rng.NextInt(2) == 0 ? highPixel : lowPixel);
             p.IsAlive = false;
         }
     }

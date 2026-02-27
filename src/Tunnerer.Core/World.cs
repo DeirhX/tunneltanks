@@ -16,11 +16,13 @@ public class World
     private readonly TerrainGrid _terrain;
     private readonly TankBases _tankBases = new();
     private readonly TankList _tankList = new();
-    private readonly ProjectileList _projectiles = new();
+    private readonly ProjectileList _projectiles;
     private readonly MachineList _machines = new();
     private readonly LinkMap _linkMap = new();
     private readonly SpriteList _sprites = new();
     private readonly CollisionSolver _collisionSolver;
+    private readonly bool _deterministicSimulation;
+    private readonly int _simulationSeed;
 
     private int _advanceCount;
     private TimeSpan _elapsed;
@@ -41,9 +43,12 @@ public class World
 
     public SimulationProfile Profile { get; } = new();
 
-    public World(Size terrainSize)
+    public World(Size terrainSize, bool deterministicSimulation = false, int simulationSeed = 0)
     {
+        _deterministicSimulation = deterministicSimulation;
+        _simulationSeed = simulationSeed != 0 ? simulationSeed : 0x51A7E3;
         _terrain = new TerrainGrid(terrainSize);
+        _projectiles = new ProjectileList(deterministicSimulation ? _simulationSeed ^ 0x5f3759df : null);
         _collisionSolver = new CollisionSolver(_terrain);
         _regrowTimer.Start();
     }
@@ -66,7 +71,11 @@ public class World
         {
             var tankBase = _tankBases.GetSpawn(i);
             if (tankBase != null)
-                _tankList.AddTank(i, tankBase);
+            {
+                int tankSeed = unchecked(_simulationSeed ^ ((i + 1) * (int)0x9e3779b9u));
+                _tankList.AddTank(i, tankBase,
+                    _deterministicSimulation ? tankSeed : 0);
+            }
         }
     }
 
@@ -114,6 +123,58 @@ public class World
         _terrain.CoolDown(Tweaks.World.HeatCooldownPerTick, Tweaks.World.HeatDiffuseRate);
 
         int w = _terrain.Width, h = _terrain.Height;
+
+        if (_deterministicSimulation)
+        {
+            var writes = new List<(int offset, TerrainPixel value)>(1024);
+            for (int y = 1; y < h - 1; y++)
+            {
+                for (int x = 1; x < w - 1; x++)
+                {
+                    var pos = new Position(x, y);
+                    var pix = _terrain.GetPixelRaw(pos);
+
+                    if (pix == TerrainPixel.Blank)
+                    {
+                        int neighbors = _terrain.CountDirtNeighbors(pos);
+                        if (TryQueueDirtRegrow(x, y, neighbors, Tweaks.World.DirtRegrowBlankModifier, 0))
+                            writes.Add((x + y * w, TerrainPixel.DirtGrow));
+                    }
+                    else if (Pixel.IsScorched(pix))
+                    {
+                        int neighbors = _terrain.CountDirtNeighbors(pos);
+                        if (TryQueueDirtRegrow(x, y, neighbors, Tweaks.World.DirtRegrowScorchedModifier, 1))
+                        {
+                            writes.Add((x + y * w, TerrainPixel.DirtGrow));
+                        }
+                        else if (pix == TerrainPixel.DecalHigh && Roll1000(x, y, 2) < Tweaks.World.DecalDecaySpeed)
+                        {
+                            writes.Add((x + y * w, TerrainPixel.DecalLow));
+                        }
+                        else if (pix == TerrainPixel.DecalLow && Roll1000(x, y, 3) < Tweaks.World.DecalDecaySpeed)
+                        {
+                            writes.Add((x + y * w, TerrainPixel.Blank));
+                        }
+                    }
+                    else if (pix == TerrainPixel.DirtGrow)
+                    {
+                        if (Roll1000(x, y, 4) < Tweaks.World.DirtRecoverSpeed)
+                        {
+                            var newPix = (Roll1000(x, y, 5) & 1) == 0 ? TerrainPixel.DirtHigh : TerrainPixel.DirtLow;
+                            writes.Add((x + y * w, newPix));
+                        }
+                    }
+                }
+            }
+
+            foreach (var (offset, value) in writes)
+            {
+                _terrain.SetPixelRaw(offset, value);
+                _terrain.CommitPixel(new Position(offset % w, offset / w));
+            }
+            return;
+        }
+
         var stagedWrites = new ThreadLocal<List<(int offset, TerrainPixel value)>>(
             () => new List<(int, TerrainPixel)>(), trackAllValues: true);
         var rng = new ThreadLocal<Random>(() => new Random(), trackAllValues: true);
@@ -179,6 +240,23 @@ public class World
         if (neighbors <= 2) return false;
         int chance = Tweaks.World.DirtRegrowSpeed * neighbors * modifier;
         return random.Next(1000) < chance;
+    }
+
+    private bool TryQueueDirtRegrow(int x, int y, int neighbors, int modifier, uint salt)
+    {
+        if (neighbors <= 2) return false;
+        int chance = Tweaks.World.DirtRegrowSpeed * neighbors * modifier;
+        return Roll1000(x, y, salt) < chance;
+    }
+
+    private int Roll1000(int x, int y, uint salt)
+    {
+        uint mixed = (uint)_simulationSeed
+            ^ (uint)_advanceCount * 0x9e3779b9u
+            ^ (uint)(x * 73856093)
+            ^ (uint)(y * 19349663)
+            ^ (salt * 83492791u);
+        return (int)(FastRandom.Hash32(mixed) % 1000u);
     }
 }
 
