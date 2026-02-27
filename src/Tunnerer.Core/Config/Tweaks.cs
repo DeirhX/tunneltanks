@@ -27,7 +27,7 @@ public static class Tweaks
         public const float DrawStaticFuelThreshold = 0.2f;
         public const int PixelScale = 6;
         public const int HiResInitialQuality = 2; // 0=Low, 1=Medium, 2=High
-        public const float HiResRenderBudgetMs = 3.0f;
+        public const float HiResRenderBudgetMs = 6.0f;
         public const int HiResBudgetHysteresisFrames = 12;
     }
 
