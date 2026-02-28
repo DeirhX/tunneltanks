@@ -1,5 +1,6 @@
 using Tunnerer.Core.Entities;
 using Tunnerer.Core.Config;
+using Tunnerer.Core.Types;
 
 namespace Tunnerer.Desktop.Rendering;
 
@@ -13,17 +14,19 @@ public sealed class HiResEntityRenderer
 
     public void Render(
         uint[] targetPixels,
-        int targetWidth,
-        int targetHeight,
+        in RenderView view,
         uint[] terrainPixels,
         uint[] compositePixels,
-        int worldWidth,
-        int worldHeight,
-        int camPixelX,
-        int camPixelY,
-        int pixelScale,
         float time = 0f)
     {
+        int targetWidth = view.ViewSize.X;
+        int targetHeight = view.ViewSize.Y;
+        var target = new SurfaceSpan(targetPixels, targetWidth, targetHeight);
+        int worldWidth = view.WorldSize.X;
+        int worldHeight = view.WorldSize.Y;
+        int camPixelX = view.CameraPixels.X;
+        int camPixelY = view.CameraPixels.Y;
+        int pixelScale = view.PixelScale;
         int cellMinX = Math.Max(0, camPixelX / pixelScale);
         int cellMinY = Math.Max(0, camPixelY / pixelScale);
         int cellMaxX = Math.Min(worldWidth - 1, (camPixelX + targetWidth - 1) / pixelScale);
@@ -56,9 +59,13 @@ public sealed class HiResEntityRenderer
 
                 for (int py = sy0; py < sy1; py++)
                 {
-                    int row = py * targetWidth;
+                    int row = target.RowStart(py);
                     for (int px = sx0; px < sx1; px++)
-                        targetPixels[row + px] = RenderingPixels.Darken(targetPixels[row + px], ShadowDarken);
+                    {
+                        int pixelIndex = row + px;
+                        ref uint dst = ref target.AtIndex(pixelIndex);
+                        dst = RenderingPixels.Darken(dst, ShadowDarken);
+                    }
                 }
             }
         }
@@ -93,13 +100,13 @@ public sealed class HiResEntityRenderer
                     float flicker = FlickerMin + FlickerRange * MathF.Sin(time * FlickerFreq + phase);
                     // Leave glow spread to GPU bloom; CPU renders a brightened core only.
                     uint core = RenderingPixels.Brighten(objectColor, 1.15f * flicker);
-                    RenderAAEntity(targetPixels, targetWidth, targetHeight,
+                    RenderAAEntity(target,
                         baseScreenX, baseScreenY, pixelScale, core,
                         neighborLeft, neighborRight, neighborUp, neighborDown);
                 }
                 else
                 {
-                    RenderAAEntity(targetPixels, targetWidth, targetHeight,
+                    RenderAAEntity(target,
                         baseScreenX, baseScreenY, pixelScale, objectColor,
                         neighborLeft, neighborRight, neighborUp, neighborDown);
                 }
@@ -108,7 +115,7 @@ public sealed class HiResEntityRenderer
     }
 
     private static void RenderAAEntity(
-        uint[] target, int tw, int th,
+        SurfaceSpan target,
         int bx, int by, int scale, uint entityColor,
         bool nLeft, bool nRight, bool nUp, bool nDown)
     {
@@ -117,14 +124,14 @@ public sealed class HiResEntityRenderer
         for (int py = 0; py < scale; py++)
         {
             int sy = by + py;
-            if (sy < 0 || sy >= th) continue;
+            if (sy < 0 || sy >= target.Height) continue;
             float fy = (py + 0.5f) / scale;
-            int row = sy * tw;
+            int row = target.RowStart(sy);
 
             for (int px = 0; px < scale; px++)
             {
                 int sx = bx + px;
-                if (sx < 0 || sx >= tw) continue;
+                if (sx < 0 || sx >= target.Width) continue;
                 float fx = (px + 0.5f) / scale;
 
                 float alpha = 1f;
@@ -133,7 +140,9 @@ public sealed class HiResEntityRenderer
                 if (!nUp)     alpha = MathF.Min(alpha, Smoothstep(0f, feather, fy));
                 if (!nDown)   alpha = MathF.Min(alpha, Smoothstep(0f, feather, 1f - fy));
 
-                target[row + sx] = RenderingPixels.Blend(target[row + sx], entityColor, alpha);
+                int pixelIndex = row + sx;
+                ref uint dst = ref target.AtIndex(pixelIndex);
+                dst = RenderingPixels.Blend(dst, entityColor, alpha);
             }
         }
     }

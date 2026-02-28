@@ -222,18 +222,19 @@ public class TerrainGrid
     public IReadOnlyList<Position> GetChangeList() => _changeList;
     public void ClearChangeList() => _changeList.Clear();
 
-    public bool TryGetHeatDirtyRect(out int minX, out int minY, out int maxX, out int maxY)
+    public bool TryGetHeatDirtyRect(out Rect dirtyRect)
     {
         if (_hasHeatDirtyRect)
         {
-            minX = _heatDirtyMinX;
-            minY = _heatDirtyMinY;
-            maxX = _heatDirtyMaxX;
-            maxY = _heatDirtyMaxY;
+            dirtyRect = new Rect(
+                _heatDirtyMinX,
+                _heatDirtyMinY,
+                _heatDirtyMaxX - _heatDirtyMinX + 1,
+                _heatDirtyMaxY - _heatDirtyMinY + 1);
             return true;
         }
 
-        minX = minY = maxX = maxY = 0;
+        dirtyRect = default;
         return false;
     }
 

@@ -158,31 +158,40 @@ public sealed class HiResTerrainRenderer
     // ------------------------------------------------------------------
 
     public void Render(
-        TerrainGrid terrain, uint[] targetPixels, int targetWidth, int targetHeight,
-        HiResRenderQuality quality, int camPixelX, int camPixelY, int pixelScale,
+        TerrainGrid terrain, uint[] targetPixels, in RenderView view,
+        HiResRenderQuality quality,
         float time = 0f)
     {
         RebuildBlurField(terrain);
-        RenderRegion(terrain, targetPixels, targetWidth, targetHeight, quality,
-            camPixelX, camPixelY, pixelScale, 0, 0, targetWidth - 1, targetHeight - 1, time);
+        RenderRegion(
+            terrain,
+            targetPixels,
+            view,
+            quality,
+            new Rect(0, 0, view.ViewSize.X, view.ViewSize.Y),
+            time);
     }
 
     public void RenderStrip(
-        TerrainGrid terrain, uint[] targetPixels, int targetWidth, int targetHeight,
-        HiResRenderQuality quality, int camPixelX, int camPixelY, int pixelScale,
-        int minX, int minY, int maxX, int maxY, float time = 0f)
+        TerrainGrid terrain, uint[] targetPixels, in RenderView view,
+        HiResRenderQuality quality,
+        in Rect screenRect, float time = 0f)
     {
-        RenderRegion(terrain, targetPixels, targetWidth, targetHeight, quality,
-            camPixelX, camPixelY, pixelScale, minX, minY, maxX, maxY, time);
+        RenderRegion(terrain, targetPixels, view, quality, screenRect, time);
     }
 
     public void RenderDirty(
-        TerrainGrid terrain, uint[] targetPixels, int targetWidth, int targetHeight,
-        HiResRenderQuality quality, int camPixelX, int camPixelY, int pixelScale,
+        TerrainGrid terrain, uint[] targetPixels, in RenderView view,
+        HiResRenderQuality quality,
         IReadOnlyList<Position> dirtyCells, float time = 0f)
     {
         if (dirtyCells.Count == 0) return;
         UpdateBlurField(terrain, dirtyCells);
+        int camPixelX = view.CameraPixels.X;
+        int camPixelY = view.CameraPixels.Y;
+        int pixelScale = view.PixelScale;
+        int targetWidth = view.ViewSize.X;
+        int targetHeight = view.ViewSize.Y;
 
         const int pad = 3;
         for (int i = 0; i < dirtyCells.Count; i++)
@@ -195,8 +204,13 @@ public sealed class HiResTerrainRenderer
 
             if (screenMinX > screenMaxX || screenMinY > screenMaxY) continue;
 
-            RenderRegion(terrain, targetPixels, targetWidth, targetHeight, quality,
-                camPixelX, camPixelY, pixelScale, screenMinX, screenMinY, screenMaxX, screenMaxY, time);
+            RenderRegion(
+                terrain,
+                targetPixels,
+                view,
+                quality,
+                RectMath.FromMinMaxInclusive(screenMinX, screenMinY, screenMaxX, screenMaxY),
+                time);
         }
     }
 
@@ -206,16 +220,25 @@ public sealed class HiResTerrainRenderer
 
     private void RenderRegion(
         TerrainGrid terrain, uint[] targetPixels,
-        int targetWidth, int targetHeight,
+        in RenderView view,
         HiResRenderQuality quality,
-        int camPixelX, int camPixelY, int pixelScale,
-        int minX, int minY, int maxX, int maxY, float time)
+        in Rect screenRect,
+        float time)
     {
+        if (screenRect.Width <= 0 || screenRect.Height <= 0)
+            return;
+
+        int targetWidth = view.ViewSize.X;
+        int camPixelX = view.CameraPixels.X;
+        int camPixelY = view.CameraPixels.Y;
+        int pixelScale = view.PixelScale;
+        RectMath.GetMinMaxInclusive(screenRect, out int minX, out int minY, out int maxX, out int maxY);
         int w = terrain.Width;
         int h = terrain.Height;
         float invScale = 1f / pixelScale;
         bool useTextures = quality != HiResRenderQuality.Low;
         bool useNormals = quality == HiResRenderQuality.High;
+        int targetHeight = view.ViewSize.Y;
 
         int rowCount = maxY - minY + 1;
         bool useParallel = useNormals && rowCount > 32;
@@ -223,39 +246,40 @@ public sealed class HiResTerrainRenderer
         if (useParallel)
         {
             Parallel.For(minY, maxY + 1, y =>
-                RenderRow(terrain, targetPixels, targetWidth, w, h, invScale,
+                RenderRow(terrain, targetPixels, targetWidth, targetHeight, w, h, invScale,
                     useTextures, useNormals, camPixelX, camPixelY, quality, time,
                     minX, maxX, y));
         }
         else
         {
             for (int y = minY; y <= maxY; y++)
-                RenderRow(terrain, targetPixels, targetWidth, w, h, invScale,
+                RenderRow(terrain, targetPixels, targetWidth, targetHeight, w, h, invScale,
                     useTextures, useNormals, camPixelX, camPixelY, quality, time,
                     minX, maxX, y);
         }
     }
 
     private void RenderRow(
-        TerrainGrid terrain, uint[] targetPixels, int targetWidth,
+        TerrainGrid terrain, uint[] targetPixels, int targetWidth, int targetHeight,
         int w, int h, float invScale,
         bool useTextures, bool useNormals,
         int camPixelX, int camPixelY, HiResRenderQuality quality, float time,
         int minX, int maxX, int y)
     {
+        var target = new SurfaceSpan(targetPixels, targetWidth, targetHeight);
         float worldYf = (camPixelY + y + 0.5f) * invScale;
         int worldY = (int)worldYf;
 
         if (worldY < -1 || worldY > h)
         {
-            int row = y * targetWidth;
+            int row = target.RowStart(y);
             for (int x = minX; x <= maxX; x++)
-                targetPixels[row + x] = BackgroundColor;
+                target.AtIndex(row + x) = BackgroundColor;
             return;
         }
 
         float fracY = worldYf - worldY;
-        int writeIndex = minX + y * targetWidth;
+        int writeIndex = minX + target.RowStart(y);
         int prevCellX = int.MinValue, prevCellY = int.MinValue;
         float aoValue = 0f;
 
@@ -266,7 +290,7 @@ public sealed class HiResTerrainRenderer
 
                 if (worldX < -1 || worldX > w)
                 {
-                    targetPixels[writeIndex] = BackgroundColor;
+                    target.AtIndex(writeIndex) = BackgroundColor;
                     continue;
                 }
 
@@ -480,7 +504,7 @@ public sealed class HiResTerrainRenderer
                     rF *= depthFactor; gF *= depthFactor; bF *= depthFactor;
                 }
 
-                targetPixels[writeIndex] = RenderingPixels.PackRgb(rF, gF, bF);
+                target.AtIndex(writeIndex) = RenderingPixels.PackRgb(rF, gF, bF);
             }
     }
 

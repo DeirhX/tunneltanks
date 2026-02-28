@@ -1,25 +1,22 @@
 namespace Tunnerer.Desktop.Rendering;
 
 using Silk.NET.SDL;
+using Tunnerer.Core.Types;
+
+public readonly record struct RenderView(
+    Size ViewSize,
+    Size WorldSize,
+    Position CameraPixels,
+    int PixelScale);
 
 public readonly record struct GamePixelsUpload(
     uint[] Pixels,
-    int Width,
-    int Height,
+    RenderView View,
     HiResRenderQuality Quality,
     float[]? TankHeatGlowData,
     int TankHeatGlowCount,
     byte[]? TerrainAux,
-    int WorldWidth,
-    int WorldHeight,
-    int CamPixelX,
-    int CamPixelY,
-    int PixelScale,
-    bool HasAuxDirtyRect,
-    int AuxMinX,
-    int AuxMinY,
-    int AuxMaxX,
-    int AuxMaxY);
+    Rect? AuxDirtyRect);
 
 public interface IGameRenderBackend : IDisposable
 {
@@ -29,7 +26,7 @@ public interface IGameRenderBackend : IDisposable
 
     void UploadGamePixels(in GamePixelsUpload upload);
 
-    void ClearFrame(int width, int height, float r, float g, float b, float a);
+    void ClearFrame(Size viewportSize, Tunnerer.Core.Types.Color clearColor);
 
     void NewFrame(int windowW, int windowH, float deltaTime);
 

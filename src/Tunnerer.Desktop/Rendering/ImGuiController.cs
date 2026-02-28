@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using ImGuiNET;
 using Silk.NET.SDL;
 using Tunnerer.Core.Config;
+using Tunnerer.Core.Types;
 using GL_PixelFormat = Silk.NET.OpenGL.PixelFormat;
 using GL_PixelType = Silk.NET.OpenGL.PixelType;
 using Silk.NET.OpenGL;
@@ -216,65 +217,52 @@ public sealed unsafe class ImGuiController : IGameRenderBackend
         _gameTexH = height;
     }
 
-    public void UploadGamePixels(uint[] pixels, int width, int height)
-    {
-        UploadGamePixels(pixels, width, height, HiResRenderQuality.High);
-    }
-
     public void UploadGamePixels(in GamePixelsUpload upload)
     {
-        UploadGamePixels(
-            upload.Pixels, upload.Width, upload.Height, upload.Quality,
-            upload.TankHeatGlowData, upload.TankHeatGlowCount,
-            upload.TerrainAux, upload.WorldWidth, upload.WorldHeight,
-            upload.CamPixelX, upload.CamPixelY, upload.PixelScale,
-            upload.HasAuxDirtyRect, upload.AuxMinX, upload.AuxMinY, upload.AuxMaxX, upload.AuxMaxY);
+        UploadGamePixelsCore(upload);
     }
 
-    public void ClearFrame(int width, int height, float r, float g, float b, float a)
+    public void ClearFrame(Size viewportSize, Tunnerer.Core.Types.Color clearColor)
     {
-        _gl.Viewport(0, 0, (uint)width, (uint)height);
-        _gl.ClearColor(r, g, b, a);
+        _gl.Viewport(0, 0, (uint)viewportSize.X, (uint)viewportSize.Y);
+        _gl.ClearColor(
+            clearColor.R / 255f,
+            clearColor.G / 255f,
+            clearColor.B / 255f,
+            clearColor.A / 255f);
         _gl.Clear(ClearBufferMask.ColorBufferBit);
     }
 
-    public void UploadGamePixels(uint[] pixels, int width, int height, HiResRenderQuality quality)
+    private void UploadGamePixelsCore(in GamePixelsUpload upload)
     {
-        UploadGamePixels(pixels, width, height, quality, null, 0);
-    }
+        uint[] pixels = upload.Pixels;
+        Size viewSize = upload.View.ViewSize;
+        Size worldSize = upload.View.WorldSize;
+        Position cameraPixels = upload.View.CameraPixels;
+        int pixelScale = upload.View.PixelScale;
 
-    public void UploadGamePixels(
-        uint[] pixels, int width, int height, HiResRenderQuality quality,
-        float[]? tankHeatGlowData, int tankHeatGlowCount)
-    {
-        UploadGamePixels(pixels, width, height, quality, tankHeatGlowData, tankHeatGlowCount,
-            null, 0, 0, 0, 0, 1, false, 0, 0, 0, 0);
-    }
-
-    public void UploadGamePixels(
-        uint[] pixels, int width, int height, HiResRenderQuality quality,
-        float[]? tankHeatGlowData, int tankHeatGlowCount,
-        byte[]? terrainAux, int worldWidth, int worldHeight, int camPixelX, int camPixelY, int pixelScale,
-        bool hasAuxDirtyRect, int auxMinX, int auxMinY, int auxMaxX, int auxMaxY)
-    {
-        EnsureGameTextures(width, height);
-        EnsurePostProcessObjects(width, height);
-        UpdateTerrainAuxTexture(terrainAux, worldWidth, worldHeight, hasAuxDirtyRect,
-            auxMinX, auxMinY, auxMaxX, auxMaxY);
+        EnsureGameTextures(viewSize.X, viewSize.Y);
+        EnsurePostProcessObjects(viewSize.X, viewSize.Y);
+        UpdateTerrainAuxTexture(upload.TerrainAux, worldSize, upload.AuxDirtyRect);
         int uploadIdx = 1 - _gameTexIndex;
         _gl.BindTexture(TextureTarget.Texture2D, _postSourceTexture);
         fixed (uint* ptr = pixels)
         {
             _gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0,
-                (uint)width, (uint)height, GL_PixelFormat.Bgra, GL_PixelType.UnsignedByte, ptr);
+                (uint)viewSize.X, (uint)viewSize.Y, GL_PixelFormat.Bgra, GL_PixelType.UnsignedByte, ptr);
         }
         _gl.BindTexture(TextureTarget.Texture2D, 0);
 
         // GPU offload for bloom/vignette and dynamic heat glow over the full frame.
-        RunPostProcessPass(_postSourceTexture, _gameTextures[uploadIdx], width, height, quality,
-            tankHeatGlowData, tankHeatGlowCount,
-            terrainAux != null && worldWidth > 0 && worldHeight > 0 && pixelScale > 0,
-            worldWidth, worldHeight, camPixelX, camPixelY, pixelScale);
+        bool useTerrainAux = upload.TerrainAux != null && worldSize.X > 0 && worldSize.Y > 0 && pixelScale > 0;
+        RunPostProcessPass(
+            _postSourceTexture,
+            _gameTextures[uploadIdx],
+            upload.View,
+            upload.Quality,
+            upload.TankHeatGlowData,
+            upload.TankHeatGlowCount,
+            useTerrainAux);
         _gameTexIndex = uploadIdx;
     }
 
@@ -589,10 +577,12 @@ void main() {
     }
 
     private void RunPostProcessPass(
-        uint sourceTex, uint destTex, int width, int height, HiResRenderQuality quality,
+        uint sourceTex, uint destTex, in RenderView view, HiResRenderQuality quality,
         float[]? tankHeatGlowData, int tankHeatGlowCount,
-        bool useTerrainAux, int worldWidth, int worldHeight, int camPixelX, int camPixelY, int pixelScale)
+        bool useTerrainAux)
     {
+        int width = view.ViewSize.X;
+        int height = view.ViewSize.Y;
         _gl.GetInteger(GetPName.CurrentProgram, out int lastProgram);
         _gl.GetInteger(GetPName.ActiveTexture, out int lastActiveTexture);
         _gl.GetInteger(GetPName.TextureBinding2D, out int lastTexture);
@@ -621,10 +611,10 @@ void main() {
         _gl.Uniform2(_postLocTexelSize, 1f / width, 1f / height);
         _gl.Uniform1(_postLocQuality, (int)quality);
         _gl.Uniform1(_postLocUseTerrainAux, useTerrainAux ? 1 : 0);
-        _gl.Uniform2(_postLocWorldSize, (float)worldWidth, (float)worldHeight);
-        _gl.Uniform2(_postLocCameraPixels, (float)camPixelX, (float)camPixelY);
-        _gl.Uniform2(_postLocViewSize, (float)width, (float)height);
-        _gl.Uniform1(_postLocPixelScale, (float)pixelScale);
+        _gl.Uniform2(_postLocWorldSize, (float)view.WorldSize.X, (float)view.WorldSize.Y);
+        _gl.Uniform2(_postLocCameraPixels, (float)view.CameraPixels.X, (float)view.CameraPixels.Y);
+        _gl.Uniform2(_postLocViewSize, (float)view.ViewSize.X, (float)view.ViewSize.Y);
+        _gl.Uniform1(_postLocPixelScale, (float)view.PixelScale);
         _gl.Uniform1(_postLocTime, (float)ImGui.GetTime());
         _gl.Uniform1(_postLocBloomThreshold, Tweaks.Screen.PostBloomThreshold);
         _gl.Uniform1(_postLocBloomStrength, Tweaks.Screen.PostBloomStrength);
@@ -691,9 +681,10 @@ void main() {
     }
 
     private void UpdateTerrainAuxTexture(
-        byte[]? auxData, int worldWidth, int worldHeight, bool hasDirtyRect,
-        int minX, int minY, int maxX, int maxY)
+        byte[]? auxData, Size worldSize, Rect? dirtyRect)
     {
+        int worldWidth = worldSize.X;
+        int worldHeight = worldSize.Y;
         if (auxData == null || worldWidth <= 0 || worldHeight <= 0)
             return;
 
@@ -724,8 +715,9 @@ void main() {
             }
             _gl.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
         }
-        else if (hasDirtyRect)
+        else if (dirtyRect is Rect rect)
         {
+            RectMath.GetMinMaxInclusive(rect, out int minX, out int minY, out int maxX, out int maxY);
             int rw = maxX - minX + 1;
             int rh = maxY - minY + 1;
             int rectLen = rw * rh * 4;

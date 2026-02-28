@@ -11,6 +11,7 @@ using Tunnerer.Desktop.Gui;
 using Tunnerer.Desktop.Input;
 using Tunnerer.Desktop.Rendering;
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices;
 
 public class Game : IDisposable
@@ -50,13 +51,28 @@ public class Game : IDisposable
     public const int DefaultSeed = 42;
 
     private readonly DrawProfile _drawProfile = new();
+    private readonly PerfCaptureOptions? _perfCapture;
+    private readonly List<double> _perfFrameMs = new();
+    private int _perfFramesSeen;
     private bool _isRunning = true;
 
-    public unsafe Game(Size? terrainSizeOverride = null, LevelGenMode genMode = LevelGenMode.Deterministic)
+    public unsafe Game(
+        Size? terrainSizeOverride = null,
+        LevelGenMode genMode = LevelGenMode.Deterministic,
+        PerfCaptureOptions? perfCapture = null)
     {
         var windowSize = Tweaks.Screen.WindowSize;
         _terrainSize = terrainSizeOverride ?? Tweaks.Screen.RenderSurfaceSize;
         bool parallel = genMode == LevelGenMode.Optimized;
+        if (perfCapture is PerfCaptureOptions perf)
+        {
+            _perfCapture = new PerfCaptureOptions(
+                Math.Max(0, perf.WarmupFrames),
+                Math.Max(1, perf.MeasureFrames),
+                string.IsNullOrWhiteSpace(perf.CsvPath) ? null : perf.CsvPath);
+            _perfFrameMs = new List<double>(_perfCapture.Value.MeasureFrames);
+            Console.WriteLine($"[Perf] enabled warmup={_perfCapture.Value.WarmupFrames} measure={_perfCapture.Value.MeasureFrames}");
+        }
 
         _renderer = new SdlRenderer(Tweaks.System.WindowTitle, windowSize);
 
@@ -160,8 +176,13 @@ public class Game : IDisposable
                     _drawProfile.FrameCount++;
                     if (_drawProfile.FrameCount >= 100)
                         _drawProfile.Report();
+
+                    if (CapturePerfFrame(totalFrameWatch.Elapsed))
+                        _isRunning = false;
                 }
             }
+
+            ReportPerfCaptureIfEnabled();
         }
         finally
         {
@@ -171,18 +192,79 @@ public class Game : IDisposable
         }
     }
 
+    private bool CapturePerfFrame(TimeSpan totalFrame)
+    {
+        if (_perfCapture is not PerfCaptureOptions perf)
+            return false;
+
+        _perfFramesSeen++;
+        if (_perfFramesSeen > perf.WarmupFrames)
+            _perfFrameMs.Add(totalFrame.TotalMilliseconds);
+
+        return _perfFrameMs.Count >= perf.MeasureFrames;
+    }
+
+    private void ReportPerfCaptureIfEnabled()
+    {
+        if (_perfCapture is not PerfCaptureOptions perf || _perfFrameMs.Count == 0)
+            return;
+
+        double sum = 0;
+        for (int i = 0; i < _perfFrameMs.Count; i++)
+            sum += _perfFrameMs[i];
+
+        double[] sorted = _perfFrameMs.ToArray();
+        Array.Sort(sorted);
+        double avg = sum / _perfFrameMs.Count;
+        double min = sorted[0];
+        double max = sorted[^1];
+        double p50 = Percentile(sorted, 0.50);
+        double p95 = Percentile(sorted, 0.95);
+        double p99 = Percentile(sorted, 0.99);
+
+        Console.WriteLine(
+            $"[Perf] frames={_perfFrameMs.Count} warmup={perf.WarmupFrames} avg={avg:F3}ms " +
+            $"p50={p50:F3}ms p95={p95:F3}ms p99={p99:F3}ms min={min:F3}ms max={max:F3}ms");
+
+        if (perf.CsvPath is null)
+            return;
+
+        string fullPath = Path.GetFullPath(perf.CsvPath);
+        string? dir = Path.GetDirectoryName(fullPath);
+        if (!string.IsNullOrEmpty(dir))
+            Directory.CreateDirectory(dir);
+
+        using var writer = new StreamWriter(fullPath, false);
+        writer.WriteLine("frame,ms");
+        for (int i = 0; i < _perfFrameMs.Count; i++)
+            writer.WriteLine($"{i},{_perfFrameMs[i].ToString("F6", CultureInfo.InvariantCulture)}");
+        Console.WriteLine($"[Perf] wrote csv: {fullPath}");
+    }
+
+    private static double Percentile(double[] sorted, double p)
+    {
+        if (sorted.Length == 0) return 0;
+        int idx = (int)Math.Ceiling(sorted.Length * p) - 1;
+        idx = Math.Clamp(idx, 0, sorted.Length - 1);
+        return sorted[idx];
+    }
+
     private void RenderImGuiFrame(IReadOnlyList<Core.Entities.Tank> tanks)
     {
         var (winW, winH) = _renderer.GetWindowSize();
         float dt = 1f / Tweaks.Perf.TargetFps;
         int scale = Tweaks.Screen.PixelScale;
 
-        int viewW = Math.Max(1, winW);
-        int viewH = Math.Max(1, winH - (int)GameHud.BottomPanelHeight);
-        EnsureHiResBuffer(new Size(viewW, viewH));
+        var viewSize = new Size(Math.Max(1, winW), Math.Max(1, winH - (int)GameHud.BottomPanelHeight));
+        EnsureHiResBuffer(viewSize);
 
         var player = tanks.Count > 0 ? tanks[0] : null;
-        UpdateCamera(player, viewW, viewH, scale);
+        UpdateCamera(player, viewSize.X, viewSize.Y, scale);
+        var renderView = new RenderView(
+            ViewSize: _hiResSize,
+            WorldSize: _terrainSize,
+            CameraPixels: new Position(_camPixelX, _camPixelY),
+            PixelScale: scale);
 
         int dx = _camPixelX - _prevCamPixelX;
         int dy = _camPixelY - _prevCamPixelY;
@@ -195,48 +277,39 @@ public class Game : IDisposable
             var hiResWatch = Stopwatch.StartNew();
             float renderTime = (float)_gameTimer.Elapsed.TotalSeconds;
             if (_hiResTerrainNeedsFullRender ||
-                Math.Abs(dx) >= viewW || Math.Abs(dy) >= viewH)
+                Math.Abs(dx) >= viewSize.X || Math.Abs(dy) >= viewSize.Y)
             {
                 _hiResTerrainRenderer.Render(_world.Terrain, _hiResTerrainPixels,
-                    _hiResSize.X, _hiResSize.Y, _hiResQuality,
-                    _camPixelX, _camPixelY, scale, renderTime);
+                    renderView, _hiResQuality, renderTime);
                 _hiResTerrainNeedsFullRender = false;
             }
             else if (cameraMoved)
             {
-                ScrollTerrainBuffer(dx, dy, viewW, viewH);
-                RenderExposedStrips(_hiResTerrainPixels, viewW, viewH, dx, dy, scale);
+                var cameraDelta = new Offset(dx, dy);
+                ScrollTerrainBuffer(cameraDelta, viewSize);
+                RenderExposedStrips(_hiResTerrainPixels, renderView, cameraDelta);
             }
 
             if (_terrainDirtyCells.Count > 0)
             {
                 _hiResTerrainRenderer.RenderDirty(_world.Terrain, _hiResTerrainPixels,
-                    _hiResSize.X, _hiResSize.Y, _hiResQuality,
-                    _camPixelX, _camPixelY, scale,
+                    renderView, _hiResQuality,
                     _terrainDirtyCells, renderTime);
             }
 
-            bool hasAuxDirtyRect;
-            int auxMinX = 0, auxMinY = 0, auxMaxX = 0, auxMaxY = 0;
+            Rect? auxDirtyRect;
             if (_gpuAuxFullUploadPending)
             {
                 BuildGpuTerrainAuxData(_world.Terrain, _gpuTerrainAux);
-                hasAuxDirtyRect = true;
-                auxMinX = 0;
-                auxMinY = 0;
-                auxMaxX = _terrainSize.X - 1;
-                auxMaxY = _terrainSize.Y - 1;
+                auxDirtyRect = new Rect(0, 0, _terrainSize.X, _terrainSize.Y);
             }
             else
             {
-                bool hasTerrainDirty = TryGetDirtyCellBounds(_terrainDirtyCells, out int terrainMinX, out int terrainMinY, out int terrainMaxX, out int terrainMaxY);
-                bool hasHeatDirty = _world.Terrain.TryGetHeatDirtyRect(out int heatMinX, out int heatMinY, out int heatMaxX, out int heatMaxY);
-                hasAuxDirtyRect = MergeDirtyRects(
-                    hasTerrainDirty, terrainMinX, terrainMinY, terrainMaxX, terrainMaxY,
-                    hasHeatDirty, heatMinX, heatMinY, heatMaxX, heatMaxY,
-                    out auxMinX, out auxMinY, out auxMaxX, out auxMaxY);
-                if (hasAuxDirtyRect)
-                    BuildGpuTerrainAuxRect(_world.Terrain, _gpuTerrainAux, auxMinX, auxMinY, auxMaxX, auxMaxY);
+                Rect? terrainDirtyRect = TryGetDirtyCellBounds(_terrainDirtyCells);
+                Rect? heatDirtyRect = _world.Terrain.TryGetHeatDirtyRect(out Rect dirtyRect) ? dirtyRect : null;
+                auxDirtyRect = MergeDirtyRects(terrainDirtyRect, heatDirtyRect);
+                if (auxDirtyRect is Rect rect)
+                    BuildGpuTerrainAuxRect(_world.Terrain, _gpuTerrainAux, rect);
             }
             _terrainDirtyCells.Clear();
 
@@ -246,13 +319,12 @@ public class Game : IDisposable
 
             hiResWatch.Restart();
             _hiResEntityRenderer.Render(
-                _hiResPixels, _hiResSize.X, _hiResSize.Y,
+                _hiResPixels, renderView,
                 _worldPixels, _compositePixels,
-                _terrainSize.X, _terrainSize.Y,
-                _camPixelX, _camPixelY, scale, renderTime);
+                renderTime);
 
             int tankHeatGlowCount = BuildGpuTankHeatGlowData(
-                _world.TankList.Tanks, _camPixelX, _camPixelY, scale, _hiResSize.X, _hiResSize.Y);
+                _world.TankList.Tanks, renderView);
 
             _drawProfile.ScreenHiResEntities += hiResWatch.Elapsed;
             double entityMs = hiResWatch.Elapsed.TotalMilliseconds;
@@ -260,22 +332,12 @@ public class Game : IDisposable
             hiResWatch.Restart();
             var upload = new GamePixelsUpload(
                 Pixels: _hiResPixels,
-                Width: _hiResSize.X,
-                Height: _hiResSize.Y,
+                View: renderView,
                 Quality: _hiResQuality,
                 TankHeatGlowData: _gpuTankHeatGlow,
                 TankHeatGlowCount: tankHeatGlowCount,
                 TerrainAux: _gpuTerrainAux,
-                WorldWidth: _terrainSize.X,
-                WorldHeight: _terrainSize.Y,
-                CamPixelX: _camPixelX,
-                CamPixelY: _camPixelY,
-                PixelScale: scale,
-                HasAuxDirtyRect: hasAuxDirtyRect,
-                AuxMinX: auxMinX,
-                AuxMinY: auxMinY,
-                AuxMaxX: auxMaxX,
-                AuxMaxY: auxMaxY);
+                AuxDirtyRect: auxDirtyRect);
             _renderBackend.UploadGamePixels(upload);
             _world.Terrain.ClearHeatDirtyRect();
             _gpuAuxFullUploadPending = false;
@@ -285,7 +347,7 @@ public class Game : IDisposable
             UpdateHiResQuality(terrainMs + entityMs + uploadMs);
         });
 
-        _renderBackend.ClearFrame(winW, winH, 0.1f, 0.1f, 0.1f, 1f);
+        _renderBackend.ClearFrame(new Size(winW, winH), new Tunnerer.Core.Types.Color(26, 26, 26, 255));
 
         var imguiWatch = Stopwatch.StartNew();
         _renderBackend.NewFrame(winW, winH, dt);
@@ -340,8 +402,13 @@ public class Game : IDisposable
 
     private int BuildGpuTankHeatGlowData(
         IReadOnlyList<Core.Entities.Tank> tanks,
-        int camPixelX, int camPixelY, int pixelScale, int targetW, int targetH)
+        in RenderView view)
     {
+        int camPixelX = view.CameraPixels.X;
+        int camPixelY = view.CameraPixels.Y;
+        int pixelScale = view.PixelScale;
+        int targetW = view.ViewSize.X;
+        int targetH = view.ViewSize.Y;
         int count = 0;
         for (int i = 0; i < tanks.Count && count < Tweaks.World.MaxPlayers; i++)
         {
@@ -368,18 +435,15 @@ public class Game : IDisposable
         return count;
     }
 
-    private static bool TryGetDirtyCellBounds(IReadOnlyList<Position> dirtyCells, out int minX, out int minY, out int maxX, out int maxY)
+    private static Rect? TryGetDirtyCellBounds(IReadOnlyList<Position> dirtyCells)
     {
         if (dirtyCells.Count == 0)
-        {
-            minX = minY = maxX = maxY = 0;
-            return false;
-        }
+            return null;
 
-        minX = int.MaxValue;
-        minY = int.MaxValue;
-        maxX = int.MinValue;
-        maxY = int.MinValue;
+        int minX = int.MaxValue;
+        int minY = int.MaxValue;
+        int maxX = int.MinValue;
+        int maxY = int.MinValue;
         for (int i = 0; i < dirtyCells.Count; i++)
         {
             var p = dirtyCells[i];
@@ -388,36 +452,12 @@ public class Game : IDisposable
             if (p.X > maxX) maxX = p.X;
             if (p.Y > maxY) maxY = p.Y;
         }
-        return true;
+        return RectMath.FromMinMaxInclusive(minX, minY, maxX, maxY);
     }
 
-    private static bool MergeDirtyRects(
-        bool hasA, int minAX, int minAY, int maxAX, int maxAY,
-        bool hasB, int minBX, int minBY, int maxBX, int maxBY,
-        out int minX, out int minY, out int maxX, out int maxY)
+    private static Rect? MergeDirtyRects(Rect? a, Rect? b)
     {
-        if (!hasA && !hasB)
-        {
-            minX = minY = maxX = maxY = 0;
-            return false;
-        }
-
-        if (!hasA)
-        {
-            minX = minBX; minY = minBY; maxX = maxBX; maxY = maxBY;
-            return true;
-        }
-        if (!hasB)
-        {
-            minX = minAX; minY = minAY; maxX = maxAX; maxY = maxAY;
-            return true;
-        }
-
-        minX = Math.Min(minAX, minBX);
-        minY = Math.Min(minAY, minBY);
-        maxX = Math.Max(maxAX, maxBX);
-        maxY = Math.Max(maxAY, maxBY);
-        return true;
+        return RectMath.Union(a, b);
     }
 
     private static void BuildGpuTerrainAuxData(Core.Terrain.TerrainGrid terrain, byte[] target)
@@ -427,8 +467,9 @@ public class Game : IDisposable
             WriteTerrainAux(terrain, i, terrain.GetPixelRaw(i), target, i * 4);
     }
 
-    private static void BuildGpuTerrainAuxRect(Core.Terrain.TerrainGrid terrain, byte[] target, int minX, int minY, int maxX, int maxY)
+    private static void BuildGpuTerrainAuxRect(Core.Terrain.TerrainGrid terrain, byte[] target, in Rect dirtyRect)
     {
+        RectMath.GetMinMaxInclusive(dirtyRect, out int minX, out int minY, out int maxX, out int maxY);
         int w = terrain.Width;
         for (int y = minY; y <= maxY; y++)
         {
@@ -477,8 +518,12 @@ public class Game : IDisposable
         return true;
     }
 
-    private void ScrollTerrainBuffer(int dx, int dy, int w, int h)
+    private void ScrollTerrainBuffer(Offset cameraDelta, Size viewSize)
     {
+        int dx = cameraDelta.X;
+        int dy = cameraDelta.Y;
+        int w = viewSize.X;
+        int h = viewSize.Y;
         int srcX = Math.Max(0, dx);
         int srcY = Math.Max(0, dy);
         int dstX = Math.Max(0, -dx);
@@ -504,28 +549,48 @@ public class Game : IDisposable
         }
     }
 
-    private void RenderExposedStrips(uint[] buf, int w, int h, int dx, int dy, int scale)
+    private void RenderExposedStrips(uint[] buf, in RenderView view, Offset cameraDelta)
     {
+        int w = view.ViewSize.X;
+        int h = view.ViewSize.Y;
+        int dx = cameraDelta.X;
+        int dy = cameraDelta.Y;
         if (dx > 0)
         {
-            _hiResTerrainRenderer.RenderStrip(_world.Terrain, buf, w, h, _hiResQuality,
-                _camPixelX, _camPixelY, scale, w - dx, 0, w - 1, h - 1);
+            _hiResTerrainRenderer.RenderStrip(
+                _world.Terrain,
+                buf,
+                view,
+                _hiResQuality,
+                new Rect(w - dx, 0, dx, h));
         }
         else if (dx < 0)
         {
-            _hiResTerrainRenderer.RenderStrip(_world.Terrain, buf, w, h, _hiResQuality,
-                _camPixelX, _camPixelY, scale, 0, 0, -dx - 1, h - 1);
+            _hiResTerrainRenderer.RenderStrip(
+                _world.Terrain,
+                buf,
+                view,
+                _hiResQuality,
+                new Rect(0, 0, -dx, h));
         }
 
         if (dy > 0)
         {
-            _hiResTerrainRenderer.RenderStrip(_world.Terrain, buf, w, h, _hiResQuality,
-                _camPixelX, _camPixelY, scale, 0, h - dy, w - 1, h - 1);
+            _hiResTerrainRenderer.RenderStrip(
+                _world.Terrain,
+                buf,
+                view,
+                _hiResQuality,
+                new Rect(0, h - dy, w, dy));
         }
         else if (dy < 0)
         {
-            _hiResTerrainRenderer.RenderStrip(_world.Terrain, buf, w, h, _hiResQuality,
-                _camPixelX, _camPixelY, scale, 0, 0, w - 1, -dy - 1);
+            _hiResTerrainRenderer.RenderStrip(
+                _world.Terrain,
+                buf,
+                view,
+                _hiResQuality,
+                new Rect(0, 0, w, -dy));
         }
     }
 
@@ -684,3 +749,8 @@ public class DrawProfile
         FrameCount = 0;
     }
 }
+
+public readonly record struct PerfCaptureOptions(
+    int WarmupFrames,
+    int MeasureFrames,
+    string? CsvPath);
