@@ -15,15 +15,6 @@ public sealed class HiResTerrainRenderer
 {
     private const uint BackgroundColor = 0xFF161414;
 
-    // Bloom
-    private const int BloomBrightThreshold = 330;
-    private const int BloomDownscale = 4;
-    private const int BloomRadius = 3;
-    private const float BloomStrength = 0.45f;
-
-    // Vignette
-    private const float VignetteDarken = 0.18f;
-
     // SDF edge
     private const float EdgeHalfLow = 0.20f;
     private const float EdgeHalfHigh = 0.35f;
@@ -36,28 +27,11 @@ public sealed class HiResTerrainRenderer
     private const float MacroNormalStrength = 1.8f;
 
     // Edge effects
-    private const float OutlineThicknessLow = 0.10f;
-    private const float OutlineThicknessHigh = 0.14f;
-    private const float OutlineDarken = 0.45f;
-    private const float SolidEdgeRange = 0.60f;
-    private const float SolidEdgeDarken = 0.35f;
-    private const float CaveShadowRange = 0.65f;
-    private const float CaveShadowDarken = 0.50f;
     private const float AoDarken = 0.45f;
-
-    // Rim lighting
-    private const float RimDistMax = 0.30f;
-    private const float RimDistMin = 0.02f;
-    private const float RimStrength = 0.12f;
 
     // Depth darkening
     private const float DepthDarkenStart = -0.25f;
     private const float DepthDarkenFloor = 0.45f;
-
-    // Emissive
-    private const float EmissivePulseFreq = 3.0f;
-    private const float EmissivePulseMin = 0.8f;
-    private const float EmissivePulseRange = 0.2f;
 
     // Material boundary
     private const float MaterialBlendAlphaMin = 0.1f;
@@ -224,144 +198,6 @@ public sealed class HiResTerrainRenderer
             RenderRegion(terrain, targetPixels, targetWidth, targetHeight, quality,
                 camPixelX, camPixelY, pixelScale, screenMinX, screenMinY, screenMaxX, screenMaxY, time);
         }
-    }
-
-    // ------------------------------------------------------------------
-    //  Post-processing: bloom + vignette (call after entity compositing)
-    // ------------------------------------------------------------------
-
-    private static int[] _bloomBuf = Array.Empty<int>();
-
-    public static void PostProcess(uint[] pixels, int width, int height, HiResRenderQuality quality)
-    {
-        if (quality >= HiResRenderQuality.Medium)
-            ApplyBloom(pixels, width, height);
-        if (quality >= HiResRenderQuality.High)
-            ApplyVignette(pixels, width, height);
-    }
-
-    private static void ApplyBloom(uint[] pixels, int w, int h)
-    {
-        const int brightThreshold = BloomBrightThreshold;
-        const int downscale = BloomDownscale;
-        const int radius = BloomRadius;
-        const float bloomStr = BloomStrength;
-        int dw = w / downscale, dh = h / downscale;
-        int dLen = dw * dh;
-
-        int bloomBufSize = dLen * 6;
-        if (_bloomBuf.Length < bloomBufSize)
-            _bloomBuf = new int[bloomBufSize];
-        var buf = _bloomBuf;
-        int oR = 0, oG = dLen, oB = dLen * 2;
-        int tR = dLen * 3, tG = dLen * 4, tB = dLen * 5;
-        Array.Clear(buf, 0, dLen * 6);
-
-        int brightCount = 0;
-        for (int dy = 0; dy < dh; dy++)
-        {
-            int srcY = dy * downscale;
-            int dRow = dy * dw;
-            for (int dx = 0; dx < dw; dx++)
-            {
-                uint c = pixels[srcY * w + dx * downscale];
-                int sr = (int)((c >> 16) & 0xFF);
-                int sg = (int)((c >> 8) & 0xFF);
-                int sb = (int)(c & 0xFF);
-                if (sr + sg + sb >= brightThreshold)
-                {
-                    buf[oR + dRow + dx] = sr;
-                    buf[oG + dRow + dx] = sg;
-                    buf[oB + dRow + dx] = sb;
-                    brightCount++;
-                }
-            }
-        }
-        if (brightCount < 2) return;
-
-        // Horizontal blur
-        for (int dy = 0; dy < dh; dy++)
-        {
-            int row = dy * dw;
-            for (int dx = 0; dx < dw; dx++)
-            {
-                int rr = 0, gg = 0, bb = 0, cnt = 0;
-                for (int k = -radius; k <= radius; k++)
-                {
-                    int nx = dx + k;
-                    if ((uint)nx >= (uint)dw) continue;
-                    int idx = row + nx;
-                    if (buf[oR + idx] == 0 && buf[oG + idx] == 0 && buf[oB + idx] == 0) continue;
-                    rr += buf[oR + idx]; gg += buf[oG + idx]; bb += buf[oB + idx]; cnt++;
-                }
-                if (cnt > 0) { buf[tR + row + dx] = rr / cnt; buf[tG + row + dx] = gg / cnt; buf[tB + row + dx] = bb / cnt; }
-            }
-        }
-
-        // Vertical blur + additive blend (parallelized)
-        Parallel.For(0, dh, dy2 =>
-        {
-            int srcY = dy2 * downscale;
-            for (int dx2 = 0; dx2 < dw; dx2++)
-            {
-                int rr = 0, gg = 0, bb = 0, cnt = 0;
-                for (int k = -radius; k <= radius; k++)
-                {
-                    int ny = dy2 + k;
-                    if ((uint)ny >= (uint)dh) continue;
-                    int idx = ny * dw + dx2;
-                    if (buf[tR + idx] == 0 && buf[tG + idx] == 0 && buf[tB + idx] == 0) continue;
-                    rr += buf[tR + idx]; gg += buf[tG + idx]; bb += buf[tB + idx]; cnt++;
-                }
-                if (cnt == 0) continue;
-
-                int addR = (int)(rr / cnt * bloomStr);
-                int addG = (int)(gg / cnt * bloomStr);
-                int addB = (int)(bb / cnt * bloomStr);
-
-                int srcX = dx2 * downscale;
-                int endY = Math.Min(srcY + downscale, h);
-                int endX = Math.Min(srcX + downscale, w);
-                for (int py = srcY; py < endY; py++)
-                {
-                    int rowOff = py * w;
-                    for (int px = srcX; px < endX; px++)
-                    {
-                        pixels[rowOff + px] = RenderingPixels.Additive(pixels[rowOff + px], addR, addG, addB);
-                    }
-                }
-            }
-        });
-    }
-
-    private static float[] _vignetteRow = Array.Empty<float>();
-
-    private static void ApplyVignette(uint[] pixels, int w, int h)
-    {
-        float cx = w * 0.5f;
-        float cy = h * 0.5f;
-        float invMaxDist2 = 1f / (cx * cx + cy * cy);
-
-        if (_vignetteRow.Length < w) _vignetteRow = new float[w];
-        for (int x = 0; x < w; x++)
-        {
-            float dx = x - cx;
-            _vignetteRow[x] = dx * dx;
-        }
-
-        var dxSq = _vignetteRow;
-        Parallel.For(0, h, y =>
-        {
-            float dyy = (y - cy) * (y - cy);
-            int row = y * w;
-            for (int x = 0; x < w; x++)
-            {
-                float d2 = (dxSq[x] + dyy) * invMaxDist2;
-                float darken = 1f - d2 * VignetteDarken;
-
-                pixels[row + x] = RenderingPixels.Darken(pixels[row + x], darken);
-            }
-        });
     }
 
     // ------------------------------------------------------------------
@@ -630,33 +466,6 @@ public sealed class HiResTerrainRenderer
                     bF *= brightness;
                 }
 
-                // Solid-side edge proximity darkening: dirt gradually darkens
-                // approaching cave boundaries (dist 0.0..0.6 = near edge)
-                if (dist > 0f && dist < SolidEdgeRange)
-                {
-                    float proximity = 1f - dist / SolidEdgeRange;
-                    float edgeDarken = 1f - proximity * proximity * SolidEdgeDarken;
-                    rF *= edgeDarken; gF *= edgeDarken; bF *= edgeDarken;
-                }
-
-                // Wall outline (narrow band right at the boundary)
-                float absDist = MathF.Abs(dist);
-                float outlineThick = quality == HiResRenderQuality.Low ? OutlineThicknessLow : OutlineThicknessHigh;
-                if (absDist < outlineThick)
-                {
-                    float t = 1f - absDist / outlineThick;
-                    float darken = 1f - t * t * OutlineDarken;
-                    rF *= darken; gF *= darken; bF *= darken;
-                }
-
-                // Cave-side shadow gradient (wider, smoother falloff)
-                if (dist < 0f && dist > -CaveShadowRange)
-                {
-                    float t = 1f + dist / CaveShadowRange;
-                    float darken = 1f - t * t * CaveShadowDarken;
-                    rF *= darken; gF *= darken; bF *= darken;
-                }
-
                 // AO on empty cells
                 if (!IsSolidTerrain(centerPixel))
                 {
@@ -664,33 +473,11 @@ public sealed class HiResTerrainRenderer
                     rF *= aoDarken; gF *= aoDarken; bF *= aoDarken;
                 }
 
-                // Rim lighting at terrain edges
-                if (useNormals && absDist < RimDistMax && absDist > RimDistMin)
-                {
-                    float rimT = 1f - absDist / RimDistMax;
-                    float rim = rimT * rimT * rimT * RimStrength;
-                    rF += 255f * rim;
-                    gF += 255f * rim;
-                    bF += 255f * rim;
-                }
-
                 // Depth darkening for deep tunnels (complete fade to black)
                 if (dist < DepthDarkenStart)
                 {
                     float depthFactor = Remap(dist, -1f, DepthDarkenStart, DepthDarkenFloor, 1f);
                     rF *= depthFactor; gF *= depthFactor; bF *= depthFactor;
-                }
-
-                // Emissive (energy glow, scorched embers)
-                if (activeMat.EmissiveIntensity > 0f)
-                {
-                    uint cellHash = Hash2((uint)worldX, (uint)worldY);
-                    float phase = (cellHash & 0xFFu) / 255f * 6.28f;
-                    float pulse = EmissivePulseMin + EmissivePulseRange * MathF.Sin(time * EmissivePulseFreq + phase);
-                    float emStr = activeMat.EmissiveIntensity * pulse;
-                    rF += activeMat.EmissiveColor.R * emStr;
-                    gF += activeMat.EmissiveColor.G * emStr;
-                    bF += activeMat.EmissiveColor.B * emStr;
                 }
 
                 targetPixels[writeIndex] = RenderingPixels.PackRgb(rF, gF, bF);

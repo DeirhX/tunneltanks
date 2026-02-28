@@ -33,8 +33,6 @@ public sealed class MaterialTexture
     public float Shininess = 8f;
     public float SpecularIntensity = 0.1f;
     public Color AmbientTint = new(128, 128, 128);
-    public float EmissiveIntensity = 0f;
-    public Color EmissiveColor = new(0, 0, 0);
 
     public MaterialTexture(int size)
     {
@@ -411,8 +409,6 @@ public sealed class TerrainTextureAtlas
         tex.Shininess = 32f;
         tex.SpecularIntensity = 0.5f;
         tex.AmbientTint = new Color(100, 130, 90);
-        tex.EmissiveIntensity = 0.6f;
-        tex.EmissiveColor = new Color(200, 220, 60);
         return tex;
     }
 
@@ -458,8 +454,6 @@ public sealed class TerrainTextureAtlas
         tex.Shininess = 4f;
         tex.SpecularIntensity = 0.04f;
         tex.AmbientTint = new Color(125, 110, 100);
-        tex.EmissiveIntensity = 0.25f;
-        tex.EmissiveColor = new Color(180, 80, 30);
         return tex;
     }
 
