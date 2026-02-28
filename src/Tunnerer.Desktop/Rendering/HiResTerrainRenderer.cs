@@ -238,7 +238,6 @@ public sealed class HiResTerrainRenderer
         float invScale = 1f / pixelScale;
         bool useTextures = quality != HiResRenderQuality.Low;
         bool useNormals = quality == HiResRenderQuality.High;
-        int targetHeight = view.ViewSize.Y;
 
         int rowCount = maxY - minY + 1;
         bool useParallel = useNormals && rowCount > 32;
@@ -246,42 +245,44 @@ public sealed class HiResTerrainRenderer
         if (useParallel)
         {
             Parallel.For(minY, maxY + 1, y =>
-                RenderRow(terrain, targetPixels, targetWidth, targetHeight, w, h, invScale,
+                RenderRow(terrain, targetPixels, targetWidth, w, h, invScale,
                     useTextures, useNormals, camPixelX, camPixelY, quality, time,
                     minX, maxX, y));
         }
         else
         {
             for (int y = minY; y <= maxY; y++)
-                RenderRow(terrain, targetPixels, targetWidth, targetHeight, w, h, invScale,
+                RenderRow(terrain, targetPixels, targetWidth, w, h, invScale,
                     useTextures, useNormals, camPixelX, camPixelY, quality, time,
                     minX, maxX, y);
         }
     }
 
     private void RenderRow(
-        TerrainGrid terrain, uint[] targetPixels, int targetWidth, int targetHeight,
+        TerrainGrid terrain, uint[] targetPixels, int targetWidth,
         int w, int h, float invScale,
         bool useTextures, bool useNormals,
         int camPixelX, int camPixelY, HiResRenderQuality quality, float time,
         int minX, int maxX, int y)
     {
-        var target = new SurfaceSpan(targetPixels, targetWidth, targetHeight);
+        MaterialTexture caveTex = _atlas.Get(MaterialClass.Cave);
+        MaterialTexture scorchedTex = _atlas.Get(MaterialClass.Scorched);
         float worldYf = (camPixelY + y + 0.5f) * invScale;
         int worldY = (int)worldYf;
+        int rowStart = y * targetWidth;
 
         if (worldY < -1 || worldY > h)
         {
-            int row = target.RowStart(y);
             for (int x = minX; x <= maxX; x++)
-                target.AtIndex(row + x) = BackgroundColor;
+                targetPixels[rowStart + x] = BackgroundColor;
             return;
         }
 
         float fracY = worldYf - worldY;
-        int writeIndex = minX + target.RowStart(y);
+        int writeIndex = minX + rowStart;
         int prevCellX = int.MinValue, prevCellY = int.MinValue;
         float aoValue = 0f;
+        float edgeHalf = quality == HiResRenderQuality.Low ? EdgeHalfLow : EdgeHalfHigh;
 
         for (int x = minX; x <= maxX; x++, writeIndex++)
             {
@@ -290,7 +291,7 @@ public sealed class HiResTerrainRenderer
 
                 if (worldX < -1 || worldX > w)
                 {
-                    target.AtIndex(writeIndex) = BackgroundColor;
+                    targetPixels[writeIndex] = BackgroundColor;
                     continue;
                 }
 
@@ -336,7 +337,6 @@ public sealed class HiResTerrainRenderer
                 }
 
                 // SDF edge blend
-                float edgeHalf = quality == HiResRenderQuality.Low ? EdgeHalfLow : EdgeHalfHigh;
                 float alpha;
                 if (dist > edgeHalf) alpha = 1f;
                 else if (dist < -edgeHalf) alpha = 0f;
@@ -369,8 +369,8 @@ public sealed class HiResTerrainRenderer
                 }
                 else if (alpha <= 0f)
                 {
-                    blended = SampleCave(texU, texV, worldX, worldY, useTextures, heat, isScorched);
-                    activeMat = _atlas.Get(MaterialClass.Cave);
+                    blended = SampleCave(caveTex, scorchedTex, texU, texV, worldX, worldY, useTextures, heat, isScorched);
+                    activeMat = caveTex;
                 }
                 else
                 {
@@ -387,10 +387,10 @@ public sealed class HiResTerrainRenderer
                         solidCol = SampleMaterial(solidPixel, texU, texV, worldX, worldY, useTextures);
                         solidMat = _atlas.Get(TerrainTextureAtlas.Classify(solidPixel));
                     }
-                    Color caveCol = SampleCave(texU, texV, worldX, worldY, useTextures, heat, isScorched);
+                    Color caveCol = SampleCave(caveTex, scorchedTex, texU, texV, worldX, worldY, useTextures, heat, isScorched);
                     blended = LerpColor(caveCol, solidCol, alpha);
 
-                    activeMat = alpha >= 0.5f ? solidMat : _atlas.Get(MaterialClass.Cave);
+                    activeMat = alpha >= 0.5f ? solidMat : caveTex;
                 }
 
                 // --- Material-to-material boundary blending ---
@@ -444,8 +444,7 @@ public sealed class HiResTerrainRenderer
                     // At solid/cave boundary, blend normals (Phase 3: normal blending)
                     if (alpha > 0f && alpha < 1f)
                     {
-                        var caveMat = _atlas.Get(MaterialClass.Cave);
-                        var (cnx, cny, cnz) = caveMat.SampleNormal(texU, texV);
+                        var (cnx, cny, cnz) = caveTex.SampleNormal(texU, texV);
                         tnx = tnx * alpha + cnx * (1f - alpha);
                         tny = tny * alpha + cny * (1f - alpha);
                         tnz = tnz * alpha + cnz * (1f - alpha);
@@ -504,7 +503,7 @@ public sealed class HiResTerrainRenderer
                     rF *= depthFactor; gF *= depthFactor; bF *= depthFactor;
                 }
 
-                target.AtIndex(writeIndex) = RenderingPixels.PackRgb(rF, gF, bF);
+                targetPixels[writeIndex] = RenderingPixels.PackRgb(rF, gF, bF);
             }
     }
 
@@ -536,7 +535,10 @@ public sealed class HiResTerrainRenderer
             ScaleByte(texColor.B, brightness));
     }
 
-    private Color SampleCave(float texU, float texV, int worldX, int worldY,
+    private Color SampleCave(
+        MaterialTexture caveTex,
+        MaterialTexture scorchedTex,
+        float texU, float texV, int worldX, int worldY,
         bool useTextures, float heat = 0f, bool isScorched = false)
     {
         float scorchBlend = heat * ScorchHeatFactor;
@@ -556,10 +558,10 @@ public sealed class HiResTerrainRenderer
             return baseCave;
         }
 
-        Color cave = _atlas.Get(MaterialClass.Cave).SampleColor(texU, texV);
+        Color cave = caveTex.SampleColor(texU, texV);
         if (scorchBlend > 0.01f)
         {
-            Color scorch = _atlas.Get(MaterialClass.Scorched).SampleColor(texU, texV);
+            Color scorch = scorchedTex.SampleColor(texU, texV);
             return LerpColor(cave, scorch, scorchBlend);
         }
         return cave;

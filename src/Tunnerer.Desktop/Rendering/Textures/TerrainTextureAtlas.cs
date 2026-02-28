@@ -1,5 +1,6 @@
 namespace Tunnerer.Desktop.Rendering.Textures;
 
+using System.Runtime.CompilerServices;
 using Tunnerer.Core.Types;
 using static ProceduralNoise;
 
@@ -42,6 +43,7 @@ public sealed class MaterialTexture
     }
 
     /// <summary>Bilinear sample from the color map using float UV coordinates (wrapping).</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Color SampleColor(float u, float v)
     {
         float fu = u - MathF.Floor(u);
@@ -49,13 +51,19 @@ public sealed class MaterialTexture
         float px = fu * Size - 0.5f;
         float py = fv * Size - 0.5f;
 
-        int x0 = ((int)MathF.Floor(px) % Size + Size) % Size;
-        int y0 = ((int)MathF.Floor(py) % Size + Size) % Size;
-        int x1 = (x0 + 1) % Size;
-        int y1 = (y0 + 1) % Size;
+        float xFloor = MathF.Floor(px);
+        float yFloor = MathF.Floor(py);
+        int x0 = (int)xFloor % Size;
+        int y0 = (int)yFloor % Size;
+        if (x0 < 0) x0 += Size;
+        if (y0 < 0) y0 += Size;
+        int x1 = x0 + 1;
+        int y1 = y0 + 1;
+        if (x1 == Size) x1 = 0;
+        if (y1 == Size) y1 = 0;
 
-        float fx = px - MathF.Floor(px);
-        float fy = py - MathF.Floor(py);
+        float fx = px - xFloor;
+        float fy = py - yFloor;
 
         var c00 = ColorMap[y0 * Size + x0];
         var c10 = ColorMap[y0 * Size + x1];
@@ -66,6 +74,7 @@ public sealed class MaterialTexture
     }
 
     /// <summary>Bilinear sample from the normal map using float UV coordinates (wrapping).</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public (float nx, float ny, float nz) SampleNormal(float u, float v)
     {
         float fu = u - MathF.Floor(u);
@@ -73,13 +82,19 @@ public sealed class MaterialTexture
         float px = fu * Size - 0.5f;
         float py = fv * Size - 0.5f;
 
-        int x0 = ((int)MathF.Floor(px) % Size + Size) % Size;
-        int y0 = ((int)MathF.Floor(py) % Size + Size) % Size;
-        int x1 = (x0 + 1) % Size;
-        int y1 = (y0 + 1) % Size;
+        float xFloor = MathF.Floor(px);
+        float yFloor = MathF.Floor(py);
+        int x0 = (int)xFloor % Size;
+        int y0 = (int)yFloor % Size;
+        if (x0 < 0) x0 += Size;
+        if (y0 < 0) y0 += Size;
+        int x1 = x0 + 1;
+        int y1 = y0 + 1;
+        if (x1 == Size) x1 = 0;
+        if (y1 == Size) y1 = 0;
 
-        float fx = px - MathF.Floor(px);
-        float fy = py - MathF.Floor(py);
+        float fx = px - xFloor;
+        float fy = py - yFloor;
 
         var n00 = DecodeNormal(NormalMap[y0 * Size + x0]);
         var n10 = DecodeNormal(NormalMap[y0 * Size + x1]);
@@ -95,6 +110,7 @@ public sealed class MaterialTexture
         return (rnx, rny, rnz);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static (float nx, float ny, float nz) DecodeNormal(Color c)
     {
         float nx = c.R / 127.5f - 1f;
@@ -119,6 +135,7 @@ public sealed class MaterialTexture
         return new Color(Clamp(r), Clamp(g), Clamp(b));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static float Bilerp(float a00, float a10, float a01, float a11, float fx, float fy)
     {
         float top = a00 + fx * (a10 - a00);
