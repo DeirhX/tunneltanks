@@ -3,6 +3,12 @@ namespace Tunnerer.Core.Config;
 using Tunnerer.Core.Types;
 
 public readonly record struct ExplosionParams(int ShrapnelCount, float Speed, int Frames);
+public enum RenderBackendKind
+{
+    OpenGl = 0,
+    Dx11 = 1,
+    Dx12 = 2,
+}
 
 public static class Tweaks
 {
@@ -10,6 +16,7 @@ public static class Tweaks
     {
         public const string WindowTitle = "Tunnerer";
         public const string Version = "0.1 alpha";
+        public const RenderBackendKind RenderBackend = RenderBackendKind.OpenGl;
     }
 
     public static class Perf
@@ -39,17 +46,42 @@ public static class Tweaks
         public const float PostBloomWeightAxis = 0.11f;
         public const float PostBloomWeightDiagonal = 0.07f;
         public const float PostVignetteStrength = 0.18f;
+        public const float PostVignetteInnerRadius = 0.35f;
+        public const float PostVignetteOuterRadius = 0.95f;
         public const float PostTerrainEdgeLightStrength = 0.10f;
         public const float PostTerrainEdgeLightBias = 0.05f;
+        public const float PostTerrainHeatThreshold = 0.01f;
         public const float PostTerrainMaskEdgeStrength = 0.18f;
         public const float PostTerrainMaskCaveDarken = 0.12f;
         public const float PostTerrainMaskSolidLift = 0.04f;
+        public const float PostTerrainMaskOutlineDarken = 0.26f;
+        public const float PostTerrainMaskRimLift = 0.07f;
+        public const float PostTerrainMaskBoundaryScale = 2.4f;
+        public const float PostMaterialEmissiveEnergyR = 0.7843f;
+        public const float PostMaterialEmissiveEnergyG = 0.8627f;
+        public const float PostMaterialEmissiveEnergyB = 0.2353f;
+        public const float PostMaterialEmissiveScorchedR = 0.7059f;
+        public const float PostMaterialEmissiveScorchedG = 0.3137f;
+        public const float PostMaterialEmissiveScorchedB = 0.1176f;
+        public const float PostMaterialEmissiveEnergyStrength = 0.60f;
+        public const float PostMaterialEmissiveScorchedStrength = 0.32f;
+        public const float PostMaterialEmissivePulseFreq = 3.0f;
+        public const float PostMaterialEmissivePulseMin = 0.8f;
+        public const float PostMaterialEmissivePulseRange = 0.2f;
         public const float PostTankHeatGlowR = 0.78f;
         public const float PostTankHeatGlowG = 0.24f;
         public const float PostTankHeatGlowB = 0.04f;
+        public const float PostTankHeatGlowMinHeat = 5f;
+        public const float PostTankHeatGlowBaseRadius = 2.5f;
+        public const float PostTankHeatGlowScaleRadius = 2.5f;
         public const float PostTerrainHeatGlowR = 0.8627f;
         public const float PostTerrainHeatGlowG = 0.3137f;
         public const float PostTerrainHeatGlowB = 0.0588f;
+        public const byte PostEmissiveEnergyLow = 150;
+        public const byte PostEmissiveEnergyMedium = 190;
+        public const byte PostEmissiveEnergyHigh = 230;
+        public const byte PostEmissiveScorchedHigh = 64;
+        public const byte PostEmissiveScorchedLow = 32;
     }
 
     public static class World

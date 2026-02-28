@@ -1,6 +1,5 @@
 namespace Tunnerer.Desktop;
 
-using Silk.NET.OpenGL;
 using Silk.NET.SDL;
 using Tunnerer.Core;
 using Tunnerer.Core.Config;
@@ -17,9 +16,8 @@ using System.Runtime.InteropServices;
 public class Game : IDisposable
 {
     private readonly SdlRenderer _renderer;
-    private readonly GL _gl;
-    private readonly ImGuiController _imgui;
-    private readonly TextureManager _textures;
+    private readonly IGameRenderBackend _renderBackend;
+    private readonly ITextureLoader _textures;
     private readonly GameHud _hud;
 
     private readonly Size _terrainSize;
@@ -32,10 +30,8 @@ public class Game : IDisposable
     private readonly HiResEntityRenderer _hiResEntityRenderer = new();
     private readonly List<Position> _terrainDirtyCells = new();
     private readonly float[] _gpuTankHeatGlow = new float[Tweaks.World.MaxPlayers * 4];
-    private readonly byte[] _gpuTerrainHeat;
-    private readonly byte[] _gpuTerrainMask;
-    private bool _gpuHeatFullUploadPending = true;
-    private bool _gpuMaskFullUploadPending = true;
+    private readonly byte[] _gpuTerrainAux;
+    private bool _gpuAuxFullUploadPending = true;
     private uint[] _hiResPixels = Array.Empty<uint>();
     private uint[] _hiResTerrainPixels = Array.Empty<uint>();
     private Size _hiResSize;
@@ -64,12 +60,10 @@ public class Game : IDisposable
 
         _renderer = new SdlRenderer(Tweaks.System.WindowTitle, windowSize);
 
-        _gl = GL.GetApi(name =>
-            (nint)_renderer.Sdl.GLGetProcAddress(name));
-
-        _imgui = new ImGuiController(_gl, _renderer.Sdl, _renderer.NativeWindow,
-            windowSize.X, windowSize.Y);
-        _textures = new TextureManager(_gl);
+        var renderServices = RenderBackendFactory.CreateServices(
+            Tweaks.System.RenderBackend, _renderer.Sdl, _renderer.NativeWindow, windowSize.X, windowSize.Y);
+        _renderBackend = renderServices.Backend;
+        _textures = renderServices.Textures;
         _hud = new GameHud();
         LoadHudSprites();
 
@@ -88,8 +82,7 @@ public class Game : IDisposable
 
         _worldPixels = new uint[_terrainSize.Area];
         _compositePixels = new uint[_terrainSize.Area];
-        _gpuTerrainHeat = new byte[_terrainSize.Area];
-        _gpuTerrainMask = new byte[_terrainSize.Area];
+        _gpuTerrainAux = new byte[_terrainSize.Area * 4];
         if (parallel)
             _world.Terrain.DrawAllToSurfaceParallel(_worldPixels);
         else
@@ -111,7 +104,7 @@ public class Game : IDisposable
 
             while (_isRunning)
             {
-                if (!_renderer.PollEvents(ev => _imgui.ProcessEvent(ev)))
+                if (!_renderer.PollEvents(ev => _renderBackend.ProcessEvent(ev)))
                 { _isRunning = false; break; }
 
                 if (_world.IsGameOver)
@@ -172,7 +165,8 @@ public class Game : IDisposable
         }
         finally
         {
-            _imgui.Dispose();
+            _textures.Dispose();
+            _renderBackend.Dispose();
             _renderer.Dispose();
         }
     }
@@ -222,21 +216,27 @@ public class Game : IDisposable
                     _terrainDirtyCells, renderTime);
             }
 
-            bool hasMaskDirtyRect = false;
-            int maskMinX = 0, maskMinY = 0, maskMaxX = 0, maskMaxY = 0;
-            if (_gpuMaskFullUploadPending)
+            bool hasAuxDirtyRect;
+            int auxMinX = 0, auxMinY = 0, auxMaxX = 0, auxMaxY = 0;
+            if (_gpuAuxFullUploadPending)
             {
-                BuildGpuTerrainMaskData(_world.Terrain, _gpuTerrainMask);
-                hasMaskDirtyRect = true;
-                maskMinX = 0;
-                maskMinY = 0;
-                maskMaxX = _terrainSize.X - 1;
-                maskMaxY = _terrainSize.Y - 1;
+                BuildGpuTerrainAuxData(_world.Terrain, _gpuTerrainAux);
+                hasAuxDirtyRect = true;
+                auxMinX = 0;
+                auxMinY = 0;
+                auxMaxX = _terrainSize.X - 1;
+                auxMaxY = _terrainSize.Y - 1;
             }
-            else if (_terrainDirtyCells.Count > 0)
+            else
             {
-                hasMaskDirtyRect = ApplyGpuTerrainMaskDirty(_world.Terrain, _gpuTerrainMask, _terrainDirtyCells,
-                    out maskMinX, out maskMinY, out maskMaxX, out maskMaxY);
+                bool hasTerrainDirty = TryGetDirtyCellBounds(_terrainDirtyCells, out int terrainMinX, out int terrainMinY, out int terrainMaxX, out int terrainMaxY);
+                bool hasHeatDirty = _world.Terrain.TryGetHeatDirtyRect(out int heatMinX, out int heatMinY, out int heatMaxX, out int heatMaxY);
+                hasAuxDirtyRect = MergeDirtyRects(
+                    hasTerrainDirty, terrainMinX, terrainMinY, terrainMaxX, terrainMaxY,
+                    hasHeatDirty, heatMinX, heatMinY, heatMaxX, heatMaxY,
+                    out auxMinX, out auxMinY, out auxMaxX, out auxMaxY);
+                if (hasAuxDirtyRect)
+                    BuildGpuTerrainAuxRect(_world.Terrain, _gpuTerrainAux, auxMinX, auxMinY, auxMaxX, auxMaxY);
             }
             _terrainDirtyCells.Clear();
 
@@ -253,48 +253,42 @@ public class Game : IDisposable
 
             int tankHeatGlowCount = BuildGpuTankHeatGlowData(
                 _world.TankList.Tanks, _camPixelX, _camPixelY, scale, _hiResSize.X, _hiResSize.Y);
-            bool uploadFullHeat = _gpuHeatFullUploadPending;
-            bool hasHeatDirtyRect = false;
-            int heatMinX = 0, heatMinY = 0, heatMaxX = 0, heatMaxY = 0;
-            if (uploadFullHeat)
-            {
-                BuildGpuTerrainHeatData(_world.Terrain, _gpuTerrainHeat);
-                hasHeatDirtyRect = true;
-                heatMinX = 0;
-                heatMinY = 0;
-                heatMaxX = _terrainSize.X - 1;
-                heatMaxY = _terrainSize.Y - 1;
-            }
-            else
-            {
-                hasHeatDirtyRect = ApplyGpuTerrainHeatDirty(_world.Terrain, _gpuTerrainHeat,
-                    out heatMinX, out heatMinY, out heatMaxX, out heatMaxY);
-            }
 
             _drawProfile.ScreenHiResEntities += hiResWatch.Elapsed;
             double entityMs = hiResWatch.Elapsed.TotalMilliseconds;
 
             hiResWatch.Restart();
-            _imgui.UploadGamePixels(_hiResPixels, _hiResSize.X, _hiResSize.Y, _hiResQuality,
-                _gpuTankHeatGlow, tankHeatGlowCount,
-                _gpuTerrainHeat, _terrainSize.X, _terrainSize.Y, _camPixelX, _camPixelY, scale,
-                hasHeatDirtyRect, heatMinX, heatMinY, heatMaxX, heatMaxY,
-                _gpuTerrainMask, hasMaskDirtyRect, maskMinX, maskMinY, maskMaxX, maskMaxY);
+            var upload = new GamePixelsUpload(
+                Pixels: _hiResPixels,
+                Width: _hiResSize.X,
+                Height: _hiResSize.Y,
+                Quality: _hiResQuality,
+                TankHeatGlowData: _gpuTankHeatGlow,
+                TankHeatGlowCount: tankHeatGlowCount,
+                TerrainAux: _gpuTerrainAux,
+                WorldWidth: _terrainSize.X,
+                WorldHeight: _terrainSize.Y,
+                CamPixelX: _camPixelX,
+                CamPixelY: _camPixelY,
+                PixelScale: scale,
+                HasAuxDirtyRect: hasAuxDirtyRect,
+                AuxMinX: auxMinX,
+                AuxMinY: auxMinY,
+                AuxMaxX: auxMaxX,
+                AuxMaxY: auxMaxY);
+            _renderBackend.UploadGamePixels(upload);
             _world.Terrain.ClearHeatDirtyRect();
-            _gpuHeatFullUploadPending = false;
-            _gpuMaskFullUploadPending = false;
+            _gpuAuxFullUploadPending = false;
             _drawProfile.ScreenUpload += hiResWatch.Elapsed;
             double uploadMs = hiResWatch.Elapsed.TotalMilliseconds;
 
             UpdateHiResQuality(terrainMs + entityMs + uploadMs);
         });
 
-        _gl.Viewport(0, 0, (uint)winW, (uint)winH);
-        _gl.ClearColor(0.1f, 0.1f, 0.1f, 1f);
-        _gl.Clear(ClearBufferMask.ColorBufferBit);
+        _renderBackend.ClearFrame(winW, winH, 0.1f, 0.1f, 0.1f, 1f);
 
         var imguiWatch = Stopwatch.StartNew();
-        _imgui.NewFrame(winW, winH, dt);
+        _renderBackend.NewFrame(winW, winH, dt);
 
         if (player != null)
         {
@@ -306,13 +300,13 @@ public class Game : IDisposable
             else
                 _hud.CrosshairScreenPos = null;
 
-            _hud.Draw((nint)_imgui.GameTextureId, _hiResSize.X, _hiResSize.Y, player, _world, dt);
+            _hud.Draw(_renderBackend.GameTextureId, _hiResSize.X, _hiResSize.Y, player, _world, dt);
         }
 
         _drawProfile.ScreenUi += imguiWatch.Elapsed;
 
         imguiWatch.Restart();
-        _imgui.Render();
+        _renderBackend.Render();
         _drawProfile.ScreenImGuiRender += imguiWatch.Elapsed;
 
         imguiWatch.Restart();
@@ -348,19 +342,15 @@ public class Game : IDisposable
         IReadOnlyList<Core.Entities.Tank> tanks,
         int camPixelX, int camPixelY, int pixelScale, int targetW, int targetH)
     {
-        const float minHeat = 5f;
-        const float baseRadius = 2.5f;
-        const float scaleRadius = 2.5f;
-
         int count = 0;
         for (int i = 0; i < tanks.Count && count < Tweaks.World.MaxPlayers; i++)
         {
             var tank = tanks[i];
-            if (tank.IsDead || tank.Heat < minHeat) continue;
+            if (tank.IsDead || tank.Heat < Tweaks.Screen.PostTankHeatGlowMinHeat) continue;
 
             float t = tank.Heat / Tweaks.Tank.HeatMax;
             float intensity = t * t;
-            float glowRadiusPx = pixelScale * (baseRadius + scaleRadius * t);
+            float glowRadiusPx = pixelScale * (Tweaks.Screen.PostTankHeatGlowBaseRadius + Tweaks.Screen.PostTankHeatGlowScaleRadius * t);
             float cx = (tank.Position.X + 0.5f) * pixelScale - camPixelX;
             float cy = (tank.Position.Y + 0.5f) * pixelScale - camPixelY;
 
@@ -378,44 +368,7 @@ public class Game : IDisposable
         return count;
     }
 
-    private static void BuildGpuTerrainHeatData(Core.Terrain.TerrainGrid terrain, byte[] target)
-    {
-        int len = terrain.Size.Area;
-        for (int i = 0; i < len; i++)
-            target[i] = terrain.GetHeat(i);
-    }
-
-    private static bool ApplyGpuTerrainHeatDirty(
-        Core.Terrain.TerrainGrid terrain, byte[] target,
-        out int minX, out int minY, out int maxX, out int maxY)
-    {
-        if (!terrain.TryGetHeatDirtyRect(out minX, out minY, out maxX, out maxY))
-            return false;
-
-        int w = terrain.Width;
-        for (int y = minY; y <= maxY; y++)
-        {
-            int row = y * w;
-            for (int x = minX; x <= maxX; x++)
-            {
-                int idx = row + x;
-                target[idx] = terrain.GetHeat(idx);
-            }
-        }
-
-        return true;
-    }
-
-    private static void BuildGpuTerrainMaskData(Core.Terrain.TerrainGrid terrain, byte[] target)
-    {
-        int len = terrain.Size.Area;
-        for (int i = 0; i < len; i++)
-            target[i] = IsSolidTerrainForGpu(terrain.GetPixelRaw(i)) ? (byte)255 : (byte)0;
-    }
-
-    private static bool ApplyGpuTerrainMaskDirty(
-        Core.Terrain.TerrainGrid terrain, byte[] target, IReadOnlyList<Position> dirtyCells,
-        out int minX, out int minY, out int maxX, out int maxY)
+    private static bool TryGetDirtyCellBounds(IReadOnlyList<Position> dirtyCells, out int minX, out int minY, out int maxX, out int maxY)
     {
         if (dirtyCells.Count == 0)
         {
@@ -427,7 +380,6 @@ public class Game : IDisposable
         minY = int.MaxValue;
         maxX = int.MinValue;
         maxY = int.MinValue;
-        int w = terrain.Width;
         for (int i = 0; i < dirtyCells.Count; i++)
         {
             var p = dirtyCells[i];
@@ -435,12 +387,87 @@ public class Game : IDisposable
             if (p.Y < minY) minY = p.Y;
             if (p.X > maxX) maxX = p.X;
             if (p.Y > maxY) maxY = p.Y;
+        }
+        return true;
+    }
 
-            int idx = p.X + p.Y * w;
-            target[idx] = IsSolidTerrainForGpu(terrain.GetPixelRaw(idx)) ? (byte)255 : (byte)0;
+    private static bool MergeDirtyRects(
+        bool hasA, int minAX, int minAY, int maxAX, int maxAY,
+        bool hasB, int minBX, int minBY, int maxBX, int maxBY,
+        out int minX, out int minY, out int maxX, out int maxY)
+    {
+        if (!hasA && !hasB)
+        {
+            minX = minY = maxX = maxY = 0;
+            return false;
         }
 
+        if (!hasA)
+        {
+            minX = minBX; minY = minBY; maxX = maxBX; maxY = maxBY;
+            return true;
+        }
+        if (!hasB)
+        {
+            minX = minAX; minY = minAY; maxX = maxAX; maxY = maxAY;
+            return true;
+        }
+
+        minX = Math.Min(minAX, minBX);
+        minY = Math.Min(minAY, minBY);
+        maxX = Math.Max(maxAX, maxBX);
+        maxY = Math.Max(maxAY, maxBY);
         return true;
+    }
+
+    private static void BuildGpuTerrainAuxData(Core.Terrain.TerrainGrid terrain, byte[] target)
+    {
+        int len = terrain.Size.Area;
+        for (int i = 0; i < len; i++)
+            WriteTerrainAux(terrain, i, terrain.GetPixelRaw(i), target, i * 4);
+    }
+
+    private static void BuildGpuTerrainAuxRect(Core.Terrain.TerrainGrid terrain, byte[] target, int minX, int minY, int maxX, int maxY)
+    {
+        int w = terrain.Width;
+        for (int y = minY; y <= maxY; y++)
+        {
+            int row = y * w;
+            for (int x = minX; x <= maxX; x++)
+            {
+                int idx = row + x;
+                WriteTerrainAux(terrain, idx, terrain.GetPixelRaw(idx), target, idx * 4);
+            }
+        }
+    }
+
+    private static void WriteTerrainAux(Core.Terrain.TerrainGrid terrain, int idx, Core.Terrain.TerrainPixel pixel, byte[] target, int writeIndex)
+    {
+        byte energy = 0;
+        byte scorched = 0;
+        switch (pixel)
+        {
+            case Core.Terrain.TerrainPixel.EnergyLow:
+                energy = Tweaks.Screen.PostEmissiveEnergyLow;
+                break;
+            case Core.Terrain.TerrainPixel.EnergyMedium:
+                energy = Tweaks.Screen.PostEmissiveEnergyMedium;
+                break;
+            case Core.Terrain.TerrainPixel.EnergyHigh:
+                energy = Tweaks.Screen.PostEmissiveEnergyHigh;
+                break;
+            case Core.Terrain.TerrainPixel.DecalHigh:
+                scorched = Tweaks.Screen.PostEmissiveScorchedHigh;
+                break;
+            case Core.Terrain.TerrainPixel.DecalLow:
+                scorched = Tweaks.Screen.PostEmissiveScorchedLow;
+                break;
+        }
+
+        target[writeIndex] = terrain.GetHeat(idx);
+        target[writeIndex + 1] = IsSolidTerrainForGpu(pixel) ? (byte)255 : (byte)0;
+        target[writeIndex + 2] = energy;
+        target[writeIndex + 3] = scorched;
     }
 
     private static bool IsSolidTerrainForGpu(Core.Terrain.TerrainPixel p)
@@ -609,7 +636,7 @@ public class Game : IDisposable
     public void Dispose()
     {
         _textures.Dispose();
-        _imgui.Dispose();
+        _renderBackend.Dispose();
         _renderer.Dispose();
         GC.SuppressFinalize(this);
     }
