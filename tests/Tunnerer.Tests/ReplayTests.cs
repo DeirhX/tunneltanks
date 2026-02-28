@@ -275,6 +275,9 @@ public class ReplayTests
 
         hash = Mix(hash, (uint)world.AdvanceCount);
         hash = Mix(hash, (uint)world.Projectiles.Count);
+        hash = Mix(hash, (uint)world.Machines.Machines.Count);
+        hash = Mix(hash, (uint)world.LinkMap.Points.Count);
+        hash = Mix(hash, (uint)world.LinkMap.Links.Count);
 
         var tanks = world.TankList.Tanks;
         hash = Mix(hash, (uint)tanks.Count);
@@ -293,10 +296,48 @@ public class ReplayTests
             hash = Mix(hash, t.IsDead ? 1u : 0u);
         }
 
+        var machines = world.Machines.Machines;
+        for (int i = 0; i < machines.Count; i++)
+        {
+            var m = machines[i];
+            hash = Mix(hash, (uint)m.Position.X);
+            hash = Mix(hash, (uint)m.Position.Y);
+            hash = Mix(hash, (uint)m.Type);
+            hash = Mix(hash, (uint)m.State);
+            hash = Mix(hash, (uint)m.OwnerColor);
+            hash = Mix(hash, m.IsAlive ? 1u : 0u);
+            hash = Mix(hash, (uint)(int)m.Reactor.Energy);
+            hash = Mix(hash, (uint)(int)m.Reactor.Health);
+        }
+
+        var points = world.LinkMap.Points;
+        for (int i = 0; i < points.Count; i++)
+        {
+            var p = points[i];
+            hash = Mix(hash, (uint)p.Id);
+            hash = Mix(hash, (uint)p.Position.X);
+            hash = Mix(hash, (uint)p.Position.Y);
+            hash = Mix(hash, (uint)p.Type);
+            hash = Mix(hash, p.IsEnabled ? 1u : 0u);
+            hash = Mix(hash, p.IsPowered ? 1u : 0u);
+        }
+
+        var links = world.LinkMap.Links;
+        for (int i = 0; i < links.Count; i++)
+        {
+            var l = links[i];
+            hash = Mix(hash, (uint)l.From.Id);
+            hash = Mix(hash, (uint)l.To.Id);
+            hash = Mix(hash, (uint)l.Type);
+            hash = Mix(hash, l.IsAlive ? 1u : 0u);
+        }
+
         // Hash a composited entity layer so projectile/sprite state differences are also captured.
         int w = world.Terrain.Width, h = world.Terrain.Height;
         var pix = new uint[w * h];
         var surface = new Surface(pix, w, h);
+        world.LinkMap.Draw(surface);
+        world.Machines.Draw(surface);
         world.Projectiles.Draw(surface);
         world.Sprites.Draw(surface);
         world.TankList.Draw(surface);

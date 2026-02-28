@@ -21,12 +21,6 @@ public static class ExplosionFactory
         return result;
     }
 
-    public static List<Projectile> CreateExplosion(Position center, ExplosionParams p)
-    {
-        var rng = new FastRandom((uint)Random.Shared.Next());
-        return CreateExplosion(center, p, ref rng);
-    }
-
     public static List<Projectile> CreateFan(Position center, VectorF baseDirection, float spreadAngle,
         ExplosionParams p, ProjectileType type, ref FastRandom rng)
     {
@@ -49,10 +43,4 @@ public static class ExplosionFactory
         return result;
     }
 
-    public static List<Projectile> CreateFan(Position center, VectorF baseDirection, float spreadAngle,
-        ExplosionParams p, ProjectileType type)
-    {
-        var rng = new FastRandom((uint)Random.Shared.Next());
-        return CreateFan(center, baseDirection, spreadAngle, p, type, ref rng);
-    }
 }

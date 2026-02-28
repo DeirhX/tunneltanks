@@ -18,7 +18,7 @@ public class World
     private readonly TankList _tankList = new();
     private readonly ProjectileList _projectiles;
     private readonly MachineList _machines = new();
-    private readonly LinkMap _linkMap = new();
+    private readonly LinkMap _linkMap;
     private readonly SpriteList _sprites = new();
     private readonly CollisionSolver _collisionSolver;
     private readonly bool _deterministicSimulation;
@@ -49,6 +49,7 @@ public class World
         _simulationSeed = simulationSeed != 0 ? simulationSeed : 0x51A7E3;
         _terrain = new TerrainGrid(terrainSize);
         _projectiles = new ProjectileList(deterministicSimulation ? _simulationSeed ^ 0x5f3759df : null);
+        _linkMap = new LinkMap(deterministicSimulation, _simulationSeed ^ 0x13579BDF);
         _collisionSolver = new CollisionSolver(_terrain);
         _regrowTimer.Start();
     }
@@ -96,7 +97,7 @@ public class World
         ProfileSection(ref Profile.Harvesters, () => _machines.Advance(_terrain, Tweaks.World.AdvanceStep));
         ProfileSection(ref Profile.Sprites, () => _sprites.Advance(Tweaks.World.AdvanceStep));
         ProfileSection(ref Profile.Bases, () => _tankBases.Advance());
-        ProfileSection(ref Profile.Links, () => _linkMap.Advance(_terrain));
+        ProfileSection(ref Profile.Links, () => _linkMap.Advance(_terrain, Tweaks.World.AdvanceStep));
 
         Profile.Total += frameWatch.Elapsed;
         Profile.FrameCount++;

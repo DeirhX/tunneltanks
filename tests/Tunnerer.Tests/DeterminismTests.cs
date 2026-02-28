@@ -1,4 +1,6 @@
 using Tunnerer.Core;
+using Tunnerer.Core.Entities.Links;
+using Tunnerer.Core.Entities.Machines;
 using Tunnerer.Core.Input;
 using Tunnerer.Core.LevelGen;
 using Tunnerer.Core.Types;
@@ -30,6 +32,8 @@ public class DeterminismTests
         const int seed = 31337;
         var fast = CreateDeterministicWorld(seed, parallelMaterialize: false);
         var slow = CreateDeterministicWorld(seed, parallelMaterialize: false);
+        SeedLinkAndMachineState(fast);
+        SeedLinkAndMachineState(slow);
 
         for (int frame = 0; frame < 140; frame++)
         {
@@ -37,6 +41,23 @@ public class DeterminismTests
             Thread.Sleep(2);
             slow.Advance(_ => default);
             Assert.Equal(ComputeWorldStateHash(fast), ComputeWorldStateHash(slow));
+        }
+    }
+
+    [Fact]
+    public void DeterministicMode_LinksAndMachines_AreStableAcrossRuns()
+    {
+        const int seed = 9001;
+        var w1 = CreateDeterministicWorld(seed, parallelMaterialize: false);
+        var w2 = CreateDeterministicWorld(seed, parallelMaterialize: false);
+        SeedLinkAndMachineState(w1);
+        SeedLinkAndMachineState(w2);
+
+        for (int frame = 0; frame < 100; frame++)
+        {
+            w1.Advance(_ => default);
+            w2.Advance(_ => default);
+            Assert.Equal(ComputeWorldStateHash(w1), ComputeWorldStateHash(w2));
         }
     }
 
@@ -117,6 +138,20 @@ public class DeterminismTests
         return script.ToArray();
     }
 
+    private static void SeedLinkAndMachineState(World world)
+    {
+        int cx = world.Terrain.Width / 2;
+        int cy = world.Terrain.Height / 2;
+        world.LinkMap.RegisterPoint(new Position(cx - 6, cy), LinkPointType.Base);
+        world.LinkMap.RegisterPoint(new Position(cx + 6, cy), LinkPointType.Machine);
+
+        var machine = new Machine(new Position(cx, cy + 5), MachineType.Harvester, ownerColor: 0)
+        {
+            State = MachineState.Planted,
+        };
+        world.Machines.Add(machine);
+    }
+
     private static ulong ComputeWorldStateHash(World world)
     {
         const ulong offset = 1469598103934665603UL;
@@ -136,6 +171,9 @@ public class DeterminismTests
 
         hash = Mix(hash, (uint)world.AdvanceCount);
         hash = Mix(hash, (uint)world.Projectiles.Count);
+        hash = Mix(hash, (uint)world.Machines.Machines.Count);
+        hash = Mix(hash, (uint)world.LinkMap.Points.Count);
+        hash = Mix(hash, (uint)world.LinkMap.Links.Count);
 
         var tanks = world.TankList.Tanks;
         hash = Mix(hash, (uint)tanks.Count);
@@ -154,9 +192,47 @@ public class DeterminismTests
             hash = Mix(hash, t.IsDead ? 1u : 0u);
         }
 
+        var machines = world.Machines.Machines;
+        for (int i = 0; i < machines.Count; i++)
+        {
+            var m = machines[i];
+            hash = Mix(hash, (uint)m.Position.X);
+            hash = Mix(hash, (uint)m.Position.Y);
+            hash = Mix(hash, (uint)m.Type);
+            hash = Mix(hash, (uint)m.State);
+            hash = Mix(hash, (uint)m.OwnerColor);
+            hash = Mix(hash, m.IsAlive ? 1u : 0u);
+            hash = Mix(hash, (uint)(int)m.Reactor.Energy);
+            hash = Mix(hash, (uint)(int)m.Reactor.Health);
+        }
+
+        var points = world.LinkMap.Points;
+        for (int i = 0; i < points.Count; i++)
+        {
+            var p = points[i];
+            hash = Mix(hash, (uint)p.Id);
+            hash = Mix(hash, (uint)p.Position.X);
+            hash = Mix(hash, (uint)p.Position.Y);
+            hash = Mix(hash, (uint)p.Type);
+            hash = Mix(hash, p.IsEnabled ? 1u : 0u);
+            hash = Mix(hash, p.IsPowered ? 1u : 0u);
+        }
+
+        var links = world.LinkMap.Links;
+        for (int i = 0; i < links.Count; i++)
+        {
+            var l = links[i];
+            hash = Mix(hash, (uint)l.From.Id);
+            hash = Mix(hash, (uint)l.To.Id);
+            hash = Mix(hash, (uint)l.Type);
+            hash = Mix(hash, l.IsAlive ? 1u : 0u);
+        }
+
         int w = world.Terrain.Width, h = world.Terrain.Height;
         var pix = new uint[w * h];
         var surface = new Surface(pix, w, h);
+        world.LinkMap.Draw(surface);
+        world.Machines.Draw(surface);
         world.Projectiles.Draw(surface);
         world.Sprites.Draw(surface);
         world.TankList.Draw(surface);
