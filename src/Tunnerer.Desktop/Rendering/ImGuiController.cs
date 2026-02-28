@@ -372,11 +372,17 @@ void main() {
     if (uQuality >= 1) {
         vec2 tx = vec2(uTexelSize.x, 0.0);
         vec2 ty = vec2(0.0, uTexelSize.y);
-        vec3 bloom = bright(base) * 0.40;
-        bloom += bright(texture(uScene, vUv + tx).rgb) * 0.15;
-        bloom += bright(texture(uScene, vUv - tx).rgb) * 0.15;
-        bloom += bright(texture(uScene, vUv + ty).rgb) * 0.15;
-        bloom += bright(texture(uScene, vUv - ty).rgb) * 0.15;
+        vec2 d1 = vec2(uTexelSize.x, uTexelSize.y);
+        vec2 d2 = vec2(uTexelSize.x, -uTexelSize.y);
+        vec3 bloom = bright(base) * 0.30;
+        bloom += bright(texture(uScene, vUv + tx).rgb) * 0.11;
+        bloom += bright(texture(uScene, vUv - tx).rgb) * 0.11;
+        bloom += bright(texture(uScene, vUv + ty).rgb) * 0.11;
+        bloom += bright(texture(uScene, vUv - ty).rgb) * 0.11;
+        bloom += bright(texture(uScene, vUv + d1).rgb) * 0.07;
+        bloom += bright(texture(uScene, vUv - d1).rgb) * 0.07;
+        bloom += bright(texture(uScene, vUv + d2).rgb) * 0.07;
+        bloom += bright(texture(uScene, vUv - d2).rgb) * 0.07;
         color += bloom * 0.60;
     }
 
