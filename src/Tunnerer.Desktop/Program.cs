@@ -1,4 +1,5 @@
 using Tunnerer.Core.LevelGen;
+using Tunnerer.Core.Config;
 using Tunnerer.Core.Types;
 
 Size? terrainSize = null;
@@ -7,6 +8,7 @@ bool perfMode = false;
 int perfWarmupFrames = 180;
 int perfMeasureFrames = 900;
 string? perfCsvPath = null;
+RenderBackendKind? renderBackend = null;
 foreach (var arg in args)
 {
     if (arg == "--large")
@@ -27,13 +29,25 @@ foreach (var arg in args)
         if (parts.Length == 2 && int.TryParse(parts[0], out int w) && int.TryParse(parts[1], out int h))
             terrainSize = new Size(w, h);
     }
+    else if (arg.StartsWith("--backend="))
+    {
+        var backendRaw = arg[10..].Trim();
+        if (backendRaw.Equals("opengl", StringComparison.OrdinalIgnoreCase))
+            renderBackend = RenderBackendKind.OpenGl;
+        else if (backendRaw.Equals("dx11", StringComparison.OrdinalIgnoreCase))
+            renderBackend = RenderBackendKind.Dx11;
+        else if (backendRaw.Equals("dx12", StringComparison.OrdinalIgnoreCase))
+            renderBackend = RenderBackendKind.Dx12;
+        else
+            Console.WriteLine($"[Args] Unknown backend '{backendRaw}', expected opengl|dx11|dx12. Using default.");
+    }
 }
 
 var mode = fastGen ? LevelGenMode.Optimized : LevelGenMode.Deterministic;
 Tunnerer.Desktop.PerfCaptureOptions? perfOptions = perfMode
     ? new Tunnerer.Desktop.PerfCaptureOptions(perfWarmupFrames, perfMeasureFrames, perfCsvPath)
     : null;
-var game = new Tunnerer.Desktop.Game(terrainSize, mode, perfOptions);
+var game = new Tunnerer.Desktop.Game(terrainSize, mode, perfOptions, renderBackend);
 game.Run();
 
 

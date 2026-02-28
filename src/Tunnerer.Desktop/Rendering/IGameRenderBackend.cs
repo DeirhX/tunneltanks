@@ -21,6 +21,7 @@ public readonly record struct GamePixelsUpload(
 public interface IGameRenderBackend : IDisposable
 {
     nint GameTextureId { get; }
+    bool SupportsUi { get; }
 
     void ProcessEvent(Event ev);
 

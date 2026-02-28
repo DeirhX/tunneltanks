@@ -67,6 +67,7 @@ public sealed unsafe class OpenGlGameRenderBackend : IGameRenderBackend
     private bool _disposed;
 
     public nint GameTextureId => (nint)_gameTextures[_gameTexIndex];
+    public bool SupportsUi => true;
 
     public OpenGlGameRenderBackend(GL gl, ImGuiController imgui)
     {

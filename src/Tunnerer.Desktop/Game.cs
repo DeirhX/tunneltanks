@@ -59,10 +59,12 @@ public class Game : IDisposable
     public unsafe Game(
         Size? terrainSizeOverride = null,
         LevelGenMode genMode = LevelGenMode.Deterministic,
-        PerfCaptureOptions? perfCapture = null)
+        PerfCaptureOptions? perfCapture = null,
+        RenderBackendKind? renderBackendOverride = null)
     {
         var windowSize = Tweaks.Screen.WindowSize;
         _terrainSize = terrainSizeOverride ?? Tweaks.Screen.RenderSurfaceSize;
+        RenderBackendKind selectedBackend = renderBackendOverride ?? Tweaks.System.RenderBackend;
         bool parallel = genMode == LevelGenMode.Optimized;
         if (perfCapture is PerfCaptureOptions perf)
         {
@@ -74,12 +76,16 @@ public class Game : IDisposable
             Console.WriteLine($"[Perf] enabled warmup={_perfCapture.Value.WarmupFrames} measure={_perfCapture.Value.MeasureFrames}");
         }
 
-        _renderer = new SdlRenderer(Tweaks.System.WindowTitle, windowSize);
+        var graphicsMode = selectedBackend == RenderBackendKind.OpenGl
+            ? SdlGraphicsMode.OpenGl
+            : SdlGraphicsMode.NativeWindow;
+        _renderer = new SdlRenderer(Tweaks.System.WindowTitle, windowSize, graphicsMode);
 
         var renderServices = RenderBackendFactory.CreateServices(
-            Tweaks.System.RenderBackend, _renderer.Sdl, _renderer.NativeWindow, windowSize.X, windowSize.Y);
+            selectedBackend, _renderer.Sdl, _renderer.NativeWindow, windowSize.X, windowSize.Y);
         _renderBackend = renderServices.Backend;
         _textures = renderServices.Textures;
+        Console.WriteLine($"[Render] Backend={selectedBackend} SDLMode={graphicsMode}");
         _hud = new GameHud();
         LoadHudSprites();
 
@@ -254,8 +260,10 @@ public class Game : IDisposable
         var (winW, winH) = _renderer.GetWindowSize();
         float dt = 1f / Tweaks.Perf.TargetFps;
         int scale = Tweaks.Screen.PixelScale;
-
-        var viewSize = new Size(Math.Max(1, winW), Math.Max(1, winH - (int)GameHud.BottomPanelHeight));
+        int viewportHeight = _renderBackend.SupportsUi
+            ? Math.Max(1, winH - (int)GameHud.BottomPanelHeight)
+            : Math.Max(1, winH);
+        var viewSize = new Size(Math.Max(1, winW), viewportHeight);
         EnsureHiResBuffer(viewSize);
 
         var player = tanks.Count > 0 ? tanks[0] : null;
@@ -350,26 +358,36 @@ public class Game : IDisposable
         _renderBackend.ClearFrame(new Size(winW, winH), new Tunnerer.Core.Types.Color(26, 26, 26, 255));
 
         var imguiWatch = Stopwatch.StartNew();
-        _renderBackend.NewFrame(winW, winH, dt);
-
-        if (player != null)
+        if (_renderBackend.SupportsUi)
         {
-            var (mx, my, _) = _renderer.GetMouseState();
-            var vp = _hud.ViewportRect;
-            if (vp.w > 0 && vp.h > 0 &&
-                mx >= vp.x && my >= vp.y && mx < vp.x + vp.w && my < vp.y + vp.h)
-                _hud.CrosshairScreenPos = (mx, my);
-            else
-                _hud.CrosshairScreenPos = null;
+            _renderBackend.NewFrame(winW, winH, dt);
 
-            _hud.Draw(_renderBackend.GameTextureId, _hiResSize.X, _hiResSize.Y, player, _world, dt);
+            if (player != null)
+            {
+                var (mx, my, _) = _renderer.GetMouseState();
+                var vp = _hud.ViewportRect;
+                if (vp.w > 0 && vp.h > 0 &&
+                    mx >= vp.x && my >= vp.y && mx < vp.x + vp.w && my < vp.y + vp.h)
+                    _hud.CrosshairScreenPos = (mx, my);
+                else
+                    _hud.CrosshairScreenPos = null;
+
+                _hud.Draw(_renderBackend.GameTextureId, _hiResSize.X, _hiResSize.Y, player, _world, dt);
+            }
+
+            _drawProfile.ScreenUi += imguiWatch.Elapsed;
+
+            imguiWatch.Restart();
+            _renderBackend.Render();
+            _drawProfile.ScreenImGuiRender += imguiWatch.Elapsed;
         }
-
-        _drawProfile.ScreenUi += imguiWatch.Elapsed;
-
-        imguiWatch.Restart();
-        _renderBackend.Render();
-        _drawProfile.ScreenImGuiRender += imguiWatch.Elapsed;
+        else
+        {
+            _drawProfile.ScreenUi += imguiWatch.Elapsed;
+            imguiWatch.Restart();
+            _renderBackend.Render();
+            _drawProfile.ScreenImGuiRender += imguiWatch.Elapsed;
+        }
 
         imguiWatch.Restart();
         _renderer.SwapWindow();
@@ -629,7 +647,9 @@ public class Game : IDisposable
     private bool IsMouseInViewport(out float relX, out float relY)
     {
         var (mx, my, _) = _renderer.GetMouseState();
-        var vp = _hud.ViewportRect;
+        (float x, float y, float w, float h) vp = _renderBackend.SupportsUi
+            ? _hud.ViewportRect
+            : (0f, 0f, _hiResSize.X, _hiResSize.Y);
 
         relX = 0; relY = 0;
         if (vp.w <= 0 || vp.h <= 0) return false;
