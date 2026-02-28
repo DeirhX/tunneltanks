@@ -1,0 +1,19 @@
+---
+alwaysApply: true
+---
+
+Repo-first: Before coding, use semantic search to find existing patterns for DI, logging, configuration, HTTP, options, and testing in this repo. Prefer matching existing conventions over “best practice”.
+
+Docs for APIs: If you’re unsure about a .NET / ASP.NET Core / EF Core / MS.Extensions API, use Context7 before writing code (especially for DI lifetimes, HttpClientFactory, logging, options, minimal APIs, and hosting).
+
+Local model lane: Use Ollama only for (a) draft implementations, (b) bulk edits, (c) unit/integration tests, (d) refactor proposals. Treat its output as a draft and validate against repo usage + Context7.
+
+Project integrity: Never introduce new packages unless asked. If you do, explain why and update the relevant .csproj.
+
+Compilation gate: After changes, run (or instruct me to run) dotnet test. If tests are slow/unavailable, at minimum run dotnet build.
+
+Modern C#/.NET 9: Prefer file-scoped namespace, required where appropriate, and modern pattern matching. Don’t overuse clever language features; optimize for readability.
+
+No hidden magic: If you change DI registrations, configuration binding, or HTTP pipeline, explicitly list what you changed and why.
+
+Error handling: Avoid swallowing exceptions. Use ILogger<T> and structured logging; don’t log sensitive values.
