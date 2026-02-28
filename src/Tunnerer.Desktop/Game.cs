@@ -33,6 +33,7 @@ public class Game : IDisposable
     private readonly List<Position> _terrainDirtyCells = new();
     private readonly float[] _gpuTankHeatGlow = new float[Tweaks.World.MaxPlayers * 4];
     private readonly byte[] _gpuTerrainHeat;
+    private bool _gpuHeatFullUploadPending = true;
     private uint[] _hiResPixels = Array.Empty<uint>();
     private uint[] _hiResTerrainPixels = Array.Empty<uint>();
     private Size _hiResSize;
@@ -232,7 +233,23 @@ public class Game : IDisposable
 
             int tankHeatGlowCount = BuildGpuTankHeatGlowData(
                 _world.TankList.Tanks, _camPixelX, _camPixelY, scale, _hiResSize.X, _hiResSize.Y);
-            BuildGpuTerrainHeatData(_world.Terrain, _gpuTerrainHeat);
+            bool uploadFullHeat = _gpuHeatFullUploadPending;
+            bool hasHeatDirtyRect = false;
+            int heatMinX = 0, heatMinY = 0, heatMaxX = 0, heatMaxY = 0;
+            if (uploadFullHeat)
+            {
+                BuildGpuTerrainHeatData(_world.Terrain, _gpuTerrainHeat);
+                hasHeatDirtyRect = true;
+                heatMinX = 0;
+                heatMinY = 0;
+                heatMaxX = _terrainSize.X - 1;
+                heatMaxY = _terrainSize.Y - 1;
+            }
+            else
+            {
+                hasHeatDirtyRect = ApplyGpuTerrainHeatDirty(_world.Terrain, _gpuTerrainHeat,
+                    out heatMinX, out heatMinY, out heatMaxX, out heatMaxY);
+            }
 
             _drawProfile.ScreenHiResEntities += hiResWatch.Elapsed;
             double entityMs = hiResWatch.Elapsed.TotalMilliseconds;
@@ -240,7 +257,10 @@ public class Game : IDisposable
             hiResWatch.Restart();
             _imgui.UploadGamePixels(_hiResPixels, _hiResSize.X, _hiResSize.Y, _hiResQuality,
                 _gpuTankHeatGlow, tankHeatGlowCount,
-                _gpuTerrainHeat, _terrainSize.X, _terrainSize.Y, _camPixelX, _camPixelY, scale);
+                _gpuTerrainHeat, _terrainSize.X, _terrainSize.Y, _camPixelX, _camPixelY, scale,
+                hasHeatDirtyRect, heatMinX, heatMinY, heatMaxX, heatMaxY);
+            _world.Terrain.ClearHeatDirtyRect();
+            _gpuHeatFullUploadPending = false;
             _drawProfile.ScreenUpload += hiResWatch.Elapsed;
             double uploadMs = hiResWatch.Elapsed.TotalMilliseconds;
 
@@ -341,6 +361,27 @@ public class Game : IDisposable
         int len = terrain.Size.Area;
         for (int i = 0; i < len; i++)
             target[i] = terrain.GetHeat(i);
+    }
+
+    private static bool ApplyGpuTerrainHeatDirty(
+        Core.Terrain.TerrainGrid terrain, byte[] target,
+        out int minX, out int minY, out int maxX, out int maxY)
+    {
+        if (!terrain.TryGetHeatDirtyRect(out minX, out minY, out maxX, out maxY))
+            return false;
+
+        int w = terrain.Width;
+        for (int y = minY; y <= maxY; y++)
+        {
+            int row = y * w;
+            for (int x = minX; x <= maxX; x++)
+            {
+                int idx = row + x;
+                target[idx] = terrain.GetHeat(idx);
+            }
+        }
+
+        return true;
     }
 
     private void ScrollTerrainBuffer(int dx, int dy, int w, int h)

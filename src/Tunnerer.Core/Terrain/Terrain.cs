@@ -9,6 +9,11 @@ public class TerrainGrid
     private readonly byte[] _heat;
     private readonly int[] _neighborOffsets;
     private readonly List<Position> _changeList = new();
+    private bool _hasHeatDirtyRect;
+    private int _heatDirtyMinX;
+    private int _heatDirtyMinY;
+    private int _heatDirtyMaxX;
+    private int _heatDirtyMaxY;
 
     public Size Size { get; }
     public int Width => Size.X;
@@ -38,8 +43,12 @@ public class TerrainGrid
     {
         int offset = pos.X + pos.Y * Width;
         if ((uint)offset >= (uint)_heat.Length) return;
-        int val = _heat[offset] + amount;
-        _heat[offset] = (byte)(val > 255 ? 255 : val);
+        byte old = _heat[offset];
+        int val = old + amount;
+        byte next = (byte)(val > 255 ? 255 : val);
+        _heat[offset] = next;
+        if (next != old)
+            MarkHeatDirty(pos.X, pos.Y);
         CommitPixel(pos);
     }
 
@@ -54,8 +63,12 @@ public class TerrainGrid
             int scaled = (int)(amount * falloff);
             if (scaled <= 0) return;
             int offset = nx + ny * Width;
-            int val = _heat[offset] + scaled;
-            _heat[offset] = (byte)(val > 255 ? 255 : val);
+            byte old = _heat[offset];
+            int val = old + scaled;
+            byte next = (byte)(val > 255 ? 255 : val);
+            _heat[offset] = next;
+            if (next != old)
+                MarkHeatDirty(nx, ny);
         });
     }
 
@@ -93,7 +106,10 @@ public class TerrainGrid
                 float blurred = sum / (float)cnt;
                 float mixed = center + (blurred - center) * diffuseRate;
                 int val = (int)(mixed + 0.5f) - decayAmount;
-                _heatTemp[idx] = (byte)(val < 0 ? 0 : val > 255 ? 255 : val);
+                byte next = (byte)(val < 0 ? 0 : val > 255 ? 255 : val);
+                _heatTemp[idx] = next;
+                if (next != _heat[idx])
+                    MarkHeatDirty(x, y);
             }
         }
 
@@ -205,6 +221,39 @@ public class TerrainGrid
 
     public IReadOnlyList<Position> GetChangeList() => _changeList;
     public void ClearChangeList() => _changeList.Clear();
+
+    public bool TryGetHeatDirtyRect(out int minX, out int minY, out int maxX, out int maxY)
+    {
+        if (_hasHeatDirtyRect)
+        {
+            minX = _heatDirtyMinX;
+            minY = _heatDirtyMinY;
+            maxX = _heatDirtyMaxX;
+            maxY = _heatDirtyMaxY;
+            return true;
+        }
+
+        minX = minY = maxX = maxY = 0;
+        return false;
+    }
+
+    public void ClearHeatDirtyRect() => _hasHeatDirtyRect = false;
+
+    private void MarkHeatDirty(int x, int y)
+    {
+        if (!_hasHeatDirtyRect)
+        {
+            _hasHeatDirtyRect = true;
+            _heatDirtyMinX = _heatDirtyMaxX = x;
+            _heatDirtyMinY = _heatDirtyMaxY = y;
+            return;
+        }
+
+        if (x < _heatDirtyMinX) _heatDirtyMinX = x;
+        if (x > _heatDirtyMaxX) _heatDirtyMaxX = x;
+        if (y < _heatDirtyMinY) _heatDirtyMinY = y;
+        if (y > _heatDirtyMaxY) _heatDirtyMaxY = y;
+    }
 
     public void DrawChangesToSurface(uint[] surface)
     {

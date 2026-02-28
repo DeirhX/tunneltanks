@@ -44,6 +44,7 @@ public sealed unsafe class ImGuiController : IDisposable
     private uint _terrainHeatTexture;
     private int _terrainHeatW;
     private int _terrainHeatH;
+    private byte[] _terrainHeatUploadScratch = Array.Empty<byte>();
     private int _postLocScene;
     private int _postLocHeatTex;
     private int _postLocTexelSize;
@@ -201,17 +202,19 @@ public sealed unsafe class ImGuiController : IDisposable
         float[]? tankHeatGlowData, int tankHeatGlowCount)
     {
         UploadGamePixels(pixels, width, height, quality, tankHeatGlowData, tankHeatGlowCount,
-            null, 0, 0, 0, 0, 1);
+            null, 0, 0, 0, 0, 1, false, 0, 0, 0, 0);
     }
 
     public void UploadGamePixels(
         uint[] pixels, int width, int height, HiResRenderQuality quality,
         float[]? tankHeatGlowData, int tankHeatGlowCount,
-        byte[]? terrainHeat, int worldWidth, int worldHeight, int camPixelX, int camPixelY, int pixelScale)
+        byte[]? terrainHeat, int worldWidth, int worldHeight, int camPixelX, int camPixelY, int pixelScale,
+        bool hasHeatDirtyRect, int heatMinX, int heatMinY, int heatMaxX, int heatMaxY)
     {
         EnsureGameTextures(width, height);
         EnsurePostProcessObjects(width, height);
-        UpdateTerrainHeatTexture(terrainHeat, worldWidth, worldHeight);
+        UpdateTerrainHeatTexture(terrainHeat, worldWidth, worldHeight, hasHeatDirtyRect,
+            heatMinX, heatMinY, heatMaxX, heatMaxY);
         int uploadIdx = 1 - _gameTexIndex;
         _gl.BindTexture(TextureTarget.Texture2D, _postSourceTexture);
         fixed (uint* ptr = pixels)
@@ -514,7 +517,9 @@ void main() {
         if (lastScissor) _gl.Enable(EnableCap.ScissorTest); else _gl.Disable(EnableCap.ScissorTest);
     }
 
-    private void UpdateTerrainHeatTexture(byte[]? heatData, int worldWidth, int worldHeight)
+    private void UpdateTerrainHeatTexture(
+        byte[]? heatData, int worldWidth, int worldHeight, bool hasDirtyRect,
+        int minX, int minY, int maxX, int maxY)
     {
         if (heatData == null || worldWidth <= 0 || worldHeight <= 0)
             return;
@@ -535,19 +540,39 @@ void main() {
             _gl.BindTexture(TextureTarget.Texture2D, _terrainHeatTexture);
         }
 
-        fixed (byte* ptr = heatData)
+        if (sizeChanged)
         {
-            if (sizeChanged)
+            _gl.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
+            fixed (byte* ptr = heatData)
             {
                 _gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.R8,
                     (uint)worldWidth, (uint)worldHeight, 0,
                     GL_PixelFormat.Red, GL_PixelType.UnsignedByte, ptr);
             }
-            else
+            _gl.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
+        }
+        else if (hasDirtyRect)
+        {
+            int rw = maxX - minX + 1;
+            int rh = maxY - minY + 1;
+            int rectLen = rw * rh;
+            if (_terrainHeatUploadScratch.Length < rectLen)
+                _terrainHeatUploadScratch = new byte[rectLen];
+
+            for (int y = 0; y < rh; y++)
             {
-                _gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0,
-                    (uint)worldWidth, (uint)worldHeight, GL_PixelFormat.Red, GL_PixelType.UnsignedByte, ptr);
+                int src = (minY + y) * worldWidth + minX;
+                int dst = y * rw;
+                Array.Copy(heatData, src, _terrainHeatUploadScratch, dst, rw);
             }
+
+            _gl.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
+            fixed (byte* ptr = _terrainHeatUploadScratch)
+            {
+                _gl.TexSubImage2D(TextureTarget.Texture2D, 0, minX, minY,
+                    (uint)rw, (uint)rh, GL_PixelFormat.Red, GL_PixelType.UnsignedByte, ptr);
+            }
+            _gl.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
         }
 
         _gl.BindTexture(TextureTarget.Texture2D, 0);
