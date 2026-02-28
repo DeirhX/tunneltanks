@@ -39,8 +39,9 @@ public static unsafe class RenderBackendFactory
 
     private static RenderBackendServices CreateDx11Services(Sdl sdl, Window* window)
     {
+        var backend = new Dx11GameRenderBackend(sdl, window);
         return new RenderBackendServices(
-            Backend: new Dx11GameRenderBackend(sdl, window),
-            Textures: new Dx11TextureManager());
+            Backend: backend,
+            Textures: new Dx11TextureManager(backend));
     }
 }

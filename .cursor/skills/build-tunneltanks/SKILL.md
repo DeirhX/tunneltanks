@@ -54,7 +54,7 @@ Working directory: `e:\Projects\New\tunnerer`
 dotnet build --configuration Release
 ```
 
-Output goes to `build\bin\Release\` (shared OutputPath configured in Directory.Build.props).
+Output goes to `out\bin\Release\` under each project (configured in `src\Directory.Build.props`).
 
 ### Test
 

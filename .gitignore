@@ -29,6 +29,7 @@ build/
 # .NET
 **/obj/
 **/bin/
+**/out/
 *.nupkg
 *.snupkg
 project.assets.json

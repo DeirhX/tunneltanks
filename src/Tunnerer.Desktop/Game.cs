@@ -287,28 +287,33 @@ public class Game : IDisposable
             if (_hiResTerrainNeedsFullRender ||
                 Math.Abs(dx) >= viewSize.X || Math.Abs(dy) >= viewSize.Y)
             {
-                _hiResTerrainRenderer.Render(_world.Terrain, _hiResTerrainPixels,
-                    renderView, _hiResQuality, renderTime);
+                ProfileSection(ref _drawProfile.ScreenTerrainFullRender, () =>
+                    _hiResTerrainRenderer.Render(_world.Terrain, _hiResTerrainPixels,
+                        renderView, _hiResQuality, renderTime));
                 _hiResTerrainNeedsFullRender = false;
             }
             else if (cameraMoved)
             {
                 var cameraDelta = new Offset(dx, dy);
-                ScrollTerrainBuffer(cameraDelta, viewSize);
-                RenderExposedStrips(_hiResTerrainPixels, renderView, cameraDelta);
+                ProfileSection(ref _drawProfile.ScreenTerrainScrollCopy, () =>
+                    ScrollTerrainBuffer(cameraDelta, viewSize));
+                ProfileSection(ref _drawProfile.ScreenTerrainExposedStrips, () =>
+                    RenderExposedStrips(_hiResTerrainPixels, renderView, cameraDelta));
             }
 
             if (_terrainDirtyCells.Count > 0)
             {
-                _hiResTerrainRenderer.RenderDirty(_world.Terrain, _hiResTerrainPixels,
-                    renderView, _hiResQuality,
-                    _terrainDirtyCells, renderTime);
+                ProfileSection(ref _drawProfile.ScreenTerrainDirtyRender, () =>
+                    _hiResTerrainRenderer.RenderDirty(_world.Terrain, _hiResTerrainPixels,
+                        renderView, _hiResQuality,
+                        _terrainDirtyCells, renderTime));
             }
 
             Rect? auxDirtyRect;
             if (_gpuAuxFullUploadPending)
             {
-                BuildGpuTerrainAuxData(_world.Terrain, _gpuTerrainAux);
+                ProfileSection(ref _drawProfile.ScreenAuxBuild, () =>
+                    BuildGpuTerrainAuxData(_world.Terrain, _gpuTerrainAux));
                 auxDirtyRect = new Rect(0, 0, _terrainSize.X, _terrainSize.Y);
             }
             else
@@ -317,22 +322,27 @@ public class Game : IDisposable
                 Rect? heatDirtyRect = _world.Terrain.TryGetHeatDirtyRect(out Rect dirtyRect) ? dirtyRect : null;
                 auxDirtyRect = MergeDirtyRects(terrainDirtyRect, heatDirtyRect);
                 if (auxDirtyRect is Rect rect)
-                    BuildGpuTerrainAuxRect(_world.Terrain, _gpuTerrainAux, rect);
+                    ProfileSection(ref _drawProfile.ScreenAuxBuild, () =>
+                        BuildGpuTerrainAuxRect(_world.Terrain, _gpuTerrainAux, rect));
             }
             _terrainDirtyCells.Clear();
 
-            Array.Copy(_hiResTerrainPixels, _hiResPixels, _hiResPixels.Length);
+            ProfileSection(ref _drawProfile.ScreenTerrainToSceneCopy, () =>
+                Array.Copy(_hiResTerrainPixels, _hiResPixels, _hiResPixels.Length));
             _drawProfile.ScreenHiResTerrain += hiResWatch.Elapsed;
             double terrainMs = hiResWatch.Elapsed.TotalMilliseconds;
 
             hiResWatch.Restart();
-            _hiResEntityRenderer.Render(
-                _hiResPixels, renderView,
-                _worldPixels, _compositePixels,
-                renderTime);
+            ProfileSection(ref _drawProfile.ScreenEntityRender, () =>
+                _hiResEntityRenderer.Render(
+                    _hiResPixels, renderView,
+                    _worldPixels, _compositePixels,
+                    renderTime));
 
-            int tankHeatGlowCount = BuildGpuTankHeatGlowData(
-                _world.TankList.Tanks, renderView);
+            int tankHeatGlowCount = 0;
+            ProfileSection(ref _drawProfile.ScreenTankGlowBuild, () =>
+                tankHeatGlowCount = BuildGpuTankHeatGlowData(
+                    _world.TankList.Tanks, renderView));
 
             _drawProfile.ScreenHiResEntities += hiResWatch.Elapsed;
             double entityMs = hiResWatch.Elapsed.TotalMilliseconds;
@@ -346,21 +356,25 @@ public class Game : IDisposable
                 TankHeatGlowCount: tankHeatGlowCount,
                 TerrainAux: _gpuTerrainAux,
                 AuxDirtyRect: auxDirtyRect);
-            _renderBackend.UploadGamePixels(upload);
+            ProfileSection(ref _drawProfile.ScreenBackendUpload, () =>
+                _renderBackend.UploadGamePixels(upload));
             _world.Terrain.ClearHeatDirtyRect();
             _gpuAuxFullUploadPending = false;
             _drawProfile.ScreenUpload += hiResWatch.Elapsed;
             double uploadMs = hiResWatch.Elapsed.TotalMilliseconds;
 
-            UpdateHiResQuality(terrainMs + entityMs + uploadMs);
+            ProfileSection(ref _drawProfile.ScreenQualityAdjust, () =>
+                UpdateHiResQuality(terrainMs + entityMs + uploadMs));
         });
 
-        _renderBackend.ClearFrame(new Size(winW, winH), new Tunnerer.Core.Types.Color(26, 26, 26, 255));
+        ProfileSection(ref _drawProfile.ScreenClearFrame, () =>
+            _renderBackend.ClearFrame(new Size(winW, winH), new Tunnerer.Core.Types.Color(26, 26, 26, 255)));
 
         var imguiWatch = Stopwatch.StartNew();
         if (_renderBackend.SupportsUi)
         {
-            _renderBackend.NewFrame(winW, winH, dt);
+            ProfileSection(ref _drawProfile.ScreenNewFrame, () =>
+                _renderBackend.NewFrame(winW, winH, dt));
 
             if (player != null)
             {
@@ -372,7 +386,8 @@ public class Game : IDisposable
                 else
                     _hud.CrosshairScreenPos = null;
 
-                _hud.Draw(_renderBackend.GameTextureId, _hiResSize.X, _hiResSize.Y, player, _world, dt);
+                ProfileSection(ref _drawProfile.ScreenHudDraw, () =>
+                    _hud.Draw(_renderBackend.GameTextureId, _hiResSize.X, _hiResSize.Y, player, _world, dt));
             }
 
             _drawProfile.ScreenUi += imguiWatch.Elapsed;
@@ -742,6 +757,19 @@ public class DrawProfile
     public TimeSpan ScreenHiResTerrain;
     public TimeSpan ScreenHiResEntities;
     public TimeSpan ScreenUpload;
+    public TimeSpan ScreenBackendUpload;
+    public TimeSpan ScreenTerrainFullRender;
+    public TimeSpan ScreenTerrainScrollCopy;
+    public TimeSpan ScreenTerrainExposedStrips;
+    public TimeSpan ScreenTerrainDirtyRender;
+    public TimeSpan ScreenTerrainToSceneCopy;
+    public TimeSpan ScreenEntityRender;
+    public TimeSpan ScreenTankGlowBuild;
+    public TimeSpan ScreenAuxBuild;
+    public TimeSpan ScreenQualityAdjust;
+    public TimeSpan ScreenClearFrame;
+    public TimeSpan ScreenNewFrame;
+    public TimeSpan ScreenHudDraw;
     public TimeSpan ScreenUi;
     public TimeSpan ScreenImGuiRender;
     public TimeSpan ScreenSwap;
@@ -756,6 +784,12 @@ public class DrawProfile
         Console.WriteLine($"[Screen]  hiresTerrain={Avg(ScreenHiResTerrain):F3} hiresEntities={Avg(ScreenHiResEntities):F3} " +
             $"upload={Avg(ScreenUpload):F3} ui={Avg(ScreenUi):F3} imguiRender={Avg(ScreenImGuiRender):F3} " +
             $"swap={Avg(ScreenSwap):F3} ms");
+        Console.WriteLine($"[Screen+] backendUpload={Avg(ScreenBackendUpload):F3} auxBuild={Avg(ScreenAuxBuild):F3} " +
+            $"scrollCopy={Avg(ScreenTerrainScrollCopy):F3} exposedStrips={Avg(ScreenTerrainExposedStrips):F3} " +
+            $"dirtyTerrain={Avg(ScreenTerrainDirtyRender):F3} ms");
+        Console.WriteLine($"[Screen++] fullTerrain={Avg(ScreenTerrainFullRender):F3} terrainCopy={Avg(ScreenTerrainToSceneCopy):F3} " +
+            $"entities={Avg(ScreenEntityRender):F3} tankGlowBuild={Avg(ScreenTankGlowBuild):F3} " +
+            $"qualityAdjust={Avg(ScreenQualityAdjust):F3} clear={Avg(ScreenClearFrame):F3} newFrame={Avg(ScreenNewFrame):F3} hud={Avg(ScreenHudDraw):F3} ms");
         Reset();
     }
 
@@ -765,6 +799,10 @@ public class DrawProfile
     {
         TerrainDraw = ObjectsDraw = ScreenDraw = TotalFrame = TimeSpan.Zero;
         ScreenHiResTerrain = ScreenHiResEntities = ScreenUpload = TimeSpan.Zero;
+        ScreenBackendUpload = ScreenTerrainFullRender = ScreenAuxBuild = ScreenTerrainScrollCopy = TimeSpan.Zero;
+        ScreenTerrainExposedStrips = ScreenTerrainDirtyRender = TimeSpan.Zero;
+        ScreenTerrainToSceneCopy = ScreenEntityRender = ScreenTankGlowBuild = TimeSpan.Zero;
+        ScreenQualityAdjust = ScreenClearFrame = ScreenNewFrame = ScreenHudDraw = TimeSpan.Zero;
         ScreenUi = ScreenImGuiRender = ScreenSwap = TimeSpan.Zero;
         FrameCount = 0;
     }
