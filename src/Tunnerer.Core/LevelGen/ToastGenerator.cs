@@ -18,12 +18,13 @@ public class ToastGenerator
         var terrain = new TerrainGrid(size);
         terrain.Fill(TerrainPixel.LevelGenRock);
 
-        var rng = seed.HasValue ? new Random(seed.Value) : new Random();
+        int effectiveSeed = seed ?? Environment.TickCount;
+        var rng = new Random(effectiveSeed);
         var spawns = GenerateTree(terrain, rng);
 
         if (mode == LevelGenMode.Optimized)
         {
-            GenerateOptimized(terrain, spawns);
+            GenerateOptimized(terrain, spawns, effectiveSeed);
         }
         else
         {
@@ -188,7 +189,7 @@ public class ToastGenerator
 
     #region Optimized (parallel, non-deterministic)
 
-    private static void GenerateOptimized(TerrainGrid terrain, Position[] spawns)
+    private static void GenerateOptimized(TerrainGrid terrain, Position[] spawns, int seed)
     {
         int w = terrain.Width, h = terrain.Height;
 
@@ -201,13 +202,13 @@ public class ToastGenerator
         // 3. Two-octave noise grids for spatially coherent rock formations.
         //    Small noise: local texture (~11px cells on 320x200).
         //    Large noise: map-spanning rock formations (~40px cells on 320x200).
-        var gridRng = new Random();
+        var gridRng = new FastRandom(unchecked(seed ^ (int)0xA511E9B3u));
         int smallCell = Math.Max(8, Math.Min(w, h) / 18);
-        float[] smallNoise = BuildNoiseGrid(w, h, smallCell, gridRng);
+        float[] smallNoise = BuildNoiseGrid(w, h, smallCell, ref gridRng);
         int smallGw = (w + smallCell - 1) / smallCell + 2;
 
         int largeCell = Math.Max(16, Math.Min(w, h) / 4);
-        float[] largeNoise = BuildNoiseGrid(w, h, largeCell, gridRng);
+        float[] largeNoise = BuildNoiseGrid(w, h, largeCell, ref gridRng);
         int largeGw = (w + largeCell - 1) / largeCell + 2;
 
         // 4. Stochastic fill: combined noise controls rock/dirt tendency per region.
@@ -220,7 +221,6 @@ public class ToastGenerator
 
         Parallel.For(1, h - 1, y =>
         {
-            var rng = new Random();
             for (int x = 1; x < w - 1; x++)
             {
                 int offset = x + y * w;
@@ -238,7 +238,7 @@ public class ToastGenerator
                 float edgeFactor = MathF.Min(MathF.Min(edgeX, edgeY), 1f);
                 float prob = (0.15f + combined * 0.50f + distBoost * 0.40f) * edgeFactor;
 
-                if (rng.NextSingle() < prob)
+                if (HashRandom01(seed, x, y, 0xC0FFEEu) < prob)
                     terrain.SetPixelRaw(offset, TerrainPixel.LevelGenDirt);
             }
         });
@@ -371,7 +371,7 @@ public class ToastGenerator
         GeneratorUtils.SetOutside(terrain, TerrainPixel.LevelGenRock);
     }
 
-    private static float[] BuildNoiseGrid(int w, int h, int cellSize, Random rng)
+    private static float[] BuildNoiseGrid(int w, int h, int cellSize, ref FastRandom rng)
     {
         int gw = (w + cellSize - 1) / cellSize + 2;
         int gh = (h + cellSize - 1) / cellSize + 2;
@@ -379,6 +379,16 @@ public class ToastGenerator
         for (int i = 0; i < grid.Length; i++)
             grid[i] = rng.NextSingle();
         return grid;
+    }
+
+    private static float HashRandom01(int seed, int x, int y, uint salt)
+    {
+        uint mixed = (uint)seed
+            ^ (uint)(x * 73856093)
+            ^ (uint)(y * 19349663)
+            ^ (salt * 83492791u);
+        uint h = FastRandom.Hash32(mixed);
+        return (h & 0x00FFFFFFu) / 16777216f;
     }
 
     private static float SampleNoise(float[] grid, int gw, int x, int y, float invCell)
