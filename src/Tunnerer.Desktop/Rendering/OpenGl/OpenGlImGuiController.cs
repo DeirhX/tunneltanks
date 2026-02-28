@@ -13,7 +13,7 @@ using GL_PixelType = Silk.NET.OpenGL.PixelType;
 /// SDL2 + OpenGL3.3 Dear ImGui bridge (input + UI draw only).
 /// Game-frame post-processing is handled by backend-specific renderers.
 /// </summary>
-public sealed unsafe class ImGuiController : IDisposable
+public sealed unsafe class OpenGlImGuiController : IDisposable
 {
     private readonly GL _gl;
     private readonly Sdl _sdl;
@@ -31,7 +31,7 @@ public sealed unsafe class ImGuiController : IDisposable
     private uint _vaoHandle;
     private bool _disposed;
 
-    public ImGuiController(GL gl, Sdl sdl, Window* window, int windowW, int windowH)
+    public OpenGlImGuiController(GL gl, Sdl sdl, Window* window, int windowW, int windowH)
     {
         _gl = gl;
         _sdl = sdl;

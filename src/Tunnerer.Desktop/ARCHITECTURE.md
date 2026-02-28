@@ -74,7 +74,7 @@ OpenGL backend uses:
 - post-process source texture + FBO destination
 - terrain aux texture with dirty-rect sub-updates
 - large GLSL post-process pass (bloom, vignette, edge light, terrain mask, emissive, tank glow)
-- OpenGL ImGui renderer (`ImGuiController`)
+- OpenGL ImGui renderer (`OpenGlImGuiController`)
 
 `SupportsUi = true`; `GameTextureId` is a GL texture handle.
 

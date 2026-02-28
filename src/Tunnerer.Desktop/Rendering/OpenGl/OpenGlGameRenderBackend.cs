@@ -12,7 +12,7 @@ public sealed unsafe class OpenGlGameRenderBackend : IGameRenderBackend
 {
     private const int MaxTankGlowCount = 8;
     private readonly GL _gl;
-    private readonly ImGuiController _imgui;
+    private readonly OpenGlImGuiController _imgui;
     private readonly uint[] _gameTextures = new uint[2];
     private int _gameTexIndex;
     private int _gameTexW;
@@ -69,7 +69,7 @@ public sealed unsafe class OpenGlGameRenderBackend : IGameRenderBackend
     public nint GameTextureId => (nint)_gameTextures[_gameTexIndex];
     public bool SupportsUi => true;
 
-    public OpenGlGameRenderBackend(GL gl, ImGuiController imgui)
+    public OpenGlGameRenderBackend(GL gl, OpenGlImGuiController imgui)
     {
         _gl = gl;
         _imgui = imgui;

@@ -31,10 +31,10 @@ public static unsafe class RenderBackendFactory
     private static RenderBackendServices CreateOpenGlServices(Sdl sdl, Window* window, int windowW, int windowH)
     {
         var gl = GL.GetApi(name => (nint)sdl.GLGetProcAddress(name));
-        var imgui = new ImGuiController(gl, sdl, window, windowW, windowH);
+        var imgui = new OpenGlImGuiController(gl, sdl, window, windowW, windowH);
         return new RenderBackendServices(
             Backend: new OpenGlGameRenderBackend(gl, imgui),
-            Textures: new TextureManager(gl));
+            Textures: new OpenGlTextureManager(gl));
     }
 
     private static RenderBackendServices CreateDx11Services(Sdl sdl, Window* window)

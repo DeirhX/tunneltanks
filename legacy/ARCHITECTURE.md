@@ -4,8 +4,8 @@ A 2D tank combat game where players dig through procedurally generated caverns, 
 
 | Codebase | Path | Stack | Status |
 |----------|------|-------|--------|
-| C++ (original) | `src/`, `crust.sln` | C++20, MSVC, SDL2, ecs.hpp, NanoGUI | Complete, all features |
-| C# (rewrite) | `dotnet/` | .NET 10, Silk.NET (SDL2), xUnit | Core simulation + rendering |
+| C++ (original) | `legacy/src/`, `legacy/crust.sln` | C++20, MSVC, SDL2, ecs.hpp, NanoGUI | Complete, all features |
+| C# (rewrite) | `src/`, `tests/` | .NET 10, Silk.NET (SDL2), xUnit | Core simulation + rendering |
 
 ## Game overview
 
@@ -63,32 +63,29 @@ C++ additionally profiles `terrain_advance` (change list processing) and `ecs` (
 
 ```
 tunnerer/
-├── ARCHITECTURE.md          ← you are here
-├── .gitignore
-├── crust.sln                # C++ solution
-├── crust.vcxproj            # C++ main project
-├── src/                     # C++ source (see src/ARCHITECTURE.md)
-│   └── gamelib/sdl/         # SDL platform layer
-├── libs/                    # C++ submodules
-│   ├── ecs/                 # ecs.hpp (entity-component system)
-│   ├── nanogui/             # NanoGUI (debug UI, pre-built DLL)
-│   └── sdl2/                # SDL2 (static lib)
-├── config/                  # C++ MSBuild property sheets
-├── resources/               # Fonts, bitmaps
-├── dotnet/                  # C# rewrite (see dotnet/ARCHITECTURE.md)
-│   ├── src/
-│   │   ├── TunnelTanks.Core/     # Simulation (platform-independent)
-│   │   └── TunnelTanks.Desktop/  # SDL rendering + input
-│   └── tests/
-│       └── TunnelTanks.Tests/    # xUnit (141 tests)
-└── build/                   # Output (gitignored)
+├── ARCHITECTURE.md               # Root C# architecture overview
+├── Tunnerer.slnx                 # C# solution
+├── src/                          # C# projects
+│   ├── Tunnerer.Core/
+│   └── Tunnerer.Desktop/
+├── tests/
+│   └── Tunnerer.Tests/
+└── legacy/                       # C++ codebase
+    ├── ARCHITECTURE.md           ← you are here
+    ├── crust.sln
+    ├── crust.vcxproj
+    ├── src/
+    ├── libs/
+    ├── config/
+    ├── resources/
+    └── build/                    # Output (gitignored)
 ```
 
 ## Build
 
 See `.cursor/skills/build-tunneltanks/SKILL.md` for exact commands. Quick reference:
 
-- **C++ Release**: `MSBuild.exe crust.vcxproj /p:Configuration=Release /p:Platform=x64`
-- **C# Release**: `dotnet build --configuration Release` (from `dotnet/`)
-- **C# Tests**: `dotnet test --configuration Release` (from `dotnet/`)
-- **C# Large map**: `dotnet run --project src/TunnelTanks.Desktop -- --size=1000x500`
+- **C++ Release**: `MSBuild.exe legacy\crust.vcxproj /p:Configuration=Release /p:Platform=x64`
+- **C# Release**: `dotnet build --configuration Release` (from repo root)
+- **C# Tests**: `dotnet test --configuration Release` (from repo root)
+- **C# Large map**: `dotnet run --project src\Tunnerer.Desktop -- --size=1000x500`

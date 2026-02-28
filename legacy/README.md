@@ -4,12 +4,27 @@ This project is a slightly modernized version of a 1991 DOS game called Tunneler
 
 For a little bit of context, check out the 'tunneler' tag on my blog: http://blog.poweredbytoast.com/tag/tunneler
 
-##Building
+## Building
 
-This thing needs CMake to configure, a Make-like program to compile, and the SDL
-libraries to run, so make sure you have all of those...
+### Windows (primary workflow)
 
-To test this program out, cd into this directory, and run:
+This repository is currently maintained on Windows via MSBuild.
+
+Build:
+
+```powershell
+& "C:\Program Files\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\amd64\MSBuild.exe" "legacy\crust.vcxproj" /p:Configuration=Release /p:Platform=x64 /m /verbosity:minimal
+```
+
+Run:
+
+```powershell
+Start-Process "E:\Projects\New\tunnerer\legacy\build\bin\Release\tunneltanks.exe"
+```
+
+### Linux/macOS (legacy path)
+
+If you are on Linux/macOS and intentionally using the old path, this project needs CMake, a Make-like program, and SDL libraries.
 
 ```bash
 cmake . && make && ./tunneltanks

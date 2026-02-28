@@ -2,6 +2,8 @@
 
 A port of the C++ Tunnerer engine to C# / .NET 10. Uses Silk.NET for SDL2 bindings. The simulation logic is platform-independent (`Tunnerer.Core`); the platform layer is isolated (`Tunnerer.Desktop`).
 
+The desktop renderer currently supports multiple backends (`OpenGL`, `DX11`) behind `IGameRenderBackend`. For backend-specific details, see `src/Tunnerer.Desktop/ARCHITECTURE.md`.
+
 ## Solution structure
 
 ```
@@ -54,7 +56,7 @@ Matches the C++ exactly:
 6. **Bases** — reactor recharge
 7. **LinkMap** — power grid solve (Bresenham visibility)
 
-## Rendering pipeline
+## Rendering pipeline (conceptual)
 
 ```
 Terrain._data
@@ -66,13 +68,13 @@ compositePixels[w×h]
 compositePixels[w×h]
     ↓ Screen.Draw (viewport blit + GUI)
 screenPixels[320×200]
-    ↓ SdlRenderer.RenderFrame
-SDL_Texture (ARGB8888)
-    ↓ SDL_RenderCopy (nearest-neighbor upscale)
+    ↓ IGameRenderBackend.UploadGamePixels
+Backend-managed GPU resources
+    ↓ IGameRenderBackend.Render
 Window
 ```
 
-The composite buffer prevents entity rendering from corrupting the terrain surface, which would cause ghosting artifacts.
+The composite buffer prevents entity rendering from corrupting the terrain surface, which would cause ghosting artifacts. Concrete GPU implementation differs per backend and is documented in `src/Tunnerer.Desktop/ARCHITECTURE.md`.
 
 ## Key differences from C++
 

@@ -7,13 +7,13 @@ using StbImageSharp;
 /// Loads PNG images from disk and creates OpenGL textures suitable for use with ImGui.
 /// All created textures are tracked for cleanup on Dispose.
 /// </summary>
-public sealed unsafe class TextureManager : ITextureLoader
+public sealed unsafe class OpenGlTextureManager : ITextureLoader
 {
     private readonly GL _gl;
     private readonly List<uint> _textures = [];
     private bool _disposed;
 
-    public TextureManager(GL gl)
+    public OpenGlTextureManager(GL gl)
     {
         _gl = gl;
         StbImage.stbi_set_flip_vertically_on_load(0);
