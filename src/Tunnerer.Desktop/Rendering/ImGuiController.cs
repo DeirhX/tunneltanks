@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ImGuiNET;
 using Silk.NET.SDL;
+using Tunnerer.Core.Config;
 using GL_PixelFormat = Silk.NET.OpenGL.PixelFormat;
 using GL_PixelType = Silk.NET.OpenGL.PixelType;
 using Silk.NET.OpenGL;
@@ -56,6 +57,16 @@ public sealed unsafe class ImGuiController : IDisposable
     private int _postLocCameraPixels;
     private int _postLocViewSize;
     private int _postLocPixelScale;
+    private int _postLocBloomThreshold;
+    private int _postLocBloomStrength;
+    private int _postLocBloomWeightCenter;
+    private int _postLocBloomWeightAxis;
+    private int _postLocBloomWeightDiagonal;
+    private int _postLocVignetteStrength;
+    private int _postLocEdgeLightStrength;
+    private int _postLocEdgeLightBias;
+    private int _postLocTankHeatGlowColor;
+    private int _postLocTerrainHeatGlowColor;
 
     private ulong _perfFrequency;
     private ulong _time;
@@ -361,9 +372,19 @@ uniform vec2 uWorldSize;
 uniform vec2 uCameraPixels;
 uniform vec2 uViewSize;
 uniform float uPixelScale;
+uniform float uBloomThreshold;
+uniform float uBloomStrength;
+uniform float uBloomWeightCenter;
+uniform float uBloomWeightAxis;
+uniform float uBloomWeightDiagonal;
+uniform float uVignetteStrength;
+uniform float uEdgeLightStrength;
+uniform float uEdgeLightBias;
+uniform vec3 uTankHeatGlowColor;
+uniform vec3 uTerrainHeatGlowColor;
 layout (location = 0) out vec4 Out_Color;
 
-vec3 bright(vec3 c) { return max(c - vec3(0.72), vec3(0.0)); }
+vec3 bright(vec3 c) { return max(c - vec3(uBloomThreshold), vec3(0.0)); }
 
 void main() {
     vec3 base = texture(uScene, vUv).rgb;
@@ -374,22 +395,33 @@ void main() {
         vec2 ty = vec2(0.0, uTexelSize.y);
         vec2 d1 = vec2(uTexelSize.x, uTexelSize.y);
         vec2 d2 = vec2(uTexelSize.x, -uTexelSize.y);
-        vec3 bloom = bright(base) * 0.30;
-        bloom += bright(texture(uScene, vUv + tx).rgb) * 0.11;
-        bloom += bright(texture(uScene, vUv - tx).rgb) * 0.11;
-        bloom += bright(texture(uScene, vUv + ty).rgb) * 0.11;
-        bloom += bright(texture(uScene, vUv - ty).rgb) * 0.11;
-        bloom += bright(texture(uScene, vUv + d1).rgb) * 0.07;
-        bloom += bright(texture(uScene, vUv - d1).rgb) * 0.07;
-        bloom += bright(texture(uScene, vUv + d2).rgb) * 0.07;
-        bloom += bright(texture(uScene, vUv - d2).rgb) * 0.07;
-        color += bloom * 0.60;
+        vec3 bloom = bright(base) * uBloomWeightCenter;
+        bloom += bright(texture(uScene, vUv + tx).rgb) * uBloomWeightAxis;
+        bloom += bright(texture(uScene, vUv - tx).rgb) * uBloomWeightAxis;
+        bloom += bright(texture(uScene, vUv + ty).rgb) * uBloomWeightAxis;
+        bloom += bright(texture(uScene, vUv - ty).rgb) * uBloomWeightAxis;
+        bloom += bright(texture(uScene, vUv + d1).rgb) * uBloomWeightDiagonal;
+        bloom += bright(texture(uScene, vUv - d1).rgb) * uBloomWeightDiagonal;
+        bloom += bright(texture(uScene, vUv + d2).rgb) * uBloomWeightDiagonal;
+        bloom += bright(texture(uScene, vUv - d2).rgb) * uBloomWeightDiagonal;
+        color += bloom * uBloomStrength;
     }
 
     if (uQuality >= 2) {
         float d = distance(vUv, vec2(0.5, 0.5));
-        float vig = 1.0 - smoothstep(0.35, 0.95, d) * 0.18;
+        float vig = 1.0 - smoothstep(0.35, 0.95, d) * uVignetteStrength;
         color *= vig;
+    }
+
+    // First terrain-lighting GPU slice: cheap screen-space edge lift.
+    if (uQuality >= 1) {
+        float l = dot(texture(uScene, vUv + vec2(-uTexelSize.x, 0.0)).rgb, vec3(0.299, 0.587, 0.114));
+        float r = dot(texture(uScene, vUv + vec2(uTexelSize.x, 0.0)).rgb, vec3(0.299, 0.587, 0.114));
+        float u = dot(texture(uScene, vUv + vec2(0.0, -uTexelSize.y)).rgb, vec3(0.299, 0.587, 0.114));
+        float d = dot(texture(uScene, vUv + vec2(0.0, uTexelSize.y)).rgb, vec3(0.299, 0.587, 0.114));
+        float edge = abs(r - l) + abs(d - u);
+        float edgeLift = max(0.0, edge - uEdgeLightBias) * uEdgeLightStrength;
+        color += vec3(edgeLift);
     }
 
     for (int i = 0; i < 8; i++) {
@@ -399,7 +431,7 @@ void main() {
         if (falloff > 0.0) {
             falloff *= falloff;
             float glow = g.w * falloff;
-            color += vec3(0.78, 0.24, 0.04) * glow;
+            color += uTankHeatGlowColor * glow;
         }
     }
 
@@ -416,9 +448,9 @@ void main() {
         float heat = h0 * 0.50 + (h1 + h2 + h3 + h4) * 0.125;
         if (heat > 0.01) {
             float t2 = heat * heat;
-            color.r += 0.8627 * t2;
-            color.g += 0.3137 * t2 * heat;
-            color.b += 0.0588 * t2 * t2;
+            color.r += uTerrainHeatGlowColor.r * t2;
+            color.g += uTerrainHeatGlowColor.g * t2 * heat;
+            color.b += uTerrainHeatGlowColor.b * t2 * t2;
         }
     }
 
@@ -450,6 +482,16 @@ void main() {
         _postLocCameraPixels = _gl.GetUniformLocation(_postProgram, "uCameraPixels");
         _postLocViewSize = _gl.GetUniformLocation(_postProgram, "uViewSize");
         _postLocPixelScale = _gl.GetUniformLocation(_postProgram, "uPixelScale");
+        _postLocBloomThreshold = _gl.GetUniformLocation(_postProgram, "uBloomThreshold");
+        _postLocBloomStrength = _gl.GetUniformLocation(_postProgram, "uBloomStrength");
+        _postLocBloomWeightCenter = _gl.GetUniformLocation(_postProgram, "uBloomWeightCenter");
+        _postLocBloomWeightAxis = _gl.GetUniformLocation(_postProgram, "uBloomWeightAxis");
+        _postLocBloomWeightDiagonal = _gl.GetUniformLocation(_postProgram, "uBloomWeightDiagonal");
+        _postLocVignetteStrength = _gl.GetUniformLocation(_postProgram, "uVignetteStrength");
+        _postLocEdgeLightStrength = _gl.GetUniformLocation(_postProgram, "uEdgeLightStrength");
+        _postLocEdgeLightBias = _gl.GetUniformLocation(_postProgram, "uEdgeLightBias");
+        _postLocTankHeatGlowColor = _gl.GetUniformLocation(_postProgram, "uTankHeatGlowColor");
+        _postLocTerrainHeatGlowColor = _gl.GetUniformLocation(_postProgram, "uTerrainHeatGlowColor");
     }
 
     private void RunPostProcessPass(
@@ -489,6 +531,18 @@ void main() {
         _gl.Uniform2(_postLocCameraPixels, (float)camPixelX, (float)camPixelY);
         _gl.Uniform2(_postLocViewSize, (float)width, (float)height);
         _gl.Uniform1(_postLocPixelScale, (float)pixelScale);
+        _gl.Uniform1(_postLocBloomThreshold, Tweaks.Screen.PostBloomThreshold);
+        _gl.Uniform1(_postLocBloomStrength, Tweaks.Screen.PostBloomStrength);
+        _gl.Uniform1(_postLocBloomWeightCenter, Tweaks.Screen.PostBloomWeightCenter);
+        _gl.Uniform1(_postLocBloomWeightAxis, Tweaks.Screen.PostBloomWeightAxis);
+        _gl.Uniform1(_postLocBloomWeightDiagonal, Tweaks.Screen.PostBloomWeightDiagonal);
+        _gl.Uniform1(_postLocVignetteStrength, Tweaks.Screen.PostVignetteStrength);
+        _gl.Uniform1(_postLocEdgeLightStrength, Tweaks.Screen.PostTerrainEdgeLightStrength);
+        _gl.Uniform1(_postLocEdgeLightBias, Tweaks.Screen.PostTerrainEdgeLightBias);
+        _gl.Uniform3(_postLocTankHeatGlowColor,
+            Tweaks.Screen.PostTankHeatGlowR, Tweaks.Screen.PostTankHeatGlowG, Tweaks.Screen.PostTankHeatGlowB);
+        _gl.Uniform3(_postLocTerrainHeatGlowColor,
+            Tweaks.Screen.PostTerrainHeatGlowR, Tweaks.Screen.PostTerrainHeatGlowG, Tweaks.Screen.PostTerrainHeatGlowB);
         int clampedGlowCount = Math.Clamp(tankHeatGlowCount, 0, MaxTankGlowCount);
         _gl.Uniform1(_postLocTankGlowCount, clampedGlowCount);
         if (tankHeatGlowData != null)

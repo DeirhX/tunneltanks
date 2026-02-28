@@ -31,6 +31,22 @@ public static class Tweaks
         public const int HiResBudgetHysteresisFrames = 12;
         public const float HiResBudgetUnderThreshold = 0.65f;
         public const int HiResQualityIncreaseFramesMultiplier = 25;
+
+        // GPU post-processing / lighting tuning
+        public const float PostBloomThreshold = 0.72f;
+        public const float PostBloomStrength = 0.60f;
+        public const float PostBloomWeightCenter = 0.30f;
+        public const float PostBloomWeightAxis = 0.11f;
+        public const float PostBloomWeightDiagonal = 0.07f;
+        public const float PostVignetteStrength = 0.18f;
+        public const float PostTerrainEdgeLightStrength = 0.10f;
+        public const float PostTerrainEdgeLightBias = 0.05f;
+        public const float PostTankHeatGlowR = 0.78f;
+        public const float PostTankHeatGlowG = 0.24f;
+        public const float PostTankHeatGlowB = 0.04f;
+        public const float PostTerrainHeatGlowR = 0.8627f;
+        public const float PostTerrainHeatGlowG = 0.3137f;
+        public const float PostTerrainHeatGlowB = 0.0588f;
     }
 
     public static class World
