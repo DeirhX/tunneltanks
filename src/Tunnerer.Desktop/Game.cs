@@ -31,6 +31,8 @@ public class Game : IDisposable
     private readonly HiResTerrainRenderer _hiResTerrainRenderer = new();
     private readonly HiResEntityRenderer _hiResEntityRenderer = new();
     private readonly List<Position> _terrainDirtyCells = new();
+    private readonly float[] _gpuTankHeatGlow = new float[Tweaks.World.MaxPlayers * 4];
+    private readonly byte[] _gpuTerrainHeat;
     private uint[] _hiResPixels = Array.Empty<uint>();
     private uint[] _hiResTerrainPixels = Array.Empty<uint>();
     private Size _hiResSize;
@@ -83,6 +85,7 @@ public class Game : IDisposable
 
         _worldPixels = new uint[_terrainSize.Area];
         _compositePixels = new uint[_terrainSize.Area];
+        _gpuTerrainHeat = new byte[_terrainSize.Area];
         if (parallel)
             _world.Terrain.DrawAllToSurfaceParallel(_worldPixels);
         else
@@ -227,16 +230,17 @@ public class Game : IDisposable
                 _terrainSize.X, _terrainSize.Y,
                 _camPixelX, _camPixelY, scale, renderTime);
 
-            HiResEntityRenderer.RenderTankHeatGlow(
-                _hiResPixels, _hiResSize.X, _hiResSize.Y,
-                _world.TankList.Tanks, _camPixelX, _camPixelY, scale);
+            int tankHeatGlowCount = BuildGpuTankHeatGlowData(
+                _world.TankList.Tanks, _camPixelX, _camPixelY, scale, _hiResSize.X, _hiResSize.Y);
+            BuildGpuTerrainHeatData(_world.Terrain, _gpuTerrainHeat);
 
-            HiResTerrainRenderer.PostProcess(_hiResPixels, _hiResSize.X, _hiResSize.Y, _hiResQuality);
             _drawProfile.ScreenHiResEntities += hiResWatch.Elapsed;
             double entityMs = hiResWatch.Elapsed.TotalMilliseconds;
 
             hiResWatch.Restart();
-            _imgui.UploadGamePixels(_hiResPixels, _hiResSize.X, _hiResSize.Y);
+            _imgui.UploadGamePixels(_hiResPixels, _hiResSize.X, _hiResSize.Y, _hiResQuality,
+                _gpuTankHeatGlow, tankHeatGlowCount,
+                _gpuTerrainHeat, _terrainSize.X, _terrainSize.Y, _camPixelX, _camPixelY, scale);
             _drawProfile.ScreenUpload += hiResWatch.Elapsed;
             double uploadMs = hiResWatch.Elapsed.TotalMilliseconds;
 
@@ -271,7 +275,6 @@ public class Game : IDisposable
 
         imguiWatch.Restart();
         _renderer.SwapWindow();
-        _gl.Finish();
         _drawProfile.ScreenSwap += imguiWatch.Elapsed;
     }
 
@@ -297,6 +300,47 @@ public class Game : IDisposable
             _camPixelY = -(viewH - worldPixelH) / 2;
         else
             _camPixelY = Math.Clamp(_camPixelY, 0, worldPixelH - viewH);
+    }
+
+    private int BuildGpuTankHeatGlowData(
+        IReadOnlyList<Core.Entities.Tank> tanks,
+        int camPixelX, int camPixelY, int pixelScale, int targetW, int targetH)
+    {
+        const float minHeat = 5f;
+        const float baseRadius = 2.5f;
+        const float scaleRadius = 2.5f;
+
+        int count = 0;
+        for (int i = 0; i < tanks.Count && count < Tweaks.World.MaxPlayers; i++)
+        {
+            var tank = tanks[i];
+            if (tank.IsDead || tank.Heat < minHeat) continue;
+
+            float t = tank.Heat / Tweaks.Tank.HeatMax;
+            float intensity = t * t;
+            float glowRadiusPx = pixelScale * (baseRadius + scaleRadius * t);
+            float cx = (tank.Position.X + 0.5f) * pixelScale - camPixelX;
+            float cy = (tank.Position.Y + 0.5f) * pixelScale - camPixelY;
+
+            if (cx + glowRadiusPx < 0 || cy + glowRadiusPx < 0 || cx - glowRadiusPx >= targetW || cy - glowRadiusPx >= targetH)
+                continue;
+
+            int baseIdx = count * 4;
+            _gpuTankHeatGlow[baseIdx + 0] = cx / targetW;
+            _gpuTankHeatGlow[baseIdx + 1] = cy / targetH;
+            _gpuTankHeatGlow[baseIdx + 2] = glowRadiusPx / MathF.Max(targetW, targetH);
+            _gpuTankHeatGlow[baseIdx + 3] = intensity;
+            count++;
+        }
+
+        return count;
+    }
+
+    private static void BuildGpuTerrainHeatData(Core.Terrain.TerrainGrid terrain, byte[] target)
+    {
+        int len = terrain.Size.Area;
+        for (int i = 0; i < len; i++)
+            target[i] = terrain.GetHeat(i);
     }
 
     private void ScrollTerrainBuffer(int dx, int dy, int w, int h)
@@ -420,13 +464,15 @@ public class Game : IDisposable
     {
         float budget = Tweaks.Screen.HiResRenderBudgetMs;
         int hysteresis = Tweaks.Screen.HiResBudgetHysteresisFrames;
+        float underThreshold = Tweaks.Screen.HiResBudgetUnderThreshold;
+        int qualityIncreaseMultiplier = Tweaks.Screen.HiResQualityIncreaseFramesMultiplier;
 
         if (frameMs > budget)
         {
             _overBudgetFrames++;
             _underBudgetFrames = 0;
         }
-        else if (frameMs < budget * 0.65f)
+        else if (frameMs < budget * underThreshold)
         {
             _underBudgetFrames++;
             _overBudgetFrames = 0;
@@ -444,7 +490,7 @@ public class Game : IDisposable
             _underBudgetFrames = 0;
             Console.WriteLine($"[Render] Hi-res quality reduced to {_hiResQuality}");
         }
-        else if (_underBudgetFrames >= hysteresis * 25 && _hiResQuality < HiResRenderQuality.High)
+        else if (_underBudgetFrames >= hysteresis * qualityIncreaseMultiplier && _hiResQuality < HiResRenderQuality.High)
         {
             _hiResQuality++;
             _overBudgetFrames = 0;

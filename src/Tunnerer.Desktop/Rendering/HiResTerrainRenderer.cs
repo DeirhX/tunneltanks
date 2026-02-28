@@ -59,12 +59,6 @@ public sealed class HiResTerrainRenderer
     private const float EmissivePulseMin = 0.8f;
     private const float EmissivePulseRange = 0.2f;
 
-    // Heat glow
-    private const float HeatGlowR = 220f;
-    private const float HeatGlowG = 80f;
-    private const float HeatGlowB = 15f;
-    private const float HeatGlowThreshold = 0.01f;
-
     // Material boundary
     private const float MaterialBlendAlphaMin = 0.1f;
     private const float MaterialBlendStrength = 0.7f;
@@ -697,15 +691,6 @@ public sealed class HiResTerrainRenderer
                     rF += activeMat.EmissiveColor.R * emStr;
                     gF += activeMat.EmissiveColor.G * emStr;
                     bF += activeMat.EmissiveColor.B * emStr;
-                }
-
-                // Heat glow: smooth emission from bilinearly interpolated heat
-                if (heat > HeatGlowThreshold)
-                {
-                    float t2 = heat * heat;
-                    rF += HeatGlowR * t2;
-                    gF += HeatGlowG * t2 * heat;
-                    bF += HeatGlowB * t2 * t2;
                 }
 
                 targetPixels[writeIndex] = RenderingPixels.PackRgb(rF, gF, bF);

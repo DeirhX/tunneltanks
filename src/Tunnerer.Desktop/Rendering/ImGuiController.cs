@@ -16,6 +16,7 @@ using Silk.NET.OpenGL;
 /// </summary>
 public sealed unsafe class ImGuiController : IDisposable
 {
+    private const int MaxTankGlowCount = 8;
     private readonly GL _gl;
     private readonly Sdl _sdl;
     private readonly Window* _window;
@@ -35,6 +36,25 @@ public sealed unsafe class ImGuiController : IDisposable
     private int _gameTexIndex;
     private int _gameTexW;
     private int _gameTexH;
+    private uint _postSourceTexture;
+    private uint _postFbo;
+    private uint _postProgram;
+    private uint _postVao;
+    private uint _postVbo;
+    private uint _terrainHeatTexture;
+    private int _terrainHeatW;
+    private int _terrainHeatH;
+    private int _postLocScene;
+    private int _postLocHeatTex;
+    private int _postLocTexelSize;
+    private int _postLocQuality;
+    private int _postLocTankGlowCount;
+    private int _postLocTankGlowData0;
+    private int _postLocUseTerrainHeat;
+    private int _postLocWorldSize;
+    private int _postLocCameraPixels;
+    private int _postLocViewSize;
+    private int _postLocPixelScale;
 
     private ulong _perfFrequency;
     private ulong _time;
@@ -168,15 +188,44 @@ public sealed unsafe class ImGuiController : IDisposable
 
     public void UploadGamePixels(uint[] pixels, int width, int height)
     {
+        UploadGamePixels(pixels, width, height, HiResRenderQuality.High);
+    }
+
+    public void UploadGamePixels(uint[] pixels, int width, int height, HiResRenderQuality quality)
+    {
+        UploadGamePixels(pixels, width, height, quality, null, 0);
+    }
+
+    public void UploadGamePixels(
+        uint[] pixels, int width, int height, HiResRenderQuality quality,
+        float[]? tankHeatGlowData, int tankHeatGlowCount)
+    {
+        UploadGamePixels(pixels, width, height, quality, tankHeatGlowData, tankHeatGlowCount,
+            null, 0, 0, 0, 0, 1);
+    }
+
+    public void UploadGamePixels(
+        uint[] pixels, int width, int height, HiResRenderQuality quality,
+        float[]? tankHeatGlowData, int tankHeatGlowCount,
+        byte[]? terrainHeat, int worldWidth, int worldHeight, int camPixelX, int camPixelY, int pixelScale)
+    {
         EnsureGameTextures(width, height);
+        EnsurePostProcessObjects(width, height);
+        UpdateTerrainHeatTexture(terrainHeat, worldWidth, worldHeight);
         int uploadIdx = 1 - _gameTexIndex;
-        _gl.BindTexture(TextureTarget.Texture2D, _gameTextures[uploadIdx]);
+        _gl.BindTexture(TextureTarget.Texture2D, _postSourceTexture);
         fixed (uint* ptr = pixels)
         {
             _gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0,
                 (uint)width, (uint)height, GL_PixelFormat.Bgra, GL_PixelType.UnsignedByte, ptr);
         }
         _gl.BindTexture(TextureTarget.Texture2D, 0);
+
+        // GPU offload for bloom/vignette and dynamic heat glow over the full frame.
+        RunPostProcessPass(_postSourceTexture, _gameTextures[uploadIdx], width, height, quality,
+            tankHeatGlowData, tankHeatGlowCount,
+            terrainHeat != null && worldWidth > 0 && worldHeight > 0 && pixelScale > 0,
+            worldWidth, worldHeight, camPixelX, camPixelY, pixelScale);
         _gameTexIndex = uploadIdx;
     }
 
@@ -224,6 +273,286 @@ public sealed unsafe class ImGuiController : IDisposable
 
         io.Fonts.SetTexID((nint)_fontTexture);
         _gl.BindTexture(TextureTarget.Texture2D, 0);
+    }
+
+    private void EnsurePostProcessObjects(int width, int height)
+    {
+        if (_postSourceTexture == 0)
+        {
+            _postSourceTexture = _gl.GenTexture();
+            _gl.BindTexture(TextureTarget.Texture2D, _postSourceTexture);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
+            _gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8,
+                (uint)width, (uint)height, 0, GL_PixelFormat.Bgra, GL_PixelType.UnsignedByte, null);
+            _gl.BindTexture(TextureTarget.Texture2D, 0);
+        }
+        else if (_gameTexW != width || _gameTexH != height)
+        {
+            _gl.BindTexture(TextureTarget.Texture2D, _postSourceTexture);
+            _gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8,
+                (uint)width, (uint)height, 0, GL_PixelFormat.Bgra, GL_PixelType.UnsignedByte, null);
+            _gl.BindTexture(TextureTarget.Texture2D, 0);
+        }
+
+        if (_postFbo == 0)
+            _postFbo = _gl.GenFramebuffer();
+
+        if (_postProgram == 0)
+            CreatePostProcessProgram();
+
+        if (_postVao == 0)
+        {
+            _postVao = _gl.GenVertexArray();
+            _postVbo = _gl.GenBuffer();
+            _gl.BindVertexArray(_postVao);
+            _gl.BindBuffer(BufferTargetARB.ArrayBuffer, _postVbo);
+
+            float[] quad =
+            {
+                -1f, -1f, 0f, 0f,
+                 1f, -1f, 1f, 0f,
+                 1f,  1f, 1f, 1f,
+                -1f, -1f, 0f, 0f,
+                 1f,  1f, 1f, 1f,
+                -1f,  1f, 0f, 1f,
+            };
+            fixed (float* ptr = quad)
+            {
+                _gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint)(quad.Length * sizeof(float)), ptr, BufferUsageARB.StaticDraw);
+            }
+
+            _gl.EnableVertexAttribArray(0);
+            _gl.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (void*)0);
+            _gl.EnableVertexAttribArray(1);
+            _gl.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+            _gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
+            _gl.BindVertexArray(0);
+        }
+    }
+
+    private void CreatePostProcessProgram()
+    {
+        const string vertSrc = @"#version 330 core
+layout (location = 0) in vec2 aPos;
+layout (location = 1) in vec2 aUv;
+out vec2 vUv;
+void main() {
+    vUv = aUv;
+    gl_Position = vec4(aPos, 0.0, 1.0);
+}";
+
+        const string fragSrc = @"#version 330 core
+in vec2 vUv;
+uniform sampler2D uScene;
+uniform sampler2D uHeatTex;
+uniform vec2 uTexelSize;
+uniform int uQuality;
+uniform int uTankGlowCount;
+uniform vec4 uTankGlow[8]; // x=u, y=v, z=radiusUv, w=intensity
+uniform int uUseTerrainHeat;
+uniform vec2 uWorldSize;
+uniform vec2 uCameraPixels;
+uniform vec2 uViewSize;
+uniform float uPixelScale;
+layout (location = 0) out vec4 Out_Color;
+
+vec3 bright(vec3 c) { return max(c - vec3(0.72), vec3(0.0)); }
+
+void main() {
+    vec3 base = texture(uScene, vUv).rgb;
+    vec3 color = base;
+
+    if (uQuality >= 1) {
+        vec2 tx = vec2(uTexelSize.x, 0.0);
+        vec2 ty = vec2(0.0, uTexelSize.y);
+        vec3 bloom = bright(base) * 0.40;
+        bloom += bright(texture(uScene, vUv + tx).rgb) * 0.15;
+        bloom += bright(texture(uScene, vUv - tx).rgb) * 0.15;
+        bloom += bright(texture(uScene, vUv + ty).rgb) * 0.15;
+        bloom += bright(texture(uScene, vUv - ty).rgb) * 0.15;
+        color += bloom * 0.60;
+    }
+
+    if (uQuality >= 2) {
+        float d = distance(vUv, vec2(0.5, 0.5));
+        float vig = 1.0 - smoothstep(0.35, 0.95, d) * 0.18;
+        color *= vig;
+    }
+
+    for (int i = 0; i < 8; i++) {
+        if (i >= uTankGlowCount) break;
+        vec4 g = uTankGlow[i];
+        float falloff = 1.0 - dot(vUv - g.xy, vUv - g.xy) / max(1e-6, g.z * g.z);
+        if (falloff > 0.0) {
+            falloff *= falloff;
+            float glow = g.w * falloff;
+            color += vec3(0.78, 0.24, 0.04) * glow;
+        }
+    }
+
+    if (uUseTerrainHeat > 0 && uPixelScale > 0.0) {
+        vec2 screenPx = vUv * uViewSize;
+        vec2 worldCell = (uCameraPixels + screenPx) / uPixelScale;
+        vec2 heatUv = (worldCell + vec2(0.5, 0.5)) / uWorldSize;
+        float h0 = texture(uHeatTex, heatUv).r;
+        vec2 hTexel = vec2(1.0 / uWorldSize.x, 1.0 / uWorldSize.y);
+        float h1 = texture(uHeatTex, heatUv + vec2(hTexel.x, 0.0)).r;
+        float h2 = texture(uHeatTex, heatUv - vec2(hTexel.x, 0.0)).r;
+        float h3 = texture(uHeatTex, heatUv + vec2(0.0, hTexel.y)).r;
+        float h4 = texture(uHeatTex, heatUv - vec2(0.0, hTexel.y)).r;
+        float heat = h0 * 0.50 + (h1 + h2 + h3 + h4) * 0.125;
+        if (heat > 0.01) {
+            float t2 = heat * heat;
+            color.r += 0.8627 * t2;
+            color.g += 0.3137 * t2 * heat;
+            color.b += 0.0588 * t2 * t2;
+        }
+    }
+
+    Out_Color = vec4(color, 1.0);
+}";
+
+        uint vs = CompileShader(ShaderType.VertexShader, vertSrc);
+        uint fs = CompileShader(ShaderType.FragmentShader, fragSrc);
+        _postProgram = _gl.CreateProgram();
+        _gl.AttachShader(_postProgram, vs);
+        _gl.AttachShader(_postProgram, fs);
+        _gl.LinkProgram(_postProgram);
+        _gl.GetProgram(_postProgram, ProgramPropertyARB.LinkStatus, out int status);
+        if (status == 0)
+            throw new Exception("Post-process shader link failed: " + _gl.GetProgramInfoLog(_postProgram));
+        _gl.DetachShader(_postProgram, vs);
+        _gl.DetachShader(_postProgram, fs);
+        _gl.DeleteShader(vs);
+        _gl.DeleteShader(fs);
+
+        _postLocScene = _gl.GetUniformLocation(_postProgram, "uScene");
+        _postLocHeatTex = _gl.GetUniformLocation(_postProgram, "uHeatTex");
+        _postLocTexelSize = _gl.GetUniformLocation(_postProgram, "uTexelSize");
+        _postLocQuality = _gl.GetUniformLocation(_postProgram, "uQuality");
+        _postLocTankGlowCount = _gl.GetUniformLocation(_postProgram, "uTankGlowCount");
+        _postLocTankGlowData0 = _gl.GetUniformLocation(_postProgram, "uTankGlow[0]");
+        _postLocUseTerrainHeat = _gl.GetUniformLocation(_postProgram, "uUseTerrainHeat");
+        _postLocWorldSize = _gl.GetUniformLocation(_postProgram, "uWorldSize");
+        _postLocCameraPixels = _gl.GetUniformLocation(_postProgram, "uCameraPixels");
+        _postLocViewSize = _gl.GetUniformLocation(_postProgram, "uViewSize");
+        _postLocPixelScale = _gl.GetUniformLocation(_postProgram, "uPixelScale");
+    }
+
+    private void RunPostProcessPass(
+        uint sourceTex, uint destTex, int width, int height, HiResRenderQuality quality,
+        float[]? tankHeatGlowData, int tankHeatGlowCount,
+        bool useTerrainHeat, int worldWidth, int worldHeight, int camPixelX, int camPixelY, int pixelScale)
+    {
+        _gl.GetInteger(GetPName.CurrentProgram, out int lastProgram);
+        _gl.GetInteger(GetPName.ActiveTexture, out int lastActiveTexture);
+        _gl.GetInteger(GetPName.TextureBinding2D, out int lastTexture);
+        _gl.GetInteger(GetPName.VertexArrayBinding, out int lastVao);
+        _gl.GetInteger(GetPName.ArrayBufferBinding, out int lastArrayBuffer);
+        Span<int> lastViewport = stackalloc int[4];
+        _gl.GetInteger(GetPName.Viewport, lastViewport);
+        bool lastBlend = _gl.IsEnabled(EnableCap.Blend);
+        bool lastDepth = _gl.IsEnabled(EnableCap.DepthTest);
+        bool lastCull = _gl.IsEnabled(EnableCap.CullFace);
+        bool lastScissor = _gl.IsEnabled(EnableCap.ScissorTest);
+
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, _postFbo);
+        _gl.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
+            TextureTarget.Texture2D, destTex, 0);
+
+        _gl.Viewport(0, 0, (uint)width, (uint)height);
+        _gl.Disable(EnableCap.Blend);
+        _gl.Disable(EnableCap.DepthTest);
+        _gl.Disable(EnableCap.CullFace);
+        _gl.Disable(EnableCap.ScissorTest);
+
+        _gl.UseProgram(_postProgram);
+        _gl.Uniform1(_postLocScene, 0);
+        _gl.Uniform1(_postLocHeatTex, 1);
+        _gl.Uniform2(_postLocTexelSize, 1f / width, 1f / height);
+        _gl.Uniform1(_postLocQuality, (int)quality);
+        _gl.Uniform1(_postLocUseTerrainHeat, useTerrainHeat ? 1 : 0);
+        _gl.Uniform2(_postLocWorldSize, (float)worldWidth, (float)worldHeight);
+        _gl.Uniform2(_postLocCameraPixels, (float)camPixelX, (float)camPixelY);
+        _gl.Uniform2(_postLocViewSize, (float)width, (float)height);
+        _gl.Uniform1(_postLocPixelScale, (float)pixelScale);
+        int clampedGlowCount = Math.Clamp(tankHeatGlowCount, 0, MaxTankGlowCount);
+        _gl.Uniform1(_postLocTankGlowCount, clampedGlowCount);
+        if (tankHeatGlowData != null)
+        {
+            for (int i = 0; i < clampedGlowCount; i++)
+            {
+                int baseIdx = i * 4;
+                _gl.Uniform4(_postLocTankGlowData0 + i,
+                    tankHeatGlowData[baseIdx + 0],
+                    tankHeatGlowData[baseIdx + 1],
+                    tankHeatGlowData[baseIdx + 2],
+                    tankHeatGlowData[baseIdx + 3]);
+            }
+        }
+        _gl.ActiveTexture(TextureUnit.Texture0);
+        _gl.BindTexture(TextureTarget.Texture2D, sourceTex);
+        _gl.ActiveTexture(TextureUnit.Texture1);
+        _gl.BindTexture(TextureTarget.Texture2D, _terrainHeatTexture);
+        _gl.BindVertexArray(_postVao);
+        _gl.DrawArrays(PrimitiveType.Triangles, 0, 6);
+
+        _gl.BindVertexArray((uint)lastVao);
+        _gl.BindBuffer(BufferTargetARB.ArrayBuffer, (uint)lastArrayBuffer);
+        _gl.BindTexture(TextureTarget.Texture2D, (uint)lastTexture);
+        _gl.ActiveTexture((TextureUnit)lastActiveTexture);
+        _gl.UseProgram((uint)lastProgram);
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        _gl.Viewport(lastViewport[0], lastViewport[1], (uint)lastViewport[2], (uint)lastViewport[3]);
+        if (lastBlend) _gl.Enable(EnableCap.Blend); else _gl.Disable(EnableCap.Blend);
+        if (lastDepth) _gl.Enable(EnableCap.DepthTest); else _gl.Disable(EnableCap.DepthTest);
+        if (lastCull) _gl.Enable(EnableCap.CullFace); else _gl.Disable(EnableCap.CullFace);
+        if (lastScissor) _gl.Enable(EnableCap.ScissorTest); else _gl.Disable(EnableCap.ScissorTest);
+    }
+
+    private void UpdateTerrainHeatTexture(byte[]? heatData, int worldWidth, int worldHeight)
+    {
+        if (heatData == null || worldWidth <= 0 || worldHeight <= 0)
+            return;
+
+        bool sizeChanged = _terrainHeatW != worldWidth || _terrainHeatH != worldHeight;
+        if (_terrainHeatTexture == 0)
+        {
+            _terrainHeatTexture = _gl.GenTexture();
+            _gl.BindTexture(TextureTarget.Texture2D, _terrainHeatTexture);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
+            sizeChanged = true;
+        }
+        else
+        {
+            _gl.BindTexture(TextureTarget.Texture2D, _terrainHeatTexture);
+        }
+
+        fixed (byte* ptr = heatData)
+        {
+            if (sizeChanged)
+            {
+                _gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.R8,
+                    (uint)worldWidth, (uint)worldHeight, 0,
+                    GL_PixelFormat.Red, GL_PixelType.UnsignedByte, ptr);
+            }
+            else
+            {
+                _gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0,
+                    (uint)worldWidth, (uint)worldHeight, GL_PixelFormat.Red, GL_PixelType.UnsignedByte, ptr);
+            }
+        }
+
+        _gl.BindTexture(TextureTarget.Texture2D, 0);
+        _terrainHeatW = worldWidth;
+        _terrainHeatH = worldHeight;
     }
 
     private void CreateShaderProgram()
@@ -423,6 +752,12 @@ void main() {
         if (_fontTexture != 0) _gl.DeleteTexture(_fontTexture);
         for (int i = 0; i < 2; i++)
             if (_gameTextures[i] != 0) _gl.DeleteTexture(_gameTextures[i]);
+        if (_postSourceTexture != 0) _gl.DeleteTexture(_postSourceTexture);
+        if (_terrainHeatTexture != 0) _gl.DeleteTexture(_terrainHeatTexture);
+        if (_postFbo != 0) _gl.DeleteFramebuffer(_postFbo);
+        if (_postProgram != 0) _gl.DeleteProgram(_postProgram);
+        if (_postVbo != 0) _gl.DeleteBuffer(_postVbo);
+        if (_postVao != 0) _gl.DeleteVertexArray(_postVao);
         if (_shaderProgram != 0) _gl.DeleteProgram(_shaderProgram);
         if (_vboHandle != 0) _gl.DeleteBuffer(_vboHandle);
         if (_eboHandle != 0) _gl.DeleteBuffer(_eboHandle);

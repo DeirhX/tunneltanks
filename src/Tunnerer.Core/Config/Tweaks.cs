@@ -29,6 +29,8 @@ public static class Tweaks
         public const int HiResInitialQuality = 2; // 0=Low, 1=Medium, 2=High
         public const float HiResRenderBudgetMs = 8.0f;
         public const int HiResBudgetHysteresisFrames = 12;
+        public const float HiResBudgetUnderThreshold = 0.65f;
+        public const int HiResQualityIncreaseFramesMultiplier = 25;
     }
 
     public static class World
