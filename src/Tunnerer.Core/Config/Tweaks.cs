@@ -41,6 +41,9 @@ public static class Tweaks
         public const float PostVignetteStrength = 0.18f;
         public const float PostTerrainEdgeLightStrength = 0.10f;
         public const float PostTerrainEdgeLightBias = 0.05f;
+        public const float PostTerrainMaskEdgeStrength = 0.18f;
+        public const float PostTerrainMaskCaveDarken = 0.12f;
+        public const float PostTerrainMaskSolidLift = 0.04f;
         public const float PostTankHeatGlowR = 0.78f;
         public const float PostTankHeatGlowG = 0.24f;
         public const float PostTankHeatGlowB = 0.04f;

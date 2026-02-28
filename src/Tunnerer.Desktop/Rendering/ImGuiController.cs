@@ -43,16 +43,22 @@ public sealed unsafe class ImGuiController : IDisposable
     private uint _postVao;
     private uint _postVbo;
     private uint _terrainHeatTexture;
+    private uint _terrainMaskTexture;
     private int _terrainHeatW;
     private int _terrainHeatH;
+    private int _terrainMaskW;
+    private int _terrainMaskH;
     private byte[] _terrainHeatUploadScratch = Array.Empty<byte>();
+    private byte[] _terrainMaskUploadScratch = Array.Empty<byte>();
     private int _postLocScene;
     private int _postLocHeatTex;
+    private int _postLocMaskTex;
     private int _postLocTexelSize;
     private int _postLocQuality;
     private int _postLocTankGlowCount;
     private int _postLocTankGlowData0;
     private int _postLocUseTerrainHeat;
+    private int _postLocUseTerrainMask;
     private int _postLocWorldSize;
     private int _postLocCameraPixels;
     private int _postLocViewSize;
@@ -67,6 +73,9 @@ public sealed unsafe class ImGuiController : IDisposable
     private int _postLocEdgeLightBias;
     private int _postLocTankHeatGlowColor;
     private int _postLocTerrainHeatGlowColor;
+    private int _postLocTerrainMaskEdgeStrength;
+    private int _postLocTerrainMaskCaveDarken;
+    private int _postLocTerrainMaskSolidLift;
 
     private ulong _perfFrequency;
     private ulong _time;
@@ -213,19 +222,23 @@ public sealed unsafe class ImGuiController : IDisposable
         float[]? tankHeatGlowData, int tankHeatGlowCount)
     {
         UploadGamePixels(pixels, width, height, quality, tankHeatGlowData, tankHeatGlowCount,
-            null, 0, 0, 0, 0, 1, false, 0, 0, 0, 0);
+            null, 0, 0, 0, 0, 1, false, 0, 0, 0, 0,
+            null, false, 0, 0, 0, 0);
     }
 
     public void UploadGamePixels(
         uint[] pixels, int width, int height, HiResRenderQuality quality,
         float[]? tankHeatGlowData, int tankHeatGlowCount,
         byte[]? terrainHeat, int worldWidth, int worldHeight, int camPixelX, int camPixelY, int pixelScale,
-        bool hasHeatDirtyRect, int heatMinX, int heatMinY, int heatMaxX, int heatMaxY)
+        bool hasHeatDirtyRect, int heatMinX, int heatMinY, int heatMaxX, int heatMaxY,
+        byte[]? terrainMask, bool hasMaskDirtyRect, int maskMinX, int maskMinY, int maskMaxX, int maskMaxY)
     {
         EnsureGameTextures(width, height);
         EnsurePostProcessObjects(width, height);
         UpdateTerrainHeatTexture(terrainHeat, worldWidth, worldHeight, hasHeatDirtyRect,
             heatMinX, heatMinY, heatMaxX, heatMaxY);
+        UpdateTerrainMaskTexture(terrainMask, worldWidth, worldHeight, hasMaskDirtyRect,
+            maskMinX, maskMinY, maskMaxX, maskMaxY);
         int uploadIdx = 1 - _gameTexIndex;
         _gl.BindTexture(TextureTarget.Texture2D, _postSourceTexture);
         fixed (uint* ptr = pixels)
@@ -239,7 +252,8 @@ public sealed unsafe class ImGuiController : IDisposable
         RunPostProcessPass(_postSourceTexture, _gameTextures[uploadIdx], width, height, quality,
             tankHeatGlowData, tankHeatGlowCount,
             terrainHeat != null && worldWidth > 0 && worldHeight > 0 && pixelScale > 0,
-            worldWidth, worldHeight, camPixelX, camPixelY, pixelScale);
+            worldWidth, worldHeight, camPixelX, camPixelY, pixelScale,
+            terrainMask != null && worldWidth > 0 && worldHeight > 0);
         _gameTexIndex = uploadIdx;
     }
 
@@ -363,11 +377,13 @@ void main() {
 in vec2 vUv;
 uniform sampler2D uScene;
 uniform sampler2D uHeatTex;
+uniform sampler2D uMaskTex;
 uniform vec2 uTexelSize;
 uniform int uQuality;
 uniform int uTankGlowCount;
 uniform vec4 uTankGlow[8]; // x=u, y=v, z=radiusUv, w=intensity
 uniform int uUseTerrainHeat;
+uniform int uUseTerrainMask;
 uniform vec2 uWorldSize;
 uniform vec2 uCameraPixels;
 uniform vec2 uViewSize;
@@ -382,6 +398,9 @@ uniform float uEdgeLightStrength;
 uniform float uEdgeLightBias;
 uniform vec3 uTankHeatGlowColor;
 uniform vec3 uTerrainHeatGlowColor;
+uniform float uTerrainMaskEdgeStrength;
+uniform float uTerrainMaskCaveDarken;
+uniform float uTerrainMaskSolidLift;
 layout (location = 0) out vec4 Out_Color;
 
 vec3 bright(vec3 c) { return max(c - vec3(uBloomThreshold), vec3(0.0)); }
@@ -422,6 +441,26 @@ void main() {
         float edge = abs(r - l) + abs(d - u);
         float edgeLift = max(0.0, edge - uEdgeLightBias) * uEdgeLightStrength;
         color += vec3(edgeLift);
+    }
+
+    // Terrain mask lighting slice: cave darken near solid edges and slight solid rim lift.
+    if (uUseTerrainMask > 0 && uPixelScale > 0.0) {
+        vec2 screenPx = vUv * uViewSize;
+        vec2 worldCell = (uCameraPixels + screenPx) / uPixelScale;
+        vec2 maskUv = (worldCell + vec2(0.5, 0.5)) / uWorldSize;
+        float m0 = texture(uMaskTex, maskUv).r;
+        vec2 mTexel = vec2(1.0 / uWorldSize.x, 1.0 / uWorldSize.y);
+        float mx1 = texture(uMaskTex, maskUv + vec2(mTexel.x, 0.0)).r;
+        float mx2 = texture(uMaskTex, maskUv - vec2(mTexel.x, 0.0)).r;
+        float my1 = texture(uMaskTex, maskUv + vec2(0.0, mTexel.y)).r;
+        float my2 = texture(uMaskTex, maskUv - vec2(0.0, mTexel.y)).r;
+        float edge = abs(mx1 - mx2) + abs(my1 - my2);
+        float edgeAmt = min(1.0, edge * uTerrainMaskEdgeStrength);
+        if (m0 < 0.5) {
+            color *= 1.0 - edgeAmt * uTerrainMaskCaveDarken;
+        } else {
+            color += vec3(edgeAmt * uTerrainMaskSolidLift);
+        }
     }
 
     for (int i = 0; i < 8; i++) {
@@ -473,11 +512,13 @@ void main() {
 
         _postLocScene = _gl.GetUniformLocation(_postProgram, "uScene");
         _postLocHeatTex = _gl.GetUniformLocation(_postProgram, "uHeatTex");
+        _postLocMaskTex = _gl.GetUniformLocation(_postProgram, "uMaskTex");
         _postLocTexelSize = _gl.GetUniformLocation(_postProgram, "uTexelSize");
         _postLocQuality = _gl.GetUniformLocation(_postProgram, "uQuality");
         _postLocTankGlowCount = _gl.GetUniformLocation(_postProgram, "uTankGlowCount");
         _postLocTankGlowData0 = _gl.GetUniformLocation(_postProgram, "uTankGlow[0]");
         _postLocUseTerrainHeat = _gl.GetUniformLocation(_postProgram, "uUseTerrainHeat");
+        _postLocUseTerrainMask = _gl.GetUniformLocation(_postProgram, "uUseTerrainMask");
         _postLocWorldSize = _gl.GetUniformLocation(_postProgram, "uWorldSize");
         _postLocCameraPixels = _gl.GetUniformLocation(_postProgram, "uCameraPixels");
         _postLocViewSize = _gl.GetUniformLocation(_postProgram, "uViewSize");
@@ -492,12 +533,16 @@ void main() {
         _postLocEdgeLightBias = _gl.GetUniformLocation(_postProgram, "uEdgeLightBias");
         _postLocTankHeatGlowColor = _gl.GetUniformLocation(_postProgram, "uTankHeatGlowColor");
         _postLocTerrainHeatGlowColor = _gl.GetUniformLocation(_postProgram, "uTerrainHeatGlowColor");
+        _postLocTerrainMaskEdgeStrength = _gl.GetUniformLocation(_postProgram, "uTerrainMaskEdgeStrength");
+        _postLocTerrainMaskCaveDarken = _gl.GetUniformLocation(_postProgram, "uTerrainMaskCaveDarken");
+        _postLocTerrainMaskSolidLift = _gl.GetUniformLocation(_postProgram, "uTerrainMaskSolidLift");
     }
 
     private void RunPostProcessPass(
         uint sourceTex, uint destTex, int width, int height, HiResRenderQuality quality,
         float[]? tankHeatGlowData, int tankHeatGlowCount,
-        bool useTerrainHeat, int worldWidth, int worldHeight, int camPixelX, int camPixelY, int pixelScale)
+        bool useTerrainHeat, int worldWidth, int worldHeight, int camPixelX, int camPixelY, int pixelScale,
+        bool useTerrainMask)
     {
         _gl.GetInteger(GetPName.CurrentProgram, out int lastProgram);
         _gl.GetInteger(GetPName.ActiveTexture, out int lastActiveTexture);
@@ -524,9 +569,11 @@ void main() {
         _gl.UseProgram(_postProgram);
         _gl.Uniform1(_postLocScene, 0);
         _gl.Uniform1(_postLocHeatTex, 1);
+        _gl.Uniform1(_postLocMaskTex, 2);
         _gl.Uniform2(_postLocTexelSize, 1f / width, 1f / height);
         _gl.Uniform1(_postLocQuality, (int)quality);
         _gl.Uniform1(_postLocUseTerrainHeat, useTerrainHeat ? 1 : 0);
+        _gl.Uniform1(_postLocUseTerrainMask, useTerrainMask ? 1 : 0);
         _gl.Uniform2(_postLocWorldSize, (float)worldWidth, (float)worldHeight);
         _gl.Uniform2(_postLocCameraPixels, (float)camPixelX, (float)camPixelY);
         _gl.Uniform2(_postLocViewSize, (float)width, (float)height);
@@ -543,6 +590,9 @@ void main() {
             Tweaks.Screen.PostTankHeatGlowR, Tweaks.Screen.PostTankHeatGlowG, Tweaks.Screen.PostTankHeatGlowB);
         _gl.Uniform3(_postLocTerrainHeatGlowColor,
             Tweaks.Screen.PostTerrainHeatGlowR, Tweaks.Screen.PostTerrainHeatGlowG, Tweaks.Screen.PostTerrainHeatGlowB);
+        _gl.Uniform1(_postLocTerrainMaskEdgeStrength, Tweaks.Screen.PostTerrainMaskEdgeStrength);
+        _gl.Uniform1(_postLocTerrainMaskCaveDarken, Tweaks.Screen.PostTerrainMaskCaveDarken);
+        _gl.Uniform1(_postLocTerrainMaskSolidLift, Tweaks.Screen.PostTerrainMaskSolidLift);
         int clampedGlowCount = Math.Clamp(tankHeatGlowCount, 0, MaxTankGlowCount);
         _gl.Uniform1(_postLocTankGlowCount, clampedGlowCount);
         if (tankHeatGlowData != null)
@@ -561,6 +611,8 @@ void main() {
         _gl.BindTexture(TextureTarget.Texture2D, sourceTex);
         _gl.ActiveTexture(TextureUnit.Texture1);
         _gl.BindTexture(TextureTarget.Texture2D, _terrainHeatTexture);
+        _gl.ActiveTexture(TextureUnit.Texture2);
+        _gl.BindTexture(TextureTarget.Texture2D, _terrainMaskTexture);
         _gl.BindVertexArray(_postVao);
         _gl.DrawArrays(PrimitiveType.Triangles, 0, 6);
 
@@ -638,6 +690,69 @@ void main() {
         _gl.BindTexture(TextureTarget.Texture2D, 0);
         _terrainHeatW = worldWidth;
         _terrainHeatH = worldHeight;
+    }
+
+    private void UpdateTerrainMaskTexture(
+        byte[]? maskData, int worldWidth, int worldHeight, bool hasDirtyRect,
+        int minX, int minY, int maxX, int maxY)
+    {
+        if (maskData == null || worldWidth <= 0 || worldHeight <= 0)
+            return;
+
+        bool sizeChanged = _terrainMaskW != worldWidth || _terrainMaskH != worldHeight;
+        if (_terrainMaskTexture == 0)
+        {
+            _terrainMaskTexture = _gl.GenTexture();
+            _gl.BindTexture(TextureTarget.Texture2D, _terrainMaskTexture);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
+            sizeChanged = true;
+        }
+        else
+        {
+            _gl.BindTexture(TextureTarget.Texture2D, _terrainMaskTexture);
+        }
+
+        if (sizeChanged)
+        {
+            _gl.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
+            fixed (byte* ptr = maskData)
+            {
+                _gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.R8,
+                    (uint)worldWidth, (uint)worldHeight, 0,
+                    GL_PixelFormat.Red, GL_PixelType.UnsignedByte, ptr);
+            }
+            _gl.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
+        }
+        else if (hasDirtyRect)
+        {
+            int rw = maxX - minX + 1;
+            int rh = maxY - minY + 1;
+            int rectLen = rw * rh;
+            if (_terrainMaskUploadScratch.Length < rectLen)
+                _terrainMaskUploadScratch = new byte[rectLen];
+
+            for (int y = 0; y < rh; y++)
+            {
+                int src = (minY + y) * worldWidth + minX;
+                int dst = y * rw;
+                Array.Copy(maskData, src, _terrainMaskUploadScratch, dst, rw);
+            }
+
+            _gl.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
+            fixed (byte* ptr = _terrainMaskUploadScratch)
+            {
+                _gl.TexSubImage2D(TextureTarget.Texture2D, 0, minX, minY,
+                    (uint)rw, (uint)rh, GL_PixelFormat.Red, GL_PixelType.UnsignedByte, ptr);
+            }
+            _gl.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
+        }
+
+        _gl.BindTexture(TextureTarget.Texture2D, 0);
+        _terrainMaskW = worldWidth;
+        _terrainMaskH = worldHeight;
     }
 
     private void CreateShaderProgram()
@@ -839,6 +954,7 @@ void main() {
             if (_gameTextures[i] != 0) _gl.DeleteTexture(_gameTextures[i]);
         if (_postSourceTexture != 0) _gl.DeleteTexture(_postSourceTexture);
         if (_terrainHeatTexture != 0) _gl.DeleteTexture(_terrainHeatTexture);
+        if (_terrainMaskTexture != 0) _gl.DeleteTexture(_terrainMaskTexture);
         if (_postFbo != 0) _gl.DeleteFramebuffer(_postFbo);
         if (_postProgram != 0) _gl.DeleteProgram(_postProgram);
         if (_postVbo != 0) _gl.DeleteBuffer(_postVbo);
