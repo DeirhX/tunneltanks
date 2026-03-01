@@ -123,7 +123,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     {
         float2 screenPx = uv * ViewSize;
         float2 worldCell = (CameraPixels + screenPx) / PixelScale;
-        float2 auxUv = worldCell / WorldSize;
+        float2 auxUv = worldCell / WorldSize + float2(-0.15, 0.15) / WorldSize;
         float2 mTexel = float2(1.0 / WorldSize.x, 1.0 / WorldSize.y);
         float4 a0 = auxTex.Sample(s0, auxUv);
         float4 ax1 = auxTex.Sample(s0, auxUv + float2(mTexel.x, 0.0));

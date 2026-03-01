@@ -61,8 +61,14 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     float2 texUv = worldCell / WorldSize;
     float3 bilinearColor = sourceTex.Sample(s0, texUv).rgb;
 
-    // SDF value: 0 = deep cave, 0.5 = boundary, 1 = deep solid
-    float sdf = auxTex.Sample(s0, texUv).g;
+    // Nudge SDF sampling toward bottom-left so the visible outline shifts
+    // toward top-right, covering raw pixel edges at cell boundaries.
+    float2 sdfUv = texUv + float2(-0.15, 0.15) / WorldSize;
+    float sdf = auxTex.Sample(s0, sdfUv).g;
+
+    // Bias SDF slightly toward cave — expands the curve outward into solid
+    // terrain in all directions, covering raw pixel edges at cell boundaries.
+    sdf -= 0.025;
 
     // Smooth alpha from SDF — transition width adapts to edge softness
     float edgeSoftness = max(0.02, NativeContinuousParams.x);

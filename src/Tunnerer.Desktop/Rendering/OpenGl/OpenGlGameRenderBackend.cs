@@ -308,7 +308,7 @@ void main() {
     if (uUseTerrainAux > 0 && uPixelScale > 0.0) {
         vec2 screenPx = vUv * uViewSize;
         vec2 worldCell = (uCameraPixels + screenPx) / uPixelScale;
-        vec2 auxUv = worldCell / uWorldSize;
+        vec2 auxUv = worldCell / uWorldSize + vec2(-0.15, 0.15) / uWorldSize;
         vec2 mTexel = vec2(1.0 / uWorldSize.x, 1.0 / uWorldSize.y);
         vec4 a0 = texture(uAuxTex, auxUv);
         vec4 ax1 = texture(uAuxTex, auxUv + vec2(mTexel.x, 0.0));
