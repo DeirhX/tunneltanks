@@ -26,7 +26,7 @@ public sealed unsafe class TextureManager : ITextureLoader
         _ = linear;
         if (!File.Exists(path))
             throw new FileNotFoundException($"Texture file not found: {path}", path);
-        if (!_backend.IsNativeReady || _backend.Device == null)
+        if (_backend.Device == null)
             return nint.Zero;
 
         using var stream = File.OpenRead(path);

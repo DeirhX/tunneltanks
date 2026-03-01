@@ -86,7 +86,6 @@ public sealed unsafe partial class Backend
 
         _swapChainW = winW;
         _swapChainH = winH;
-        _nativeReady = true;
         _imgui = new ImGuiController(_sdl, _window, _device, _context, winW, winH);
         Console.WriteLine($"[Render] DX11 native pipeline ready ({winW}x{winH}, feature={created}).");
         return true;

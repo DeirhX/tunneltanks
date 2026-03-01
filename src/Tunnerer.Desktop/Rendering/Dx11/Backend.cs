@@ -43,8 +43,6 @@ public sealed unsafe partial class Backend : IGameRenderBackend
     private ID3D11Buffer* _postParamsBuffer;
     private ID3D11ShaderResourceView* _displaySrv;
     private ImGuiController? _imgui;
-    private readonly bool _forceCpuFallbackEffects =
-        string.Equals(Environment.GetEnvironmentVariable("TUNNERER_DX11_CPU_FALLBACK"), "1", StringComparison.Ordinal);
     private readonly bool _detailedProfileEnabled =
         string.Equals(Environment.GetEnvironmentVariable("TUNNERER_DX11_PROFILE"), "1", StringComparison.Ordinal);
     private long _profileSceneUploadTicks;
@@ -60,20 +58,11 @@ public sealed unsafe partial class Backend : IGameRenderBackend
     private int _sceneTexW, _sceneTexH;
     private int _terrainAuxW, _terrainAuxH;
     private int _swapChainW, _swapChainH;
-    private bool _nativeReady;
-
-    // SDL fallback pipeline
-    private Renderer* _sdlRenderer;
-    private Texture* _sdlFrameTexture;
-    private int _sdlFrameW, _sdlFrameH;
-
-    private uint[] _processedPixels = Array.Empty<uint>();
     private bool _disposed;
 
     internal ID3D11Device* Device => _device;
-    internal bool IsNativeReady => _nativeReady;
     public nint GameTextureId => (nint)(_displaySrv != null ? _displaySrv : _sceneSrv);
-    public bool SupportsUi => _nativeReady && _imgui != null;
+    public bool SupportsUi => _imgui != null;
 
     public Backend(Sdl sdl, Window* window)
     {
@@ -84,7 +73,9 @@ public sealed unsafe partial class Backend : IGameRenderBackend
 #pragma warning restore CS0618
 
         if (!TryInitNativeSwapChain())
-            InitSdlFallback();
+            throw new InvalidOperationException(
+                "DX11 native initialization failed. DX11 CPU/SDL fallback has been removed. " +
+                "Use a DX11-capable GPU/driver or switch render backend.");
     }
 
     public void ProcessEvent(Event ev)
@@ -97,36 +88,18 @@ public sealed unsafe partial class Backend : IGameRenderBackend
     {
         int w = upload.View.ViewSize.X;
         int h = upload.View.ViewSize.Y;
-
-        if (_nativeReady)
-            UploadNative(w, h, upload);
-        else
-        {
-            EnsureProcessedPixels(w * h);
-            Array.Copy(upload.Pixels, _processedPixels, _processedPixels.Length);
-            ApplyFallbackEffects(_processedPixels, upload);
-            DrawCrosshairIntoPixels(_processedPixels, w, h);
-            UploadSdl(w, h);
-        }
+        UploadNative(w, h, upload);
     }
 
     public void ClearFrame(Size viewportSize, Tunnerer.Core.Types.Color c)
     {
-        if (_nativeReady)
-        {
-            float* color = stackalloc float[4];
-            color[0] = c.R / 255f;
-            color[1] = c.G / 255f;
-            color[2] = c.B / 255f;
-            color[3] = c.A / 255f;
-            _context->ClearRenderTargetView(_backbufferRTV, color);
-        }
-        else
-        {
-            _ = viewportSize;
-            _sdl.SetRenderDrawColor(_sdlRenderer, c.R, c.G, c.B, c.A);
-            _sdl.RenderClear(_sdlRenderer);
-        }
+        _ = viewportSize;
+        float* color = stackalloc float[4];
+        color[0] = c.R / 255f;
+        color[1] = c.G / 255f;
+        color[2] = c.B / 255f;
+        color[3] = c.A / 255f;
+        _context->ClearRenderTargetView(_backbufferRTV, color);
     }
 
     public void NewFrame(int windowW, int windowH, float deltaTime)
@@ -137,42 +110,33 @@ public sealed unsafe partial class Backend : IGameRenderBackend
 
     public void Render()
     {
-        if (_nativeReady)
+        if (!EnsureSwapChainSize())
+            return;
+
+        if (_displaySrv != null || _sceneSrv != null)
         {
-            if (!EnsureSwapChainSize())
-                return;
-
-            if (_displaySrv != null || _sceneSrv != null)
-            {
-                long t0 = Stopwatch.GetTimestamp();
-                // Match blit viewport to uploaded scene size to avoid stretching
-                // into the bottom HUD strip area.
-                int blitW = _sceneTexW > 0 ? Math.Min(_sceneTexW, _swapChainW) : _swapChainW;
-                int blitH = _sceneTexH > 0 ? Math.Min(_sceneTexH, _swapChainH) : _swapChainH;
-                PrepareFullscreenPass(_backbufferRTV, blitW, blitH, _blitPs);
-                ID3D11ShaderResourceView* srv = _displaySrv != null ? _displaySrv : _sceneSrv;
-                _context->PSSetShaderResources(0, 1, &srv);
-                _context->Draw(3, 0);
-                ID3D11ShaderResourceView* clearSrv = null;
-                _context->PSSetShaderResources(0, 1, &clearSrv);
-                _profileFinalBlitTicks += Stopwatch.GetTimestamp() - t0;
-            }
-
-            if (SupportsUi)
-            {
-                long t0 = Stopwatch.GetTimestamp();
-                _imgui!.Render(_backbufferRTV, _swapChainW, _swapChainH);
-                _profileUiRenderTicks += Stopwatch.GetTimestamp() - t0;
-            }
-
-            _swapChain->Present(1, 0);
+            long t0 = Stopwatch.GetTimestamp();
+            // Match blit viewport to uploaded scene size to avoid stretching
+            // into the bottom HUD strip area.
+            int blitW = _sceneTexW > 0 ? Math.Min(_sceneTexW, _swapChainW) : _swapChainW;
+            int blitH = _sceneTexH > 0 ? Math.Min(_sceneTexH, _swapChainH) : _swapChainH;
+            PrepareFullscreenPass(_backbufferRTV, blitW, blitH, _blitPs);
+            ID3D11ShaderResourceView* srv = _displaySrv != null ? _displaySrv : _sceneSrv;
+            _context->PSSetShaderResources(0, 1, &srv);
+            _context->Draw(3, 0);
+            ID3D11ShaderResourceView* clearSrv = null;
+            _context->PSSetShaderResources(0, 1, &clearSrv);
+            _profileFinalBlitTicks += Stopwatch.GetTimestamp() - t0;
         }
-        else
+
+        if (SupportsUi)
         {
-            if (_sdlFrameTexture != null)
-                _sdl.RenderCopy(_sdlRenderer, _sdlFrameTexture, null, null);
-            _sdl.RenderPresent(_sdlRenderer);
+            long t0 = Stopwatch.GetTimestamp();
+            _imgui!.Render(_backbufferRTV, _swapChainW, _swapChainH);
+            _profileUiRenderTicks += Stopwatch.GetTimestamp() - t0;
         }
+
+        _swapChain->Present(1, 0);
     }
 
     public void Dispose()
@@ -207,9 +171,6 @@ public sealed unsafe partial class Backend : IGameRenderBackend
         if (_swapChain != null) { _swapChain->Release(); _swapChain = null; }
         if (_context != null) { _context->Release(); _context = null; }
         if (_device != null) { _device->Release(); _device = null; }
-
-        if (_sdlFrameTexture != null) { _sdl.DestroyTexture(_sdlFrameTexture); _sdlFrameTexture = null; }
-        if (_sdlRenderer != null) { _sdl.DestroyRenderer(_sdlRenderer); _sdlRenderer = null; }
 
         _d3d11.Dispose();
     }

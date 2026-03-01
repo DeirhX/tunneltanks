@@ -13,22 +13,6 @@ public sealed unsafe partial class Backend
 {
     private void UploadNative(int w, int h, in GamePixelsUpload upload)
     {
-        if (_forceCpuFallbackEffects)
-        {
-            EnsureProcessedPixels(w * h);
-            Array.Copy(upload.Pixels, _processedPixels, _processedPixels.Length);
-            ApplyFallbackEffects(_processedPixels, upload);
-            DrawCrosshairIntoPixels(_processedPixels, w, h);
-            EnsureSceneTexture(w, h);
-            fixed (uint* ptr = _processedPixels)
-            {
-                _context->UpdateSubresource(
-                    (ID3D11Resource*)_sceneTexture, 0, null, ptr, (uint)(w * sizeof(uint)), 0);
-            }
-            _displaySrv = _sceneSrv;
-            return;
-        }
-
         EnsureSceneTexture(w, h);
         long t0 = Stopwatch.GetTimestamp();
         UpdateTerrainAuxTexture(upload.TerrainAux, upload.View.WorldSize, upload.AuxDirtyRect);
@@ -363,6 +347,26 @@ public sealed unsafe partial class Backend
         cbData.NativeBoundaryBlend = Tweaks.Screen.NativeContinuousBoundaryBlend;
         cbData.NativeSampleFactor = upload.NativeSampleCount <= 1 ? 0f : upload.NativeSampleCount <= 2 ? 0.5f : 1f;
         cbData.NativePad = 0f;
+
+        float lx = Tweaks.Screen.LightDirX, ly = Tweaks.Screen.LightDirY, lz = Tweaks.Screen.LightDirZ;
+        float lLen = MathF.Sqrt(lx * lx + ly * ly + lz * lz);
+        if (lLen > 0.001f) { lx /= lLen; ly /= lLen; lz /= lLen; }
+        cbData.LightDirX = lx;
+        cbData.LightDirY = ly;
+        cbData.LightDirZ = lz;
+        cbData.LightNormalStrength = Tweaks.Screen.LightNormalStrength;
+        float hx = lx, hy = ly, hz = lz + 1f;
+        float hLen = MathF.Sqrt(hx * hx + hy * hy + hz * hz);
+        if (hLen > 0.001f) { hx /= hLen; hy /= hLen; hz /= hLen; }
+        cbData.HalfVecX = hx;
+        cbData.HalfVecY = hy;
+        cbData.HalfVecZ = hz;
+        cbData.LightMicroNormalStrength = Tweaks.Screen.LightMicroNormalStrength;
+        cbData.LightAmbient = Tweaks.Screen.LightAmbient;
+        cbData.LightDiffuseWeight = Tweaks.Screen.LightDiffuseWeight;
+        cbData.LightShininess = Tweaks.Screen.LightShininess;
+        cbData.LightSpecularIntensity = Tweaks.Screen.LightSpecularIntensity;
+
         int glowCount = Math.Clamp(upload.TankHeatGlowCount, 0, 8);
         cbData.TankGlowCount = glowCount;
         if (upload.TankHeatGlowData != null)
