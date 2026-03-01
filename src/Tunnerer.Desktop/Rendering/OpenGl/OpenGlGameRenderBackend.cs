@@ -271,8 +271,10 @@ uniform float uMaterialEmissivePulseRange;
 layout (location = 0) out vec4 Out_Color;
 vec3 bright(vec3 c) { return max(c - vec3(uBloomThreshold), vec3(0.0)); }
 void main() {
-    vec3 base = texture(uScene, vUv).rgb;
+    vec4 sceneSample = texture(uScene, vUv);
+    vec3 base = sceneSample.rgb;
     vec3 color = base;
+    float terrainFactor = step(0.999, sceneSample.a);
     if (uQuality >= 1) {
         vec2 tx = vec2(uTexelSize.x, 0.0);
         vec2 ty = vec2(0.0, uTexelSize.y);
@@ -306,7 +308,7 @@ void main() {
     if (uUseTerrainAux > 0 && uPixelScale > 0.0) {
         vec2 screenPx = vUv * uViewSize;
         vec2 worldCell = (uCameraPixels + screenPx) / uPixelScale;
-        vec2 auxUv = (worldCell + vec2(0.5, 0.5)) / uWorldSize;
+        vec2 auxUv = worldCell / uWorldSize;
         vec2 mTexel = vec2(1.0 / uWorldSize.x, 1.0 / uWorldSize.y);
         vec4 a0 = texture(uAuxTex, auxUv);
         vec4 ax1 = texture(uAuxTex, auxUv + vec2(mTexel.x, 0.0));
@@ -337,10 +339,10 @@ void main() {
         float edgeProfile = edgeAmt * smoothstep(0.08, 0.95, boundary);
         float energyMask = clamp(a0.b * 2.0, 0.0, 1.0);
         float outlineDarken = uTerrainMaskOutlineDarken * (1.0 - 0.55 * energyMask);
-        color *= 1.0 - outline * outlineDarken;
-        color *= 1.0 - (1.0 - maskSoft) * edgeProfile * uTerrainMaskCaveDarken;
-        color += vec3(maskSoft * edgeProfile * uTerrainMaskSolidLift);
-        color += vec3(maskSoft * edgeProfile * outline * uTerrainMaskRimLift);
+        color *= 1.0 - outline * outlineDarken * terrainFactor;
+        color *= 1.0 - (1.0 - maskSoft) * edgeProfile * uTerrainMaskCaveDarken * terrainFactor;
+        color += vec3(maskSoft * edgeProfile * uTerrainMaskSolidLift * terrainFactor);
+        color += vec3(maskSoft * edgeProfile * outline * uTerrainMaskRimLift * terrainFactor);
 
         // Boundary-local AA: smooth staircase edges without globally blurring the frame.
         vec3 aaNeighborhood =
@@ -353,7 +355,7 @@ void main() {
             texture(uScene, vUv + vec2(-mTexel.x, mTexel.y)).rgb +
             texture(uScene, vUv + vec2(-mTexel.x, -mTexel.y)).rgb;
         aaNeighborhood *= (1.0 / 8.0);
-        float aaMix = clamp(edgeProfile * 0.30, 0.0, 1.0);
+        float aaMix = clamp(edgeProfile * 0.30, 0.0, 1.0) * terrainFactor;
         color = mix(color, aaNeighborhood, aaMix);
         float heat = a0.r * 0.50 + (ax1.r + ax2.r + ay1.r + ay2.r) * 0.125;
         if (heat > uTerrainHeatThreshold) {
@@ -365,8 +367,8 @@ void main() {
         float phase = fract(sin(dot(floor(worldCell), vec2(12.9898, 78.233))) * 43758.5453) * 6.2831853;
         float pulse = uMaterialEmissivePulseMin + uMaterialEmissivePulseRange * (0.5 + 0.5 * sin(uTime * uMaterialEmissivePulseFreq + phase));
         float energy = a0.b * 0.50 + (ax1.b + ax2.b + ay1.b + ay2.b) * 0.10 + (ad1.b + ad2.b + ad3.b + ad4.b) * 0.025;
-        color += uMaterialEmissiveEnergyColor * (energy * uMaterialEmissiveEnergyStrength * pulse);
-        color += uMaterialEmissiveScorchedColor * (a0.a * uMaterialEmissiveScorchedStrength * pulse);
+        color += uMaterialEmissiveEnergyColor * (energy * uMaterialEmissiveEnergyStrength * pulse * terrainFactor);
+        color += uMaterialEmissiveScorchedColor * (a0.a * uMaterialEmissiveScorchedStrength * pulse * terrainFactor);
     }
     for (int i = 0; i < 8; i++) {
         if (i >= uTankGlowCount) break;
@@ -618,7 +620,13 @@ void main() {
     ivec2 cellX2 = clamp(cell - ivec2(1, 0), ivec2(0, 0), maxCell);
     ivec2 cellY1 = clamp(cell + ivec2(0, 1), ivec2(0, 0), maxCell);
     ivec2 cellY2 = clamp(cell - ivec2(0, 1), ivec2(0, 0), maxCell);
-    vec3 c0 = texelFetch(uSourceTex, cell, 0).rgb;
+    vec4 c0Full = texelFetch(uSourceTex, cell, 0);
+    vec3 c0 = c0Full.rgb;
+    float entityFlag = c0Full.a;
+    if (entityFlag < 0.999) {
+        Out_Color = vec4(c0, entityFlag);
+        return;
+    }
     vec3 cBlend = c0 * 0.70 +
         texelFetch(uSourceTex, cellX1, 0).rgb * 0.075 +
         texelFetch(uSourceTex, cellX2, 0).rgb * 0.075 +

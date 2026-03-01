@@ -78,8 +78,10 @@ float fbmNoise(float2 p, int octaves)
 
 float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
 {
-    float3 baseColor = sceneTex.Sample(s0, uv).rgb;
+    float4 sceneSample = sceneTex.Sample(s0, uv);
+    float3 baseColor = sceneSample.rgb;
     float3 color = baseColor;
+    float terrainFactor = step(0.999, sceneSample.a);
 
     if (Quality >= 1.0)
     {
@@ -121,7 +123,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     {
         float2 screenPx = uv * ViewSize;
         float2 worldCell = (CameraPixels + screenPx) / PixelScale;
-        float2 auxUv = (worldCell + float2(0.5, 0.5)) / WorldSize;
+        float2 auxUv = worldCell / WorldSize;
         float2 mTexel = float2(1.0 / WorldSize.x, 1.0 / WorldSize.y);
         float4 a0 = auxTex.Sample(s0, auxUv);
         float4 ax1 = auxTex.Sample(s0, auxUv + float2(mTexel.x, 0.0));
@@ -154,10 +156,10 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
         float edgeProfile = edgeAmt * smoothstep(0.05, 0.8, boundary);
         float energyMask = saturate(a0.b * 2.0);
         float outlineDarken = TerrainMaskOutlineDarken * (1.0 - 0.55 * energyMask);
-        color *= 1.0 - outline * outlineDarken;
-        color *= 1.0 - (1.0 - maskSoft) * edgeProfile * TerrainMaskCaveDarken;
-        color += maskSoft * edgeProfile * TerrainMaskSolidLift;
-        color += maskSoft * edgeProfile * outline * TerrainMaskRimLift;
+        color *= 1.0 - outline * outlineDarken * terrainFactor;
+        color *= 1.0 - (1.0 - maskSoft) * edgeProfile * TerrainMaskCaveDarken * terrainFactor;
+        color += maskSoft * edgeProfile * TerrainMaskSolidLift * terrainFactor;
+        color += maskSoft * edgeProfile * outline * TerrainMaskRimLift * terrainFactor;
 
         float3 aaNeighborhood =
             sceneTex.Sample(s0, uv + float2(mTexel.x, 0.0)).rgb +
@@ -169,7 +171,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
             sceneTex.Sample(s0, uv + float2(-mTexel.x, mTexel.y)).rgb +
             sceneTex.Sample(s0, uv + float2(-mTexel.x, -mTexel.y)).rgb;
         aaNeighborhood *= (1.0 / 8.0);
-        float aaMix = saturate(edgeProfile * 0.30);
+        float aaMix = saturate(edgeProfile * 0.30) * terrainFactor;
         color = lerp(color, aaNeighborhood, aaMix);
 
         // --- Directional lighting from SDF-derived normals ---
@@ -199,7 +201,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
             float lit = LightParams.x + LightParams.y * diffuse;
 
             // Apply lighting only to solid terrain, cave stays unlit
-            float lightMix = maskSoft * saturate(edgeProfile * 3.0 + maskSoft);
+            float lightMix = maskSoft * saturate(edgeProfile * 3.0 + maskSoft) * terrainFactor;
             color = lerp(color, color * lit + spec, lightMix);
         }
 
@@ -215,8 +217,8 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
         float phase = frac(sin(dot(floor(worldCell), float2(12.9898, 78.233))) * 43758.5453) * 6.2831853;
         float pulse = MaterialEmissivePulse.y + MaterialEmissivePulse.z * (0.5 + 0.5 * sin(Time * MaterialEmissivePulse.x + phase));
         float energy = a0.b * 0.50 + (ax1.b + ax2.b + ay1.b + ay2.b) * 0.10 + (ad1.b + ad2.b + ad3.b + ad4.b) * 0.025;
-        color += MaterialEmissiveEnergy.rgb * (energy * MaterialEmissiveEnergy.a * pulse);
-        color += MaterialEmissiveScorched.rgb * (a0.a * MaterialEmissiveScorched.a * pulse);
+        color += MaterialEmissiveEnergy.rgb * (energy * MaterialEmissiveEnergy.a * pulse * terrainFactor);
+        color += MaterialEmissiveScorched.rgb * (a0.a * MaterialEmissiveScorched.a * pulse * terrainFactor);
     }
 
     [loop]

@@ -142,7 +142,7 @@ public sealed class HiResEntityRenderer
 
                 int pixelIndex = row + sx;
                 ref uint dst = ref target.AtIndex(pixelIndex);
-                dst = RenderingPixels.Blend(dst, entityColor, alpha);
+                dst = RenderingPixels.MarkEntity(RenderingPixels.Blend(dst, entityColor, alpha));
             }
         }
     }

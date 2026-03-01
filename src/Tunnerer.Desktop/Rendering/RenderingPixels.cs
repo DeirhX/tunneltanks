@@ -2,6 +2,10 @@ namespace Tunnerer.Desktop.Rendering;
 
 public static class RenderingPixels
 {
+    /// <summary>Alpha byte written into entity pixels so GPU shaders can distinguish them from terrain.
+    /// 0xFE → 254/255 ≈ 0.996 in normalized float; shaders test <c>step(0.999, alpha)</c>.</summary>
+    public const uint EntityAlpha = 0xFE000000u;
+
     public static uint PackRgb(float r, float g, float b)
     {
         byte rb = (byte)(r < 0 ? 0 : r > 255 ? 255 : (int)(r + 0.5f));
@@ -9,6 +13,8 @@ public static class RenderingPixels
         byte bb = (byte)(b < 0 ? 0 : b > 255 ? 255 : (int)(b + 0.5f));
         return 0xFF000000u | ((uint)rb << 16) | ((uint)gb << 8) | bb;
     }
+
+    public static uint MarkEntity(uint color) => (color & 0x00FFFFFFu) | EntityAlpha;
 
     public static uint Blend(uint under, uint over, float alpha)
     {

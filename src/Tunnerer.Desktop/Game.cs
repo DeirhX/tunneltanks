@@ -181,6 +181,8 @@ public class Game : IDisposable
                         _world.Projectiles.Draw(compositeSurface);
                         _world.Sprites.Draw(compositeSurface);
                         _world.TankList.Draw(compositeSurface);
+
+                        MarkEntityPixels(_worldPixels, _compositePixels);
                     });
 
                     RenderImGuiFrame(tanks);
@@ -823,6 +825,15 @@ public class Game : IDisposable
         _renderBackend.Dispose();
         _renderer.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private static void MarkEntityPixels(uint[] terrain, uint[] composite)
+    {
+        for (int i = 0; i < composite.Length; i++)
+        {
+            if (composite[i] != terrain[i])
+                composite[i] = RenderingPixels.MarkEntity(composite[i]);
+        }
     }
 
     private static void ProfileSection(ref TimeSpan accumulator, Action action)

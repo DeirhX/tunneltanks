@@ -46,18 +46,23 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     float2 screenPx = uv * ViewSize;
     float2 worldCell = (CameraPixels + screenPx) / max(1.0, PixelScale);
 
-    // Bilinear sampling of source colors using texture UV
-    float2 srcUv = (worldCell + float2(0.5, 0.5)) / WorldSize;
-    float3 bilinearColor = sourceTex.Sample(s0, srcUv).rgb;
-
-    // Nearest-neighbor color for deep solid/cave (avoids bleeding)
+    // Nearest-neighbor fetch (avoids bilinear bleed across entity/terrain boundaries)
     int2 maxCell = int2(max(1.0, WorldSize.x), max(1.0, WorldSize.y)) - int2(1, 1);
     int2 cell = clamp(int2(floor(worldCell)), int2(0, 0), maxCell);
-    float3 nearestColor = sourceTex.Load(int3(cell, 0)).rgb;
+    float4 nearestSample = sourceTex.Load(int3(cell, 0));
+    float3 nearestColor = nearestSample.rgb;
+
+    // Entity pixels are marked with alpha < 1.0 — pass them through unmodified
+    float entityFlag = nearestSample.a;
+    if (entityFlag < 0.999)
+        return float4(nearestColor, entityFlag);
+
+    // Bilinear sampling of source colors using texture UV
+    float2 texUv = worldCell / WorldSize;
+    float3 bilinearColor = sourceTex.Sample(s0, texUv).rgb;
 
     // SDF value: 0 = deep cave, 0.5 = boundary, 1 = deep solid
-    float2 auxUv = (worldCell + float2(0.5, 0.5)) / WorldSize;
-    float sdf = auxTex.Sample(s0, auxUv).g;
+    float sdf = auxTex.Sample(s0, texUv).g;
 
     // Smooth alpha from SDF — transition width adapts to edge softness
     float edgeSoftness = max(0.02, NativeContinuousParams.x);
