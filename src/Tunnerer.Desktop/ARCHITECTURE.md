@@ -7,7 +7,7 @@ This document describes the current rendering model used by the desktop client, 
 `Tunnerer.Desktop` has a backend-agnostic render contract and two active implementations:
 
 - `OpenGlGameRenderBackend`
-- `Dx11GameRenderBackend`
+- `Tunnerer.Desktop.Rendering.Dx11.Backend`
 
 Core orchestration lives in `Game.cs`; platform/windowing lives in `Rendering/SdlRenderer.cs`.
 
@@ -85,28 +85,53 @@ DX11 backend now has:
 - native swap chain + backbuffer RTV
 - scene texture + SRV (uploaded from CPU frame buffer)
 - post-process texture + RTV + SRV
+- native-source texture + SRV for native continuous terrain mode
 - terrain aux texture + SRV with dirty-rect uploads
-- fullscreen VS + two PS variants:
+- fullscreen VS + three PS variants:
+  - native continuous terrain PS
   - post-process PS
   - final blit PS
-- DX11 ImGui renderer/controller (`Dx11ImGuiController`)
+- DX11 ImGui renderer/controller (`ImGuiController`)
 - DX11 texture manager for HUD sprites (returns `ID3D11ShaderResourceView*` encoded as `nint`)
 
 `SupportsUi = true` when native DX11 init succeeds; `GameTextureId` is an SRV pointer for ImGui.
+
+DX11 implementation is split by responsibility:
+
+- `Backend` partials (`Backend.*.cs`) for lifecycle, init, native pass, CPU fallback, SDL fallback, profiling, and shader compiler interop
+- shader sources are grouped under `Rendering/Dx11/Shaders/`:
+  - `FullscreenVs.cs`
+  - `BlitPs.cs`
+  - `PostPs.cs`
+  - `TerrainPs.cs`
 
 ### DX11 Render Stages
 
 `UploadGamePixels` (native path):
 
-1. upload scene texture (`UpdateSubresource`)
-2. update terrain aux texture (full or dirty rect)
-3. run post-process pass into post RTV
+1. update terrain aux texture (full or dirty rect)
+2. upload scene texture (`UpdateSubresource`) or native-source texture (native continuous mode)
+3. optional native continuous terrain pass into scene RTV
+4. run post-process pass into post RTV
 
 `Render`:
 
 1. fullscreen blit of display SRV to backbuffer RTV
 2. ImGui draw on top (HUD + overlays)
 3. `swapChain->Present`
+
+### Per-frame DX11 Walkthrough
+
+1. `Game.RenderImGuiFrame` computes the render `viewSize` (window minus HUD strip when UI is enabled), updates camera, and builds `RenderView`.
+2. Terrain is rendered into the hi-res pixel buffer (full redraw, or scroll copy + exposed strips + dirty updates).
+3. Entities are composited into that same hi-res pixel buffer.
+4. Terrain auxiliary payload and tank glow metadata are built.
+5. `Game` sends `GamePixelsUpload` to `IGameRenderBackend.UploadGamePixels`.
+6. `Backend.UploadGamePixels` uploads scene pixels to `_sceneTexture`, updates `_terrainAuxTexture` (full/dirty rect), then runs the post pass.
+7. `RunPostProcessPass` binds `_postRtv`, scene/aux SRVs, updates `PostParamsCBuffer`, and draws the fullscreen triangle into `_postTexture`.
+8. `Game` clears the frame, starts backend UI frame (`NewFrame`), and records HUD draw calls (`GameHud.Draw`).
+9. `Backend.Render` blits `_displaySrv` (or `_sceneSrv`) to backbuffer using a viewport matched to scene texture size, then renders ImGui.
+10. Swapchain present displays the final composed frame.
 
 ### DX11 Safety/Debug Toggles
 

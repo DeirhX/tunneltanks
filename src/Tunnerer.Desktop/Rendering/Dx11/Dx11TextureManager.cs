@@ -1,20 +1,21 @@
-namespace Tunnerer.Desktop.Rendering;
+namespace Tunnerer.Desktop.Rendering.Dx11;
 
 using Silk.NET.Direct3D11;
 using Silk.NET.DXGI;
 using StbImageSharp;
+using Tunnerer.Desktop.Rendering;
 
 /// <summary>
 /// Loads PNG/JPG images from disk and creates DX11 SRVs suitable for use with ImGui.
 /// Returned texture IDs are raw ID3D11ShaderResourceView pointers cast to nint.
 /// </summary>
-public sealed unsafe class Dx11TextureManager : ITextureLoader
+public sealed unsafe class TextureManager : ITextureLoader
 {
-    private readonly Dx11GameRenderBackend _backend;
+    private readonly Backend _backend;
     private readonly List<nint> _srvHandles = [];
     private bool _disposed;
 
-    public Dx11TextureManager(Dx11GameRenderBackend backend)
+    public TextureManager(Backend backend)
     {
         _backend = backend;
         StbImage.stbi_set_flip_vertically_on_load(0);

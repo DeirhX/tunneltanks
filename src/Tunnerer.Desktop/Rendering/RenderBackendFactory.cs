@@ -3,6 +3,7 @@ namespace Tunnerer.Desktop.Rendering;
 using Silk.NET.OpenGL;
 using Silk.NET.SDL;
 using Tunnerer.Core.Config;
+using Tunnerer.Desktop.Rendering.Dx11;
 
 public static unsafe class RenderBackendFactory
 {
@@ -39,9 +40,9 @@ public static unsafe class RenderBackendFactory
 
     private static RenderBackendServices CreateDx11Services(Sdl sdl, Window* window)
     {
-        var backend = new Dx11GameRenderBackend(sdl, window);
+        var backend = new Backend(sdl, window);
         return new RenderBackendServices(
             Backend: backend,
-            Textures: new Dx11TextureManager(backend));
+            Textures: new TextureManager(backend));
     }
 }

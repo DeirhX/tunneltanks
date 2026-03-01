@@ -1,4 +1,4 @@
-namespace Tunnerer.Desktop.Rendering;
+namespace Tunnerer.Desktop.Rendering.Dx11;
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -14,7 +14,7 @@ using Silk.NET.SDL;
 /// <summary>
 /// SDL2 + DX11 Dear ImGui bridge (input + UI draw only).
 /// </summary>
-public sealed unsafe class Dx11ImGuiController : IDisposable
+public sealed unsafe class ImGuiController : IDisposable
 {
     private readonly Sdl _sdl;
     private readonly Window* _window;
@@ -38,7 +38,7 @@ public sealed unsafe class Dx11ImGuiController : IDisposable
 
     private bool _disposed;
 
-    public Dx11ImGuiController(Sdl sdl, Window* window, ID3D11Device* device, ID3D11DeviceContext* context, int windowW, int windowH)
+    public ImGuiController(Sdl sdl, Window* window, ID3D11Device* device, ID3D11DeviceContext* context, int windowW, int windowH)
     {
         _sdl = sdl;
         _window = window;
