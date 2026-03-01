@@ -624,10 +624,12 @@ float4 main(PS_INPUT input) : SV_Target
         _ = fn(blob);
     }
 
+    #pragma warning disable CS0649 // Interop struct is populated by native code.
     private struct ID3DBlob
     {
         public void** LpVtbl;
     }
+    #pragma warning restore CS0649
 
     [StructLayout(LayoutKind.Sequential)]
     private struct VertexConstants

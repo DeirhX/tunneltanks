@@ -1,8 +1,3 @@
-namespace Tunnerer.Desktop.Rendering.Dx11.Shaders;
-
-internal static class FullscreenVs
-{
-    public const string Source = @"
 struct VSOut
 {
     float4 pos : SV_POSITION;
@@ -16,5 +11,4 @@ VSOut main(uint id : SV_VertexID)
     else if (id == 1) { o.pos = float4(-1, 3, 0, 1); o.uv = float2(0, -1); }
     else { o.pos = float4(3, -1, 0, 1); o.uv = float2(2, 1); }
     return o;
-}";
 }

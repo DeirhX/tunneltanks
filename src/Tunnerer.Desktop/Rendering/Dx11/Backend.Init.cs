@@ -4,7 +4,6 @@ using Silk.NET.Core.Native;
 using Silk.NET.Direct3D11;
 using Silk.NET.DXGI;
 using Silk.NET.SDL;
-using Tunnerer.Desktop.Rendering.Dx11.Shaders;
 
 public sealed unsafe partial class Backend
 {
@@ -110,69 +109,43 @@ public sealed unsafe partial class Backend
 
     private bool CreateFullscreenPipeline()
     {
-        string vsSource = FullscreenVs.Source;
-        string blitPsSource = BlitPs.Source;
-        string postPsSource = PostPs.Source;
-        string terrainPsSource = TerrainPs.Source;
-
-        ID3DBlob* vsBlob;
-        ID3DBlob* psBlob;
-        try
-        {
-            vsBlob = CompileShader(vsSource, "main", "vs_5_0");
-            if (vsBlob == null)
-                return false;
-            psBlob = CompileShader(blitPsSource, "main", "ps_5_0");
-        }
-        catch (DllNotFoundException e)
-        {
-            Console.WriteLine($"[Render] D3DCompile unavailable: {e.Message}");
+        if (!TryGetShaderBytecode("FullscreenVs", "vs_5_0", out byte[]? vsBytecode) || vsBytecode == null)
             return false;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"[Render] D3DCompile failed: {e.Message}");
-            return false;
-        }
-        if (psBlob == null)
-        {
-            BlobRelease(vsBlob);
-            return false;
-        }
 
         ID3D11VertexShader* vs = null;
-        int hr = _device->CreateVertexShader(BlobGetBufferPointer(vsBlob), BlobGetBufferSize(vsBlob), null, &vs);
+        int hr;
+        fixed (byte* pVsBytecode = vsBytecode)
+            hr = _device->CreateVertexShader(pVsBytecode, (nuint)vsBytecode.Length, null, &vs);
         if (hr < 0 || vs == null)
-        {
-            BlobRelease(vsBlob);
-            BlobRelease(psBlob);
             return false;
-        }
         _fullscreenVs = vs;
+
+        if (!TryGetShaderBytecode("BlitPs", "ps_5_0", out byte[]? blitBytecode) || blitBytecode == null)
+            return false;
+
         ID3D11PixelShader* ps = null;
-        hr = _device->CreatePixelShader(BlobGetBufferPointer(psBlob), BlobGetBufferSize(psBlob), null, &ps);
-        BlobRelease(vsBlob);
-        BlobRelease(psBlob);
+        fixed (byte* pBlitBytecode = blitBytecode)
+            hr = _device->CreatePixelShader(pBlitBytecode, (nuint)blitBytecode.Length, null, &ps);
         if (hr < 0 || ps == null)
             return false;
         _blitPs = ps;
 
-        ID3DBlob* postPsBlob = CompileShader(postPsSource, "main", "ps_5_0");
-        if (postPsBlob == null)
+        if (!TryGetShaderBytecode("PostPs", "ps_5_0", out byte[]? postBytecode) || postBytecode == null)
             return false;
+
         ID3D11PixelShader* postPs = null;
-        hr = _device->CreatePixelShader(BlobGetBufferPointer(postPsBlob), BlobGetBufferSize(postPsBlob), null, &postPs);
-        BlobRelease(postPsBlob);
+        fixed (byte* pPostBytecode = postBytecode)
+            hr = _device->CreatePixelShader(pPostBytecode, (nuint)postBytecode.Length, null, &postPs);
         if (hr < 0 || postPs == null)
             return false;
         _postPs = postPs;
 
-        ID3DBlob* terrainPsBlob = CompileShader(terrainPsSource, "main", "ps_5_0");
-        if (terrainPsBlob == null)
+        if (!TryGetShaderBytecode("TerrainPs", "ps_5_0", out byte[]? terrainBytecode) || terrainBytecode == null)
             return false;
+
         ID3D11PixelShader* terrainPs = null;
-        hr = _device->CreatePixelShader(BlobGetBufferPointer(terrainPsBlob), BlobGetBufferSize(terrainPsBlob), null, &terrainPs);
-        BlobRelease(terrainPsBlob);
+        fixed (byte* pTerrainBytecode = terrainBytecode)
+            hr = _device->CreatePixelShader(pTerrainBytecode, (nuint)terrainBytecode.Length, null, &terrainPs);
         if (hr < 0 || terrainPs == null)
             return false;
         _terrainPs = terrainPs;

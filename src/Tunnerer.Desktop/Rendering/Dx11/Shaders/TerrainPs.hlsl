@@ -1,8 +1,3 @@
-namespace Tunnerer.Desktop.Rendering.Dx11.Shaders;
-
-internal static class TerrainPs
-{
-    public const string Source = @"
 Texture2D sourceTex : register(t0);
 Texture2D auxTex : register(t1);
 SamplerState s0 : register(s0);
@@ -67,5 +62,4 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     edgeW *= (0.15 + 0.35 * saturate(NativeContinuousParams.z));
     float3 color = lerp(c0, cBlend, saturate(edgeW));
     return float4(color, 1.0);
-}";
 }

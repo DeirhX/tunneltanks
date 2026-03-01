@@ -1,10 +1,79 @@
 namespace Tunnerer.Desktop.Rendering.Dx11;
 
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
 public sealed unsafe partial class Backend
 {
+    private static string GetShaderOutputPath(string fileName) =>
+        Path.Combine(AppContext.BaseDirectory, "Shaders", fileName);
+
+    private static byte[]? LoadShaderBytecode(string shaderFileName)
+    {
+        string path = GetShaderOutputPath(shaderFileName);
+        if (!File.Exists(path))
+            return null;
+
+        try
+        {
+            return File.ReadAllBytes(path);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"[Render] Failed to read shader bytecode '{path}': {e.Message}");
+            return null;
+        }
+    }
+
+    private ID3DBlob* CompileShaderFromSourceFile(string shaderFileName, string entryPoint, string target)
+    {
+        string path = GetShaderOutputPath(shaderFileName);
+        if (!File.Exists(path))
+        {
+            Console.WriteLine($"[Render] Shader source missing: '{path}'.");
+            return null;
+        }
+
+        try
+        {
+            return CompileShader(File.ReadAllText(path), entryPoint, target);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"[Render] Failed to compile shader source '{path}': {e.Message}");
+            return null;
+        }
+    }
+
+    private bool TryGetShaderBytecode(string shaderBaseName, string target, out byte[]? bytecode)
+    {
+        bytecode = LoadShaderBytecode($"{shaderBaseName}.cso");
+        if (bytecode != null)
+            return true;
+
+#if DEBUG
+        Console.WriteLine($"[Render] Missing '{shaderBaseName}.cso'; using Debug runtime compile fallback.");
+        ID3DBlob* blob = CompileShaderFromSourceFile($"{shaderBaseName}.hlsl", "main", target);
+        if (blob == null)
+            return false;
+
+        try
+        {
+            bytecode = new byte[(int)BlobGetBufferSize(blob)];
+            Marshal.Copy((nint)BlobGetBufferPointer(blob), bytecode, 0, bytecode.Length);
+            return true;
+        }
+        finally
+        {
+            BlobRelease(blob);
+        }
+#else
+        Console.WriteLine($"[Render] Missing precompiled shader '{shaderBaseName}.cso'.");
+        return false;
+#endif
+    }
+
     private ID3DBlob* CompileShader(string source, string entryPoint, string target)
     {
         byte[] srcBytes = Encoding.UTF8.GetBytes(source);
@@ -73,6 +142,7 @@ public sealed unsafe partial class Backend
         _ = fn(blob);
     }
 
+    #pragma warning disable CS0649 // Interop structs are populated by native code / binary layout.
     private struct ID3DBlob
     {
         public void** LpVtbl;
@@ -99,4 +169,5 @@ public sealed unsafe partial class Backend
         public float TankGlowCount, _pad0, _pad1, _pad2;
         public fixed float TankGlow[32];
     }
+    #pragma warning restore CS0649
 }

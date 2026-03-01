@@ -1,8 +1,3 @@
-namespace Tunnerer.Desktop.Rendering.Dx11.Shaders;
-
-internal static class PostPs
-{
-    public const string Source = @"
 Texture2D sceneTex : register(t0);
 Texture2D auxTex : register(t1);
 SamplerState s0 : register(s0);
@@ -171,5 +166,4 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     }
 
     return float4(color, 1.0);
-}";
 }
