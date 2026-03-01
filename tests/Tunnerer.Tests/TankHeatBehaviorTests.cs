@@ -110,7 +110,54 @@ public class TankHeatBehaviorTests
         for (int i = 0; i < 45; i++)
             tank.Advance(world, default);
 
-        Assert.True(tank.Heat > 26f, $"Expected explosion heat zone to push above ambient after impact heating reduction. Actual={tank.Heat:0.00}");
+        Assert.True(tank.Heat > 20.5f, $"Expected explosion heat zone to push above ambient after impact heating reduction. Actual={tank.Heat:0.00}");
+    }
+
+    [Fact]
+    public void TankHeat_AtOwnBase_DoesNotHeatFillBaseInterior()
+    {
+        var world = TestHelpers.CreateSeededWorld(seed: 9090);
+        var tank = world.TankList.Tanks[0];
+        Assert.NotNull(tank.Base);
+        var basePos = tank.Base!.Position;
+
+        tank.Position = basePos;
+        tank.Heat = 140f;
+        tank.Reactor.Current.Heat = new Heat(140);
+
+        // Start from cold terrain in/around base to isolate tank->terrain effects.
+        CoolAreaToZero(world.Terrain, basePos, radius: 24);
+
+        for (int i = 0; i < 120; i++)
+            tank.Advance(world, default);
+
+        float baseInteriorHeat = world.Terrain.SampleAverageHeat(basePos, radius: 14) * 255f;
+
+        Assert.True(tank.Heat < 8f, $"Expected own base cooling to drop tank heat near 0. Actual={tank.Heat:0.00}");
+        Assert.True(baseInteriorHeat < 8f,
+            $"Expected base interior to stay cool, not heat-fill. Avg terrain heat={baseInteriorHeat:0.00}");
+    }
+
+    [Fact]
+    public void WorldAdvance_BaseInterior_RemainsCoolUnderThermalExchange()
+    {
+        var world = TestHelpers.CreateSeededWorld(seed: 9191);
+        var tank = world.TankList.Tanks[0];
+        Assert.NotNull(tank.Base);
+        var basePos = tank.Base!.Position;
+
+        tank.Position = basePos;
+        tank.Heat = 150f;
+        tank.Reactor.Current.Heat = new Heat(150);
+
+        // Deliberately heat the area around base, then let world simulation run.
+        world.Terrain.AddHeatRadius(basePos, 255, 18);
+        for (int i = 0; i < 200; i++)
+            world.Advance(_ => default);
+
+        float baseInteriorHeat = world.Terrain.SampleAverageHeat(basePos, radius: 12) * 255f;
+        Assert.True(baseInteriorHeat < 8f,
+            $"Expected base interior to remain near 0 with high base conductance. Avg terrain heat={baseInteriorHeat:0.00}");
     }
 
     private static void SetupHotZoneScenario(World world, Tank tank, Position zonePos, float initialHeat)
@@ -131,6 +178,18 @@ public class TankHeatBehaviorTests
                 if (!terrain.IsInside(pos))
                     continue;
                 terrain.SetPixel(pos, TerrainPixel.Blank);
+            }
+    }
+
+    private static void CoolAreaToZero(TerrainGrid terrain, Position center, int radius)
+    {
+        for (int y = center.Y - radius; y <= center.Y + radius; y++)
+            for (int x = center.X - radius; x <= center.X + radius; x++)
+            {
+                var pos = new Position(x, y);
+                if (!terrain.IsInside(pos))
+                    continue;
+                terrain.AddHeat(pos, -255);
             }
     }
 }

@@ -133,6 +133,7 @@ public class World
         }
 
         _terrain.CoolDown(Tweaks.World.HeatCooldownPerTick, Tweaks.World.HeatDiffuseRate);
+        CoolBaseInteriorHeat();
 
         int w = _terrain.Width, h = _terrain.Height;
 
@@ -259,6 +260,24 @@ public class World
         if (neighbors <= 2) return false;
         int chance = Tweaks.World.DirtRegrowSpeed * neighbors * modifier;
         return Roll1000(x, y, salt) < chance;
+    }
+
+    private void CoolBaseInteriorHeat()
+    {
+        int half = Tweaks.Base.BaseSize / 2;
+        foreach (var b in _tankBases.Bases)
+        {
+            for (int dy = -half + 1; dy <= half - 1; dy++)
+                for (int dx = -half + 1; dx <= half - 1; dx++)
+                {
+                    var pos = b.Position + new Offset(dx, dy);
+                    if (!_terrain.IsInside(pos))
+                        continue;
+                    if (_terrain.GetHeat(pos) == 0)
+                        continue;
+                    _terrain.AddHeat(pos, -255);
+                }
+        }
     }
 
     private int Roll1000(int x, int y, uint salt)

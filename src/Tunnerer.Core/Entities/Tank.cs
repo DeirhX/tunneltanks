@@ -206,17 +206,19 @@ public class Tank
         float nextHeat = Heat;
         nextHeat += TankHeatModel.ComputeActionHeat(_frameDugPixels, _frameShotFired);
 
+        var baseColl = world.TankBases.CheckBaseCollision(Position);
+        bool atOwnBase = baseColl != null && baseColl.Color == Color;
+
         float terrainHeatNorm = world.Terrain.SampleAverageHeat(Position, Tweaks.Tank.DigRadius);
-        float ambient = Tweaks.Tank.HeatAmbientOutsideBase;
-        float terrainTemperature = ambient + terrainHeatNorm * (255f - ambient);
+        float sampledTerrainTemperature = terrainHeatNorm * 255f;
+        float ambientBaseline = atOwnBase ? 0f : Tweaks.Tank.HeatAmbientOutsideBase;
+        float terrainTemperature = MathF.Max(ambientBaseline, sampledTerrainTemperature);
         float dQTerrain = TankHeatModel.ComputeTankTerrainHeatFlow(nextHeat, terrainTemperature);
         nextHeat += TankHeatModel.ComputeTankDeltaFromHeatFlow(dQTerrain);
         int terrainDelta = (int)MathF.Round(TankHeatModel.ComputeTerrainDeltaFromHeatFlow(dQTerrain));
         if (terrainDelta != 0)
             world.Terrain.AddHeatRadius(Position, terrainDelta, Tweaks.Tank.DigRadius);
 
-        var baseColl = world.TankBases.CheckBaseCollision(Position);
-        bool atOwnBase = baseColl != null && baseColl.Color == Color;
         nextHeat += TankHeatModel.ComputeTankAmbientExchange(nextHeat, atOwnBase);
 
         int damage = TankHeatModel.ComputeOverheatDamage(nextHeat);
