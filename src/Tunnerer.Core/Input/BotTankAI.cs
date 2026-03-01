@@ -13,7 +13,7 @@ public class BotTankAI
     private readonly record struct BehaviorProfile(
         string Name,
         float LowHealthRatio,
-        float LowEnergyRatio,
+        float HighHeatRatio,
         int OutgunnedHealthGap,
         int ShootChanceLosPermille,
         int ShootChanceDigPermille,
@@ -32,7 +32,7 @@ public class BotTankAI
         new(
             Name: "cautious",
             LowHealthRatio: 0.70f,
-            LowEnergyRatio: 0.45f,
+            HighHeatRatio: 0.55f,
             OutgunnedHealthGap: 40,
             ShootChanceLosPermille: 500,
             ShootChanceDigPermille: 250,
@@ -47,7 +47,7 @@ public class BotTankAI
         new(
             Name: "balanced",
             LowHealthRatio: 0.50f,
-            LowEnergyRatio: 0.33f,
+            HighHeatRatio: 0.67f,
             OutgunnedHealthGap: 100,
             ShootChanceLosPermille: 700,
             ShootChanceDigPermille: 450,
@@ -62,7 +62,7 @@ public class BotTankAI
         new(
             Name: "rush",
             LowHealthRatio: 0.30f,
-            LowEnergyRatio: 0.20f,
+            HighHeatRatio: 0.80f,
             OutgunnedHealthGap: 220,
             ShootChanceLosPermille: 900,
             ShootChanceDigPermille: 700,
@@ -168,7 +168,7 @@ public class BotTankAI
     private ControllerOutput DoTwitch(Tank tank, Tank? enemy, TerrainGrid terrain, int relX, int relY)
     {
         var profile = ActiveProfile;
-        if (tank.Reactor.Health < 500 || tank.Reactor.Energy < 8000 ||
+        if (tank.Reactor.Health < 500 || tank.Reactor.Heat > 70 ||
             (Math.Abs(relX) < Tweaks.Base.BaseSize / 2 && Math.Abs(relY) < Tweaks.Base.BaseSize / 2))
         {
             _mode = TwitchMode.Return;
@@ -246,7 +246,8 @@ public class BotTankAI
 
     private ControllerOutput DoRecharge(Tank tank, int relX, int relY)
     {
-        if (tank.Reactor.Health >= 1000 && tank.Reactor.Energy >= 24000)
+        if (tank.Reactor.Health >= Tweaks.Tank.InitialHealth &&
+            tank.Reactor.Heat <= (int)(Tweaks.Tank.HeatCapacity * 0.1f))
         {
             _mode = TwitchMode.Start;
             return default;
@@ -260,9 +261,9 @@ public class BotTankAI
     private bool ShouldRetreat(Tank self, Tank enemy, BehaviorProfile profile)
     {
         bool lowHealth = self.Reactor.Health < (int)(Tweaks.Tank.InitialHealth * profile.LowHealthRatio);
-        bool lowEnergy = self.Reactor.Energy < (int)(Tweaks.Tank.InitialEnergy * profile.LowEnergyRatio);
+        bool highHeat = self.Reactor.Heat > (int)(Tweaks.Tank.HeatCapacity * profile.HighHeatRatio);
         bool outgunned = self.Reactor.Health + profile.OutgunnedHealthGap < enemy.Reactor.Health;
-        return lowHealth || lowEnergy || outgunned;
+        return lowHealth || highHeat || outgunned;
     }
 
     private Offset ChooseCombatMove(Position self, Position enemy, TerrainGrid terrain, bool retreat)

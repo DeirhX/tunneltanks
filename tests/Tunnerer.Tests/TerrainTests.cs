@@ -1,4 +1,5 @@
 using Tunnerer.Core.Terrain;
+using Tunnerer.Core.Config;
 using Tunnerer.Core.Types;
 
 namespace Tunnerer.Tests;
@@ -164,5 +165,26 @@ public class TerrainTests
         var t = MakeTerrain(10, 8);
         t.SetPixelRaw(new Position(3, 5), TerrainPixel.Rock);
         Assert.Equal(TerrainPixel.Rock, t[3 + 5 * 10]);
+    }
+
+    [Fact]
+    public void MaterialHeatExchange_AndAmbient_DriveTowardEquilibrium()
+    {
+        var t = MakeTerrain(16, 16);
+        for (int i = 0; i < 16 * 16; i++)
+            t[i] = TerrainPixel.Rock;
+
+        var hot = new Position(8, 8);
+        t.AddHeat(hot, 255);
+
+        byte startCenter = t.GetHeat(hot);
+        for (int i = 0; i < 200; i++)
+            t.CoolDown(Tweaks.World.HeatCooldownPerTick, Tweaks.World.HeatDiffuseRate);
+
+        byte endCenter = t.GetHeat(hot);
+        byte ambient = (byte)Math.Clamp((int)MathF.Round(Tweaks.World.ThermalAmbientTemperature), 0, 255);
+
+        Assert.True(endCenter < startCenter, $"Expected hot spot to cool from {startCenter}, got {endCenter}");
+        Assert.InRange(endCenter, (byte)Math.Max(0, ambient - 10), (byte)Math.Min(255, ambient + 30));
     }
 }

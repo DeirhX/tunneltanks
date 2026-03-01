@@ -74,6 +74,24 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     float edgeSoftness = max(0.02, NativeContinuousParams.x);
     float alpha = smoothstep(0.5 - edgeSoftness, 0.5 + edgeSoftness, sdf);
 
+    // Boundary-local subpixel smoothing for thin/single-cell canyons.
+    // This hides staircase remnants by averaging 4 nearby SDF samples.
+    float edgeBand = edgeSoftness * 1.8;
+    if (abs(sdf - 0.5) < edgeBand)
+    {
+        float2 sub = float2(0.35, 0.35) / WorldSize;
+        float s1 = auxTex.Sample(s0, sdfUv + float2(-sub.x, -sub.y)).g - 0.025;
+        float s2 = auxTex.Sample(s0, sdfUv + float2( sub.x, -sub.y)).g - 0.025;
+        float s3 = auxTex.Sample(s0, sdfUv + float2(-sub.x,  sub.y)).g - 0.025;
+        float s4 = auxTex.Sample(s0, sdfUv + float2( sub.x,  sub.y)).g - 0.025;
+        float aSub =
+            smoothstep(0.5 - edgeSoftness, 0.5 + edgeSoftness, s1) +
+            smoothstep(0.5 - edgeSoftness, 0.5 + edgeSoftness, s2) +
+            smoothstep(0.5 - edgeSoftness, 0.5 + edgeSoftness, s3) +
+            smoothstep(0.5 - edgeSoftness, 0.5 + edgeSoftness, s4);
+        alpha = (alpha + aSub * 0.25) * 0.5;
+    }
+
     // Blend bilinear (smooth at boundaries) with nearest (sharp deep inside)
     float boundaryProximity = 1.0 - abs(sdf * 2.0 - 1.0);
     float bilinearWeight = smoothstep(0.0, 0.4, boundaryProximity) * NativeContinuousParams.y;

@@ -271,7 +271,22 @@ uniform float uMaterialEmissivePulseRange;
 layout (location = 0) out vec4 Out_Color;
 vec3 bright(vec3 c) { return max(c - vec3(uBloomThreshold), vec3(0.0)); }
 void main() {
-    vec4 sceneSample = texture(uScene, vUv);
+    vec2 hazeOffset = vec2(0.0);
+    for (int i = 0; i < 8; i++) {
+        if (i >= uTankGlowCount) break;
+        vec4 g = uTankGlow[i];
+        vec2 d = vUv - g.xy;
+        float dist2 = dot(d, d);
+        float radius2 = max(1e-6, g.z * g.z);
+        float falloff = clamp(1.0 - dist2 / radius2, 0.0, 1.0);
+        if (falloff <= 0.0) continue;
+        vec2 swirlDir = normalize(vec2(-d.y, d.x) + vec2(1e-4, -1e-4));
+        float shimmer = sin(uTime * 14.0 + (vUv.x * 210.0 + vUv.y * 170.0) + float(i) * 1.7);
+        float hazeStrength = g.w * falloff * falloff * 0.0100;
+        hazeOffset += swirlDir * shimmer * hazeStrength;
+    }
+    vec2 hazeUv = clamp(vUv + hazeOffset, uTexelSize * 0.5, vec2(1.0) - uTexelSize * 0.5);
+    vec4 sceneSample = texture(uScene, hazeUv);
     vec3 base = sceneSample.rgb;
     vec3 color = base;
     float terrainFactor = step(0.999, sceneSample.a);
@@ -358,11 +373,14 @@ void main() {
         float aaMix = clamp(edgeProfile * 0.30, 0.0, 1.0) * terrainFactor;
         color = mix(color, aaNeighborhood, aaMix);
         float heat = a0.r * 0.50 + (ax1.r + ax2.r + ay1.r + ay2.r) * 0.125;
-        if (heat > uTerrainHeatThreshold) {
-            float t2 = heat * heat;
-            color.r += uTerrainHeatGlowColor.r * t2;
-            color.g += uTerrainHeatGlowColor.g * t2 * heat;
-            color.b += uTerrainHeatGlowColor.b * t2 * t2;
+        float heatNorm = clamp((heat - uTerrainHeatThreshold) / max(1e-4, 1.0 - uTerrainHeatThreshold), 0.0, 1.0);
+        if (heatNorm > 0.0) {
+            float tail = pow(heatNorm, 1.20);
+            float peakBoost = 1.0 + 2.6 * pow(heatNorm, 4.0);
+            float glow = tail * peakBoost;
+            color.r += uTerrainHeatGlowColor.r * glow;
+            color.g += uTerrainHeatGlowColor.g * glow * mix(1.20, 0.55, heatNorm);
+            color.b += uTerrainHeatGlowColor.b * glow * mix(1.00, 0.35, heatNorm);
         }
         float phase = fract(sin(dot(floor(worldCell), vec2(12.9898, 78.233))) * 43758.5453) * 6.2831853;
         float pulse = uMaterialEmissivePulseMin + uMaterialEmissivePulseRange * (0.5 + 0.5 * sin(uTime * uMaterialEmissivePulseFreq + phase));
@@ -370,13 +388,19 @@ void main() {
         color += uMaterialEmissiveEnergyColor * (energy * uMaterialEmissiveEnergyStrength * pulse * terrainFactor);
         color += uMaterialEmissiveScorchedColor * (a0.a * uMaterialEmissiveScorchedStrength * pulse * terrainFactor);
     }
-    for (int i = 0; i < 8; i++) {
-        if (i >= uTankGlowCount) break;
-        vec4 g = uTankGlow[i];
-        float falloff = 1.0 - dot(vUv - g.xy, vUv - g.xy) / max(1e-6, g.z * g.z);
+    for (int j = 0; j < 8; j++) {
+        if (j >= uTankGlowCount) break;
+        vec4 g = uTankGlow[j];
+        vec2 d = vUv - g.xy;
+        float falloff = 1.0 - dot(d, d) / max(1e-6, g.z * g.z);
         if (falloff > 0.0) {
-            falloff *= falloff;
-            color += uTankHeatGlowColor * (g.w * falloff);
+            float f2 = falloff * falloff;
+            float halo = clamp(pow(clamp(falloff, 0.0, 1.0), 0.55) - f2 * 0.35, 0.0, 1.0);
+            float glow = g.w * (f2 + 1.20 * halo);
+            color += uTankHeatGlowColor * glow;
+            float entityMask = 1.0 - step(0.999, texture(uScene, vUv).a);
+            float core = pow(clamp(falloff, 0.0, 1.0), 0.38);
+            color += uTankHeatGlowColor * (g.w * core * 2.0 * entityMask);
         }
     }
     Out_Color = vec4(color, 1.0);
@@ -632,9 +656,24 @@ void main() {
         texelFetch(uSourceTex, cellX2, 0).rgb * 0.075 +
         texelFetch(uSourceTex, cellY1, 0).rgb * 0.075 +
         texelFetch(uSourceTex, cellY2, 0).rgb * 0.075;
-    float m0 = texelFetch(uAuxTex, cell, 0).g;
+    vec2 auxUv = worldCell / uWorldSize + vec2(-0.15, 0.15) / uWorldSize;
+    float m0 = texture(uAuxTex, auxUv).g - 0.025;
     float edge = 1.0 - abs(m0 * 2.0 - 1.0);
     float edgeW = smoothstep(0.0, max(0.001, uEdgeSoftness), edge) * uBoundaryBlend;
+    float edgeBand = max(0.001, uEdgeSoftness) * 1.8;
+    if (abs(m0 - 0.5) < edgeBand) {
+        vec2 sub = vec2(0.35, 0.35) / uWorldSize;
+        float s1 = texture(uAuxTex, auxUv + vec2(-sub.x, -sub.y)).g - 0.025;
+        float s2 = texture(uAuxTex, auxUv + vec2( sub.x, -sub.y)).g - 0.025;
+        float s3 = texture(uAuxTex, auxUv + vec2(-sub.x,  sub.y)).g - 0.025;
+        float s4 = texture(uAuxTex, auxUv + vec2( sub.x,  sub.y)).g - 0.025;
+        float eSub =
+            smoothstep(0.0, max(0.001, uEdgeSoftness), 1.0 - abs(s1 * 2.0 - 1.0)) +
+            smoothstep(0.0, max(0.001, uEdgeSoftness), 1.0 - abs(s2 * 2.0 - 1.0)) +
+            smoothstep(0.0, max(0.001, uEdgeSoftness), 1.0 - abs(s3 * 2.0 - 1.0)) +
+            smoothstep(0.0, max(0.001, uEdgeSoftness), 1.0 - abs(s4 * 2.0 - 1.0));
+        edgeW = (edgeW + eSub * 0.25) * 0.5;
+    }
     edgeW *= (0.15 + 0.35 * clamp(uSampleFactor, 0.0, 1.0));
     vec3 color = mix(c0, cBlend, clamp(edgeW, 0.0, 1.0));
     Out_Color = vec4(color, 1.0);

@@ -17,7 +17,7 @@ public class Tank
     public Reactor Reactor { get; }
     public MaterialContainer Resources { get; }
     public int LivesLeft { get; set; }
-    public bool IsDead => Reactor.Health <= 0 || Reactor.Energy <= 0;
+    public bool IsDead => Reactor.Health <= 0;
     public TankBase? Base { get; }
     public TankTurret Turret { get; }
     public float Heat { get; set; }
@@ -35,8 +35,8 @@ public class Tank
         Position = tankBase.Position;
         LivesLeft = Tweaks.Tank.MaxLives;
         Reactor = new Reactor(
-            initial: new ReactorState(Tweaks.Tank.InitialEnergy, Tweaks.Tank.InitialHealth),
-            capacity: new ReactorState(Tweaks.Tank.EnergyCapacity, Tweaks.Tank.HealthCapacity));
+            initial: new ReactorState(Tweaks.Tank.InitialHeat, Tweaks.Tank.InitialHealth),
+            capacity: new ReactorState(Tweaks.Tank.HeatCapacity, Tweaks.Tank.HealthCapacity));
         Resources = new MaterialContainer(
             initial: new MaterialAmount(0, 0),
             capacity: new MaterialAmount(Tweaks.Tank.ResourceDirtCapacity, Tweaks.Tank.ResourceMineralsCapacity));
@@ -44,6 +44,7 @@ public class Tank
         int fallbackSeed = Environment.TickCount ^ HashSeed(color, tankBase.Position);
         _rng = new FastRandom(rngSeed != 0 ? rngSeed : fallbackSeed);
         Direction = RandomDirection();
+        Heat = Tweaks.Tank.InitialHeat;
     }
 
     public void Advance(World world, ControllerOutput input)
@@ -54,7 +55,8 @@ public class Tank
             return;
         }
 
-        Reactor.Exhaust(new ReactorState(Tweaks.Tank.IdleEnergyDrain, 0));
+        Heat += Tweaks.Tank.IdleHeatGain;
+        Reactor.Current.Heat = new Heat((int)MathF.Round(Heat));
         AdvanceBaseInteraction(world);
         AdvanceTurretAim(input);
         Turret.Update(input.ShootPrimary);
@@ -70,6 +72,7 @@ public class Tank
         if (baseColl == null) return;
 
         baseColl.RechargeTank(Reactor, Color);
+        Heat = Reactor.Heat;
         if (baseColl.Color == Color)
             baseColl.AbsorbResources(Resources, new MaterialAmount(Tweaks.Base.HomeAbsorbDirt, Tweaks.Base.HomeAbsorbMinerals));
     }
@@ -94,7 +97,7 @@ public class Tank
         var bullet = Turret.TryShoot(Position, world.Projectiles);
         if (bullet != null)
         {
-            Reactor.Exhaust(new ReactorState(Tweaks.Tank.ShootEnergyCost, 0));
+            Heat += Tweaks.Tank.ShootHeatGain;
             _frameShotFired = true;
         }
     }
@@ -125,7 +128,7 @@ public class Tank
 
         Direction = dir;
         Position = newPos;
-        Reactor.Exhaust(new ReactorState(Tweaks.Tank.MoveEnergyDrain, 0));
+        Heat += Tweaks.Tank.MoveHeatGain;
     }
 
     private CollisionType TestCollision(TerrainGrid terrain, Position pos, int dir)
@@ -159,6 +162,8 @@ public class Tank
                 {
                     terrain.SetPixel(worldPos, TerrainPixel.Blank);
                     _frameDugPixels++;
+                    if (torchUse)
+                        terrain.AddHeat(worldPos, Tweaks.Tank.TorchTerrainHeatAmount);
                     if (Pixel.IsDirt(pix))
                         Resources.Add(new MaterialAmount(1, 0));
                 }
@@ -167,6 +172,7 @@ public class Tank
                 {
                     terrain.SetPixel(worldPos, TerrainPixel.Blank);
                     _frameDugPixels += 2;
+                    terrain.AddHeatRadius(worldPos, Tweaks.Tank.TorchRockHeatAmount, Tweaks.Tank.TorchRockHeatRadius);
                     if (Pixel.IsMineral(pix))
                         Resources.Add(new MaterialAmount(0, 1));
                 }
@@ -183,13 +189,13 @@ public class Tank
             if (Pixel.IsEnergy(pix))
             {
                 terrain.SetPixel(worldPos, TerrainPixel.Blank);
-                int energyGain = pix switch
+                int cooling = pix switch
                 {
-                    TerrainPixel.EnergyMedium => Tweaks.Tank.EnergyPickupMedium,
-                    TerrainPixel.EnergyHigh => Tweaks.Tank.EnergyPickupHigh,
-                    _ => Tweaks.Tank.EnergyPickupLow,
+                    TerrainPixel.EnergyMedium => Tweaks.Tank.CoolingPickupMedium,
+                    TerrainPixel.EnergyHigh => Tweaks.Tank.CoolingPickupHigh,
+                    _ => Tweaks.Tank.CoolingPickupLow,
                 };
-                Reactor.Add(new ReactorState(energyGain, 0));
+                Heat -= cooling;
             }
             return true;
         });
@@ -197,19 +203,28 @@ public class Tank
 
     private void AdvanceHeat(World world)
     {
-        Heat += TankHeatModel.ComputeActionHeat(_frameDugPixels, _frameShotFired);
+        float nextHeat = Heat;
+        nextHeat += TankHeatModel.ComputeActionHeat(_frameDugPixels, _frameShotFired);
 
-        float terrainHeat = world.Terrain.SampleAverageHeat(Position, Tweaks.Tank.DigRadius);
-        Heat += TankHeatModel.ComputeTerrainAbsorb(terrainHeat);
+        float terrainHeatNorm = world.Terrain.SampleAverageHeat(Position, Tweaks.Tank.DigRadius);
+        float ambient = Tweaks.Tank.HeatAmbientOutsideBase;
+        float terrainTemperature = ambient + terrainHeatNorm * (255f - ambient);
+        float dQTerrain = TankHeatModel.ComputeTankTerrainHeatFlow(nextHeat, terrainTemperature);
+        nextHeat += TankHeatModel.ComputeTankDeltaFromHeatFlow(dQTerrain);
+        int terrainDelta = (int)MathF.Round(TankHeatModel.ComputeTerrainDeltaFromHeatFlow(dQTerrain));
+        if (terrainDelta != 0)
+            world.Terrain.AddHeatRadius(Position, terrainDelta, Tweaks.Tank.DigRadius);
 
         var baseColl = world.TankBases.CheckBaseCollision(Position);
         bool atOwnBase = baseColl != null && baseColl.Color == Color;
-        Heat -= TankHeatModel.ComputeCooling(atOwnBase);
-        Heat = TankHeatModel.ClampHeat(Heat);
+        nextHeat += TankHeatModel.ComputeTankAmbientExchange(nextHeat, atOwnBase);
 
-        int damage = TankHeatModel.ComputeOverheatDamage(Heat);
+        int damage = TankHeatModel.ComputeOverheatDamage(nextHeat);
         if (damage > 0)
             Reactor.Exhaust(new ReactorState(0, damage));
+
+        Heat = TankHeatModel.ClampHeat(nextHeat);
+        Reactor.Current.Heat = new Heat((int)MathF.Round(Heat));
 
         _frameDugPixels = 0;
         _frameShotFired = false;
@@ -218,15 +233,16 @@ public class Tank
     public void Spawn()
     {
         if (Base == null) return;
-        Reactor.Add(new ReactorState(Reactor.EnergyCapacity, Reactor.HealthCapacity));
+        Reactor.Add(new ReactorState(Reactor.HeatCapacity, Reactor.HealthCapacity));
         Position = Base.Position;
         Heat = 0f;
+        Reactor.Current.Heat = new Heat(0);
         _respawning = false;
     }
 
     public void Die(ProjectileList? projectiles = null)
     {
-        Reactor.Exhaust(new ReactorState(Reactor.Energy, Reactor.Health));
+        Reactor.Exhaust(new ReactorState(Reactor.Heat, Reactor.Health));
         _respawning = true;
         _respawnTimer = Tweaks.Tank.RespawnDelay;
 

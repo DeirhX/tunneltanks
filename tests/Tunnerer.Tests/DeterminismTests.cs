@@ -184,7 +184,7 @@ public class DeterminismTests
             hash = Mix(hash, (uint)t.Position.Y);
             hash = Mix(hash, (uint)t.Direction);
             hash = Mix(hash, (uint)t.LivesLeft);
-            hash = Mix(hash, (uint)(int)t.Reactor.Energy);
+            hash = Mix(hash, (uint)(int)t.Reactor.Heat);
             hash = Mix(hash, (uint)(int)t.Reactor.Health);
             hash = Mix(hash, (uint)t.Resources.Dirt);
             hash = Mix(hash, (uint)t.Resources.Minerals);
@@ -202,7 +202,7 @@ public class DeterminismTests
             hash = Mix(hash, (uint)m.State);
             hash = Mix(hash, (uint)m.OwnerColor);
             hash = Mix(hash, m.IsAlive ? 1u : 0u);
-            hash = Mix(hash, (uint)(int)m.Reactor.Energy);
+            hash = Mix(hash, (uint)(int)m.Reactor.Heat);
             hash = Mix(hash, (uint)(int)m.Reactor.Health);
         }
 

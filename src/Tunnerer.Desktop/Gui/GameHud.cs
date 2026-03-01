@@ -103,12 +103,12 @@ public class GameHud
         x += mW;
         dl.AddImage(_buildPanelTex, new Vector2(x, drawY), new Vector2(x + bW, drawY + h));
 
-        // Energy value: inside the green label plate below "ENERGY" text
-        int energy = player.Reactor.Energy;
+        // Heat value: inside the left label plate.
+        int heat = player.Reactor.Heat;
         float plateX = startX + 105f;
         float plateW = 130f;
         float plateY = drawY + 168f;
-        DrawNumberCentered(dl, energy, plateX, plateY, plateW);
+        DrawNumberCentered(dl, heat, plateX, plateY, plateW);
 
         // Shield/health value: inside the blue label plate below "SHIELD" text
         int health = player.Reactor.Health;

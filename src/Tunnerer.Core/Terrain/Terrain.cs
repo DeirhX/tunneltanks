@@ -45,7 +45,7 @@ public class TerrainGrid
         if ((uint)offset >= (uint)_heat.Length) return;
         byte old = _heat[offset];
         int val = old + amount;
-        byte next = (byte)(val > 255 ? 255 : val);
+        byte next = (byte)Math.Clamp(val, 0, 255);
         _heat[offset] = next;
         if (next != old)
             MarkHeatDirty(pos.X, pos.Y);
@@ -61,11 +61,11 @@ public class TerrainGrid
             if (dist2 > radiusSq) return;
             float falloff = 1f - (float)dist2 / radiusSq;
             int scaled = (int)(amount * falloff);
-            if (scaled <= 0) return;
+            if (scaled == 0) return;
             int offset = nx + ny * Width;
             byte old = _heat[offset];
             int val = old + scaled;
-            byte next = (byte)(val > 255 ? 255 : val);
+            byte next = (byte)Math.Clamp(val, 0, 255);
             _heat[offset] = next;
             if (next != old)
                 MarkHeatDirty(nx, ny);
@@ -73,6 +73,7 @@ public class TerrainGrid
     }
 
     private byte[]? _heatTemp;
+    private float[]? _heatExchangeDelta;
 
     public void CoolDown(int decayAmount, float diffuseRate = 0.12f)
     {
@@ -105,7 +106,9 @@ public class TerrainGrid
 
                 float blurred = sum / (float)cnt;
                 float mixed = center + (blurred - center) * diffuseRate;
-                int val = (int)(mixed + 0.5f) - decayAmount;
+                int val = Tweaks.World.EnableMaterialHeatExchange
+                    ? (int)(mixed + 0.5f)
+                    : (int)(mixed + 0.5f) - decayAmount;
                 byte next = (byte)(val < 0 ? 0 : val > 255 ? 255 : val);
                 _heatTemp[idx] = next;
                 if (next != _heat[idx])
@@ -114,6 +117,9 @@ public class TerrainGrid
         }
 
         Array.Copy(_heatTemp, _heat, len);
+
+        if (Tweaks.World.EnableMaterialHeatExchange)
+            ApplyMaterialHeatExchange();
     }
 
     public float SampleAverageHeat(Position center, int radius)
@@ -142,6 +148,103 @@ public class TerrainGrid
             }
         }
     }
+
+    private void ApplyMaterialHeatExchange()
+    {
+        int w = Width, h = Height, len = w * h;
+        if (_heatExchangeDelta == null || _heatExchangeDelta.Length < len)
+            _heatExchangeDelta = new float[len];
+        Array.Clear(_heatExchangeDelta, 0, len);
+
+        for (int y = 0; y < h; y++)
+        {
+            int row = y * w;
+            for (int x = 0; x < w; x++)
+            {
+                int idx = row + x;
+                ThermalMaterial m1 = Pixel.GetThermalMaterial(_data[idx]);
+                float t1 = _heat[idx];
+
+                if (x + 1 < w)
+                    ExchangePair(idx, idx + 1, m1, t1);
+                if (y + 1 < h)
+                    ExchangePair(idx, idx + w, m1, t1);
+                ExchangeAmbient(idx, m1, t1);
+            }
+        }
+
+        for (int i = 0; i < len; i++)
+        {
+            if (_heatExchangeDelta[i] == 0f) continue;
+            byte old = _heat[i];
+            int nextVal = (int)MathF.Round(old + _heatExchangeDelta[i]);
+            byte next = (byte)Math.Clamp(nextVal, 0, 255);
+            _heat[i] = next;
+            if (next != old)
+            {
+                int x = i % w;
+                int y = i / w;
+                MarkHeatDirty(x, y);
+            }
+        }
+    }
+
+    private void ExchangePair(int idxA, int idxB, ThermalMaterial mA, float tA)
+    {
+        ThermalMaterial mB = Pixel.GetThermalMaterial(_data[idxB]);
+        float tB = _heat[idxB];
+        float delta = tA - tB;
+        if (MathF.Abs(delta) < 0.0001f) return;
+
+        float k = GetConductance(mA, mB);
+        float dQ = k * delta * Tweaks.World.ThermalDt;
+        if (MathF.Abs(dQ) < 0.0001f) return;
+
+        float cA = GetHeatCapacity(mA);
+        float cB = GetHeatCapacity(mB);
+
+        _heatExchangeDelta![idxA] -= dQ / cA;
+        _heatExchangeDelta[idxB] += dQ / cB;
+    }
+
+    private void ExchangeAmbient(int idx, ThermalMaterial material, float temperature)
+    {
+        float ambient = Tweaks.World.ThermalAmbientTemperature;
+        float k = GetAmbientConductance(material);
+        float dQ = k * (ambient - temperature) * Tweaks.World.ThermalDt;
+        if (MathF.Abs(dQ) < 0.0001f) return;
+
+        float capacity = GetHeatCapacity(material);
+        _heatExchangeDelta![idx] += dQ / capacity;
+    }
+
+    private static float GetHeatCapacity(ThermalMaterial material) => material switch
+    {
+        ThermalMaterial.Air => Tweaks.World.ThermalCapacityAir,
+        ThermalMaterial.Dirt => Tweaks.World.ThermalCapacityDirt,
+        _ => Tweaks.World.ThermalCapacityStone,
+    };
+
+    private static float GetConductance(ThermalMaterial a, ThermalMaterial b)
+    {
+        if (a > b) (a, b) = (b, a);
+        return (a, b) switch
+        {
+            (ThermalMaterial.Air, ThermalMaterial.Air) => Tweaks.World.ThermalKAirAir,
+            (ThermalMaterial.Air, ThermalMaterial.Dirt) => Tweaks.World.ThermalKAirDirt,
+            (ThermalMaterial.Air, ThermalMaterial.Stone) => Tweaks.World.ThermalKAirStone,
+            (ThermalMaterial.Dirt, ThermalMaterial.Dirt) => Tweaks.World.ThermalKDirtDirt,
+            (ThermalMaterial.Dirt, ThermalMaterial.Stone) => Tweaks.World.ThermalKDirtStone,
+            _ => Tweaks.World.ThermalKStoneStone,
+        };
+    }
+
+    private static float GetAmbientConductance(ThermalMaterial material) => material switch
+    {
+        ThermalMaterial.Air => Tweaks.World.ThermalKAmbientAir,
+        ThermalMaterial.Dirt => Tweaks.World.ThermalKAmbientDirt,
+        _ => Tweaks.World.ThermalKAmbientStone,
+    };
 
     private static int[] BuildNeighborOffsets(int w)
     {

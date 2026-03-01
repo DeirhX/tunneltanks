@@ -78,7 +78,27 @@ float fbmNoise(float2 p, int octaves)
 
 float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
 {
-    float4 sceneSample = sceneTex.Sample(s0, uv);
+    // Tank heat haze: distort scene lookup around hot tanks before post-lighting.
+    float2 hazeOffset = float2(0.0, 0.0);
+    [loop]
+    for (int i = 0; i < 8; i++)
+    {
+        if (i >= (int)TankGlowCount) break;
+        float4 g = TankGlow[i];
+        float2 d = uv - g.xy;
+        float dist2 = dot(d, d);
+        float radius2 = max(1e-6, g.z * g.z);
+        float falloff = saturate(1.0 - dist2 / radius2);
+        if (falloff <= 0.0) continue;
+
+        float2 swirlDir = normalize(float2(-d.y, d.x) + float2(1e-4, -1e-4));
+        float shimmer = sin(Time * 14.0 + (uv.x * 210.0 + uv.y * 170.0) + i * 1.7);
+        float hazeStrength = g.w * falloff * falloff * 0.0100;
+        hazeOffset += swirlDir * shimmer * hazeStrength;
+    }
+
+    float2 hazeUv = clamp(uv + hazeOffset, TexelSize * 0.5, 1.0 - TexelSize * 0.5);
+    float4 sceneSample = sceneTex.Sample(s0, hazeUv);
     float3 baseColor = sceneSample.rgb;
     float3 color = baseColor;
     float terrainFactor = step(0.999, sceneSample.a);
@@ -206,12 +226,16 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
         }
 
         float heat = a0.r * 0.50 + (ax1.r + ax2.r + ay1.r + ay2.r) * 0.125;
-        if (heat > TerrainHeatGlowColorAndThreshold.a)
+        float heatNorm = saturate((heat - TerrainHeatGlowColorAndThreshold.a) / max(1e-4, 1.0 - TerrainHeatGlowColorAndThreshold.a));
+        if (heatNorm > 0.0)
         {
-            float t2 = heat * heat;
-            color.r += TerrainHeatGlowColorAndThreshold.r * t2;
-            color.g += TerrainHeatGlowColorAndThreshold.g * t2 * heat;
-            color.b += TerrainHeatGlowColorAndThreshold.b * t2 * t2;
+            // Orange at warm levels, red at highest heat; ambient is hidden via threshold.
+            float tail = pow(heatNorm, 1.20);
+            float peakBoost = 1.0 + 2.6 * pow(heatNorm, 4.0);
+            float glow = tail * peakBoost;
+            color.r += TerrainHeatGlowColorAndThreshold.r * glow;
+            color.g += TerrainHeatGlowColorAndThreshold.g * glow * lerp(1.20, 0.55, heatNorm);
+            color.b += TerrainHeatGlowColorAndThreshold.b * glow * lerp(1.00, 0.35, heatNorm);
         }
 
         float phase = frac(sin(dot(floor(worldCell), float2(12.9898, 78.233))) * 43758.5453) * 6.2831853;
@@ -222,16 +246,23 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     }
 
     [loop]
-    for (int i = 0; i < 8; i++)
+    for (int j = 0; j < 8; j++)
     {
-        if (i >= (int)TankGlowCount) break;
-        float4 g = TankGlow[i];
+        if (j >= (int)TankGlowCount) break;
+        float4 g = TankGlow[j];
         float2 d = uv - g.xy;
         float falloff = 1.0 - dot(d, d) / max(1e-6, g.z * g.z);
         if (falloff > 0.0)
         {
-            falloff *= falloff;
-            color += TankHeatGlowColor.rgb * (g.w * falloff);
+            float f2 = falloff * falloff;
+            float halo = saturate(pow(saturate(falloff), 0.55) - f2 * 0.35);
+            float glow = g.w * (f2 + 1.20 * halo);
+            color += TankHeatGlowColor.rgb * glow;
+
+            // Make the tank sprite itself radiate when hot, not only the surrounding aura.
+            float entityMask = 1.0 - step(0.999, sceneTex.Sample(s0, uv).a);
+            float core = pow(saturate(falloff), 0.38);
+            color += TankHeatGlowColor.rgb * (g.w * core * 2.0 * entityMask);
         }
     }
 

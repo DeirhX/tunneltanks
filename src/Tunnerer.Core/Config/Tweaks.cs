@@ -65,7 +65,7 @@ public static class Tweaks
         public const float PostVignetteOuterRadius = 0.95f;
         public const float PostTerrainEdgeLightStrength = 0.10f;
         public const float PostTerrainEdgeLightBias = 0.05f;
-        public const float PostTerrainHeatThreshold = 0.01f;
+        public const float PostTerrainHeatThreshold = 0.10f;
         public const float PostTerrainMaskEdgeStrength = 0.18f;
         public const float PostTerrainMaskCaveDarken = 0.12f;
         public const float PostTerrainMaskSolidLift = 0.04f;
@@ -86,12 +86,12 @@ public static class Tweaks
         public const float PostTankHeatGlowR = 0.78f;
         public const float PostTankHeatGlowG = 0.24f;
         public const float PostTankHeatGlowB = 0.04f;
-        public const float PostTankHeatGlowMinHeat = 5f;
+        public const float PostTankHeatGlowMinHeat = 1.5f;
         public const float PostTankHeatGlowBaseRadius = 2.5f;
         public const float PostTankHeatGlowScaleRadius = 2.5f;
-        public const float PostTerrainHeatGlowR = 0.8627f;
-        public const float PostTerrainHeatGlowG = 0.3137f;
-        public const float PostTerrainHeatGlowB = 0.0588f;
+        public const float PostTerrainHeatGlowR = 1.0000f;
+        public const float PostTerrainHeatGlowG = 0.4500f;
+        public const float PostTerrainHeatGlowB = 0.0500f;
         public const byte PostEmissiveEnergyLow = 150;
         public const byte PostEmissiveEnergyMedium = 190;
         public const byte PostEmissiveEnergyHigh = 230;
@@ -121,11 +121,33 @@ public static class Tweaks
         public const int DirtRegrowScorchedModifier = 1;
         public const int DecalDecaySpeed = 40;
         public const int HeatCooldownPerTick = 1;
-        public const float HeatDiffuseRate = 0.18f;
+        public const float HeatDiffuseRate = 0.12f;
         public const int DigThroughRockChance = 250;
         public static readonly TimeSpan RefreshLinkMapInterval = TimeSpan.FromMilliseconds(200);
         public const float MaximumLiveLinkDistance = 100f;
         public const float MaximumTheoreticalLinkDistance = 170f;
+
+        // Optional physically-inspired material heat exchange model.
+        // Disabled by default to preserve current gameplay/visual behavior.
+        public static bool EnableMaterialHeatExchange => true;
+        public const float ThermalDt = 2.0f;
+        public const float ThermalAmbientTemperature = 20f;
+
+        // Effective heat capacities (higher means temperature changes slower).
+        public const float ThermalCapacityAir = 0.8f;
+        public const float ThermalCapacityDirt = 1.4f;
+        public const float ThermalCapacityStone = 2.6f;
+
+        // Pairwise transmission speed (conductance).
+        public const float ThermalKAirAir = 0.180f;
+        public const float ThermalKAirDirt = 0.110f;
+        public const float ThermalKAirStone = 0.070f;
+        public const float ThermalKDirtDirt = 0.160f;
+        public const float ThermalKDirtStone = 0.110f;
+        public const float ThermalKStoneStone = 0.070f;
+        public const float ThermalKAmbientAir = 0.0090f;
+        public const float ThermalKAmbientDirt = 0.0045f;
+        public const float ThermalKAmbientStone = 0.0025f;
     }
 
     public static class Base
@@ -133,17 +155,17 @@ public static class Tweaks
         public const int MinDistance = 150;
         public const int BaseSize = 35;
         public const int DoorSize = 7;
-        public const int InitialEnergy = 15000;
+        public const int InitialHeat = 0;
         public const int InitialHealth = 2000;
-        public const int EnergyCapacity = 30000;
+        public const int HeatCapacity = 100;
         public const int HealthCapacity = 2000;
         public const int MaterialDirtCapacity = 2000;
         public const int MaterialMineralsCapacity = 20000;
-        public const int EnergyRegen = 100;
+        public const int HeatCooldown = 2;
         public const int HealthRegen = 10;
-        public const int HomeRechargeEnergy = 300;
+        public const int HomeCooldownHeat = 6;
         public const int HomeRechargeHealth = 3;
-        public const int ForeignRechargeEnergy = 90;
+        public const int ForeignCooldownHeat = 2;
         public const int ForeignRechargeHealth = 1;
         public const int HomeAbsorbDirt = 15;
         public const int HomeAbsorbMinerals = 15;
@@ -156,27 +178,37 @@ public static class Tweaks
         public const int TurretDelay = 3;
         public const int TurretLength = 4;
         public const int DigRadius = 3;
-        public const int InitialEnergy = 24000;
+        public const int InitialHeat = 0;
         public const int InitialHealth = 1000;
-        public const int EnergyCapacity = 24000;
+        public const int HeatCapacity = 100;
         public const int HealthCapacity = 1000;
         public const int ResourceDirtCapacity = 10000;
         public const int ResourceMineralsCapacity = 10000;
-        public const int IdleEnergyDrain = 3;
-        public const int MoveEnergyDrain = 8;
-        public const int ShootEnergyCost = 160;
-        public const int EnergyPickupLow = 100;
-        public const int EnergyPickupMedium = 200;
-        public const int EnergyPickupHigh = 400;
+        public const int IdleHeatGain = 0;
+        public const int MoveHeatGain = 1;
+        public const float ShootHeatGain = 2.0f;
+        public const int CoolingPickupLow = 8;
+        public const int CoolingPickupMedium = 14;
+        public const int CoolingPickupHigh = 20;
 
         public const float HeatMax = 100f;
         public const float HeatDigPerPixel = 0.008f;
-        public const float HeatShootPerShot = 1.8f;
-        public const float HeatTerrainAbsorb = 0.008f;
-        public const float HeatCoolPerFrame = 0.18f;
-        public const float HeatBaseCoolBonus = 0.30f;
-        public const float HeatOverheatThreshold = 70f;
-        public const float HeatDamagePerFrame = 0.5f;
+        public const float HeatShootPerShot = 0.50f;
+        public const float HeatTerrainAbsorb = 0.004f;
+        public const float HeatCoolPerFrame = 0.12f;
+        public const float HeatBaseCoolBonus = 0.20f;
+        public const float HeatColdCoolingBoost = 0.60f;
+        public const int TorchTerrainHeatAmount = 14;
+        public const int TorchRockHeatAmount = 26;
+        public const int TorchRockHeatRadius = 2;
+        public const float HeatAmbientOutsideBase = 20f;
+        public const float TankHeatCapacity = 20f;
+        public const float TerrainHeatCapacity = 80f;
+        public const float TankTerrainConductance = 10.0f;
+        public const float TankAmbientConductance = 1.0f;
+        public const float TankBaseConductance = 12.0f;
+        public const float HeatSafeMax = 100f;
+        public const float OverheatDamagePerDegree = 0.5f;
     }
 
     public static class Weapon
@@ -189,7 +221,7 @@ public static class Tweaks
 
     public static class Machine
     {
-        public const int ReactorEnergyCapacity = 10000;
+        public const int ReactorHeatCapacity = 100;
         public const int ReactorHealthCapacity = 1000;
         public const int HarvesterIntervalMs = 500;
         public const int ChargerIntervalMs = 200;
@@ -211,11 +243,11 @@ public static class Tweaks
         public static readonly ExplosionParams Normal = new(ShrapnelCount: 14, Speed: 0.56f, Frames: 13);
         public static readonly ExplosionParams Death = new(ShrapnelCount: 100, Speed: 0.25f, Frames: 72);
 
-        public const int BulletHeatAmount = 255;
-        public const int BulletHeatRadius = 5;
-        public const int ShrapnelHitHeat = 200;
-        public const int ShrapnelDigHeatAmount = 255;
-        public const int ShrapnelDigHeatRadius = 3;
+        public const int BulletHeatAmount = 4;
+        public const int BulletHeatRadius = 6;
+        public const int ShrapnelHitHeat = 2;
+        public const int ShrapnelDigHeatAmount = 2;
+        public const int ShrapnelDigHeatRadius = 4;
     }
 
     public static class Colors

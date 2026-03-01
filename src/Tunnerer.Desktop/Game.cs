@@ -478,11 +478,27 @@ public class Game : IDisposable
         for (int i = 0; i < tanks.Count && count < Tweaks.World.MaxPlayers; i++)
         {
             var tank = tanks[i];
-            if (tank.IsDead || tank.Heat < Tweaks.Screen.PostTankHeatGlowMinHeat) continue;
+            if (tank.IsDead) continue;
 
             float t = tank.Heat / Tweaks.Tank.HeatMax;
-            float intensity = t * t;
-            float glowRadiusPx = pixelScale * (Tweaks.Screen.PostTankHeatGlowBaseRadius + Tweaks.Screen.PostTankHeatGlowScaleRadius * t);
+            float minVisible = Tweaks.Screen.PostTankHeatGlowMinHeat / Tweaks.Tank.HeatMax;
+            float damageStart = Tweaks.Tank.HeatSafeMax / Tweaks.Tank.HeatMax;
+            float visibleRange = Math.Max(0.0001f, damageStart - minVisible);
+            // Visual heat reaches peak around overheat onset, so damage state already looks max-hot.
+            float visibleT = Math.Clamp((t - minVisible) / visibleRange, 0.0f, 1.0f);
+            if (tank.Reactor.Health < tank.Reactor.HealthCapacity)
+            {
+                // Health damage should already look close to max-hot for clear player feedback.
+                float damageFrac = 1.0f - (float)tank.Reactor.Health / Math.Max(1f, tank.Reactor.HealthCapacity);
+                float damageVisual = 0.85f + 0.15f * MathF.Sqrt(Math.Clamp(damageFrac * 8.0f, 0.0f, 1.0f));
+                visibleT = Math.Max(visibleT, damageVisual);
+            }
+            if (visibleT <= 0.0f) continue;
+
+            // Keep visibility from lower heat while giving max heat a strong punch.
+            float intensity = visibleT * (0.35f + 2.8f * visibleT * visibleT);
+            float radiusFactor = 0.45f + 0.55f * MathF.Sqrt(visibleT);
+            float glowRadiusPx = pixelScale * (Tweaks.Screen.PostTankHeatGlowBaseRadius + Tweaks.Screen.PostTankHeatGlowScaleRadius * radiusFactor);
             float cx = (tank.Position.X + 0.5f) * pixelScale - camPixelX;
             float cy = (tank.Position.Y + 0.5f) * pixelScale - camPixelY;
 

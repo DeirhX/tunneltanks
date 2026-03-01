@@ -12,28 +12,39 @@ internal static class TankHeatModel
         return heat;
     }
 
-    public static float ComputeTerrainAbsorb(float terrainHeatNormalized)
+    public static float ComputeTankTerrainHeatFlow(float tankTemperature, float terrainTemperature)
     {
-        return terrainHeatNormalized * Tweaks.Tank.HeatTerrainAbsorb * Tweaks.Tank.HeatMax;
+        float deltaT = terrainTemperature - tankTemperature;
+        return Tweaks.Tank.TankTerrainConductance * deltaT;
     }
 
-    public static float ComputeCooling(bool atOwnBase)
+    public static float ComputeTankDeltaFromHeatFlow(float dQ)
     {
-        float cooling = Tweaks.Tank.HeatCoolPerFrame;
-        if (atOwnBase)
-            cooling += Tweaks.Tank.HeatBaseCoolBonus;
-        return cooling;
+        return Tweaks.Tank.TankHeatCapacity > 0f ? dQ / Tweaks.Tank.TankHeatCapacity : 0f;
+    }
+
+    public static float ComputeTerrainDeltaFromHeatFlow(float dQ)
+    {
+        return Tweaks.Tank.TerrainHeatCapacity > 0f ? -dQ / Tweaks.Tank.TerrainHeatCapacity : 0f;
+    }
+
+    public static float ComputeTankAmbientExchange(float tankTemperature, bool atOwnBase)
+    {
+        float ambient = atOwnBase ? 0f : Tweaks.Tank.HeatAmbientOutsideBase;
+        float conductance = atOwnBase ? Tweaks.Tank.TankBaseConductance : Tweaks.Tank.TankAmbientConductance;
+        float dQ = conductance * (ambient - tankTemperature);
+        return Tweaks.Tank.TankHeatCapacity > 0f ? dQ / Tweaks.Tank.TankHeatCapacity : 0f;
     }
 
     public static int ComputeOverheatDamage(float heat)
     {
-        if (heat <= Tweaks.Tank.HeatOverheatThreshold) return 0;
-        float excess = heat - Tweaks.Tank.HeatOverheatThreshold;
-        return (int)(excess * Tweaks.Tank.HeatDamagePerFrame);
+        if (heat <= Tweaks.Tank.HeatSafeMax) return 0;
+        float excess = heat - Tweaks.Tank.HeatSafeMax;
+        return (int)(excess * Tweaks.Tank.OverheatDamagePerDegree);
     }
 
     public static float ClampHeat(float heat)
     {
-        return Math.Clamp(heat, 0f, Tweaks.Tank.HeatMax);
+        return Math.Max(0f, heat);
     }
 }
