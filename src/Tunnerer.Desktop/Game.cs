@@ -39,6 +39,10 @@ public class Game : IDisposable
     private bool _hiResTerrainNeedsFullRender = true;
     private HiResRenderQuality _hiResQuality =
         (HiResRenderQuality)Math.Clamp(Tweaks.Screen.HiResInitialQuality, 0, 2);
+    private readonly TerrainVisualMode _terrainVisualMode;
+    private int _nativeContinuousSampleCount = Tweaks.Screen.NativeContinuousSampleHigh;
+    private int _nativeOverBudgetFrames;
+    private int _nativeUnderBudgetFrames;
     private int _overBudgetFrames;
     private int _underBudgetFrames;
     private readonly Stopwatch _gameTimer = Stopwatch.StartNew();
@@ -65,6 +69,7 @@ public class Game : IDisposable
         var windowSize = Tweaks.Screen.WindowSize;
         _terrainSize = terrainSizeOverride ?? Tweaks.Screen.RenderSurfaceSize;
         RenderBackendKind selectedBackend = renderBackendOverride ?? Tweaks.System.RenderBackend;
+        _terrainVisualMode = ResolveTerrainVisualMode();
         bool parallel = genMode == LevelGenMode.Optimized;
         if (perfCapture is PerfCaptureOptions perf)
         {
@@ -114,6 +119,7 @@ public class Game : IDisposable
             Left: Scancode.ScancodeA, Right: Scancode.ScancodeD,
             Up: Scancode.ScancodeW, Down: Scancode.ScancodeS,
             Shoot: Scancode.ScancodeSpace));
+        Console.WriteLine($"[Render] TerrainVisual={_terrainVisualMode}");
     }
 
     public void Run()
@@ -284,29 +290,34 @@ public class Game : IDisposable
         {
             var hiResWatch = Stopwatch.StartNew();
             float renderTime = (float)_gameTimer.Elapsed.TotalSeconds;
-            if (_hiResTerrainNeedsFullRender ||
-                Math.Abs(dx) >= viewSize.X || Math.Abs(dy) >= viewSize.Y)
-            {
-                ProfileSection(ref _drawProfile.ScreenTerrainFullRender, () =>
-                    _hiResTerrainRenderer.Render(_world.Terrain, _hiResTerrainPixels,
-                        renderView, _hiResQuality, renderTime));
-                _hiResTerrainNeedsFullRender = false;
-            }
-            else if (cameraMoved)
-            {
-                var cameraDelta = new Offset(dx, dy);
-                ProfileSection(ref _drawProfile.ScreenTerrainScrollCopy, () =>
-                    ScrollTerrainBuffer(cameraDelta, viewSize));
-                ProfileSection(ref _drawProfile.ScreenTerrainExposedStrips, () =>
-                    RenderExposedStrips(_hiResTerrainPixels, renderView, cameraDelta));
-            }
+            bool useNativeContinuous = _terrainVisualMode == TerrainVisualMode.NativeContinuous;
 
-            if (_terrainDirtyCells.Count > 0)
+            if (!useNativeContinuous)
             {
-                ProfileSection(ref _drawProfile.ScreenTerrainDirtyRender, () =>
-                    _hiResTerrainRenderer.RenderDirty(_world.Terrain, _hiResTerrainPixels,
-                        renderView, _hiResQuality,
-                        _terrainDirtyCells, renderTime));
+                if (_hiResTerrainNeedsFullRender ||
+                    Math.Abs(dx) >= viewSize.X || Math.Abs(dy) >= viewSize.Y)
+                {
+                    ProfileSection(ref _drawProfile.ScreenTerrainFullRender, () =>
+                        _hiResTerrainRenderer.Render(_world.Terrain, _hiResTerrainPixels,
+                            renderView, _hiResQuality, renderTime));
+                    _hiResTerrainNeedsFullRender = false;
+                }
+                else if (cameraMoved)
+                {
+                    var cameraDelta = new Offset(dx, dy);
+                    ProfileSection(ref _drawProfile.ScreenTerrainScrollCopy, () =>
+                        ScrollTerrainBuffer(cameraDelta, viewSize));
+                    ProfileSection(ref _drawProfile.ScreenTerrainExposedStrips, () =>
+                        RenderExposedStrips(_hiResTerrainPixels, renderView, cameraDelta));
+                }
+
+                if (_terrainDirtyCells.Count > 0)
+                {
+                    ProfileSection(ref _drawProfile.ScreenTerrainDirtyRender, () =>
+                        _hiResTerrainRenderer.RenderDirty(_world.Terrain, _hiResTerrainPixels,
+                            renderView, _hiResQuality,
+                            _terrainDirtyCells, renderTime));
+                }
             }
 
             Rect? auxDirtyRect;
@@ -327,17 +338,28 @@ public class Game : IDisposable
             }
             _terrainDirtyCells.Clear();
 
-            ProfileSection(ref _drawProfile.ScreenTerrainToSceneCopy, () =>
-                Array.Copy(_hiResTerrainPixels, _hiResPixels, _hiResPixels.Length));
+            if (useNativeContinuous)
+            {
+                ProfileSection(ref _drawProfile.ScreenTerrainToSceneCopy, () =>
+                    BuildFallbackViewPixels(_hiResPixels, _compositePixels, renderView));
+            }
+            else
+            {
+                ProfileSection(ref _drawProfile.ScreenTerrainToSceneCopy, () =>
+                    Array.Copy(_hiResTerrainPixels, _hiResPixels, _hiResPixels.Length));
+            }
             _drawProfile.ScreenHiResTerrain += hiResWatch.Elapsed;
             double terrainMs = hiResWatch.Elapsed.TotalMilliseconds;
 
             hiResWatch.Restart();
-            ProfileSection(ref _drawProfile.ScreenEntityRender, () =>
-                _hiResEntityRenderer.Render(
-                    _hiResPixels, renderView,
-                    _worldPixels, _compositePixels,
-                    renderTime));
+            if (!useNativeContinuous)
+            {
+                ProfileSection(ref _drawProfile.ScreenEntityRender, () =>
+                    _hiResEntityRenderer.Render(
+                        _hiResPixels, renderView,
+                        _worldPixels, _compositePixels,
+                        renderTime));
+            }
 
             int tankHeatGlowCount = 0;
             ProfileSection(ref _drawProfile.ScreenTankGlowBuild, () =>
@@ -355,7 +377,10 @@ public class Game : IDisposable
                 TankHeatGlowData: _gpuTankHeatGlow,
                 TankHeatGlowCount: tankHeatGlowCount,
                 TerrainAux: _gpuTerrainAux,
-                AuxDirtyRect: auxDirtyRect);
+                AuxDirtyRect: auxDirtyRect,
+                UseNativeContinuous: useNativeContinuous,
+                NativeSourcePixels: useNativeContinuous ? _compositePixels : null,
+                NativeSampleCount: _nativeContinuousSampleCount);
             ProfileSection(ref _drawProfile.ScreenBackendUpload, () =>
                 _renderBackend.UploadGamePixels(upload));
             _world.Terrain.ClearHeatDirtyRect();
@@ -364,7 +389,12 @@ public class Game : IDisposable
             double uploadMs = hiResWatch.Elapsed.TotalMilliseconds;
 
             ProfileSection(ref _drawProfile.ScreenQualityAdjust, () =>
-                UpdateHiResQuality(terrainMs + entityMs + uploadMs));
+            {
+                if (useNativeContinuous)
+                    UpdateNativeContinuousQuality(terrainMs + uploadMs);
+                else
+                    UpdateHiResQuality(terrainMs + entityMs + uploadMs);
+            });
         });
 
         ProfileSection(ref _drawProfile.ScreenClearFrame, () =>
@@ -694,6 +724,50 @@ public class Game : IDisposable
         _hiResTerrainNeedsFullRender = true;
     }
 
+    private static void BuildFallbackViewPixels(uint[] target, uint[] worldPixels, in RenderView view)
+    {
+        int viewW = view.ViewSize.X;
+        int viewH = view.ViewSize.Y;
+        int worldW = view.WorldSize.X;
+        int worldH = view.WorldSize.Y;
+        int camPixelX = view.CameraPixels.X;
+        int camPixelY = view.CameraPixels.Y;
+        int pixelScale = Math.Max(1, view.PixelScale);
+        for (int y = 0; y < viewH; y++)
+        {
+            int worldY = (camPixelY + y) / pixelScale;
+            int row = y * viewW;
+            if ((uint)worldY >= (uint)worldH)
+            {
+                Array.Fill(target, 0xFF161414u, row, viewW);
+                continue;
+            }
+
+            int worldRow = worldY * worldW;
+            for (int x = 0; x < viewW; x++)
+            {
+                int worldX = (camPixelX + x) / pixelScale;
+                target[row + x] = (uint)worldX < (uint)worldW
+                    ? worldPixels[worldRow + worldX]
+                    : 0xFF161414u;
+            }
+        }
+    }
+
+    private static TerrainVisualMode ResolveTerrainVisualMode()
+    {
+        string? env = Environment.GetEnvironmentVariable("TUNNERER_TERRAIN_VISUAL");
+        if (!string.IsNullOrWhiteSpace(env))
+        {
+            if (string.Equals(env, "legacy", StringComparison.OrdinalIgnoreCase))
+                return TerrainVisualMode.LegacyHiRes;
+            if (string.Equals(env, "native", StringComparison.OrdinalIgnoreCase))
+                return TerrainVisualMode.NativeContinuous;
+        }
+
+        return Tweaks.Screen.TerrainVisual;
+    }
+
     private void UpdateHiResQuality(double frameMs)
     {
         float budget = Tweaks.Screen.HiResRenderBudgetMs;
@@ -730,6 +804,47 @@ public class Game : IDisposable
             _overBudgetFrames = 0;
             _underBudgetFrames = 0;
             Console.WriteLine($"[Render] Hi-res quality increased to {_hiResQuality}");
+        }
+    }
+
+    private void UpdateNativeContinuousQuality(double frameMs)
+    {
+        float budget = Tweaks.Screen.NativeContinuousRenderBudgetMs;
+        int hysteresis = Tweaks.Screen.NativeContinuousBudgetHysteresisFrames;
+        if (frameMs > budget)
+        {
+            _nativeOverBudgetFrames++;
+            _nativeUnderBudgetFrames = 0;
+        }
+        else if (frameMs < budget * Tweaks.Screen.HiResBudgetUnderThreshold)
+        {
+            _nativeUnderBudgetFrames++;
+            _nativeOverBudgetFrames = 0;
+        }
+        else
+        {
+            _nativeOverBudgetFrames = 0;
+            _nativeUnderBudgetFrames = 0;
+        }
+
+        if (_nativeOverBudgetFrames >= hysteresis && _nativeContinuousSampleCount > Tweaks.Screen.NativeContinuousSampleLow)
+        {
+            _nativeContinuousSampleCount = _nativeContinuousSampleCount >= Tweaks.Screen.NativeContinuousSampleHigh
+                ? Tweaks.Screen.NativeContinuousSampleMedium
+                : Tweaks.Screen.NativeContinuousSampleLow;
+            _nativeOverBudgetFrames = 0;
+            _nativeUnderBudgetFrames = 0;
+            Console.WriteLine($"[Render] Native continuous sample count reduced to {_nativeContinuousSampleCount}");
+        }
+        else if (_nativeUnderBudgetFrames >= hysteresis * Tweaks.Screen.NativeContinuousRecoveryFramesMultiplier &&
+                 _nativeContinuousSampleCount < Tweaks.Screen.NativeContinuousSampleHigh)
+        {
+            _nativeContinuousSampleCount = _nativeContinuousSampleCount <= Tweaks.Screen.NativeContinuousSampleLow
+                ? Tweaks.Screen.NativeContinuousSampleMedium
+                : Tweaks.Screen.NativeContinuousSampleHigh;
+            _nativeOverBudgetFrames = 0;
+            _nativeUnderBudgetFrames = 0;
+            Console.WriteLine($"[Render] Native continuous sample count increased to {_nativeContinuousSampleCount}");
         }
     }
 

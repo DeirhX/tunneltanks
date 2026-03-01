@@ -17,7 +17,7 @@ public sealed class HiResTerrainRenderer
 
     // SDF edge
     private const float EdgeHalfLow = 0.20f;
-    private const float EdgeHalfHigh = 0.35f;
+    private const float EdgeHalfHigh = 0.42f;
     private const float IsolatedSolidAlpha = 0.35f;
 
     // Lighting
@@ -145,6 +145,30 @@ public sealed class HiResTerrainRenderer
     {
         if ((uint)x >= (uint)_blurW || (uint)y >= (uint)_blurH) return 1f;
         return _blurField![y * _blurW + x];
+    }
+
+    private float SampleBlurBilinear(float worldXf, float worldYf)
+    {
+        int worldX = (int)worldXf;
+        int worldY = (int)worldYf;
+        float fracX = worldXf - worldX;
+        float fracY = worldYf - worldY;
+        float sx = fracX - 0.5f;
+        float sy = fracY - 0.5f;
+        int ox = sx >= 0f ? 0 : -1;
+        int oy = sy >= 0f ? 0 : -1;
+        float lx = sx >= 0f ? sx : sx + 1f;
+        float ly = sy >= 0f ? sy : sy + 1f;
+
+        int cx0 = worldX + ox;
+        int cx1 = cx0 + 1;
+        int cy0 = worldY + oy;
+        int cy1 = cy0 + 1;
+        float b00 = SampleBlur(cx0, cy0);
+        float b10 = SampleBlur(cx1, cy0);
+        float b01 = SampleBlur(cx0, cy1);
+        float b11 = SampleBlur(cx1, cy1);
+        return RenderingMath.Bilinear(b00, b10, b01, b11, lx, ly);
     }
 
     private static float SampleHeat(TerrainGrid terrain, int x, int y, int w, int h)
@@ -336,11 +360,28 @@ public sealed class HiResTerrainRenderer
                     aoValue = ComputeAO(terrain, worldX, worldY, w, h);
                 }
 
-                // SDF edge blend
-                float alpha;
-                if (dist > edgeHalf) alpha = 1f;
-                else if (dist < -edgeHalf) alpha = 0f;
-                else alpha = Smoothstep(-edgeHalf, edgeHalf, dist);
+                // SDF edge blend.
+                float alpha = DistToAlpha(dist, edgeHalf);
+
+                // Boundary-local subpixel coverage to reduce staircase transitions.
+                if (quality != HiResRenderQuality.Low)
+                {
+                    float edgeBand = edgeHalf * 1.35f;
+                    if (dist > -edgeBand && dist < edgeBand)
+                    {
+                        float sub = 0.35f * invScale;
+                        float d1s = SampleBlurBilinear(worldXf - sub, worldYf - sub);
+                        float d2s = SampleBlurBilinear(worldXf + sub, worldYf - sub);
+                        float d3s = SampleBlurBilinear(worldXf - sub, worldYf + sub);
+                        float d4s = SampleBlurBilinear(worldXf + sub, worldYf + sub);
+                        float aSub =
+                            DistToAlpha(d1s, edgeHalf) +
+                            DistToAlpha(d2s, edgeHalf) +
+                            DistToAlpha(d3s, edgeHalf) +
+                            DistToAlpha(d4s, edgeHalf);
+                        alpha = (alpha + aSub * 0.25f) * 0.5f;
+                    }
+                }
 
                 // Texture UV
                 float texU = worldXf * TexTileDensity;
@@ -424,7 +465,10 @@ public sealed class HiResTerrainRenderer
                         float proximity = MathF.Max(
                             MathF.Abs(fracX - 0.5f),
                             MathF.Abs(fracY - 0.5f)) * 2f;
-                        float blendT = Smoothstep(0f, 1f, proximity) * MaterialBlendStrength;
+                        float boundaryStrength = centerMat == MaterialClass.Energy
+                            ? MaterialBlendStrength * 0.25f
+                            : MaterialBlendStrength;
+                        float blendT = Smoothstep(0f, 1f, proximity) * boundaryStrength;
                         blended = LerpColor(blended, bilinearCol, blendT);
                     }
                 }
@@ -523,11 +567,14 @@ public sealed class HiResTerrainRenderer
         Color texColor = matTex.SampleColor(texU, texV);
 
         uint h = Hash2((uint)worldX, (uint)worldY);
-        float cellVar = ((h & 0xFFu) / 255f - 0.5f) * 0.10f;
+        float variation = matClass == MaterialClass.Energy ? 0.035f : 0.10f;
+        float cellVar = ((h & 0xFFu) / 255f - 0.5f) * variation;
         float brightness = 1f + cellVar;
 
         if (pixel == TerrainPixel.DirtGrow)
             texColor = LerpColor(texColor, new Color(94, 126, 74), 0.22f);
+        else if (matClass == MaterialClass.Energy)
+            texColor = LerpColor(texColor, new Color(238, 244, 132), 0.12f);
 
         return new Color(
             ScaleByte(texColor.R, brightness),
@@ -613,6 +660,13 @@ public sealed class HiResTerrainRenderer
         float t = (value - fromMin) / (fromMax - fromMin);
         t = MathF.Max(0f, MathF.Min(1f, t));
         return toMin + t * (toMax - toMin);
+    }
+
+    private static float DistToAlpha(float dist, float edgeHalf)
+    {
+        if (dist > edgeHalf) return 1f;
+        if (dist < -edgeHalf) return 0f;
+        return Smoothstep(-edgeHalf, edgeHalf, dist);
     }
 
     private static float ComputeAO(TerrainGrid terrain, int cx, int cy, int w, int h)

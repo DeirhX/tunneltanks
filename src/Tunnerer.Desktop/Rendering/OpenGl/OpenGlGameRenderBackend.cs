@@ -20,8 +20,21 @@ public sealed unsafe class OpenGlGameRenderBackend : IGameRenderBackend
     private uint _postSourceTexture;
     private uint _postFbo;
     private uint _postProgram;
+    private uint _nativeTerrainProgram;
     private uint _postVao;
     private uint _postVbo;
+    private uint _nativeSourceTexture;
+    private int _nativeSourceW;
+    private int _nativeSourceH;
+    private int _nativeLocSourceTex;
+    private int _nativeLocAuxTex;
+    private int _nativeLocWorldSize;
+    private int _nativeLocCameraPixels;
+    private int _nativeLocViewSize;
+    private int _nativeLocPixelScale;
+    private int _nativeLocEdgeSoftness;
+    private int _nativeLocBoundaryBlend;
+    private int _nativeLocSampleFactor;
     private uint _terrainAuxTexture;
     private int _terrainAuxW;
     private int _terrainAuxH;
@@ -64,6 +77,7 @@ public sealed unsafe class OpenGlGameRenderBackend : IGameRenderBackend
     private int _postLocMaterialEmissivePulseFreq;
     private int _postLocMaterialEmissivePulseMin;
     private int _postLocMaterialEmissivePulseRange;
+    private bool _postStaticUniformsInitialized;
     private bool _disposed;
 
     public nint GameTextureId => (nint)_gameTextures[_gameTexIndex];
@@ -104,13 +118,32 @@ public sealed unsafe class OpenGlGameRenderBackend : IGameRenderBackend
         EnsurePostProcessObjects(viewSize.X, viewSize.Y);
         UpdateTerrainAuxTexture(upload.TerrainAux, worldSize, upload.AuxDirtyRect);
         int uploadIdx = 1 - _gameTexIndex;
-        _gl.BindTexture(TextureTarget.Texture2D, _postSourceTexture);
-        fixed (uint* ptr = pixels)
+        if (upload.UseNativeContinuous && upload.NativeSourcePixels != null)
         {
-            _gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0,
-                (uint)viewSize.X, (uint)viewSize.Y, GL_PixelFormat.Bgra, GL_PixelType.UnsignedByte, ptr);
+            EnsureNativeSourceTexture(worldSize.X, worldSize.Y);
+            _gl.BindTexture(TextureTarget.Texture2D, _nativeSourceTexture);
+            fixed (uint* ptr = upload.NativeSourcePixels)
+            {
+                _gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0,
+                    (uint)worldSize.X, (uint)worldSize.Y, GL_PixelFormat.Bgra, GL_PixelType.UnsignedByte, ptr);
+            }
+            _gl.BindTexture(TextureTarget.Texture2D, 0);
+            RunNativeContinuousTerrainPass(
+                _nativeSourceTexture,
+                _postSourceTexture,
+                upload.View,
+                upload.NativeSampleCount);
         }
-        _gl.BindTexture(TextureTarget.Texture2D, 0);
+        else
+        {
+            _gl.BindTexture(TextureTarget.Texture2D, _postSourceTexture);
+            fixed (uint* ptr = pixels)
+            {
+                _gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0,
+                    (uint)viewSize.X, (uint)viewSize.Y, GL_PixelFormat.Bgra, GL_PixelType.UnsignedByte, ptr);
+            }
+            _gl.BindTexture(TextureTarget.Texture2D, 0);
+        }
 
         bool useTerrainAux = upload.TerrainAux != null && worldSize.X > 0 && worldSize.Y > 0 && pixelScale > 0;
         RunPostProcessPass(_postSourceTexture, _gameTextures[uploadIdx], upload.View, upload.Quality,
@@ -162,6 +195,7 @@ public sealed unsafe class OpenGlGameRenderBackend : IGameRenderBackend
         }
         if (_postFbo == 0) _postFbo = _gl.GenFramebuffer();
         if (_postProgram == 0) CreatePostProcessProgram();
+        if (_nativeTerrainProgram == 0) CreateNativeTerrainProgram();
         if (_postVao != 0) return;
         _postVao = _gl.GenVertexArray();
         _postVbo = _gl.GenBuffer();
@@ -279,21 +313,48 @@ void main() {
         vec4 ax2 = texture(uAuxTex, auxUv - vec2(mTexel.x, 0.0));
         vec4 ay1 = texture(uAuxTex, auxUv + vec2(0.0, mTexel.y));
         vec4 ay2 = texture(uAuxTex, auxUv - vec2(0.0, mTexel.y));
+        vec4 ad1 = texture(uAuxTex, auxUv + vec2(mTexel.x, mTexel.y));
+        vec4 ad2 = texture(uAuxTex, auxUv + vec2(mTexel.x, -mTexel.y));
+        vec4 ad3 = texture(uAuxTex, auxUv + vec2(-mTexel.x, mTexel.y));
+        vec4 ad4 = texture(uAuxTex, auxUv + vec2(-mTexel.x, -mTexel.y));
         float m0 = a0.g;
         float mx1 = ax1.g;
         float mx2 = ax2.g;
         float my1 = ay1.g;
         float my2 = ay2.g;
-        float edge = abs(mx1 - mx2) + abs(my1 - my2);
-        float edgeAmt = min(1.0, edge * uTerrainMaskEdgeStrength);
-        float boundary = 1.0 - abs(m0 * 2.0 - 1.0);
+        float gx = (ad2.g + 2.0 * mx1 + ad1.g) - (ad4.g + 2.0 * mx2 + ad3.g);
+        float gy = (ad3.g + 2.0 * my1 + ad1.g) - (ad4.g + 2.0 * my2 + ad2.g);
+        float edge = length(vec2(gx, gy)) * 0.25;
+        float edgeAmt = min(1.0, edge * uTerrainMaskEdgeStrength * 1.2);
+        float mDiag = (ad1.g + ad2.g + ad3.g + ad4.g) * 0.25;
+        float m = mix(m0, mDiag, 0.12);
+        float mSmooth = (m0 * 4.0 + mx1 + mx2 + my1 + my2 + ad1.g + ad2.g + ad3.g + ad4.g) / 12.0;
+        m = mix(m, mSmooth, 0.55);
+        float boundary = 1.0 - abs(m * 2.0 - 1.0);
         float outline = min(1.0, boundary * uTerrainMaskBoundaryScale);
-        color *= 1.0 - outline * uTerrainMaskOutlineDarken;
-        if (m0 < 0.5) color *= 1.0 - edgeAmt * uTerrainMaskCaveDarken;
-        else {
-            color += vec3(edgeAmt * uTerrainMaskSolidLift);
-            color += vec3(edgeAmt * outline * uTerrainMaskRimLift);
-        }
+        float maskWidth = max(fwidth(m) * 1.6, 0.045);
+        float maskSoft = smoothstep(0.5 - maskWidth, 0.5 + maskWidth, m);
+        float edgeProfile = edgeAmt * smoothstep(0.08, 0.95, boundary);
+        float energyMask = clamp(a0.b * 2.0, 0.0, 1.0);
+        float outlineDarken = uTerrainMaskOutlineDarken * (1.0 - 0.55 * energyMask);
+        color *= 1.0 - outline * outlineDarken;
+        color *= 1.0 - (1.0 - maskSoft) * edgeProfile * uTerrainMaskCaveDarken;
+        color += vec3(maskSoft * edgeProfile * uTerrainMaskSolidLift);
+        color += vec3(maskSoft * edgeProfile * outline * uTerrainMaskRimLift);
+
+        // Boundary-local AA: smooth staircase edges without globally blurring the frame.
+        vec3 aaNeighborhood =
+            texture(uScene, vUv + vec2(mTexel.x, 0.0)).rgb +
+            texture(uScene, vUv - vec2(mTexel.x, 0.0)).rgb +
+            texture(uScene, vUv + vec2(0.0, mTexel.y)).rgb +
+            texture(uScene, vUv - vec2(0.0, mTexel.y)).rgb +
+            texture(uScene, vUv + vec2(mTexel.x, mTexel.y)).rgb +
+            texture(uScene, vUv + vec2(mTexel.x, -mTexel.y)).rgb +
+            texture(uScene, vUv + vec2(-mTexel.x, mTexel.y)).rgb +
+            texture(uScene, vUv + vec2(-mTexel.x, -mTexel.y)).rgb;
+        aaNeighborhood *= (1.0 / 8.0);
+        float aaMix = clamp(edgeProfile * 0.30, 0.0, 1.0);
+        color = mix(color, aaNeighborhood, aaMix);
         float heat = a0.r * 0.50 + (ax1.r + ax2.r + ay1.r + ay2.r) * 0.125;
         if (heat > uTerrainHeatThreshold) {
             float t2 = heat * heat;
@@ -303,7 +364,8 @@ void main() {
         }
         float phase = fract(sin(dot(floor(worldCell), vec2(12.9898, 78.233))) * 43758.5453) * 6.2831853;
         float pulse = uMaterialEmissivePulseMin + uMaterialEmissivePulseRange * (0.5 + 0.5 * sin(uTime * uMaterialEmissivePulseFreq + phase));
-        color += uMaterialEmissiveEnergyColor * (a0.b * uMaterialEmissiveEnergyStrength * pulse);
+        float energy = a0.b * 0.50 + (ax1.b + ax2.b + ay1.b + ay2.b) * 0.10 + (ad1.b + ad2.b + ad3.b + ad4.b) * 0.025;
+        color += uMaterialEmissiveEnergyColor * (energy * uMaterialEmissiveEnergyStrength * pulse);
         color += uMaterialEmissiveScorchedColor * (a0.a * uMaterialEmissiveScorchedStrength * pulse);
     }
     for (int i = 0; i < 8; i++) {
@@ -367,42 +429,13 @@ void main() {
         _postLocMaterialEmissivePulseFreq = _gl.GetUniformLocation(_postProgram, "uMaterialEmissivePulseFreq");
         _postLocMaterialEmissivePulseMin = _gl.GetUniformLocation(_postProgram, "uMaterialEmissivePulseMin");
         _postLocMaterialEmissivePulseRange = _gl.GetUniformLocation(_postProgram, "uMaterialEmissivePulseRange");
+        _postStaticUniformsInitialized = false;
     }
 
-    private void RunPostProcessPass(uint sourceTex, uint destTex, in RenderView view, HiResRenderQuality quality,
-        float[]? tankHeatGlowData, int tankHeatGlowCount, bool useTerrainAux)
+    private void ApplyStaticPostUniforms()
     {
-        int width = view.ViewSize.X;
-        int height = view.ViewSize.Y;
-        _gl.GetInteger(GetPName.CurrentProgram, out int lastProgram);
-        _gl.GetInteger(GetPName.ActiveTexture, out int lastActiveTexture);
-        _gl.GetInteger(GetPName.TextureBinding2D, out int lastTexture);
-        _gl.GetInteger(GetPName.VertexArrayBinding, out int lastVao);
-        _gl.GetInteger(GetPName.ArrayBufferBinding, out int lastArrayBuffer);
-        Span<int> lastViewport = stackalloc int[4];
-        _gl.GetInteger(GetPName.Viewport, lastViewport);
-        bool lastBlend = _gl.IsEnabled(EnableCap.Blend);
-        bool lastDepth = _gl.IsEnabled(EnableCap.DepthTest);
-        bool lastCull = _gl.IsEnabled(EnableCap.CullFace);
-        bool lastScissor = _gl.IsEnabled(EnableCap.ScissorTest);
-        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, _postFbo);
-        _gl.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, destTex, 0);
-        _gl.Viewport(0, 0, (uint)width, (uint)height);
-        _gl.Disable(EnableCap.Blend);
-        _gl.Disable(EnableCap.DepthTest);
-        _gl.Disable(EnableCap.CullFace);
-        _gl.Disable(EnableCap.ScissorTest);
-        _gl.UseProgram(_postProgram);
         _gl.Uniform1(_postLocScene, 0);
         _gl.Uniform1(_postLocAuxTex, 1);
-        _gl.Uniform2(_postLocTexelSize, 1f / width, 1f / height);
-        _gl.Uniform1(_postLocQuality, (int)quality);
-        _gl.Uniform1(_postLocUseTerrainAux, useTerrainAux ? 1 : 0);
-        _gl.Uniform2(_postLocWorldSize, (float)view.WorldSize.X, (float)view.WorldSize.Y);
-        _gl.Uniform2(_postLocCameraPixels, (float)view.CameraPixels.X, (float)view.CameraPixels.Y);
-        _gl.Uniform2(_postLocViewSize, (float)view.ViewSize.X, (float)view.ViewSize.Y);
-        _gl.Uniform1(_postLocPixelScale, (float)view.PixelScale);
-        _gl.Uniform1(_postLocTime, (float)ImGui.GetTime());
         _gl.Uniform1(_postLocBloomThreshold, Tweaks.Screen.PostBloomThreshold);
         _gl.Uniform1(_postLocBloomStrength, Tweaks.Screen.PostBloomStrength);
         _gl.Uniform1(_postLocBloomWeightCenter, Tweaks.Screen.PostBloomWeightCenter);
@@ -429,6 +462,32 @@ void main() {
         _gl.Uniform1(_postLocMaterialEmissivePulseFreq, Tweaks.Screen.PostMaterialEmissivePulseFreq);
         _gl.Uniform1(_postLocMaterialEmissivePulseMin, Tweaks.Screen.PostMaterialEmissivePulseMin);
         _gl.Uniform1(_postLocMaterialEmissivePulseRange, Tweaks.Screen.PostMaterialEmissivePulseRange);
+        _postStaticUniformsInitialized = true;
+    }
+
+    private void RunPostProcessPass(uint sourceTex, uint destTex, in RenderView view, HiResRenderQuality quality,
+        float[]? tankHeatGlowData, int tankHeatGlowCount, bool useTerrainAux)
+    {
+        int width = view.ViewSize.X;
+        int height = view.ViewSize.Y;
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, _postFbo);
+        _gl.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, destTex, 0);
+        _gl.Viewport(0, 0, (uint)width, (uint)height);
+        _gl.Disable(EnableCap.Blend);
+        _gl.Disable(EnableCap.DepthTest);
+        _gl.Disable(EnableCap.CullFace);
+        _gl.Disable(EnableCap.ScissorTest);
+        _gl.UseProgram(_postProgram);
+        if (!_postStaticUniformsInitialized)
+            ApplyStaticPostUniforms();
+        _gl.Uniform2(_postLocTexelSize, 1f / width, 1f / height);
+        _gl.Uniform1(_postLocQuality, (int)quality);
+        _gl.Uniform1(_postLocUseTerrainAux, useTerrainAux ? 1 : 0);
+        _gl.Uniform2(_postLocWorldSize, (float)view.WorldSize.X, (float)view.WorldSize.Y);
+        _gl.Uniform2(_postLocCameraPixels, (float)view.CameraPixels.X, (float)view.CameraPixels.Y);
+        _gl.Uniform2(_postLocViewSize, (float)view.ViewSize.X, (float)view.ViewSize.Y);
+        _gl.Uniform1(_postLocPixelScale, (float)view.PixelScale);
+        _gl.Uniform1(_postLocTime, (float)ImGui.GetTime());
         int clampedGlowCount = Math.Clamp(tankHeatGlowCount, 0, MaxTankGlowCount);
         _gl.Uniform1(_postLocTankGlowCount, clampedGlowCount);
         if (tankHeatGlowData != null)
@@ -447,17 +506,13 @@ void main() {
         _gl.BindTexture(TextureTarget.Texture2D, _terrainAuxTexture);
         _gl.BindVertexArray(_postVao);
         _gl.DrawArrays(PrimitiveType.Triangles, 0, 6);
-        _gl.BindVertexArray((uint)lastVao);
-        _gl.BindBuffer(BufferTargetARB.ArrayBuffer, (uint)lastArrayBuffer);
-        _gl.BindTexture(TextureTarget.Texture2D, (uint)lastTexture);
-        _gl.ActiveTexture((TextureUnit)lastActiveTexture);
-        _gl.UseProgram((uint)lastProgram);
+
+        // Leave in a clean baseline state for subsequent backend/UI passes.
+        _gl.BindVertexArray(0);
+        _gl.BindTexture(TextureTarget.Texture2D, 0);
+        _gl.ActiveTexture(TextureUnit.Texture0);
+        _gl.UseProgram(0);
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        _gl.Viewport(lastViewport[0], lastViewport[1], (uint)lastViewport[2], (uint)lastViewport[3]);
-        if (lastBlend) _gl.Enable(EnableCap.Blend); else _gl.Disable(EnableCap.Blend);
-        if (lastDepth) _gl.Enable(EnableCap.DepthTest); else _gl.Disable(EnableCap.DepthTest);
-        if (lastCull) _gl.Enable(EnableCap.CullFace); else _gl.Disable(EnableCap.CullFace);
-        if (lastScissor) _gl.Enable(EnableCap.ScissorTest); else _gl.Disable(EnableCap.ScissorTest);
     }
 
     private void UpdateTerrainAuxTexture(byte[]? auxData, Size worldSize, Rect? dirtyRect)
@@ -466,6 +521,9 @@ void main() {
         int worldHeight = worldSize.Y;
         if (auxData == null || worldWidth <= 0 || worldHeight <= 0) return;
         bool sizeChanged = _terrainAuxW != worldWidth || _terrainAuxH != worldHeight;
+        if (!sizeChanged && dirtyRect is null)
+            return;
+
         if (_terrainAuxTexture == 0)
         {
             _terrainAuxTexture = _gl.GenTexture();
@@ -482,12 +540,10 @@ void main() {
         }
         if (sizeChanged)
         {
-            _gl.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
             fixed (byte* ptr = auxData)
             {
                 _gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8, (uint)worldWidth, (uint)worldHeight, 0, GL_PixelFormat.Rgba, GL_PixelType.UnsignedByte, ptr);
             }
-            _gl.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
         }
         else if (dirtyRect is Rect rect)
         {
@@ -502,16 +558,136 @@ void main() {
                 int dst = y * rw * 4;
                 Array.Copy(auxData, src, _terrainAuxUploadScratch, dst, rw * 4);
             }
-            _gl.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
             fixed (byte* ptr = _terrainAuxUploadScratch)
             {
                 _gl.TexSubImage2D(TextureTarget.Texture2D, 0, minX, minY, (uint)rw, (uint)rh, GL_PixelFormat.Rgba, GL_PixelType.UnsignedByte, ptr);
             }
-            _gl.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
         }
         _gl.BindTexture(TextureTarget.Texture2D, 0);
         _terrainAuxW = worldWidth;
         _terrainAuxH = worldHeight;
+    }
+
+    private void EnsureNativeSourceTexture(int width, int height)
+    {
+        if (_nativeSourceTexture != 0 && _nativeSourceW == width && _nativeSourceH == height)
+            return;
+        if (_nativeSourceTexture == 0)
+            _nativeSourceTexture = _gl.GenTexture();
+        _gl.BindTexture(TextureTarget.Texture2D, _nativeSourceTexture);
+        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Nearest);
+        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Nearest);
+        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
+        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
+        _gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8,
+            (uint)width, (uint)height, 0, GL_PixelFormat.Bgra, GL_PixelType.UnsignedByte, null);
+        _gl.BindTexture(TextureTarget.Texture2D, 0);
+        _nativeSourceW = width;
+        _nativeSourceH = height;
+    }
+
+    private void CreateNativeTerrainProgram()
+    {
+        const string vertSrc = @"#version 330 core
+layout (location = 0) in vec2 aPos;
+layout (location = 1) in vec2 aUv;
+out vec2 vUv;
+void main() {
+    vUv = aUv;
+    gl_Position = vec4(aPos, 0.0, 1.0);
+}";
+
+        const string fragSrc = @"#version 330 core
+in vec2 vUv;
+uniform sampler2D uSourceTex;
+uniform sampler2D uAuxTex;
+uniform vec2 uWorldSize;
+uniform vec2 uCameraPixels;
+uniform vec2 uViewSize;
+uniform float uPixelScale;
+uniform float uEdgeSoftness;
+uniform float uBoundaryBlend;
+uniform float uSampleFactor;
+layout (location = 0) out vec4 Out_Color;
+void main() {
+    vec2 screenPx = vUv * uViewSize;
+    vec2 worldCell = (uCameraPixels + screenPx) / max(1.0, uPixelScale);
+    ivec2 maxCell = ivec2(max(1.0, uWorldSize.x), max(1.0, uWorldSize.y)) - ivec2(1, 1);
+    ivec2 cell = clamp(ivec2(floor(worldCell)), ivec2(0, 0), maxCell);
+    ivec2 cellX1 = clamp(cell + ivec2(1, 0), ivec2(0, 0), maxCell);
+    ivec2 cellX2 = clamp(cell - ivec2(1, 0), ivec2(0, 0), maxCell);
+    ivec2 cellY1 = clamp(cell + ivec2(0, 1), ivec2(0, 0), maxCell);
+    ivec2 cellY2 = clamp(cell - ivec2(0, 1), ivec2(0, 0), maxCell);
+    vec3 c0 = texelFetch(uSourceTex, cell, 0).rgb;
+    vec3 cBlend = c0 * 0.70 +
+        texelFetch(uSourceTex, cellX1, 0).rgb * 0.075 +
+        texelFetch(uSourceTex, cellX2, 0).rgb * 0.075 +
+        texelFetch(uSourceTex, cellY1, 0).rgb * 0.075 +
+        texelFetch(uSourceTex, cellY2, 0).rgb * 0.075;
+    float m0 = texelFetch(uAuxTex, cell, 0).g;
+    float edge = 1.0 - abs(m0 * 2.0 - 1.0);
+    float edgeW = smoothstep(0.0, max(0.001, uEdgeSoftness), edge) * uBoundaryBlend;
+    edgeW *= (0.15 + 0.35 * clamp(uSampleFactor, 0.0, 1.0));
+    vec3 color = mix(c0, cBlend, clamp(edgeW, 0.0, 1.0));
+    Out_Color = vec4(color, 1.0);
+}";
+
+        uint vs = CompileShader(ShaderType.VertexShader, vertSrc);
+        uint fs = CompileShader(ShaderType.FragmentShader, fragSrc);
+        _nativeTerrainProgram = _gl.CreateProgram();
+        _gl.AttachShader(_nativeTerrainProgram, vs);
+        _gl.AttachShader(_nativeTerrainProgram, fs);
+        _gl.LinkProgram(_nativeTerrainProgram);
+        _gl.GetProgram(_nativeTerrainProgram, ProgramPropertyARB.LinkStatus, out int status);
+        if (status == 0) throw new Exception("Native terrain shader link failed: " + _gl.GetProgramInfoLog(_nativeTerrainProgram));
+        _gl.DetachShader(_nativeTerrainProgram, vs);
+        _gl.DetachShader(_nativeTerrainProgram, fs);
+        _gl.DeleteShader(vs);
+        _gl.DeleteShader(fs);
+        _nativeLocSourceTex = _gl.GetUniformLocation(_nativeTerrainProgram, "uSourceTex");
+        _nativeLocAuxTex = _gl.GetUniformLocation(_nativeTerrainProgram, "uAuxTex");
+        _nativeLocWorldSize = _gl.GetUniformLocation(_nativeTerrainProgram, "uWorldSize");
+        _nativeLocCameraPixels = _gl.GetUniformLocation(_nativeTerrainProgram, "uCameraPixels");
+        _nativeLocViewSize = _gl.GetUniformLocation(_nativeTerrainProgram, "uViewSize");
+        _nativeLocPixelScale = _gl.GetUniformLocation(_nativeTerrainProgram, "uPixelScale");
+        _nativeLocEdgeSoftness = _gl.GetUniformLocation(_nativeTerrainProgram, "uEdgeSoftness");
+        _nativeLocBoundaryBlend = _gl.GetUniformLocation(_nativeTerrainProgram, "uBoundaryBlend");
+        _nativeLocSampleFactor = _gl.GetUniformLocation(_nativeTerrainProgram, "uSampleFactor");
+    }
+
+    private void RunNativeContinuousTerrainPass(uint sourceTex, uint destTex, in RenderView view, int nativeSampleCount)
+    {
+        int width = view.ViewSize.X;
+        int height = view.ViewSize.Y;
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, _postFbo);
+        _gl.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, destTex, 0);
+        _gl.Viewport(0, 0, (uint)width, (uint)height);
+        _gl.Disable(EnableCap.Blend);
+        _gl.Disable(EnableCap.DepthTest);
+        _gl.Disable(EnableCap.CullFace);
+        _gl.Disable(EnableCap.ScissorTest);
+        _gl.UseProgram(_nativeTerrainProgram);
+        _gl.Uniform1(_nativeLocSourceTex, 0);
+        _gl.Uniform1(_nativeLocAuxTex, 1);
+        _gl.Uniform2(_nativeLocWorldSize, (float)view.WorldSize.X, (float)view.WorldSize.Y);
+        _gl.Uniform2(_nativeLocCameraPixels, (float)view.CameraPixels.X, (float)view.CameraPixels.Y);
+        _gl.Uniform2(_nativeLocViewSize, (float)view.ViewSize.X, (float)view.ViewSize.Y);
+        _gl.Uniform1(_nativeLocPixelScale, (float)view.PixelScale);
+        _gl.Uniform1(_nativeLocEdgeSoftness, Tweaks.Screen.NativeContinuousEdgeSoftness);
+        _gl.Uniform1(_nativeLocBoundaryBlend, Tweaks.Screen.NativeContinuousBoundaryBlend);
+        float sampleFactor = nativeSampleCount <= 1 ? 0f : nativeSampleCount <= 2 ? 0.5f : 1f;
+        _gl.Uniform1(_nativeLocSampleFactor, sampleFactor);
+        _gl.ActiveTexture(TextureUnit.Texture0);
+        _gl.BindTexture(TextureTarget.Texture2D, sourceTex);
+        _gl.ActiveTexture(TextureUnit.Texture1);
+        _gl.BindTexture(TextureTarget.Texture2D, _terrainAuxTexture);
+        _gl.BindVertexArray(_postVao);
+        _gl.DrawArrays(PrimitiveType.Triangles, 0, 6);
+        _gl.BindVertexArray(0);
+        _gl.BindTexture(TextureTarget.Texture2D, 0);
+        _gl.ActiveTexture(TextureUnit.Texture0);
+        _gl.UseProgram(0);
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }
 
     private uint CompileShader(ShaderType type, string source)
@@ -531,9 +707,11 @@ void main() {
         _imgui.Dispose();
         for (int i = 0; i < 2; i++) if (_gameTextures[i] != 0) _gl.DeleteTexture(_gameTextures[i]);
         if (_postSourceTexture != 0) _gl.DeleteTexture(_postSourceTexture);
+        if (_nativeSourceTexture != 0) _gl.DeleteTexture(_nativeSourceTexture);
         if (_terrainAuxTexture != 0) _gl.DeleteTexture(_terrainAuxTexture);
         if (_postFbo != 0) _gl.DeleteFramebuffer(_postFbo);
         if (_postProgram != 0) _gl.DeleteProgram(_postProgram);
+        if (_nativeTerrainProgram != 0) _gl.DeleteProgram(_nativeTerrainProgram);
         if (_postVbo != 0) _gl.DeleteBuffer(_postVbo);
         if (_postVao != 0) _gl.DeleteVertexArray(_postVao);
     }

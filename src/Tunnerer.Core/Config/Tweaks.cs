@@ -10,13 +10,19 @@ public enum RenderBackendKind
     Dx12 = 2,
 }
 
+public enum TerrainVisualMode
+{
+    LegacyHiRes = 0,
+    NativeContinuous = 1,
+}
+
 public static class Tweaks
 {
     public static class System
     {
         public const string WindowTitle = "Tunnerer";
         public const string Version = "0.1 alpha";
-        public const RenderBackendKind RenderBackend = RenderBackendKind.OpenGl;
+        public const RenderBackendKind RenderBackend = RenderBackendKind.Dx11;
     }
 
     public static class Perf
@@ -33,11 +39,20 @@ public static class Tweaks
         public static readonly Size RenderSurfaceSize = new(320, 200);
         public const float DrawStaticFuelThreshold = 0.2f;
         public const int PixelScale = 6;
+        public const TerrainVisualMode TerrainVisual = TerrainVisualMode.NativeContinuous;
         public const int HiResInitialQuality = 2; // 0=Low, 1=Medium, 2=High
         public const float HiResRenderBudgetMs = 8.0f;
         public const int HiResBudgetHysteresisFrames = 12;
         public const float HiResBudgetUnderThreshold = 0.65f;
         public const int HiResQualityIncreaseFramesMultiplier = 25;
+        public const int NativeContinuousSampleLow = 1;
+        public const int NativeContinuousSampleMedium = 2;
+        public const int NativeContinuousSampleHigh = 4;
+        public const float NativeContinuousEdgeSoftness = 0.10f;
+        public const float NativeContinuousBoundaryBlend = 0.75f;
+        public const float NativeContinuousRenderBudgetMs = 5.0f;
+        public const int NativeContinuousBudgetHysteresisFrames = 10;
+        public const int NativeContinuousRecoveryFramesMultiplier = 20;
 
         // GPU post-processing / lighting tuning
         public const float PostBloomThreshold = 0.72f;
@@ -63,7 +78,7 @@ public static class Tweaks
         public const float PostMaterialEmissiveScorchedR = 0.7059f;
         public const float PostMaterialEmissiveScorchedG = 0.3137f;
         public const float PostMaterialEmissiveScorchedB = 0.1176f;
-        public const float PostMaterialEmissiveEnergyStrength = 0.60f;
+        public const float PostMaterialEmissiveEnergyStrength = 0.95f;
         public const float PostMaterialEmissiveScorchedStrength = 0.32f;
         public const float PostMaterialEmissivePulseFreq = 3.0f;
         public const float PostMaterialEmissivePulseMin = 0.8f;

@@ -16,7 +16,10 @@ public readonly record struct GamePixelsUpload(
     float[]? TankHeatGlowData,
     int TankHeatGlowCount,
     byte[]? TerrainAux,
-    Rect? AuxDirtyRect);
+    Rect? AuxDirtyRect,
+    bool UseNativeContinuous,
+    uint[]? NativeSourcePixels,
+    int NativeSampleCount);
 
 public interface IGameRenderBackend : IDisposable
 {
