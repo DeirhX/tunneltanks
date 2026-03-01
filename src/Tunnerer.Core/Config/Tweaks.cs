@@ -97,6 +97,17 @@ public static class Tweaks
         public const byte PostEmissiveEnergyHigh = 230;
         public const byte PostEmissiveScorchedHigh = 64;
         public const byte PostEmissiveScorchedLow = 32;
+
+        // Directional lighting (matches CPU path: top-left, slightly forward)
+        public const float LightDirX = -0.35f;
+        public const float LightDirY = -0.55f;
+        public const float LightDirZ = 0.70f;
+        public const float LightAmbient = 0.22f;
+        public const float LightDiffuseWeight = 0.68f;
+        public const float LightNormalStrength = 2.2f;
+        public const float LightShininess = 8f;
+        public const float LightSpecularIntensity = 0.10f;
+        public const float LightMicroNormalStrength = 0.35f;
     }
 
     public static class World

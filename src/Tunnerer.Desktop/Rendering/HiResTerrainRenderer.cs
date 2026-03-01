@@ -21,7 +21,6 @@ public sealed class HiResTerrainRenderer
     private const float IsolatedSolidAlpha = 0.35f;
 
     // Lighting
-    private const float GaussianSigma = 1.8f;
     private const float AmbientWeight = 0.22f;
     private const float DiffuseWeight = 0.68f;
     private const float MacroNormalStrength = 1.8f;
@@ -41,9 +40,7 @@ public sealed class HiResTerrainRenderer
     private const float ScorchHeatFactor = 0.6f;
     private const float ScorchResidualMin = 0.2f;
 
-    private float[]? _blurField;
-    private int _blurW;
-    private int _blurH;
+    private readonly TerrainBlurField _blurField = new();
 
     private readonly TerrainTextureAtlas _atlas = new();
 
@@ -67,16 +64,7 @@ public sealed class HiResTerrainRenderer
         s_halfX = hx / hLen;
         s_halfY = hy / hLen;
         s_halfZ = hz / hLen;
-
-        Gauss5x5 = new float[25];
-        const float sigma = GaussianSigma;
-        for (int ky = -2; ky <= 2; ky++)
-            for (int kx = -2; kx <= 2; kx++)
-                Gauss5x5[(ky + 2) * 5 + (kx + 2)] =
-                    MathF.Exp(-(kx * kx + ky * ky) / (2f * sigma * sigma));
     }
-
-    private static readonly float[] Gauss5x5;
 
     private const float TexTileDensity = 0.08f;
 
@@ -84,68 +72,12 @@ public sealed class HiResTerrainRenderer
     //  Blur-field management
     // ------------------------------------------------------------------
 
-    public void RebuildBlurField(TerrainGrid terrain)
-    {
-        int w = terrain.Width, h = terrain.Height;
-        if (_blurField == null || _blurW != w || _blurH != h)
-        {
-            _blurField = new float[w * h];
-            _blurW = w;
-            _blurH = h;
-        }
+    public void RebuildBlurField(TerrainGrid terrain) => _blurField.Rebuild(terrain);
 
-        for (int cy = 0; cy < h; cy++)
-            for (int cx = 0; cx < w; cx++)
-                _blurField[cy * w + cx] = ComputeBlurCell(terrain, cx, cy, w, h);
-    }
+    public void UpdateBlurField(TerrainGrid terrain, IReadOnlyList<Position> dirtyCells) =>
+        _blurField.UpdateDirty(terrain, dirtyCells);
 
-    public void UpdateBlurField(TerrainGrid terrain, IReadOnlyList<Position> dirtyCells)
-    {
-        if (_blurField == null) { RebuildBlurField(terrain); return; }
-
-        int w = _blurW, h = _blurH;
-        for (int i = 0; i < dirtyCells.Count; i++)
-        {
-            var p = dirtyCells[i];
-            for (int dy = -2; dy <= 2; dy++)
-            {
-                int ny = p.Y + dy;
-                if ((uint)ny >= (uint)h) continue;
-                for (int dx = -2; dx <= 2; dx++)
-                {
-                    int nx = p.X + dx;
-                    if ((uint)nx >= (uint)w) continue;
-                    _blurField[ny * w + nx] = ComputeBlurCell(terrain, nx, ny, w, h);
-                }
-            }
-        }
-    }
-
-    private static float ComputeBlurCell(TerrainGrid terrain, int cx, int cy, int w, int h)
-    {
-        float sum = 0f, wSum = 0f;
-        for (int ky = -2; ky <= 2; ky++)
-        {
-            int ny = cy + ky;
-            if ((uint)ny >= (uint)h) continue;
-            int rowOff = ny * w;
-            for (int kx = -2; kx <= 2; kx++)
-            {
-                int nx = cx + kx;
-                if ((uint)nx >= (uint)w) continue;
-                float gw = Gauss5x5[(ky + 2) * 5 + (kx + 2)];
-                sum += gw * (IsSolidTerrain(terrain.GetPixelRaw(rowOff + nx)) ? 1f : -1f);
-                wSum += gw;
-            }
-        }
-        return sum / wSum;
-    }
-
-    private float SampleBlur(int x, int y)
-    {
-        if ((uint)x >= (uint)_blurW || (uint)y >= (uint)_blurH) return 1f;
-        return _blurField![y * _blurW + x];
-    }
+    private float SampleBlur(int x, int y) => _blurField.Sample(x, y);
 
     private float SampleBlurBilinear(float worldXf, float worldYf)
     {

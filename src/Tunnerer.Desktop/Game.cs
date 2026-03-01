@@ -32,6 +32,7 @@ public class Game : IDisposable
     private readonly List<Position> _terrainDirtyCells = new();
     private readonly float[] _gpuTankHeatGlow = new float[Tweaks.World.MaxPlayers * 4];
     private readonly byte[] _gpuTerrainAux;
+    private readonly TerrainBlurField _gpuBlurField = new();
     private bool _gpuAuxFullUploadPending = true;
     private uint[] _hiResPixels = Array.Empty<uint>();
     private uint[] _hiResTerrainPixels = Array.Empty<uint>();
@@ -340,8 +341,7 @@ public class Game : IDisposable
 
             if (useNativeContinuous)
             {
-                ProfileSection(ref _drawProfile.ScreenTerrainToSceneCopy, () =>
-                    BuildFallbackViewPixels(_hiResPixels, _compositePixels, renderView));
+                // NativeContinuous path uploads world-resolution composite pixels directly to GPU.
             }
             else
             {
@@ -523,16 +523,22 @@ public class Game : IDisposable
         return RectMath.Union(a, b);
     }
 
-    private static void BuildGpuTerrainAuxData(Core.Terrain.TerrainGrid terrain, byte[] target)
+    private void BuildGpuTerrainAuxData(Core.Terrain.TerrainGrid terrain, byte[] target)
     {
+        _gpuBlurField.Rebuild(terrain);
+        int w = terrain.Width;
         int len = terrain.Size.Area;
         for (int i = 0; i < len; i++)
-            WriteTerrainAux(terrain, i, terrain.GetPixelRaw(i), target, i * 4);
+        {
+            int x = i % w, y = i / w;
+            WriteTerrainAux(terrain, i, terrain.GetPixelRaw(i), _gpuBlurField.SampleAsByte(x, y), target, i * 4);
+        }
     }
 
-    private static void BuildGpuTerrainAuxRect(Core.Terrain.TerrainGrid terrain, byte[] target, in Rect dirtyRect)
+    private void BuildGpuTerrainAuxRect(Core.Terrain.TerrainGrid terrain, byte[] target, in Rect dirtyRect)
     {
         RectMath.GetMinMaxInclusive(dirtyRect, out int minX, out int minY, out int maxX, out int maxY);
+        _gpuBlurField.UpdateRect(terrain, minX, minY, maxX, maxY);
         int w = terrain.Width;
         for (int y = minY; y <= maxY; y++)
         {
@@ -540,12 +546,12 @@ public class Game : IDisposable
             for (int x = minX; x <= maxX; x++)
             {
                 int idx = row + x;
-                WriteTerrainAux(terrain, idx, terrain.GetPixelRaw(idx), target, idx * 4);
+                WriteTerrainAux(terrain, idx, terrain.GetPixelRaw(idx), _gpuBlurField.SampleAsByte(x, y), target, idx * 4);
             }
         }
     }
 
-    private static void WriteTerrainAux(Core.Terrain.TerrainGrid terrain, int idx, Core.Terrain.TerrainPixel pixel, byte[] target, int writeIndex)
+    private static void WriteTerrainAux(Core.Terrain.TerrainGrid terrain, int idx, Core.Terrain.TerrainPixel pixel, byte sdfValue, byte[] target, int writeIndex)
     {
         byte energy = 0;
         byte scorched = 0;
@@ -569,16 +575,9 @@ public class Game : IDisposable
         }
 
         target[writeIndex] = terrain.GetHeat(idx);
-        target[writeIndex + 1] = IsSolidTerrainForGpu(pixel) ? (byte)255 : (byte)0;
+        target[writeIndex + 1] = sdfValue;
         target[writeIndex + 2] = energy;
         target[writeIndex + 3] = scorched;
-    }
-
-    private static bool IsSolidTerrainForGpu(Core.Terrain.TerrainPixel p)
-    {
-        if (p == Core.Terrain.TerrainPixel.Blank) return false;
-        if (Core.Terrain.Pixel.IsScorched(p)) return false;
-        return true;
     }
 
     private void ScrollTerrainBuffer(Offset cameraDelta, Size viewSize)
@@ -722,36 +721,6 @@ public class Game : IDisposable
         _hiResPixels = new uint[size.Area];
         _hiResTerrainPixels = new uint[size.Area];
         _hiResTerrainNeedsFullRender = true;
-    }
-
-    private static void BuildFallbackViewPixels(uint[] target, uint[] worldPixels, in RenderView view)
-    {
-        int viewW = view.ViewSize.X;
-        int viewH = view.ViewSize.Y;
-        int worldW = view.WorldSize.X;
-        int worldH = view.WorldSize.Y;
-        int camPixelX = view.CameraPixels.X;
-        int camPixelY = view.CameraPixels.Y;
-        int pixelScale = Math.Max(1, view.PixelScale);
-        for (int y = 0; y < viewH; y++)
-        {
-            int worldY = (camPixelY + y) / pixelScale;
-            int row = y * viewW;
-            if ((uint)worldY >= (uint)worldH)
-            {
-                Array.Fill(target, 0xFF161414u, row, viewW);
-                continue;
-            }
-
-            int worldRow = worldY * worldW;
-            for (int x = 0; x < viewW; x++)
-            {
-                int worldX = (camPixelX + x) / pixelScale;
-                target[row + x] = (uint)worldX < (uint)worldW
-                    ? worldPixels[worldRow + worldX]
-                    : 0xFF161414u;
-            }
-        }
     }
 
     private static TerrainVisualMode ResolveTerrainVisualMode()

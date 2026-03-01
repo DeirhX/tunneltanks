@@ -73,7 +73,8 @@ public class World
             var tankBase = _tankBases.GetSpawn(i);
             if (tankBase != null)
             {
-                int tankSeed = unchecked(_simulationSeed ^ ((i + 1) * (int)0x9e3779b9u));
+                uint mixed = (uint)_simulationSeed ^ (uint)(i + 1) * 0x9e3779b9u;
+                int tankSeed = unchecked((int)mixed);
                 _tankList.AddTank(i, tankBase,
                     _deterministicSimulation ? tankSeed : 0);
             }

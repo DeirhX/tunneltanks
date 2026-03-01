@@ -34,11 +34,47 @@ cbuffer PostParams : register(b0)
     float4 MaterialEmissiveScorched;
     float4 MaterialEmissivePulse;
     float4 NativeContinuousParams;
+    float4 LightDir;     // xyz = direction, w = NormalStrength
+    float4 HalfVector;   // xyz = half-vector, w = MicroNormalStrength
+    float4 LightParams;  // x = Ambient, y = DiffuseWeight, z = Shininess, w = SpecularIntensity
     float TankGlowCount;
     float4 TankGlow[8];
 };
 
 float3 bright(float3 c) { return max(c - float3(BloomThreshold, BloomThreshold, BloomThreshold), 0.0); }
+
+// GPU hash noise for procedural micro-normal perturbation (matches CPU TexTileDensity = 0.08)
+float hash21(float2 p)
+{
+    float3 p3 = frac(float3(p.xyx) * float3(0.1031, 0.1030, 0.0973));
+    p3 += dot(p3, p3.yzx + 33.33);
+    return frac((p3.x + p3.y) * p3.z);
+}
+
+float valueNoise(float2 p)
+{
+    float2 i = floor(p);
+    float2 f = frac(p);
+    f = f * f * (3.0 - 2.0 * f);
+    float a = hash21(i);
+    float b = hash21(i + float2(1.0, 0.0));
+    float c = hash21(i + float2(0.0, 1.0));
+    float d = hash21(i + float2(1.0, 1.0));
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+float fbmNoise(float2 p, int octaves)
+{
+    float val = 0.0;
+    float amp = 0.5;
+    for (int i = 0; i < octaves; i++)
+    {
+        val += amp * valueNoise(p);
+        p *= 2.17;
+        amp *= 0.5;
+    }
+    return val;
+}
 
 float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
 {
@@ -102,19 +138,20 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
         float mx2 = ax2.g;
         float my1 = ay1.g;
         float my2 = ay2.g;
+
+        // Sobel gradient of the smooth SDF — used for edge detection and normals
         float gx = (ad2.g + 2.0 * mx1 + ad1.g) - (ad4.g + 2.0 * mx2 + ad3.g);
         float gy = (ad3.g + 2.0 * my1 + ad1.g) - (ad4.g + 2.0 * my2 + ad2.g);
         float edge = length(float2(gx, gy)) * 0.25;
-        float edgeAmt = min(1.0, edge * TerrainMaskEdgeStrength * 1.2);
-        float mDiag = (ad1.g + ad2.g + ad3.g + ad4.g) * 0.25;
-        float m = lerp(m0, mDiag, 0.12);
-        float mSmooth = (m0 * 4.0 + mx1 + mx2 + my1 + my2 + ad1.g + ad2.g + ad3.g + ad4.g) / 12.0;
-        m = lerp(m, mSmooth, 0.55);
+        float edgeAmt = min(1.0, edge * TerrainMaskEdgeStrength);
+
+        // SDF is already smooth — light averaging to reduce any quantization artifacts
+        float m = lerp(m0, (mx1 + mx2 + my1 + my2) * 0.25, 0.15);
         float boundary = 1.0 - abs(m * 2.0 - 1.0);
         float outline = min(1.0, boundary * TerrainMaskBoundaryScale);
-        float maskWidth = max(fwidth(m) * 1.6, 0.045);
+        float maskWidth = max(fwidth(m) * 1.4, 0.02);
         float maskSoft = smoothstep(0.5 - maskWidth, 0.5 + maskWidth, m);
-        float edgeProfile = edgeAmt * smoothstep(0.08, 0.95, boundary);
+        float edgeProfile = edgeAmt * smoothstep(0.05, 0.8, boundary);
         float energyMask = saturate(a0.b * 2.0);
         float outlineDarken = TerrainMaskOutlineDarken * (1.0 - 0.55 * energyMask);
         color *= 1.0 - outline * outlineDarken;
@@ -134,6 +171,37 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
         aaNeighborhood *= (1.0 / 8.0);
         float aaMix = saturate(edgeProfile * 0.30);
         color = lerp(color, aaNeighborhood, aaMix);
+
+        // --- Directional lighting from SDF-derived normals ---
+        if (Quality >= 1.0 && LightDir.w > 0.0)
+        {
+            float nStr = LightDir.w;
+            float3 normal = normalize(float3(-gx * nStr, -gy * nStr, 1.0));
+
+            // Procedural micro-normal perturbation for surface texture
+            float microStr = HalfVector.w;
+            if (microStr > 0.0)
+            {
+                float2 noiseP = worldCell * 0.08;
+                float mnx = (fbmNoise(noiseP, 3) - 0.5) * 2.0 * microStr;
+                float mny = (fbmNoise(noiseP + float2(97.0, 131.0), 3) - 0.5) * 2.0 * microStr;
+                normal = normalize(float3(normal.xy + float2(mnx, mny), normal.z));
+            }
+
+            // Half-Lambert diffuse
+            float NdotL = dot(normal, LightDir.xyz);
+            float diffuse = max(0.0, NdotL) * 0.6 + 0.4;
+
+            // Blinn-Phong specular
+            float NdotH = max(0.0, dot(normal, HalfVector.xyz));
+            float spec = pow(NdotH, LightParams.z) * LightParams.w;
+
+            float lit = LightParams.x + LightParams.y * diffuse;
+
+            // Apply lighting only to solid terrain, cave stays unlit
+            float lightMix = maskSoft * saturate(edgeProfile * 3.0 + maskSoft);
+            color = lerp(color, color * lit + spec, lightMix);
+        }
 
         float heat = a0.r * 0.50 + (ax1.r + ax2.r + ay1.r + ay2.r) * 0.125;
         if (heat > TerrainHeatGlowColorAndThreshold.a)

@@ -34,6 +34,9 @@ cbuffer PostParams : register(b0)
     float4 MaterialEmissiveScorched;
     float4 MaterialEmissivePulse;
     float4 NativeContinuousParams;
+    float4 LightDir;     // xyz = direction, w = NormalStrength
+    float4 HalfVector;   // xyz = half-vector, w = MicroNormalStrength
+    float4 LightParams;  // x = Ambient, y = DiffuseWeight, z = Shininess, w = SpecularIntensity
     float TankGlowCount;
     float4 TankGlow[8];
 };
@@ -42,24 +45,32 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
 {
     float2 screenPx = uv * ViewSize;
     float2 worldCell = (CameraPixels + screenPx) / max(1.0, PixelScale);
+
+    // Bilinear sampling of source colors using texture UV
+    float2 srcUv = (worldCell + float2(0.5, 0.5)) / WorldSize;
+    float3 bilinearColor = sourceTex.Sample(s0, srcUv).rgb;
+
+    // Nearest-neighbor color for deep solid/cave (avoids bleeding)
     int2 maxCell = int2(max(1.0, WorldSize.x), max(1.0, WorldSize.y)) - int2(1, 1);
     int2 cell = clamp(int2(floor(worldCell)), int2(0, 0), maxCell);
-    int2 cellX1 = clamp(cell + int2(1, 0), int2(0, 0), maxCell);
-    int2 cellX2 = clamp(cell - int2(1, 0), int2(0, 0), maxCell);
-    int2 cellY1 = clamp(cell + int2(0, 1), int2(0, 0), maxCell);
-    int2 cellY2 = clamp(cell - int2(0, 1), int2(0, 0), maxCell);
+    float3 nearestColor = sourceTex.Load(int3(cell, 0)).rgb;
 
-    float3 c0 = sourceTex.Load(int3(cell, 0)).rgb;
-    float3 cBlend = c0 * 0.70 +
-        sourceTex.Load(int3(cellX1, 0)).rgb * 0.075 +
-        sourceTex.Load(int3(cellX2, 0)).rgb * 0.075 +
-        sourceTex.Load(int3(cellY1, 0)).rgb * 0.075 +
-        sourceTex.Load(int3(cellY2, 0)).rgb * 0.075;
+    // SDF value: 0 = deep cave, 0.5 = boundary, 1 = deep solid
+    float2 auxUv = (worldCell + float2(0.5, 0.5)) / WorldSize;
+    float sdf = auxTex.Sample(s0, auxUv).g;
 
-    float m0 = auxTex.Load(int3(cell, 0)).g;
-    float edge = 1.0 - abs(m0 * 2.0 - 1.0);
-    float edgeW = smoothstep(0.0, max(0.001, NativeContinuousParams.x), edge) * NativeContinuousParams.y;
-    edgeW *= (0.15 + 0.35 * saturate(NativeContinuousParams.z));
-    float3 color = lerp(c0, cBlend, saturate(edgeW));
+    // Smooth alpha from SDF — transition width adapts to edge softness
+    float edgeSoftness = max(0.02, NativeContinuousParams.x);
+    float alpha = smoothstep(0.5 - edgeSoftness, 0.5 + edgeSoftness, sdf);
+
+    // Blend bilinear (smooth at boundaries) with nearest (sharp deep inside)
+    float boundaryProximity = 1.0 - abs(sdf * 2.0 - 1.0);
+    float bilinearWeight = smoothstep(0.0, 0.4, boundaryProximity) * NativeContinuousParams.y;
+    float3 solidColor = lerp(nearestColor, bilinearColor, saturate(bilinearWeight));
+
+    // Cave color (very dark, not pure black to allow depth variation)
+    float3 caveColor = float3(0.055, 0.055, 0.063);
+
+    float3 color = lerp(caveColor, solidColor, alpha);
     return float4(color, 1.0);
 }
