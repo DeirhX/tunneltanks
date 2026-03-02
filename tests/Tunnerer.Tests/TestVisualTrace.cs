@@ -66,10 +66,10 @@ internal sealed class TestVisualTrace : IDisposable
                 int dst = idx * 3;
                 var pix = terrain.GetPixelRaw(idx);
                 var baseColor = Pixel.GetColor(pix);
-                int heat = terrain.GetHeat(idx);
+                float heat = terrain.GetHeatTemperature(idx);
 
                 // Blend terrain albedo with heat glow to make transfer patterns obvious.
-                float h = heat / 255f;
+                float h = Math.Clamp(heat / 255f, 0f, 1f);
                 int r = ClampByte(baseColor.R + (int)(230f * h));
                 int g = ClampByte((int)(baseColor.G * (1f - 0.55f * h)));
                 int b = ClampByte((int)(baseColor.B * (1f - 0.75f * h)));

@@ -9,54 +9,45 @@ using Tunnerer.Core.Terrain;
 /// </summary>
 public sealed class TerrainHeatEngine
 {
-    private float[]? _temperature;
     private float[]? _delta;
-    private bool _stateDirty = true;
 
-    public void MarkStateDirty() => _stateDirty = true;
-
-    public void EnsureState(byte[] heat, int len) => EnsureStateFromHeat(heat, len);
-
-    public bool AddEnergyAt(byte[] heat, int width, int height, int x, int y, int amount)
+    public bool AddEnergyAt(float[] temperature, int width, int height, int x, int y, float amount)
     {
         if ((uint)x >= (uint)width || (uint)y >= (uint)height)
             return false;
         int idx = x + y * width;
-        return AddEnergyAt(heat, idx, amount);
+        return AddEnergyAt(temperature, idx, amount);
     }
 
-    public bool AddEnergyAt(byte[] heat, int index, int amount)
+    public bool AddEnergyAt(float[] temperature, int index, float amount)
     {
-        if ((uint)index >= (uint)heat.Length || amount == 0)
+        if ((uint)index >= (uint)temperature.Length || amount == 0f)
             return false;
 
-        EnsureStateFromHeat(heat, heat.Length);
-        float next = Math.Clamp(_temperature![index] + amount, 0f, 255f);
-        _temperature[index] = next;
-        heat[index] = (byte)Math.Clamp((int)MathF.Round(next), 0, 255);
+        temperature[index] += amount;
         return true;
     }
 
-    public float GetTemperatureAt(byte[] heat, int len, int index)
+    public float GetTemperatureAt(float[] temperature, int len, int index)
     {
-        EnsureStateFromHeat(heat, len);
         if ((uint)index >= (uint)len)
             return 0f;
-        return _temperature![index];
+        return temperature[index];
     }
 
-    public void Step(byte[] heat, TerrainPixel[] pixels, int width, int height)
-        => Step(heat, pixels, width, height, includeAmbientExchange: Tweaks.World.EnableThermalAmbientExchange);
+    public void Step(float[] temperature, TerrainPixel[] pixels, int width, int height)
+        => Step(temperature, pixels, width, height, includeAmbientExchange: Tweaks.World.EnableThermalAmbientExchange);
 
     public void Step(
-        byte[] heat,
+        float[] temperature,
         TerrainPixel[] pixels,
         int width,
         int height,
         bool includeAmbientExchange)
     {
         int len = width * height;
-        EnsureStateFromHeat(heat, len);
+        if (temperature.Length < len)
+            throw new ArgumentException("temperature length must cover simulation grid", nameof(temperature));
 
         if (_delta == null || _delta.Length < len)
             _delta = new float[len];
@@ -69,12 +60,12 @@ public sealed class TerrainHeatEngine
             {
                 int idx = row + x;
                 ThermalMaterial m1 = Pixel.GetThermalMaterial(pixels[idx]);
-                float t1 = _temperature![idx];
+                float t1 = temperature[idx];
 
                 if (x + 1 < width)
-                    ExchangePair(idx, idx + 1, m1, t1, pixels);
+                    ExchangePair(idx, idx + 1, m1, t1, pixels, temperature);
                 if (y + 1 < height)
-                    ExchangePair(idx, idx + width, m1, t1, pixels);
+                    ExchangePair(idx, idx + width, m1, t1, pixels, temperature);
                 if (includeAmbientExchange)
                     ExchangeAmbient(idx, m1, t1);
             }
@@ -82,37 +73,32 @@ public sealed class TerrainHeatEngine
 
         for (int i = 0; i < len; i++)
         {
-            float nextT = _temperature![i] + _delta[i];
-            nextT = Math.Clamp(nextT, 0f, 255f);
-            _temperature[i] = nextT;
-            heat[i] = (byte)Math.Clamp((int)MathF.Round(nextT), 0, 255);
+            temperature[i] += _delta[i];
         }
 
-        ApplyFixedTemperatureCells(heat, pixels, len);
+        ApplyFixedTemperatureCells(temperature, pixels, len);
     }
 
-    public double SumInternalEnergy(TerrainPixel[] pixels)
+    public double SumInternalEnergy(float[] temperature, TerrainPixel[] pixels)
     {
-        if (_temperature == null)
-            return 0.0;
-        if (pixels.Length < _temperature.Length)
+        if (pixels.Length < temperature.Length)
             throw new ArgumentException("pixels length must cover internal state", nameof(pixels));
 
         double sum = 0.0;
-        for (int i = 0; i < _temperature.Length; i++)
+        for (int i = 0; i < temperature.Length; i++)
         {
             ThermalMaterial m = Pixel.GetThermalMaterial(pixels[i]);
             float c = GetHeatCapacity(m);
-            sum += _temperature[i] * c;
+            sum += temperature[i] * c;
         }
 
         return sum;
     }
 
-    private void ExchangePair(int idxA, int idxB, ThermalMaterial mA, float tA, TerrainPixel[] pixels)
+    private void ExchangePair(int idxA, int idxB, ThermalMaterial mA, float tA, TerrainPixel[] pixels, float[] temperature)
     {
         ThermalMaterial mB = Pixel.GetThermalMaterial(pixels[idxB]);
-        float tB = _temperature![idxB];
+        float tB = temperature[idxB];
         float delta = tA - tB;
         if (MathF.Abs(delta) < 0.0001f) return;
 
@@ -122,7 +108,10 @@ public sealed class TerrainHeatEngine
         float dQ = k * delta * Tweaks.World.ThermalDt;
 
         // Keep explicit pair exchange numerically stable under large deltas.
-        float maxStableDQ = MathF.Min(cA, cB) * MathF.Abs(delta) * 0.5f;
+        // Pairwise cap is conservative because each cell can exchange with multiple
+        // neighbors in one step; this avoids multi-neighbor overshoot that can
+        // create heat after temperature floor clamping.
+        float maxStableDQ = MathF.Min(cA, cB) * MathF.Abs(delta) * 0.125f;
         if (dQ > maxStableDQ) dQ = maxStableDQ;
         else if (dQ < -maxStableDQ) dQ = -maxStableDQ;
         if (MathF.Abs(dQ) < 0.0001f) return;
@@ -145,7 +134,7 @@ public sealed class TerrainHeatEngine
         _delta![idx] += dQ / capacity;
     }
 
-    private void ApplyFixedTemperatureCells(byte[] heat, TerrainPixel[] pixels, int len)
+    private void ApplyFixedTemperatureCells(float[] temperature, TerrainPixel[] pixels, int len)
     {
         for (int i = 0; i < len; i++)
         {
@@ -153,25 +142,8 @@ public sealed class TerrainHeatEngine
             if (!IsFixedTemperatureMaterial(material))
                 continue;
             float target = GetFixedTemperature(material);
-            _temperature![i] = target;
-            heat[i] = (byte)Math.Clamp((int)MathF.Round(target), 0, 255);
+            temperature[i] = target;
         }
-    }
-
-    private void EnsureStateFromHeat(byte[] heat, int len)
-    {
-        if (_temperature == null || _temperature.Length < len)
-        {
-            _temperature = new float[len];
-            _stateDirty = true;
-        }
-
-        if (!_stateDirty)
-            return;
-
-        for (int i = 0; i < len; i++)
-            _temperature[i] = heat[i];
-        _stateDirty = false;
     }
 
     private static float GetHeatCapacity(ThermalMaterial material) => material switch

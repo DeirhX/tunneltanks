@@ -29,9 +29,11 @@ public sealed class TankHeatEngine
             float ambientBaseline = atOwnBase ? 0f : Tweaks.Tank.HeatAmbientOutsideBase;
             terrainTemperature = MathF.Max(ambientBaseline, sampledTerrainTemperature);
         }
-        float dQTerrain = TankHeatModel.ComputeTankTerrainHeatFlow(nextHeat, terrainTemperature);
+        float dQTerrain = atOwnBase
+            ? 0f
+            : TankHeatModel.ComputeTankTerrainHeatFlow(nextHeat, terrainTemperature);
 
-        if (sampleCells > 0 && Tweaks.Tank.TerrainHeatCapacity > 0f)
+        if (!atOwnBase && sampleCells > 0 && Tweaks.Tank.TerrainHeatCapacity > 0f)
         {
             float desiredTerrainAvgDelta = TankHeatModel.ComputeTerrainDeltaFromHeatFlow(dQTerrain);
             int desiredTerrainTotalDelta = (int)MathF.Round(desiredTerrainAvgDelta * sampleCells);

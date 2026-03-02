@@ -131,15 +131,15 @@ public static class Tweaks
         public const float ThermalCapacityBase = 2.6f;
 
         // Pairwise transmission speed (conductance).
-        public const float ThermalKAirAir = 0.180f;
+        public const float ThermalKAirAir = 0.240f;
         public const float ThermalKAirDirt = 0.110f;
-        public const float ThermalKAirStone = 0.070f;
+        public const float ThermalKAirStone = 0.220f;
         public const float ThermalKAirBase = 0.450f;
         public const float ThermalKDirtDirt = 0.160f;
-        public const float ThermalKDirtStone = 0.110f;
+        public const float ThermalKDirtStone = 0.200f;
         public const float ThermalKDirtBase = 0.350f;
-        public const float ThermalKStoneStone = 0.070f;
-        public const float ThermalKStoneBase = 0.120f;
+        public const float ThermalKStoneStone = 0.300f;
+        public const float ThermalKStoneBase = 0.450f;
         public const float ThermalKBaseBase = 0.200f;
         public const float ThermalFixedBaseTemperature = 0f;
         public const float ThermalKAmbientAir = 0.0120f;

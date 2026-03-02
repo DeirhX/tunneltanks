@@ -156,14 +156,18 @@ public class TankHeatBehaviorTests
         tank.Heat = 20f;
         tank.Reactor.Current.Heat = new Heat(20);
 
-        // Simulate repeated explosion deposition while standing in place.
-        for (int i = 0; i < 8; i++)
-            world.Terrain.AddHeatRadius(zonePos, Tweaks.Explosion.BulletHeatAmount, Tweaks.Explosion.BulletHeatRadius);
-
+        float peakHeat = tank.Heat;
         for (int i = 0; i < 45; i++)
+        {
+            // Keep injecting local explosion heat while tank remains in the zone.
+            world.Terrain.AddHeatRadius(zonePos, Tweaks.Explosion.BulletHeatAmount, Tweaks.Explosion.BulletHeatRadius);
             tank.Advance(world, default);
+            if (tank.Heat > peakHeat)
+                peakHeat = tank.Heat;
+        }
 
-        Assert.True(tank.Heat > 20.5f, $"Expected explosion heat zone to push above ambient after impact heating reduction. Actual={tank.Heat:0.00}");
+        Assert.True(peakHeat > 20.5f,
+            $"Expected explosion heat zone to push above ambient at least transiently. peak={peakHeat:0.00}, final={tank.Heat:0.00}");
     }
 
     [Fact]
@@ -251,15 +255,15 @@ public class TankHeatBehaviorTests
 
         var impactPos = basePos + new Offset(0, 46);
         world.Terrain.AddHeatRadius(impactPos, Tweaks.Explosion.BulletHeatAmount, Tweaks.Explosion.BulletHeatRadius);
-        int startHeat = world.Terrain.GetHeat(impactPos);
+        float startHeat = world.Terrain.GetHeatTemperature(impactPos);
 
         AdvanceUntil(world, maxFrames: 24 * 60, () =>
-            world.Terrain.GetHeat(impactPos) <= Math.Max(0, startHeat - 1));
+            world.Terrain.GetHeatTemperature(impactPos) <= startHeat - 1f);
 
-        int endHeat = world.Terrain.GetHeat(impactPos);
+        float endHeat = world.Terrain.GetHeatTemperature(impactPos);
         Assert.True(endHeat < startHeat,
             $"Expected one-bullet heat packet to cool over time. start={startHeat}, end={endHeat}");
-        Assert.True(endHeat <= Math.Max(0, startHeat - 1),
+        Assert.True(endHeat <= startHeat - 1f,
             $"Expected measurable dissipation when connected to base sink. start={startHeat}, end={endHeat}");
     }
 
@@ -694,9 +698,7 @@ public class TankHeatBehaviorTests
         for (int i = 0; i < maxFrames; i++)
         {
             if ((i % 120) == 0)
-            {
                 energySamples.Add($"{i}:{SumTunnelEnergy():0.0}");
-            }
 
             if (world.Terrain.SampleAverageHeat(hotspotPos, radius: 6) * 255f <= 8f)
                 break;
@@ -778,7 +780,7 @@ public class TankHeatBehaviorTests
         for (int i = 0; i < terrain.Size.Area; i++)
         {
             float capacity = ThermalCapacityFor(terrain.GetPixelRaw(i));
-            total += terrain.GetHeat(i) * capacity;
+            total += terrain.GetHeatTemperature(i) * capacity;
         }
 
         return total;

@@ -164,9 +164,11 @@ public class Tank
                 if (Pixel.IsDiggable(pix))
                 {
                     terrain.SetPixel(worldPos, TerrainPixel.Blank);
-                    _frameDugPixels++;
                     if (torchUse)
+                    {
+                        _frameDugPixels++;
                         terrain.AddHeat(worldPos, Tweaks.Tank.TorchTerrainHeatAmount);
+                    }
                     if (Pixel.IsDirt(pix))
                         Resources.Add(new MaterialAmount(1, 0));
                 }

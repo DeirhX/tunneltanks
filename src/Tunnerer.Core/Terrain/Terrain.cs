@@ -7,7 +7,7 @@ using Tunnerer.Core.Types;
 public class TerrainGrid
 {
     private readonly TerrainPixel[] _data;
-    private readonly byte[] _heat;
+    private readonly float[] _heatTemperature;
     private readonly TerrainHeatEngine _heatEngine = new();
     private readonly int[] _neighborOffsets;
     private readonly List<Position> _changeList = new();
@@ -25,45 +25,39 @@ public class TerrainGrid
     {
         Size = size;
         _data = new TerrainPixel[size.Area];
-        _heat = new byte[size.Area];
+        _heatTemperature = new float[size.Area];
         _neighborOffsets = BuildNeighborOffsets(size.X);
     }
 
     // ------------------------------------------------------------------
-    //  Heat map: continuous temperature per pixel (0=cold, 255=max)
+    //  Heat map: continuous temperature per pixel (float-authoritative simulation state).
     // ------------------------------------------------------------------
 
-    public byte GetHeat(int offset) => _heat[offset];
-
-    public byte GetHeat(Position pos)
-    {
-        int offset = pos.X + pos.Y * Width;
-        return (uint)offset < (uint)_heat.Length ? _heat[offset] : (byte)0;
-    }
+    public float GetHeatTemperature(int offset)
+        => (uint)offset < (uint)_heatTemperature.Length ? _heatTemperature[offset] : 0f;
 
     public float GetHeatTemperature(Position pos)
     {
         int offset = pos.X + pos.Y * Width;
-        if ((uint)offset >= (uint)_heat.Length)
+        if ((uint)offset >= (uint)_heatTemperature.Length)
             return 0f;
-        return _heatEngine.GetTemperatureAt(_heat, _heat.Length, offset);
+        return _heatEngine.GetTemperatureAt(_heatTemperature, _heatTemperature.Length, offset);
     }
 
     public void AddHeat(Position pos, int amount)
     {
         int offset = pos.X + pos.Y * Width;
-        if ((uint)offset >= (uint)_heat.Length) return;
-        byte old = _heat[offset];
-        _heatEngine.AddEnergyAt(_heat, offset, amount);
-        byte next = _heat[offset];
-        if (next != old)
+        if ((uint)offset >= (uint)_heatTemperature.Length) return;
+        float old = _heatTemperature[offset];
+        _heatEngine.AddEnergyAt(_heatTemperature, offset, amount);
+        float next = _heatTemperature[offset];
+        if (MathF.Abs(next - old) > 0.0001f)
             MarkHeatDirty(pos.X, pos.Y);
         CommitPixel(pos);
     }
 
     public void AddHeatRadius(Position center, int amount, int radius)
     {
-        _heatEngine.EnsureState(_heat, _heat.Length);
         int radiusSq = radius * radius;
         ForEachInRadius(center, radius, (nx, ny, dx, dy) =>
         {
@@ -73,15 +67,15 @@ public class TerrainGrid
             int scaled = (int)(amount * falloff);
             if (scaled == 0) return;
             int offset = nx + ny * Width;
-            byte old = _heat[offset];
-            _heatEngine.AddEnergyAt(_heat, offset, scaled);
-            byte next = _heat[offset];
-            if (next != old)
+            float old = _heatTemperature[offset];
+            _heatEngine.AddEnergyAt(_heatTemperature, offset, scaled);
+            float next = _heatTemperature[offset];
+            if (MathF.Abs(next - old) > 0.0001f)
                 MarkHeatDirty(nx, ny);
         });
     }
 
-    private byte[]? _heatTemp;
+    private float[]? _heatTemp;
 
     public void CoolDown(int decayAmount, float diffuseRate = 0.12f)
     {
@@ -94,12 +88,12 @@ public class TerrainGrid
             // create heat through per-cell rounding. Use only pairwise exchange and
             // ambient coupling so heat moves through explicit flux terms.
             if (_heatTemp == null || _heatTemp.Length < len)
-                _heatTemp = new byte[len];
-            Array.Copy(_heat, _heatTemp, len);
-            _heatEngine.Step(_heat, _data, w, h);
+                _heatTemp = new float[len];
+            Array.Copy(_heatTemperature, _heatTemp, len);
+            _heatEngine.Step(_heatTemperature, _data, w, h);
             for (int i = 0; i < len; i++)
             {
-                if (_heat[i] == _heatTemp[i]) continue;
+                if (MathF.Abs(_heatTemperature[i] - _heatTemp[i]) < 0.0001f) continue;
                 int x = i % w;
                 int y = i / w;
                 MarkHeatDirty(x, y);
@@ -108,7 +102,7 @@ public class TerrainGrid
         }
 
         if (_heatTemp == null || _heatTemp.Length < len)
-            _heatTemp = new byte[len];
+            _heatTemp = new float[len];
 
         for (int y = 0; y < h; y++)
         {
@@ -116,44 +110,41 @@ public class TerrainGrid
             for (int x = 0; x < w; x++)
             {
                 int idx = row + x;
-                int center = _heat[idx];
-                if (center == 0 && x > 0 && x < w - 1 && y > 0 && y < h - 1)
+                float center = _heatTemperature[idx];
+                if (MathF.Abs(center) < 0.0001f && x > 0 && x < w - 1 && y > 0 && y < h - 1)
                 {
-                    int neighborSum = _heat[idx - 1] + _heat[idx + 1] +
-                                      _heat[idx - w] + _heat[idx + w];
-                    if (neighborSum == 0) { _heatTemp[idx] = 0; continue; }
+                    float neighborSum = _heatTemperature[idx - 1] + _heatTemperature[idx + 1] +
+                                        _heatTemperature[idx - w] + _heatTemperature[idx + w];
+                    if (MathF.Abs(neighborSum) < 0.0001f) { _heatTemp[idx] = 0f; continue; }
                 }
 
-                int sum = center * 4;
+                float sum = center * 4f;
                 int cnt = 4;
-                if (x > 0) { sum += _heat[idx - 1]; cnt++; }
-                if (x < w - 1) { sum += _heat[idx + 1]; cnt++; }
-                if (y > 0) { sum += _heat[idx - w]; cnt++; }
-                if (y < h - 1) { sum += _heat[idx + w]; cnt++; }
+                if (x > 0) { sum += _heatTemperature[idx - 1]; cnt++; }
+                if (x < w - 1) { sum += _heatTemperature[idx + 1]; cnt++; }
+                if (y > 0) { sum += _heatTemperature[idx - w]; cnt++; }
+                if (y < h - 1) { sum += _heatTemperature[idx + w]; cnt++; }
 
-                float blurred = sum / (float)cnt;
+                float blurred = sum / cnt;
                 float mixed = center + (blurred - center) * diffuseRate;
-                int val = (int)(mixed + 0.5f) - decayAmount;
-                byte next = (byte)(val < 0 ? 0 : val > 255 ? 255 : val);
+                float next = mixed - decayAmount;
                 _heatTemp[idx] = next;
-                if (next != _heat[idx])
+                if (MathF.Abs(next - _heatTemperature[idx]) > 0.0001f)
                     MarkHeatDirty(x, y);
             }
         }
 
-        Array.Copy(_heatTemp, _heat, len);
-        _heatEngine.MarkStateDirty();
+        Array.Copy(_heatTemp, _heatTemperature, len);
     }
 
     public float SampleAverageHeat(Position center, int radius)
     {
         float sum = 0f;
         int count = 0;
-        _heatEngine.EnsureState(_heat, _heat.Length);
         ForEachInRadius(center, radius, (nx, ny, _, _) =>
         {
             int idx = ny * Width + nx;
-            sum += _heatEngine.GetTemperatureAt(_heat, _heat.Length, idx);
+            sum += _heatEngine.GetTemperatureAt(_heatTemperature, _heatTemperature.Length, idx);
             count++;
         });
         return count > 0 ? sum / (count * 255f) : 0f;
@@ -168,14 +159,12 @@ public class TerrainGrid
 
     /// <summary>
     /// Applies an exact integer total heat delta across the same square area used by
-    /// <see cref="SampleAverageHeat"/>. Returns the actually applied total after clamping.
+    /// <see cref="SampleAverageHeat"/>. Returns the actually applied integer total.
     /// </summary>
     public int AddHeatTotalInRadiusArea(Position center, int radius, int totalAmount)
     {
         if (totalAmount == 0)
             return 0;
-        _heatEngine.EnsureState(_heat, _heat.Length);
-
         int count = CountCellsInRadiusArea(center, radius);
         if (count <= 0)
             return 0;
@@ -198,12 +187,12 @@ public class TerrainGrid
                 return;
 
             int offset = nx + ny * Width;
-            byte old = _heat[offset];
-            _heatEngine.AddEnergyAt(_heat, offset, delta);
-            byte next = _heat[offset];
-            if (next != old)
+            float old = _heatTemperature[offset];
+            _heatEngine.AddEnergyAt(_heatTemperature, offset, delta);
+            float next = _heatTemperature[offset];
+            if (MathF.Abs(next - old) > 0.0001f)
                 MarkHeatDirty(nx, ny);
-            applied += next - old;
+            applied += (int)MathF.Round(next - old);
         });
 
         return applied;

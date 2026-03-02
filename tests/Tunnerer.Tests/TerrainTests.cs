@@ -178,15 +178,15 @@ public class TerrainTests
         var hot = new Position(8, 8);
         t.AddHeat(hot, 255);
 
-        byte startCenter = t.GetHeat(hot);
+        float startCenter = t.GetHeatTemperature(hot);
         for (int i = 0; i < 200; i++)
             t.CoolDown(Tweaks.World.HeatCooldownPerTick, Tweaks.World.HeatDiffuseRate);
 
-        byte endCenter = t.GetHeat(hot);
-        byte ambient = (byte)Math.Clamp((int)MathF.Round(Tweaks.World.ThermalAmbientTemperature), 0, 255);
+        float endCenter = t.GetHeatTemperature(hot);
+        float ambient = Tweaks.World.ThermalAmbientTemperature;
 
         Assert.True(endCenter < startCenter, $"Expected hot spot to cool from {startCenter}, got {endCenter}");
-        Assert.InRange(endCenter, (byte)Math.Max(0, ambient - 10), (byte)Math.Min(255, ambient + 30));
+        Assert.InRange(endCenter, ambient - 10f, ambient + 30f);
     }
 
     [Fact]
@@ -199,10 +199,10 @@ public class TerrainTests
         var hot = new Position(10, 10);
         t.AddHeatRadius(hot, 255, 6);
 
-        int startTotal = SumHeat(t);
+        double startTotal = SumHeat(t);
         t.CoolDown(Tweaks.World.HeatCooldownPerTick, Tweaks.World.HeatDiffuseRate);
-        int afterFirstTick = SumHeat(t);
-        Assert.True(afterFirstTick <= startTotal,
+        double afterFirstTick = SumHeat(t);
+        Assert.True(afterFirstTick <= startTotal + 0.001,
             $"Expected first CoolDown tick to be non-increasing. start={startTotal}, tick1={afterFirstTick}");
     }
 
@@ -215,26 +215,26 @@ public class TerrainTests
 
         var hot = new Position(10, 10);
         t.AddHeatRadius(hot, 255, 6);
-        int previousTotal = SumHeat(t);
-        int startTotal = previousTotal;
-        int maxUpstep = 0;
+        double previousTotal = SumHeat(t);
+        double startTotal = previousTotal;
+        double maxUpstep = 0;
 
         for (int i = 0; i < 300; i++)
         {
             t.CoolDown(Tweaks.World.HeatCooldownPerTick, Tweaks.World.HeatDiffuseRate);
-            int currentTotal = SumHeat(t);
-            int upstep = currentTotal - previousTotal;
+            double currentTotal = SumHeat(t);
+            double upstep = currentTotal - previousTotal;
             if (upstep > maxUpstep)
                 maxUpstep = upstep;
 
-            Assert.True(currentTotal <= previousTotal,
+            Assert.True(currentTotal <= previousTotal + 0.001,
                 $"Expected non-increasing total heat at tick {i}. prev={previousTotal}, current={currentTotal}");
             previousTotal = currentTotal;
         }
 
-        int endTotal = previousTotal;
-        Assert.True(endTotal <= startTotal, $"Expected non-increasing total heat. start={startTotal}, end={endTotal}");
-        Assert.Equal(0, maxUpstep);
+        double endTotal = previousTotal;
+        Assert.True(endTotal <= startTotal + 0.001, $"Expected non-increasing total heat. start={startTotal}, end={endTotal}");
+        Assert.True(maxUpstep <= 0.001, $"Expected no positive up-step, got {maxUpstep:0.000000}");
     }
 
     [Fact]
@@ -244,9 +244,9 @@ public class TerrainTests
         const int width = 1;
         const int height = 64;
         var engine = new TerrainHeatEngine();
-        var heat = new byte[width * height];
+        var heat = new float[width * height];
         var pixels = new TerrainPixel[width * height];
-        byte ambient = (byte)Math.Clamp((int)MathF.Round(Tweaks.World.ThermalAmbientTemperature), 0, 255);
+        float ambient = Tweaks.World.ThermalAmbientTemperature;
 
         for (int i = 0; i < heat.Length; i++)
         {
@@ -256,9 +256,9 @@ public class TerrainTests
 
         // Spawn heat at one side of the strip.
         heat[0] = 220;
-        int startTotal = SumHeat(heat);
+        double startTotal = SumHeat(heat);
         double startInternalEnergy = SumThermalEnergy(heat, pixels);
-        float expectedMean = startTotal / (float)heat.Length;
+        float expectedMean = (float)(startTotal / heat.Length);
 
         int? firstInternalDivergenceStep = null;
         double firstInternalDivergenceEnergy = 0.0;
@@ -266,7 +266,7 @@ public class TerrainTests
         for (int step = 1; step <= 30000; step++)
         {
             engine.Step(heat, pixels, width, height, includeAmbientExchange: false);
-            double internalEnergy = engine.SumInternalEnergy(pixels);
+            double internalEnergy = engine.SumInternalEnergy(heat, pixels);
             if (!firstInternalDivergenceStep.HasValue &&
                 Math.Abs(internalEnergy - startInternalEnergy) > internalEnergyTolerance)
             {
@@ -275,10 +275,12 @@ public class TerrainTests
             }
         }
 
-        int min = 255, max = 0, sum = 0;
+        float min = float.MaxValue;
+        float max = float.MinValue;
+        double sum = 0.0;
         for (int i = 0; i < heat.Length; i++)
         {
-            int v = heat[i];
+            float v = heat[i];
             if (v < min) min = v;
             if (v > max) max = v;
             sum += v;
@@ -287,10 +289,10 @@ public class TerrainTests
         Assert.True(!firstInternalDivergenceStep.HasValue,
             $"Internal-energy diverged at step={firstInternalDivergenceStep}, " +
             $"internal={firstInternalDivergenceEnergy:0.0000}, startInternal={startInternalEnergy:0.0000}");
-        float mean = sum / (float)heat.Length;
+        float mean = (float)(sum / heat.Length);
         Assert.InRange(mean, expectedMean - 0.75f, expectedMean + 0.75f);
-        Assert.InRange(min, (int)MathF.Floor(expectedMean) - 3, (int)MathF.Ceiling(expectedMean) + 3);
-        Assert.InRange(max, (int)MathF.Floor(expectedMean) - 3, (int)MathF.Ceiling(expectedMean) + 3);
+        Assert.InRange(min, expectedMean - 3f, expectedMean + 3f);
+        Assert.InRange(max, expectedMean - 3f, expectedMean + 3f);
     }
 
     [Fact]
@@ -299,9 +301,9 @@ public class TerrainTests
         const int width = 32;
         const int height = 32;
         var engine = new TerrainHeatEngine();
-        var heat = new byte[width * height];
+        var heat = new float[width * height];
         var pixels = new TerrainPixel[width * height];
-        byte ambient = (byte)Math.Clamp((int)MathF.Round(Tweaks.World.ThermalAmbientTemperature), 0, 255);
+        float ambient = Tweaks.World.ThermalAmbientTemperature;
 
         for (int i = 0; i < heat.Length; i++)
         {
@@ -315,9 +317,9 @@ public class TerrainTests
         int cy = height / 2;
         heat[cx + cy * width] = 255;
 
-        int startTotal = SumHeat(heat);
+        double startTotal = SumHeat(heat);
         double startInternalEnergy = SumThermalEnergy(heat, pixels);
-        float expectedMean = startTotal / (float)heat.Length;
+        float expectedMean = (float)(startTotal / heat.Length);
 
         int? firstInternalDivergenceStep = null;
         double firstInternalDivergenceEnergy = 0.0;
@@ -325,7 +327,7 @@ public class TerrainTests
         for (int step = 1; step <= 60000; step++)
         {
             engine.Step(heat, pixels, width, height, includeAmbientExchange: false);
-            double internalEnergy = engine.SumInternalEnergy(pixels);
+            double internalEnergy = engine.SumInternalEnergy(heat, pixels);
             if (!firstInternalDivergenceStep.HasValue &&
                 Math.Abs(internalEnergy - startInternalEnergy) > internalEnergyTolerance)
             {
@@ -334,10 +336,12 @@ public class TerrainTests
             }
         }
 
-        int min = 255, max = 0, sum = 0;
+        float min = float.MaxValue;
+        float max = float.MinValue;
+        double sum = 0.0;
         for (int i = 0; i < heat.Length; i++)
         {
-            int v = heat[i];
+            float v = heat[i];
             if (v < min) min = v;
             if (v > max) max = v;
             sum += v;
@@ -346,21 +350,21 @@ public class TerrainTests
         Assert.True(!firstInternalDivergenceStep.HasValue,
             $"Internal-energy diverged at step={firstInternalDivergenceStep}, " +
             $"internal={firstInternalDivergenceEnergy:0.0000}, startInternal={startInternalEnergy:0.0000}");
-        float mean = sum / (float)heat.Length;
+        float mean = (float)(sum / heat.Length);
         Assert.InRange(mean, expectedMean - 0.5f, expectedMean + 0.5f);
-        Assert.InRange(min, (int)MathF.Floor(expectedMean) - 2, (int)MathF.Ceiling(expectedMean) + 2);
-        Assert.InRange(max, (int)MathF.Floor(expectedMean) - 2, (int)MathF.Ceiling(expectedMean) + 2);
+        Assert.InRange(min, expectedMean - 2f, expectedMean + 2f);
+        Assert.InRange(max, expectedMean - 2f, expectedMean + 2f);
     }
 
-    private static int SumHeat(byte[] heat)
+    private static double SumHeat(float[] heat)
     {
-        int sum = 0;
+        double sum = 0.0;
         for (int i = 0; i < heat.Length; i++)
             sum += heat[i];
         return sum;
     }
 
-    private static double SumThermalEnergy(byte[] heat, TerrainPixel[] pixels)
+    private static double SumThermalEnergy(float[] heat, TerrainPixel[] pixels)
     {
         double sum = 0.0;
         for (int i = 0; i < heat.Length; i++)
@@ -375,11 +379,11 @@ public class TerrainTests
         _ => Tweaks.World.ThermalCapacityStone,
     };
 
-    private static int SumHeat(TerrainGrid terrain)
+    private static double SumHeat(TerrainGrid terrain)
     {
-        int sum = 0;
+        double sum = 0.0;
         for (int i = 0; i < terrain.Size.Area; i++)
-            sum += terrain.GetHeat(i);
+            sum += terrain.GetHeatTemperature(i);
         return sum;
     }
 

@@ -6,7 +6,7 @@ description: Generate visual frame traces from tests and convert them to MP4 vid
 # Test Visual Video
 
 Use this workflow to capture per-frame test visuals and convert them to `.mp4`.
-Always finalize output by moving timestamped MP4 files to the parent `test-visual` folder and deleting `.ppm` files.
+Always finalize output by moving timestamped MP4 files to the parent `test-visual` folder, deleting `.ppm` files, and removing the original trace subfolders.
 
 ## Default (use every time)
 
@@ -21,6 +21,7 @@ Script behavior:
 - converts recent `.ppm` traces to `trace.mp4`
 - moves final MP4 files to parent `test-visual` folder with appended timestamp
 - deletes `.ppm` files from subfolders
+- deletes original trace subfolders after export
 
 ## 1) Run tests with visual capture enabled
 
@@ -77,7 +78,7 @@ foreach ($d in $dirs) {
 ## 4) Finalize location (parent folder + timestamp)
 
 After conversion, move each `trace.mp4` to the parent `test-visual` folder and append a timestamp.
-Also remove `.ppm` files from trace subfolders to keep output clean.
+Then remove `.ppm` files and delete each original trace subfolder.
 
 ```powershell
 $root = "tests/Tunnerer.Tests/bin/Debug/net10.0/artifacts/test-visual"
@@ -85,11 +86,16 @@ $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
 Get-ChildItem $root -Directory | ForEach-Object {
   $dir = $_.FullName
   $mp4 = Join-Path $dir "trace.mp4"
+  $movedThisDir = $false
   if (Test-Path $mp4) {
     $target = Join-Path $root ("{0}_{1}.mp4" -f $_.Name, $stamp)
     Move-Item $mp4 $target -Force
+    $movedThisDir = $true
   }
   Get-ChildItem $dir -Filter *.ppm -File -ErrorAction SilentlyContinue | Remove-Item -Force
+  if ($movedThisDir -and (Test-Path $dir)) {
+    Remove-Item $dir -Recurse -Force -ErrorAction SilentlyContinue
+  }
 }
 ```
 

@@ -30,6 +30,7 @@ public enum ThermalMaterial : byte
     Air = 0,
     Dirt = 1,
     Stone = 2,
+    Base = 3,
 }
 
 /// <summary>
@@ -148,10 +149,12 @@ public static class Pixel
     public static ThermalMaterial GetThermalMaterial(TerrainPixel p)
     {
         var b = _behaviors[(int)p];
+        if (p == TerrainPixel.BaseBarrier) return ThermalMaterial.Base;
+        if (b.Base) return ThermalMaterial.Base;
         if (b.Dirt) return ThermalMaterial.Dirt;
 
         // Hard terrain and structures behave as stone for thermal exchange.
-        if (b.BlocksMovement || b.Concrete || b.Mineral || b.Base)
+        if (b.BlocksMovement || b.Concrete || b.Mineral)
             return ThermalMaterial.Stone;
 
         return ThermalMaterial.Air;

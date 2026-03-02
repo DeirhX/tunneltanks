@@ -524,7 +524,8 @@ public class Game : IDisposable
                 break;
         }
 
-        target[writeIndex] = terrain.GetHeat(idx);
+        float heat = terrain.GetHeatTemperature(idx);
+        target[writeIndex] = (byte)Math.Clamp((int)MathF.Round(heat), 0, 255);
         target[writeIndex + 1] = sdfValue;
         target[writeIndex + 2] = energy;
         target[writeIndex + 3] = scorched;

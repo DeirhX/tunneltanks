@@ -45,12 +45,17 @@ $moved = @()
 Get-ChildItem $root -Directory | ForEach-Object {
     $dir = $_.FullName
     $mp4 = Join-Path $dir "trace.mp4"
+    $movedThisDir = $false
     if (Test-Path $mp4) {
         $target = Join-Path $root ("{0}_{1}.mp4" -f $_.Name, $stamp)
         Move-Item $mp4 $target -Force
         $moved += $target
+        $movedThisDir = $true
     }
     Get-ChildItem $dir -Filter *.ppm -File -ErrorAction SilentlyContinue | Remove-Item -Force
+    if ($movedThisDir -and (Test-Path $dir)) {
+        Remove-Item $dir -Recurse -Force -ErrorAction SilentlyContinue
+    }
 }
 
 Write-Output "Final videos:"
