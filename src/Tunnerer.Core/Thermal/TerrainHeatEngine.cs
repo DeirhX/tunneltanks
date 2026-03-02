@@ -15,6 +15,8 @@ public sealed class TerrainHeatEngine
 
     public void MarkStateDirty() => _stateDirty = true;
 
+    public void EnsureState(byte[] heat, int len) => EnsureStateFromHeat(heat, len);
+
     public bool AddEnergyAt(byte[] heat, int width, int height, int x, int y, int amount)
     {
         if ((uint)x >= (uint)width || (uint)y >= (uint)height)
@@ -28,13 +30,19 @@ public sealed class TerrainHeatEngine
         if ((uint)index >= (uint)heat.Length || amount == 0)
             return false;
 
-        int next = Math.Clamp(heat[index] + amount, 0, 255);
-        heat[index] = (byte)next;
-        if (_temperature != null && _temperature.Length == heat.Length && !_stateDirty)
-            _temperature[index] = next;
-        else
-            _stateDirty = true;
+        EnsureStateFromHeat(heat, heat.Length);
+        float next = Math.Clamp(_temperature![index] + amount, 0f, 255f);
+        _temperature[index] = next;
+        heat[index] = (byte)Math.Clamp((int)MathF.Round(next), 0, 255);
         return true;
+    }
+
+    public float GetTemperatureAt(byte[] heat, int len, int index)
+    {
+        EnsureStateFromHeat(heat, len);
+        if ((uint)index >= (uint)len)
+            return 0f;
+        return _temperature![index];
     }
 
     public void Step(byte[] heat, TerrainPixel[] pixels, int width, int height)
@@ -79,6 +87,24 @@ public sealed class TerrainHeatEngine
             _temperature[i] = nextT;
             heat[i] = (byte)Math.Clamp((int)MathF.Round(nextT), 0, 255);
         }
+    }
+
+    public double SumInternalEnergy(TerrainPixel[] pixels)
+    {
+        if (_temperature == null)
+            return 0.0;
+        if (pixels.Length < _temperature.Length)
+            throw new ArgumentException("pixels length must cover internal state", nameof(pixels));
+
+        double sum = 0.0;
+        for (int i = 0; i < _temperature.Length; i++)
+        {
+            ThermalMaterial m = Pixel.GetThermalMaterial(pixels[i]);
+            float c = GetHeatCapacity(m);
+            sum += _temperature[i] * c;
+        }
+
+        return sum;
     }
 
     private void ExchangePair(int idxA, int idxB, ThermalMaterial mA, float tA, TerrainPixel[] pixels)

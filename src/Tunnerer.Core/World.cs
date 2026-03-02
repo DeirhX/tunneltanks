@@ -273,7 +273,7 @@ public class World
                     var pos = b.Position + new Offset(dx, dy);
                     if (!_terrain.IsInside(pos))
                         continue;
-                    if (_terrain.GetHeat(pos) == 0)
+                    if (_terrain.GetHeatTemperature(pos) <= 0.0001f)
                         continue;
                     _terrain.AddHeat(pos, -255);
                 }

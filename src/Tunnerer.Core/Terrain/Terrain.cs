@@ -41,15 +41,21 @@ public class TerrainGrid
         return (uint)offset < (uint)_heat.Length ? _heat[offset] : (byte)0;
     }
 
+    public float GetHeatTemperature(Position pos)
+    {
+        int offset = pos.X + pos.Y * Width;
+        if ((uint)offset >= (uint)_heat.Length)
+            return 0f;
+        return _heatEngine.GetTemperatureAt(_heat, _heat.Length, offset);
+    }
+
     public void AddHeat(Position pos, int amount)
     {
         int offset = pos.X + pos.Y * Width;
         if ((uint)offset >= (uint)_heat.Length) return;
-        _heatEngine.MarkStateDirty();
         byte old = _heat[offset];
-        int val = old + amount;
-        byte next = (byte)Math.Clamp(val, 0, 255);
-        _heat[offset] = next;
+        _heatEngine.AddEnergyAt(_heat, offset, amount);
+        byte next = _heat[offset];
         if (next != old)
             MarkHeatDirty(pos.X, pos.Y);
         CommitPixel(pos);
@@ -57,7 +63,7 @@ public class TerrainGrid
 
     public void AddHeatRadius(Position center, int amount, int radius)
     {
-        _heatEngine.MarkStateDirty();
+        _heatEngine.EnsureState(_heat, _heat.Length);
         int radiusSq = radius * radius;
         ForEachInRadius(center, radius, (nx, ny, dx, dy) =>
         {
@@ -68,9 +74,8 @@ public class TerrainGrid
             if (scaled == 0) return;
             int offset = nx + ny * Width;
             byte old = _heat[offset];
-            int val = old + scaled;
-            byte next = (byte)Math.Clamp(val, 0, 255);
-            _heat[offset] = next;
+            _heatEngine.AddEnergyAt(_heat, offset, scaled);
+            byte next = _heat[offset];
             if (next != old)
                 MarkHeatDirty(nx, ny);
         });
@@ -142,10 +147,13 @@ public class TerrainGrid
 
     public float SampleAverageHeat(Position center, int radius)
     {
-        int sum = 0, count = 0;
+        float sum = 0f;
+        int count = 0;
+        _heatEngine.EnsureState(_heat, _heat.Length);
         ForEachInRadius(center, radius, (nx, ny, _, _) =>
         {
-            sum += _heat[ny * Width + nx];
+            int idx = ny * Width + nx;
+            sum += _heatEngine.GetTemperatureAt(_heat, _heat.Length, idx);
             count++;
         });
         return count > 0 ? sum / (count * 255f) : 0f;
@@ -166,7 +174,7 @@ public class TerrainGrid
     {
         if (totalAmount == 0)
             return 0;
-        _heatEngine.MarkStateDirty();
+        _heatEngine.EnsureState(_heat, _heat.Length);
 
         int count = CountCellsInRadiusArea(center, radius);
         if (count <= 0)
@@ -191,9 +199,8 @@ public class TerrainGrid
 
             int offset = nx + ny * Width;
             byte old = _heat[offset];
-            int nextVal = old + delta;
-            byte next = (byte)Math.Clamp(nextVal, 0, 255);
-            _heat[offset] = next;
+            _heatEngine.AddEnergyAt(_heat, offset, delta);
+            byte next = _heat[offset];
             if (next != old)
                 MarkHeatDirty(nx, ny);
             applied += next - old;
