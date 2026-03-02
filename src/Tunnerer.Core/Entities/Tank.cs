@@ -8,9 +8,12 @@ using Tunnerer.Core.Collision;
 using Tunnerer.Core.Input;
 using Tunnerer.Core.Rendering;
 using Tunnerer.Core.Entities.Projectiles;
+using Tunnerer.Core.Thermal;
 
 public class Tank
 {
+    private static readonly TankHeatEngine HeatEngine = new();
+
     public Position Position { get; set; }
     public int Color { get; }
     public int Direction { get; set; }
@@ -203,29 +206,27 @@ public class Tank
 
     private void AdvanceHeat(World world)
     {
-        float nextHeat = Heat;
-        nextHeat += TankHeatModel.ComputeActionHeat(_frameDugPixels, _frameShotFired);
-
         var baseColl = world.TankBases.CheckBaseCollision(Position);
         bool atOwnBase = baseColl != null && baseColl.Color == Color;
 
         float terrainHeatNorm = world.Terrain.SampleAverageHeat(Position, Tweaks.Tank.DigRadius);
         float sampledTerrainTemperature = terrainHeatNorm * 255f;
-        float ambientBaseline = atOwnBase ? 0f : Tweaks.Tank.HeatAmbientOutsideBase;
-        float terrainTemperature = MathF.Max(ambientBaseline, sampledTerrainTemperature);
-        float dQTerrain = TankHeatModel.ComputeTankTerrainHeatFlow(nextHeat, terrainTemperature);
-        nextHeat += TankHeatModel.ComputeTankDeltaFromHeatFlow(dQTerrain);
-        int terrainDelta = (int)MathF.Round(TankHeatModel.ComputeTerrainDeltaFromHeatFlow(dQTerrain));
-        if (terrainDelta != 0)
-            world.Terrain.AddHeatRadius(Position, terrainDelta, Tweaks.Tank.DigRadius);
+        int sampleCells = world.Terrain.CountCellsInRadiusArea(Position, Tweaks.Tank.DigRadius);
+        float nextHeat = HeatEngine.Advance(
+            currentHeat: Heat,
+            frameDugPixels: _frameDugPixels,
+            frameShotFired: _frameShotFired,
+            atOwnBase: atOwnBase,
+            sampledTerrainTemperature: sampledTerrainTemperature,
+            sampleCells: sampleCells,
+            applyTerrainTotalDelta: desiredTotal =>
+                world.Terrain.AddHeatTotalInRadiusArea(Position, Tweaks.Tank.DigRadius, desiredTotal),
+            out int damage);
 
-        nextHeat += TankHeatModel.ComputeTankAmbientExchange(nextHeat, atOwnBase);
-
-        int damage = TankHeatModel.ComputeOverheatDamage(nextHeat);
         if (damage > 0)
             Reactor.Exhaust(new ReactorState(0, damage));
 
-        Heat = TankHeatModel.ClampHeat(nextHeat);
+        Heat = nextHeat;
         Reactor.Current.Heat = new Heat((int)MathF.Round(Heat));
 
         _frameDugPixels = 0;
