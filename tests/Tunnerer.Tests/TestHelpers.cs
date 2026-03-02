@@ -10,12 +10,19 @@ internal static class TestHelpers
     public const int DefaultSeed = 42;
     public static readonly Size DefaultMapSize = new(320, 200);
 
-    public static World CreateSeededWorld(Size? size = null, int seed = DefaultSeed)
+    public static World CreateSeededWorld(
+        Size? size = null,
+        int seed = DefaultSeed,
+        bool enableTerrainRegrowth = true)
     {
         var mapSize = size ?? DefaultMapSize;
         var gen = new ToastGenerator();
         var (terrain, spawns) = gen.Generate(mapSize, seed: seed);
-        var world = new World(mapSize, deterministicSimulation: true, simulationSeed: seed);
+        var world = new World(
+            mapSize,
+            deterministicSimulation: true,
+            simulationSeed: seed,
+            enableTerrainRegrowth: enableTerrainRegrowth);
         world.Initialize(terrain, spawns, materializeSeed: seed + 1);
         return world;
     }

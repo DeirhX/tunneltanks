@@ -22,6 +22,7 @@ public class World
     private readonly SpriteList _sprites = new();
     private readonly CollisionSolver _collisionSolver;
     private readonly bool _deterministicSimulation;
+    private readonly bool _enableTerrainRegrowth;
     private readonly int _simulationSeed;
 
     private int _advanceCount;
@@ -43,9 +44,14 @@ public class World
 
     public SimulationProfile Profile { get; } = new();
 
-    public World(Size terrainSize, bool deterministicSimulation = false, int simulationSeed = 0)
+    public World(
+        Size terrainSize,
+        bool deterministicSimulation = false,
+        int simulationSeed = 0,
+        bool enableTerrainRegrowth = true)
     {
         _deterministicSimulation = deterministicSimulation;
+        _enableTerrainRegrowth = enableTerrainRegrowth;
         _simulationSeed = simulationSeed != 0 ? simulationSeed : 0x51A7E3;
         _terrain = new TerrainGrid(terrainSize);
         _projectiles = new ProjectileList(deterministicSimulation ? _simulationSeed ^ 0x5f3759df : null);
@@ -91,6 +97,7 @@ public class World
         _elapsed += Tweaks.World.AdvanceStep;
 
         _collisionSolver.Update(_tankList, _machines);
+        _terrain.CoolDown(Tweaks.World.HeatCooldownPerTick, Tweaks.World.HeatDiffuseRate);
 
         ProfileSection(ref Profile.Regrow, RegrowPass);
         ProfileSection(ref Profile.Projectiles, () => _projectiles.Advance(_collisionSolver));
@@ -132,8 +139,8 @@ public class World
             _regrowAccumulator += Tweaks.World.DirtRecoverInterval;
         }
 
-        _terrain.CoolDown(Tweaks.World.HeatCooldownPerTick, Tweaks.World.HeatDiffuseRate);
-        CoolBaseInteriorHeat();
+        if (!_enableTerrainRegrowth)
+            return;
 
         int w = _terrain.Width, h = _terrain.Height;
 
@@ -260,24 +267,6 @@ public class World
         if (neighbors <= 2) return false;
         int chance = Tweaks.World.DirtRegrowSpeed * neighbors * modifier;
         return Roll1000(x, y, salt) < chance;
-    }
-
-    private void CoolBaseInteriorHeat()
-    {
-        int half = Tweaks.Base.BaseSize / 2;
-        foreach (var b in _tankBases.Bases)
-        {
-            for (int dy = -half + 1; dy <= half - 1; dy++)
-                for (int dx = -half + 1; dx <= half - 1; dx++)
-                {
-                    var pos = b.Position + new Offset(dx, dy);
-                    if (!_terrain.IsInside(pos))
-                        continue;
-                    if (_terrain.GetHeatTemperature(pos) <= 0.0001f)
-                        continue;
-                    _terrain.AddHeat(pos, -255);
-                }
-        }
     }
 
     private int Roll1000(int x, int y, uint salt)

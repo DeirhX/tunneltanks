@@ -118,26 +118,34 @@ public static class Tweaks
         // Optional physically-inspired material heat exchange model.
         // Disabled by default to preserve current gameplay/visual behavior.
         public static bool EnableMaterialHeatExchange => true;
-        // Closed-system default: no ambient sink/source unless explicitly enabled.
-        public static bool EnableThermalAmbientExchange => false;
+        // Keep weak ambient exchange enabled so isolated hotspots can eventually relax.
+        public static bool EnableThermalAmbientExchange => true;
+        public static bool EnableStoneAmbientExchange { get; set; } = true;
         public const float ThermalDt = 2.0f;
-        public const float ThermalAmbientTemperature = 20f;
+        public const float ThermalAmbientTemperature = 0f;
 
         // Effective heat capacities (higher means temperature changes slower).
         public const float ThermalCapacityAir = 0.8f;
         public const float ThermalCapacityDirt = 1.4f;
         public const float ThermalCapacityStone = 2.6f;
+        public const float ThermalCapacityBase = 2.6f;
 
         // Pairwise transmission speed (conductance).
         public const float ThermalKAirAir = 0.180f;
         public const float ThermalKAirDirt = 0.110f;
         public const float ThermalKAirStone = 0.070f;
+        public const float ThermalKAirBase = 0.450f;
         public const float ThermalKDirtDirt = 0.160f;
         public const float ThermalKDirtStone = 0.110f;
+        public const float ThermalKDirtBase = 0.350f;
         public const float ThermalKStoneStone = 0.070f;
-        public const float ThermalKAmbientAir = 0.0090f;
-        public const float ThermalKAmbientDirt = 0.0045f;
-        public const float ThermalKAmbientStone = 0.0025f;
+        public const float ThermalKStoneBase = 0.120f;
+        public const float ThermalKBaseBase = 0.200f;
+        public const float ThermalFixedBaseTemperature = 0f;
+        public const float ThermalKAmbientAir = 0.0120f;
+        public const float ThermalKAmbientDirt = 0.0120f;
+        public const float ThermalKAmbientStone = 0.0100f;
+        public const float ThermalKAmbientBase = 0.0000f;
     }
 
     public static class Base
@@ -191,7 +199,7 @@ public static class Tweaks
         public const int TorchTerrainHeatAmount = 14;
         public const int TorchRockHeatAmount = 26;
         public const int TorchRockHeatRadius = 2;
-        public const float HeatAmbientOutsideBase = 20f;
+        public const float HeatAmbientOutsideBase = 0f;
         public const float TankHeatCapacity = 20f;
         public const float TerrainHeatCapacity = 80f;
         public const float TankTerrainConductance = 10.0f;

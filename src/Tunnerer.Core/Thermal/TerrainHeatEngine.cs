@@ -87,6 +87,8 @@ public sealed class TerrainHeatEngine
             _temperature[i] = nextT;
             heat[i] = (byte)Math.Clamp((int)MathF.Round(nextT), 0, 255);
         }
+
+        ApplyFixedTemperatureCells(heat, pixels, len);
     }
 
     public double SumInternalEnergy(TerrainPixel[] pixels)
@@ -143,6 +145,19 @@ public sealed class TerrainHeatEngine
         _delta![idx] += dQ / capacity;
     }
 
+    private void ApplyFixedTemperatureCells(byte[] heat, TerrainPixel[] pixels, int len)
+    {
+        for (int i = 0; i < len; i++)
+        {
+            ThermalMaterial material = Pixel.GetThermalMaterial(pixels[i]);
+            if (!IsFixedTemperatureMaterial(material))
+                continue;
+            float target = GetFixedTemperature(material);
+            _temperature![i] = target;
+            heat[i] = (byte)Math.Clamp((int)MathF.Round(target), 0, 255);
+        }
+    }
+
     private void EnsureStateFromHeat(byte[] heat, int len)
     {
         if (_temperature == null || _temperature.Length < len)
@@ -163,7 +178,8 @@ public sealed class TerrainHeatEngine
     {
         ThermalMaterial.Air => Tweaks.World.ThermalCapacityAir,
         ThermalMaterial.Dirt => Tweaks.World.ThermalCapacityDirt,
-        _ => Tweaks.World.ThermalCapacityStone,
+        ThermalMaterial.Stone => Tweaks.World.ThermalCapacityStone,
+        _ => Tweaks.World.ThermalCapacityBase,
     };
 
     private static float GetConductance(ThermalMaterial a, ThermalMaterial b)
@@ -174,9 +190,13 @@ public sealed class TerrainHeatEngine
             (ThermalMaterial.Air, ThermalMaterial.Air) => Tweaks.World.ThermalKAirAir,
             (ThermalMaterial.Air, ThermalMaterial.Dirt) => Tweaks.World.ThermalKAirDirt,
             (ThermalMaterial.Air, ThermalMaterial.Stone) => Tweaks.World.ThermalKAirStone,
+            (ThermalMaterial.Air, ThermalMaterial.Base) => Tweaks.World.ThermalKAirBase,
             (ThermalMaterial.Dirt, ThermalMaterial.Dirt) => Tweaks.World.ThermalKDirtDirt,
             (ThermalMaterial.Dirt, ThermalMaterial.Stone) => Tweaks.World.ThermalKDirtStone,
-            _ => Tweaks.World.ThermalKStoneStone,
+            (ThermalMaterial.Dirt, ThermalMaterial.Base) => Tweaks.World.ThermalKDirtBase,
+            (ThermalMaterial.Stone, ThermalMaterial.Stone) => Tweaks.World.ThermalKStoneStone,
+            (ThermalMaterial.Stone, ThermalMaterial.Base) => Tweaks.World.ThermalKStoneBase,
+            _ => Tweaks.World.ThermalKBaseBase,
         };
     }
 
@@ -184,6 +204,13 @@ public sealed class TerrainHeatEngine
     {
         ThermalMaterial.Air => Tweaks.World.ThermalKAmbientAir,
         ThermalMaterial.Dirt => Tweaks.World.ThermalKAmbientDirt,
-        _ => Tweaks.World.ThermalKAmbientStone,
+        ThermalMaterial.Stone => Tweaks.World.EnableStoneAmbientExchange ? Tweaks.World.ThermalKAmbientStone : 0f,
+        _ => Tweaks.World.ThermalKAmbientBase,
     };
+
+    private static bool IsFixedTemperatureMaterial(ThermalMaterial material)
+        => material == ThermalMaterial.Base;
+
+    private static float GetFixedTemperature(ThermalMaterial material)
+        => material == ThermalMaterial.Base ? Tweaks.World.ThermalFixedBaseTemperature : 0f;
 }
