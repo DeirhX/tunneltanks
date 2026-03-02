@@ -1,5 +1,6 @@
 using Tunnerer.Core.Terrain;
 using Tunnerer.Core.Config;
+using Tunnerer.Core.Thermal;
 using Tunnerer.Core.Types;
 
 namespace Tunnerer.Tests;
@@ -187,4 +188,104 @@ public class TerrainTests
         Assert.True(endCenter < startCenter, $"Expected hot spot to cool from {startCenter}, got {endCenter}");
         Assert.InRange(endCenter, (byte)Math.Max(0, ambient - 10), (byte)Math.Min(255, ambient + 30));
     }
+
+    [Fact]
+    public void CoolDown_NoSources_FirstTick_DoesNotIncreaseTotalHeat()
+    {
+        var t = MakeTerrain(20, 20);
+        for (int i = 0; i < 20 * 20; i++)
+            t[i] = TerrainPixel.Rock;
+
+        var hot = new Position(10, 10);
+        t.AddHeatRadius(hot, 255, 6);
+
+        int startTotal = SumHeat(t);
+        t.CoolDown(Tweaks.World.HeatCooldownPerTick, Tweaks.World.HeatDiffuseRate);
+        int afterFirstTick = SumHeat(t);
+        Assert.True(afterFirstTick <= startTotal,
+            $"Expected first CoolDown tick to be non-increasing. start={startTotal}, tick1={afterFirstTick}");
+    }
+
+    [Fact]
+    public void MaterialHeatExchange_NoSources_TotalHeatNeverIncreasesPerTick()
+    {
+        var t = MakeTerrain(20, 20);
+        for (int i = 0; i < 20 * 20; i++)
+            t[i] = TerrainPixel.Rock;
+
+        var hot = new Position(10, 10);
+        t.AddHeatRadius(hot, 255, 6);
+        int previousTotal = SumHeat(t);
+        int startTotal = previousTotal;
+        int maxUpstep = 0;
+
+        for (int i = 0; i < 300; i++)
+        {
+            t.CoolDown(Tweaks.World.HeatCooldownPerTick, Tweaks.World.HeatDiffuseRate);
+            int currentTotal = SumHeat(t);
+            int upstep = currentTotal - previousTotal;
+            if (upstep > maxUpstep)
+                maxUpstep = upstep;
+
+            Assert.True(currentTotal <= previousTotal,
+                $"Expected non-increasing total heat at tick {i}. prev={previousTotal}, current={currentTotal}");
+            previousTotal = currentTotal;
+        }
+
+        int endTotal = previousTotal;
+        Assert.True(endTotal <= startTotal, $"Expected non-increasing total heat. start={startTotal}, end={endTotal}");
+        Assert.Equal(0, maxUpstep);
+    }
+
+    [Fact]
+    public void TerrainHeatEngine_OneDimensionalStrip_ClosedSystem_ConvergesToInitialEnergyMean()
+    {
+        // Single-pixel-wide bed (1 x N): inject heat on one side and wait for equilibrium.
+        const int width = 1;
+        const int height = 64;
+        var engine = new TerrainHeatEngine();
+        var heat = new byte[width * height];
+        var pixels = new TerrainPixel[width * height];
+        byte ambient = (byte)Math.Clamp((int)MathF.Round(Tweaks.World.ThermalAmbientTemperature), 0, 255);
+
+        for (int i = 0; i < heat.Length; i++)
+        {
+            heat[i] = ambient;
+            pixels[i] = TerrainPixel.Rock;
+        }
+
+        // Spawn heat at one side of the strip.
+        heat[0] = 220;
+        int startTotal = 0;
+        for (int i = 0; i < heat.Length; i++)
+            startTotal += heat[i];
+        float expectedMean = startTotal / (float)heat.Length;
+
+        for (int i = 0; i < 30000; i++)
+            engine.Step(heat, pixels, width, height, includeAmbientExchange: false);
+
+        int min = 255, max = 0, sum = 0;
+        for (int i = 0; i < heat.Length; i++)
+        {
+            int v = heat[i];
+            if (v < min) min = v;
+            if (v > max) max = v;
+            sum += v;
+        }
+
+        float mean = sum / (float)heat.Length;
+        Assert.InRange(sum, startTotal - 8, startTotal + 8);
+        Assert.InRange(mean, expectedMean - 0.75f, expectedMean + 0.75f);
+        Assert.InRange(min, (int)MathF.Floor(expectedMean) - 3, (int)MathF.Ceiling(expectedMean) + 3);
+        Assert.InRange(max, (int)MathF.Floor(expectedMean) - 3, (int)MathF.Ceiling(expectedMean) + 3);
+    }
+
+    private static int SumHeat(TerrainGrid terrain)
+    {
+        int sum = 0;
+        for (int i = 0; i < terrain.Size.Area; i++)
+            sum += terrain.GetHeat(i);
+        return sum;
+    }
+
 }

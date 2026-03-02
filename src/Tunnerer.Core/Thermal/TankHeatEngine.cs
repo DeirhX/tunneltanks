@@ -22,8 +22,13 @@ public sealed class TankHeatEngine
         float nextHeat = currentHeat;
         nextHeat += TankHeatModel.ComputeActionHeat(frameDugPixels, frameShotFired);
 
-        float ambientBaseline = atOwnBase ? 0f : Tweaks.Tank.HeatAmbientOutsideBase;
-        float terrainTemperature = MathF.Max(ambientBaseline, sampledTerrainTemperature);
+        bool includeAmbientExchange = Tweaks.World.EnableThermalAmbientExchange;
+        float terrainTemperature = sampledTerrainTemperature;
+        if (includeAmbientExchange)
+        {
+            float ambientBaseline = atOwnBase ? 0f : Tweaks.Tank.HeatAmbientOutsideBase;
+            terrainTemperature = MathF.Max(ambientBaseline, sampledTerrainTemperature);
+        }
         float dQTerrain = TankHeatModel.ComputeTankTerrainHeatFlow(nextHeat, terrainTemperature);
 
         if (sampleCells > 0 && Tweaks.Tank.TerrainHeatCapacity > 0f)
@@ -40,7 +45,8 @@ public sealed class TankHeatEngine
             nextHeat += TankHeatModel.ComputeTankDeltaFromHeatFlow(dQTerrain);
         }
 
-        nextHeat += TankHeatModel.ComputeTankAmbientExchange(nextHeat, atOwnBase);
+        if (includeAmbientExchange)
+            nextHeat += TankHeatModel.ComputeTankAmbientExchange(nextHeat, atOwnBase);
         overheatDamage = TankHeatModel.ComputeOverheatDamage(nextHeat);
         return TankHeatModel.ClampHeat(nextHeat);
     }

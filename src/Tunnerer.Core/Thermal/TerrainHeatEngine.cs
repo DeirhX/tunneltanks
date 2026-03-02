@@ -9,11 +9,47 @@ using Tunnerer.Core.Terrain;
 /// </summary>
 public sealed class TerrainHeatEngine
 {
+    private float[]? _temperature;
     private float[]? _delta;
+    private bool _stateDirty = true;
+
+    public void MarkStateDirty() => _stateDirty = true;
+
+    public bool AddEnergyAt(byte[] heat, int width, int height, int x, int y, int amount)
+    {
+        if ((uint)x >= (uint)width || (uint)y >= (uint)height)
+            return false;
+        int idx = x + y * width;
+        return AddEnergyAt(heat, idx, amount);
+    }
+
+    public bool AddEnergyAt(byte[] heat, int index, int amount)
+    {
+        if ((uint)index >= (uint)heat.Length || amount == 0)
+            return false;
+
+        int next = Math.Clamp(heat[index] + amount, 0, 255);
+        heat[index] = (byte)next;
+        if (_temperature != null && _temperature.Length == heat.Length && !_stateDirty)
+            _temperature[index] = next;
+        else
+            _stateDirty = true;
+        return true;
+    }
 
     public void Step(byte[] heat, TerrainPixel[] pixels, int width, int height)
+        => Step(heat, pixels, width, height, includeAmbientExchange: Tweaks.World.EnableThermalAmbientExchange);
+
+    public void Step(
+        byte[] heat,
+        TerrainPixel[] pixels,
+        int width,
+        int height,
+        bool includeAmbientExchange)
     {
         int len = width * height;
+        EnsureStateFromHeat(heat, len);
+
         if (_delta == null || _delta.Length < len)
             _delta = new float[len];
         Array.Clear(_delta, 0, len);
@@ -25,28 +61,30 @@ public sealed class TerrainHeatEngine
             {
                 int idx = row + x;
                 ThermalMaterial m1 = Pixel.GetThermalMaterial(pixels[idx]);
-                float t1 = heat[idx];
+                float t1 = _temperature![idx];
 
                 if (x + 1 < width)
-                    ExchangePair(idx, idx + 1, m1, t1, heat, pixels);
+                    ExchangePair(idx, idx + 1, m1, t1, pixels);
                 if (y + 1 < height)
-                    ExchangePair(idx, idx + width, m1, t1, heat, pixels);
-                ExchangeAmbient(idx, m1, t1);
+                    ExchangePair(idx, idx + width, m1, t1, pixels);
+                if (includeAmbientExchange)
+                    ExchangeAmbient(idx, m1, t1);
             }
         }
 
         for (int i = 0; i < len; i++)
         {
-            if (_delta[i] == 0f) continue;
-            int nextVal = (int)MathF.Round(heat[i] + _delta[i]);
-            heat[i] = (byte)Math.Clamp(nextVal, 0, 255);
+            float nextT = _temperature![i] + _delta[i];
+            nextT = Math.Clamp(nextT, 0f, 255f);
+            _temperature[i] = nextT;
+            heat[i] = (byte)Math.Clamp((int)MathF.Round(nextT), 0, 255);
         }
     }
 
-    private void ExchangePair(int idxA, int idxB, ThermalMaterial mA, float tA, byte[] heat, TerrainPixel[] pixels)
+    private void ExchangePair(int idxA, int idxB, ThermalMaterial mA, float tA, TerrainPixel[] pixels)
     {
         ThermalMaterial mB = Pixel.GetThermalMaterial(pixels[idxB]);
-        float tB = heat[idxB];
+        float tB = _temperature![idxB];
         float delta = tA - tB;
         if (MathF.Abs(delta) < 0.0001f) return;
 
@@ -77,6 +115,22 @@ public sealed class TerrainHeatEngine
 
         float capacity = GetHeatCapacity(material);
         _delta![idx] += dQ / capacity;
+    }
+
+    private void EnsureStateFromHeat(byte[] heat, int len)
+    {
+        if (_temperature == null || _temperature.Length < len)
+        {
+            _temperature = new float[len];
+            _stateDirty = true;
+        }
+
+        if (!_stateDirty)
+            return;
+
+        for (int i = 0; i < len; i++)
+            _temperature[i] = heat[i];
+        _stateDirty = false;
     }
 
     private static float GetHeatCapacity(ThermalMaterial material) => material switch

@@ -130,6 +130,8 @@ public static class Tweaks
         // Optional physically-inspired material heat exchange model.
         // Disabled by default to preserve current gameplay/visual behavior.
         public static bool EnableMaterialHeatExchange => true;
+        // Closed-system default: no ambient sink/source unless explicitly enabled.
+        public static bool EnableThermalAmbientExchange => false;
         public const float ThermalDt = 2.0f;
         public const float ThermalAmbientTemperature = 20f;
 

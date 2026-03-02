@@ -45,6 +45,7 @@ public class TerrainGrid
     {
         int offset = pos.X + pos.Y * Width;
         if ((uint)offset >= (uint)_heat.Length) return;
+        _heatEngine.MarkStateDirty();
         byte old = _heat[offset];
         int val = old + amount;
         byte next = (byte)Math.Clamp(val, 0, 255);
@@ -56,6 +57,7 @@ public class TerrainGrid
 
     public void AddHeatRadius(Position center, int amount, int radius)
     {
+        _heatEngine.MarkStateDirty();
         int radiusSq = radius * radius;
         ForEachInRadius(center, radius, (nx, ny, dx, dy) =>
         {
@@ -135,6 +137,7 @@ public class TerrainGrid
         }
 
         Array.Copy(_heatTemp, _heat, len);
+        _heatEngine.MarkStateDirty();
     }
 
     public float SampleAverageHeat(Position center, int radius)
@@ -163,6 +166,7 @@ public class TerrainGrid
     {
         if (totalAmount == 0)
             return 0;
+        _heatEngine.MarkStateDirty();
 
         int count = CountCellsInRadiusArea(center, radius);
         if (count <= 0)
