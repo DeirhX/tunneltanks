@@ -23,15 +23,14 @@ public class WorldIntegrationTests
     public void World_AdvanceSingleFrame_DoesNotThrow()
     {
         var (world, _) = SetupWorld();
-        world.Advance(_ => default);
+        world.Advance(_ => TestSimulation.Idle);
     }
 
     [Fact]
     public void World_Advance100Frames_Runs()
     {
         var (world, _) = SetupWorld();
-        for (int i = 0; i < 100; i++)
-            world.Advance(_ => default);
+        TestSimulation.AdvanceIdle(world, frames: 100);
 
         Assert.Equal(100, world.AdvanceCount);
         Assert.False(world.IsGameOver);
@@ -91,8 +90,8 @@ public class WorldIntegrationTests
 
         // Move a tank by advancing with input
         world.Advance(i => i == 0
-            ? new ControllerOutput { MoveSpeed = new Offset(1, 0) }
-            : default);
+            ? TestSimulation.Move(1, 0)
+            : TestSimulation.Idle);
         world.Terrain.DrawChangesToSurface(terrainPixels);
 
         // Frame 2: rebuild composite from scratch
@@ -122,8 +121,7 @@ public class WorldIntegrationTests
                 world.Terrain.SetPixel(new Position(x, y), TerrainPixel.Blank);
 
         // Run many frames to trigger regrow timer
-        for (int i = 0; i < 500; i++)
-            world.Advance(_ => default);
+        TestSimulation.AdvanceIdle(world, frames: 500);
 
         // Verify no LevelGen artifacts
         for (int i = 0; i < TestSize.Area; i++)

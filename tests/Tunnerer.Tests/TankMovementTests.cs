@@ -74,7 +74,7 @@ public class TankMovementTests
         // Move up - initially in or near the base (blank space), should move freely
         // After moving out of blank space and hitting dirt, the tank should stop for one frame
         var positions = new List<Position> { startPos };
-        var moveUp = new ControllerOutput { MoveSpeed = new Offset(0, -1) };
+        var moveUp = TestSimulation.Move(0, -1);
 
         for (int i = 0; i < 100; i++)
         {
@@ -102,7 +102,7 @@ public class TankMovementTests
 
         // First, measure frames to cross open space (base area is blank)
         var startPos = tank.Position;
-        var moveRight = new ControllerOutput { MoveSpeed = new Offset(1, 0) };
+        var moveRight = TestSimulation.Move(1, 0);
 
         // Run 10 frames in what should be open base area
         int openMoved = 0;
@@ -118,9 +118,8 @@ public class TankMovementTests
         var tank2 = world2.TankList.Tanks[0];
 
         // Move up to hit dirt (away from base)
-        var moveUp = new ControllerOutput { MoveSpeed = new Offset(0, -1) };
-        for (int i = 0; i < 60; i++)
-            world2.Advance(_ => moveUp);
+        var moveUp = TestSimulation.Move(0, -1);
+        TestSimulation.Advance(world2, frames: 60, moveUp);
 
         // Continue moving up into dirt for 10 more frames
         int dirtMoved = 0;
@@ -169,7 +168,7 @@ public class TankMovementTests
         tank.Position = new Position(100, 29);
 
         // Move down into the dirt wall
-        var moveDown = new ControllerOutput { MoveSpeed = new Offset(0, 1) };
+        var moveDown = TestSimulation.Move(0, 1);
         world.Advance(_ => moveDown);
 
         // Dig target is (100, 30)
@@ -213,14 +212,14 @@ public class TankMovementTests
         var tank = world.TankList.Tanks[0];
 
         // Move tank down into the corridor
-        var moveDown = new ControllerOutput { MoveSpeed = new Offset(0, 1) };
+        var moveDown = TestSimulation.Move(0, 1);
         for (int i = 0; i < 5; i++)
             world.Advance(_ => moveDown);
 
         var posInCorridor = tank.Position;
 
         // Now try to move right (into the corridor wall of dirt)
-        var moveRight = new ControllerOutput { MoveSpeed = new Offset(1, 0) };
+        var moveRight = TestSimulation.Move(1, 0);
         for (int i = 0; i < 5; i++)
             world.Advance(_ => moveRight);
 
@@ -244,11 +243,7 @@ public class TankMovementTests
         var world = CreateSeededWorld();
         var tank = world.TankList.Tanks[0];
 
-        var input = new ControllerOutput
-        {
-            MoveSpeed = new Offset(0, -1),
-            AimDirection = new DirectionF(1, 0),
-        };
+        var input = TestSimulation.MoveAndAim(0, -1, 1f, 0f);
 
         for (int i = 0; i < 5; i++)
             world.Advance(_ => input);
@@ -268,14 +263,9 @@ public class TankMovementTests
         var tank2 = world2.TankList.Tanks[0];
 
         // Move up without shooting
-        var noShoot = new ControllerOutput { MoveSpeed = new Offset(0, -1) };
+        var noShoot = TestSimulation.Move(0, -1);
         // Move up while shooting ahead (turret aimed up)
-        var shootAhead = new ControllerOutput
-        {
-            MoveSpeed = new Offset(0, -1),
-            ShootPrimary = true,
-            AimDirection = new DirectionF(0, -1),
-        };
+        var shootAhead = TestSimulation.MoveAndAim(0, -1, 0f, -1f, shootPrimary: true);
 
         for (int i = 0; i < 80; i++)
         {
@@ -302,19 +292,9 @@ public class TankMovementTests
         var tank2 = world2.TankList.Tanks[0];
 
         // Move up while shooting right (perpendicular)
-        var shootSideways = new ControllerOutput
-        {
-            MoveSpeed = new Offset(0, -1),
-            ShootPrimary = true,
-            AimDirection = new DirectionF(1, 0),
-        };
+        var shootSideways = TestSimulation.MoveAndAim(0, -1, 1f, 0f, shootPrimary: true);
         // Move up while shooting ahead
-        var shootAhead = new ControllerOutput
-        {
-            MoveSpeed = new Offset(0, -1),
-            ShootPrimary = true,
-            AimDirection = new DirectionF(0, -1),
-        };
+        var shootAhead = TestSimulation.MoveAndAim(0, -1, 0f, -1f, shootPrimary: true);
 
         for (int i = 0; i < 80; i++)
         {
@@ -350,7 +330,7 @@ public class TankMovementTests
         tank.Position = new Position(100, 62);
 
         // Move up into rock WITHOUT shooting
-        var noShoot = new ControllerOutput { MoveSpeed = new Offset(0, -1) };
+        var noShoot = TestSimulation.Move(0, -1);
         for (int i = 0; i < 5; i++)
             world.Advance(_ => noShoot);
 

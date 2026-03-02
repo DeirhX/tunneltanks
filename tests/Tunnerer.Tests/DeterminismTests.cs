@@ -20,9 +20,9 @@ public class DeterminismTests
         for (int frame = 0; frame < 200; frame++)
         {
             var input = script[frame % script.Length];
-            w1.Advance(i => i == 0 ? input : default);
-            w2.Advance(i => i == 0 ? input : default);
-            Assert.Equal(ComputeWorldStateHash(w1), ComputeWorldStateHash(w2));
+            w1.Advance(i => i == 0 ? input : TestSimulation.Idle);
+            w2.Advance(i => i == 0 ? input : TestSimulation.Idle);
+            Assert.Equal(TestSimulation.ComputeWorldStateHash(w1), TestSimulation.ComputeWorldStateHash(w2));
         }
     }
 
@@ -37,10 +37,10 @@ public class DeterminismTests
 
         for (int frame = 0; frame < 140; frame++)
         {
-            fast.Advance(_ => default);
+            fast.Advance(_ => TestSimulation.Idle);
             Thread.Sleep(2);
-            slow.Advance(_ => default);
-            Assert.Equal(ComputeWorldStateHash(fast), ComputeWorldStateHash(slow));
+            slow.Advance(_ => TestSimulation.Idle);
+            Assert.Equal(TestSimulation.ComputeWorldStateHash(fast), TestSimulation.ComputeWorldStateHash(slow));
         }
     }
 
@@ -55,9 +55,9 @@ public class DeterminismTests
 
         for (int frame = 0; frame < 100; frame++)
         {
-            w1.Advance(_ => default);
-            w2.Advance(_ => default);
-            Assert.Equal(ComputeWorldStateHash(w1), ComputeWorldStateHash(w2));
+            w1.Advance(_ => TestSimulation.Idle);
+            w2.Advance(_ => TestSimulation.Idle);
+            Assert.Equal(TestSimulation.ComputeWorldStateHash(w1), TestSimulation.ComputeWorldStateHash(w2));
         }
     }
 
@@ -70,9 +70,9 @@ public class DeterminismTests
         bool diverged = false;
         for (int frame = 0; frame < 80; frame++)
         {
-            w1.Advance(_ => default);
-            w2.Advance(_ => default);
-            if (ComputeWorldStateHash(w1) != ComputeWorldStateHash(w2))
+            w1.Advance(_ => TestSimulation.Idle);
+            w2.Advance(_ => TestSimulation.Idle);
+            if (TestSimulation.ComputeWorldStateHash(w1) != TestSimulation.ComputeWorldStateHash(w2))
             {
                 diverged = true;
                 break;
@@ -90,9 +90,9 @@ public class DeterminismTests
 
         for (int frame = 0; frame < 60; frame++)
         {
-            w1.Advance(_ => default);
-            w2.Advance(_ => default);
-            Assert.Equal(ComputeWorldStateHash(w1), ComputeWorldStateHash(w2));
+            w1.Advance(_ => TestSimulation.Idle);
+            w2.Advance(_ => TestSimulation.Idle);
+            Assert.Equal(TestSimulation.ComputeWorldStateHash(w1), TestSimulation.ComputeWorldStateHash(w2));
         }
     }
 
@@ -128,13 +128,13 @@ public class DeterminismTests
     {
         var script = new List<ControllerOutput>();
         for (int i = 0; i < 16; i++)
-            script.Add(new ControllerOutput { MoveSpeed = new Offset(1, 0) });
+            script.Add(TestSimulation.Move(1, 0));
         for (int i = 0; i < 10; i++)
-            script.Add(new ControllerOutput { MoveSpeed = new Offset(0, -1) });
+            script.Add(TestSimulation.Move(0, -1));
         for (int i = 0; i < 8; i++)
-            script.Add(new ControllerOutput { ShootPrimary = true, AimDirection = new DirectionF(1, 0) });
+            script.Add(TestSimulation.MoveAndAim(0, 0, 1f, 0f, shootPrimary: true));
         for (int i = 0; i < 8; i++)
-            script.Add(default);
+            script.Add(TestSimulation.Idle);
         return script.ToArray();
     }
 
@@ -152,93 +152,4 @@ public class DeterminismTests
         world.Machines.Add(machine);
     }
 
-    private static ulong ComputeWorldStateHash(World world)
-    {
-        const ulong offset = 1469598103934665603UL;
-        const ulong prime = 1099511628211UL;
-        ulong hash = offset;
-
-        ulong Mix(ulong h, uint value)
-        {
-            h ^= value;
-            h *= prime;
-            return h;
-        }
-
-        var terrain = world.Terrain.Data;
-        for (int i = 0; i < terrain.Length; i++)
-            hash = Mix(hash, (uint)terrain[i]);
-
-        hash = Mix(hash, (uint)world.AdvanceCount);
-        hash = Mix(hash, (uint)world.Projectiles.Count);
-        hash = Mix(hash, (uint)world.Machines.Machines.Count);
-        hash = Mix(hash, (uint)world.LinkMap.Points.Count);
-        hash = Mix(hash, (uint)world.LinkMap.Links.Count);
-
-        var tanks = world.TankList.Tanks;
-        hash = Mix(hash, (uint)tanks.Count);
-        for (int i = 0; i < tanks.Count; i++)
-        {
-            var t = tanks[i];
-            hash = Mix(hash, (uint)t.Position.X);
-            hash = Mix(hash, (uint)t.Position.Y);
-            hash = Mix(hash, (uint)t.Direction);
-            hash = Mix(hash, (uint)t.LivesLeft);
-            hash = Mix(hash, (uint)(int)t.Reactor.Heat);
-            hash = Mix(hash, (uint)(int)t.Reactor.Health);
-            hash = Mix(hash, (uint)t.Resources.Dirt);
-            hash = Mix(hash, (uint)t.Resources.Minerals);
-            hash = Mix(hash, (uint)BitConverter.SingleToInt32Bits(t.Heat));
-            hash = Mix(hash, t.IsDead ? 1u : 0u);
-        }
-
-        var machines = world.Machines.Machines;
-        for (int i = 0; i < machines.Count; i++)
-        {
-            var m = machines[i];
-            hash = Mix(hash, (uint)m.Position.X);
-            hash = Mix(hash, (uint)m.Position.Y);
-            hash = Mix(hash, (uint)m.Type);
-            hash = Mix(hash, (uint)m.State);
-            hash = Mix(hash, (uint)m.OwnerColor);
-            hash = Mix(hash, m.IsAlive ? 1u : 0u);
-            hash = Mix(hash, (uint)(int)m.Reactor.Heat);
-            hash = Mix(hash, (uint)(int)m.Reactor.Health);
-        }
-
-        var points = world.LinkMap.Points;
-        for (int i = 0; i < points.Count; i++)
-        {
-            var p = points[i];
-            hash = Mix(hash, (uint)p.Id);
-            hash = Mix(hash, (uint)p.Position.X);
-            hash = Mix(hash, (uint)p.Position.Y);
-            hash = Mix(hash, (uint)p.Type);
-            hash = Mix(hash, p.IsEnabled ? 1u : 0u);
-            hash = Mix(hash, p.IsPowered ? 1u : 0u);
-        }
-
-        var links = world.LinkMap.Links;
-        for (int i = 0; i < links.Count; i++)
-        {
-            var l = links[i];
-            hash = Mix(hash, (uint)l.From.Id);
-            hash = Mix(hash, (uint)l.To.Id);
-            hash = Mix(hash, (uint)l.Type);
-            hash = Mix(hash, l.IsAlive ? 1u : 0u);
-        }
-
-        int w = world.Terrain.Width, h = world.Terrain.Height;
-        var pix = new uint[w * h];
-        var surface = new Surface(pix, w, h);
-        world.LinkMap.Draw(surface);
-        world.Machines.Draw(surface);
-        world.Projectiles.Draw(surface);
-        world.Sprites.Draw(surface);
-        world.TankList.Draw(surface);
-        for (int i = 0; i < pix.Length; i++)
-            hash = Mix(hash, pix[i]);
-
-        return hash;
-    }
 }

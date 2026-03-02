@@ -64,9 +64,7 @@ public class ReplayTests
         var world = CreateSeededWorld();
         var startPos = world.TankList.Tanks[0].Position;
 
-        var moveRight = new ControllerOutput { MoveSpeed = new Offset(1, 0) };
-        for (int i = 0; i < 50; i++)
-            world.Advance(_ => moveRight);
+        TestSimulation.Advance(world, frames: 50, TestSimulation.Move(1, 0));
 
         var endPos = world.TankList.Tanks[0].Position;
         Assert.True(endPos.X > startPos.X,
@@ -79,20 +77,12 @@ public class ReplayTests
         var world = CreateSeededWorld();
 
         // Move out of base first (need to be in open area to shoot)
-        var moveUp = new ControllerOutput { MoveSpeed = new Offset(0, -1) };
-        for (int i = 0; i < 30; i++)
-            world.Advance(_ => moveUp);
+        TestSimulation.Advance(world, frames: 30, TestSimulation.Move(0, -1));
 
         int projectilesBefore = world.Projectiles.Count;
 
-        var shootRight = new ControllerOutput
-        {
-            MoveSpeed = new Offset(0, 0),
-            ShootPrimary = true,
-            AimDirection = new DirectionF(1, 0),
-        };
-        for (int i = 0; i < 10; i++)
-            world.Advance(_ => shootRight);
+        var shootRight = TestSimulation.MoveAndAim(0, 0, 1f, 0f, shootPrimary: true);
+        TestSimulation.Advance(world, frames: 10, shootRight);
 
         Assert.True(world.Projectiles.Count > projectilesBefore,
             $"Expected projectiles to appear: before={projectilesBefore}, after={world.Projectiles.Count}");
@@ -109,8 +99,8 @@ public class ReplayTests
         for (int frame = 0; frame < script.Length; frame++)
         {
             var input = script[frame];
-            w1.Advance(i => i == 0 ? input : default);
-            w2.Advance(i => i == 0 ? input : default);
+            w1.Advance(i => i == 0 ? input : TestSimulation.Idle);
+            w2.Advance(i => i == 0 ? input : TestSimulation.Idle);
         }
 
         Assert.Equal(w1.TankList.Tanks[0].Position, w2.TankList.Tanks[0].Position);
@@ -126,9 +116,7 @@ public class ReplayTests
         var startPos = tank.Position;
 
         // Move up out of the base (base has blank space), then count dirt ahead
-        var moveUp = new ControllerOutput { MoveSpeed = new Offset(0, -1) };
-        for (int i = 0; i < 60; i++)
-            world.Advance(_ => moveUp);
+        TestSimulation.Advance(world, frames: 60, TestSimulation.Move(0, -1));
 
         // The tank should have dug through some dirt
         bool anyBlank = false;
@@ -149,40 +137,26 @@ public class ReplayTests
         var world = CreateSeededWorld();
 
         // Phase 1: Move right for 20 frames
-        for (int i = 0; i < 20; i++)
-            world.Advance(_ => new ControllerOutput { MoveSpeed = new Offset(1, 0) });
+        TestSimulation.Advance(world, frames: 20, TestSimulation.Move(1, 0));
         var checkpoint1 = world.TankList.Tanks[0].Position;
 
         // Phase 2: Move up for 20 frames
-        for (int i = 0; i < 20; i++)
-            world.Advance(_ => new ControllerOutput { MoveSpeed = new Offset(0, -1) });
+        TestSimulation.Advance(world, frames: 20, TestSimulation.Move(0, -1));
         var checkpoint2 = world.TankList.Tanks[0].Position;
 
         // Phase 3: Shoot while stationary for 10 frames
-        for (int i = 0; i < 10; i++)
-            world.Advance(_ => new ControllerOutput
-            {
-                ShootPrimary = true,
-                AimDirection = new DirectionF(1, 0),
-            });
+        TestSimulation.Advance(world, frames: 10, TestSimulation.MoveAndAim(0, 0, 1f, 0f, shootPrimary: true));
         var checkpoint3 = world.TankList.Tanks[0].Position;
 
         // Verify reproducibility: run same sequence again
         var world2 = CreateSeededWorld();
-        for (int i = 0; i < 20; i++)
-            world2.Advance(_ => new ControllerOutput { MoveSpeed = new Offset(1, 0) });
+        TestSimulation.Advance(world2, frames: 20, TestSimulation.Move(1, 0));
         Assert.Equal(checkpoint1, world2.TankList.Tanks[0].Position);
 
-        for (int i = 0; i < 20; i++)
-            world2.Advance(_ => new ControllerOutput { MoveSpeed = new Offset(0, -1) });
+        TestSimulation.Advance(world2, frames: 20, TestSimulation.Move(0, -1));
         Assert.Equal(checkpoint2, world2.TankList.Tanks[0].Position);
 
-        for (int i = 0; i < 10; i++)
-            world2.Advance(_ => new ControllerOutput
-            {
-                ShootPrimary = true,
-                AimDirection = new DirectionF(1, 0),
-            });
+        TestSimulation.Advance(world2, frames: 10, TestSimulation.MoveAndAim(0, 0, 1f, 0f, shootPrimary: true));
         Assert.Equal(checkpoint3, world2.TankList.Tanks[0].Position);
     }
 
@@ -230,11 +204,11 @@ public class ReplayTests
         for (int frame = 0; frame < 240; frame++)
         {
             var input = script[frame % script.Length];
-            w1.Advance(i => i == 0 ? input : default);
-            w2.Advance(i => i == 0 ? input : default);
+            w1.Advance(i => i == 0 ? input : TestSimulation.Idle);
+            w2.Advance(i => i == 0 ? input : TestSimulation.Idle);
 
-            ulong h1 = ComputeWorldStateHash(w1);
-            ulong h2 = ComputeWorldStateHash(w2);
+            ulong h1 = TestSimulation.ComputeWorldStateHash(w1);
+            ulong h2 = TestSimulation.ComputeWorldStateHash(w2);
             Assert.Equal(h1, h2);
         }
     }
@@ -247,103 +221,12 @@ public class ReplayTests
 
         for (int frame = 0; frame < 320; frame++)
         {
-            w1.Advance(_ => default);
-            w2.Advance(_ => default);
+            w1.Advance(_ => TestSimulation.Idle);
+            w2.Advance(_ => TestSimulation.Idle);
 
-            ulong h1 = ComputeWorldStateHash(w1);
-            ulong h2 = ComputeWorldStateHash(w2);
+            ulong h1 = TestSimulation.ComputeWorldStateHash(w1);
+            ulong h2 = TestSimulation.ComputeWorldStateHash(w2);
             Assert.Equal(h1, h2);
         }
-    }
-
-    private static ulong ComputeWorldStateHash(World world)
-    {
-        const ulong offset = 1469598103934665603UL;
-        const ulong prime = 1099511628211UL;
-        ulong hash = offset;
-
-        ulong Mix(ulong h, uint value)
-        {
-            h ^= value;
-            h *= prime;
-            return h;
-        }
-
-        var terrain = world.Terrain.Data;
-        for (int i = 0; i < terrain.Length; i++)
-            hash = Mix(hash, (uint)terrain[i]);
-
-        hash = Mix(hash, (uint)world.AdvanceCount);
-        hash = Mix(hash, (uint)world.Projectiles.Count);
-        hash = Mix(hash, (uint)world.Machines.Machines.Count);
-        hash = Mix(hash, (uint)world.LinkMap.Points.Count);
-        hash = Mix(hash, (uint)world.LinkMap.Links.Count);
-
-        var tanks = world.TankList.Tanks;
-        hash = Mix(hash, (uint)tanks.Count);
-        for (int i = 0; i < tanks.Count; i++)
-        {
-            var t = tanks[i];
-            hash = Mix(hash, (uint)t.Position.X);
-            hash = Mix(hash, (uint)t.Position.Y);
-            hash = Mix(hash, (uint)t.Direction);
-            hash = Mix(hash, (uint)t.LivesLeft);
-            hash = Mix(hash, (uint)(int)t.Reactor.Heat);
-            hash = Mix(hash, (uint)(int)t.Reactor.Health);
-            hash = Mix(hash, (uint)t.Resources.Dirt);
-            hash = Mix(hash, (uint)t.Resources.Minerals);
-            hash = Mix(hash, (uint)BitConverter.SingleToInt32Bits(t.Heat));
-            hash = Mix(hash, t.IsDead ? 1u : 0u);
-        }
-
-        var machines = world.Machines.Machines;
-        for (int i = 0; i < machines.Count; i++)
-        {
-            var m = machines[i];
-            hash = Mix(hash, (uint)m.Position.X);
-            hash = Mix(hash, (uint)m.Position.Y);
-            hash = Mix(hash, (uint)m.Type);
-            hash = Mix(hash, (uint)m.State);
-            hash = Mix(hash, (uint)m.OwnerColor);
-            hash = Mix(hash, m.IsAlive ? 1u : 0u);
-            hash = Mix(hash, (uint)(int)m.Reactor.Heat);
-            hash = Mix(hash, (uint)(int)m.Reactor.Health);
-        }
-
-        var points = world.LinkMap.Points;
-        for (int i = 0; i < points.Count; i++)
-        {
-            var p = points[i];
-            hash = Mix(hash, (uint)p.Id);
-            hash = Mix(hash, (uint)p.Position.X);
-            hash = Mix(hash, (uint)p.Position.Y);
-            hash = Mix(hash, (uint)p.Type);
-            hash = Mix(hash, p.IsEnabled ? 1u : 0u);
-            hash = Mix(hash, p.IsPowered ? 1u : 0u);
-        }
-
-        var links = world.LinkMap.Links;
-        for (int i = 0; i < links.Count; i++)
-        {
-            var l = links[i];
-            hash = Mix(hash, (uint)l.From.Id);
-            hash = Mix(hash, (uint)l.To.Id);
-            hash = Mix(hash, (uint)l.Type);
-            hash = Mix(hash, l.IsAlive ? 1u : 0u);
-        }
-
-        // Hash a composited entity layer so projectile/sprite state differences are also captured.
-        int w = world.Terrain.Width, h = world.Terrain.Height;
-        var pix = new uint[w * h];
-        var surface = new Surface(pix, w, h);
-        world.LinkMap.Draw(surface);
-        world.Machines.Draw(surface);
-        world.Projectiles.Draw(surface);
-        world.Sprites.Draw(surface);
-        world.TankList.Draw(surface);
-        for (int i = 0; i < pix.Length; i++)
-            hash = Mix(hash, pix[i]);
-
-        return hash;
     }
 }
