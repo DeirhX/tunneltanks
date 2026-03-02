@@ -5,15 +5,8 @@ using Tunnerer.Core.Types;
 public readonly record struct ExplosionParams(int ShrapnelCount, float Speed, int Frames);
 public enum RenderBackendKind
 {
-    OpenGl = 0,
-    Dx11 = 1,
-    Dx12 = 2,
-}
-
-public enum TerrainVisualMode
-{
-    LegacyHiRes = 0,
-    NativeContinuous = 1,
+    Dx11 = 0,
+    Dx12 = 1,
 }
 
 public static class Tweaks
@@ -39,12 +32,6 @@ public static class Tweaks
         public static readonly Size RenderSurfaceSize = new(320, 200);
         public const float DrawStaticFuelThreshold = 0.2f;
         public const int PixelScale = 6;
-        public const TerrainVisualMode TerrainVisual = TerrainVisualMode.NativeContinuous;
-        public const int HiResInitialQuality = 2; // 0=Low, 1=Medium, 2=High
-        public const float HiResRenderBudgetMs = 8.0f;
-        public const int HiResBudgetHysteresisFrames = 12;
-        public const float HiResBudgetUnderThreshold = 0.65f;
-        public const int HiResQualityIncreaseFramesMultiplier = 25;
         public const int NativeContinuousSampleLow = 1;
         public const int NativeContinuousSampleMedium = 2;
         public const int NativeContinuousSampleHigh = 4;
@@ -52,6 +39,7 @@ public static class Tweaks
         public const float NativeContinuousBoundaryBlend = 0.75f;
         public const float NativeContinuousRenderBudgetMs = 5.0f;
         public const int NativeContinuousBudgetHysteresisFrames = 10;
+        public const float NativeContinuousBudgetUnderThreshold = 0.65f;
         public const int NativeContinuousRecoveryFramesMultiplier = 20;
 
         // GPU post-processing / lighting tuning

@@ -4,9 +4,8 @@ This document describes the current rendering model used by the desktop client, 
 
 ## High-Level Layout
 
-`Tunnerer.Desktop` has a backend-agnostic render contract and two active implementations:
+`Tunnerer.Desktop` has a backend-agnostic render contract and one active implementation:
 
-- `OpenGlGameRenderBackend`
 - `Tunnerer.Desktop.Rendering.Dx11.Backend`
 
 Core orchestration lives in `Game.cs`; platform/windowing lives in `Rendering/SdlRenderer.cs`.
@@ -15,10 +14,8 @@ Core orchestration lives in `Game.cs`; platform/windowing lives in `Rendering/Sd
 
 Selection path:
 
-1. CLI argument `--backend=opengl|dx11|dx12` is parsed in `Program.cs`.
-2. `Game` chooses a graphics mode:
-   - OpenGL backend -> SDL OpenGL window/context (`SdlGraphicsMode.OpenGl`)
-   - DX11 backend -> native window (`SdlGraphicsMode.NativeWindow`)
+1. CLI argument `--backend=dx11|dx12` is parsed in `Program.cs`.
+2. `Game` creates an SDL native window for DX backends.
 3. `RenderBackendFactory` creates:
    - backend instance (`IGameRenderBackend`)
    - texture loader (`ITextureLoader`)
@@ -64,19 +61,7 @@ Simplified frame pipeline:
    - `NewFrame`
    - `GameHud.Draw` (`ImGui.Image` + overlays/panels)
 10. `Render` backend output
-11. `SdlRenderer.SwapWindow()` (OpenGL swap only; DX11 presents via swap chain)
-
-## OpenGL Backend
-
-OpenGL backend uses:
-
-- game textures (double-buffer style)
-- post-process source texture + FBO destination
-- terrain aux texture with dirty-rect sub-updates
-- large GLSL post-process pass (bloom, vignette, edge light, terrain mask, emissive, tank glow)
-- OpenGL ImGui renderer (`OpenGlImGuiController`)
-
-`SupportsUi = true`; `GameTextureId` is a GL texture handle.
+11. `SdlRenderer.SwapWindow()` (no-op for DX backends; DX11 presents via swap chain)
 
 ## DX11 Backend
 

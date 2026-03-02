@@ -32,14 +32,12 @@ foreach (var arg in args)
     else if (arg.StartsWith("--backend="))
     {
         var backendRaw = arg[10..].Trim();
-        if (backendRaw.Equals("opengl", StringComparison.OrdinalIgnoreCase))
-            renderBackend = RenderBackendKind.OpenGl;
-        else if (backendRaw.Equals("dx11", StringComparison.OrdinalIgnoreCase))
+        if (backendRaw.Equals("dx11", StringComparison.OrdinalIgnoreCase))
             renderBackend = RenderBackendKind.Dx11;
         else if (backendRaw.Equals("dx12", StringComparison.OrdinalIgnoreCase))
             renderBackend = RenderBackendKind.Dx12;
         else
-            Console.WriteLine($"[Args] Unknown backend '{backendRaw}', expected opengl|dx11|dx12. Using default.");
+            Console.WriteLine($"[Args] Unknown backend '{backendRaw}', expected dx11|dx12. Using default.");
     }
 }
 

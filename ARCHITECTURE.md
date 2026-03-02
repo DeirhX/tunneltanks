@@ -2,7 +2,7 @@
 
 A port of the C++ Tunnerer engine to C# / .NET 10. Uses Silk.NET for SDL2 bindings. The simulation logic is platform-independent (`Tunnerer.Core`); the platform layer is isolated (`Tunnerer.Desktop`).
 
-The desktop renderer currently supports multiple backends (`OpenGL`, `DX11`) behind `IGameRenderBackend`. For backend-specific details, see `src/Tunnerer.Desktop/ARCHITECTURE.md`.
+The desktop renderer currently uses `DX11` behind `IGameRenderBackend`. For backend-specific details, see `src/Tunnerer.Desktop/ARCHITECTURE.md`.
 
 ## Solution structure
 
