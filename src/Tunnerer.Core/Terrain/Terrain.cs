@@ -9,7 +9,8 @@ public class TerrainGrid
 {
     private readonly TerrainPixel[] _data;
     private readonly float[] _heatTemperature;
-    private readonly TerrainHeatEngine _heatEngine = new();
+    private readonly TerrainHeatEngine _heatEngine;
+    private readonly SimulationSettings _simulationSettings;
     private readonly int[] _neighborOffsets;
     private readonly List<Position> _changeList = new();
     private bool _hasHeatDirtyRect;
@@ -23,10 +24,17 @@ public class TerrainGrid
     public int Height => Size.Y;
 
     public TerrainGrid(Size size)
+        : this(size, SimulationSettings.FromTweaks())
     {
+    }
+
+    public TerrainGrid(Size size, SimulationSettings simulationSettings)
+    {
+        _simulationSettings = simulationSettings;
         Size = size;
         _data = new TerrainPixel[size.Area];
         _heatTemperature = new float[size.Area];
+        _heatEngine = new TerrainHeatEngine(simulationSettings);
         _neighborOffsets = BuildNeighborOffsets(size.X);
     }
 
@@ -93,7 +101,7 @@ public class TerrainGrid
         int w = Width, h = Height;
         int len = w * h;
 
-        if (Tweaks.World.EnableMaterialHeatExchange)
+        if (_simulationSettings.EnableMaterialHeatExchange)
         {
             // In material-physics mode, avoid the legacy blur/mix pass because it can
             // create heat through per-cell rounding. Use only pairwise exchange and

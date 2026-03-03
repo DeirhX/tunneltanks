@@ -9,7 +9,18 @@ using Tunnerer.Core.Terrain;
 /// </summary>
 public sealed class TerrainHeatEngine
 {
+    private readonly SimulationSettings _settings;
     private float[]? _delta;
+
+    public TerrainHeatEngine()
+        : this(SimulationSettings.FromTweaks())
+    {
+    }
+
+    public TerrainHeatEngine(SimulationSettings settings)
+    {
+        _settings = settings;
+    }
 
     public bool AddEnergyAt(float[] temperature, int width, int height, int x, int y, float amount)
     {
@@ -36,7 +47,7 @@ public sealed class TerrainHeatEngine
     }
 
     public void Step(float[] temperature, TerrainPixel[] pixels, int width, int height)
-        => Step(temperature, pixels, width, height, includeAmbientExchange: Tweaks.World.EnableThermalAmbientExchange);
+        => Step(temperature, pixels, width, height, includeAmbientExchange: _settings.EnableThermalAmbientExchange);
 
     public void Step(
         float[] temperature,
@@ -172,11 +183,11 @@ public sealed class TerrainHeatEngine
         };
     }
 
-    private static float GetAmbientConductance(ThermalMaterial material) => material switch
+    private float GetAmbientConductance(ThermalMaterial material) => material switch
     {
         ThermalMaterial.Air => Tweaks.World.ThermalKAmbientAir,
         ThermalMaterial.Dirt => Tweaks.World.ThermalKAmbientDirt,
-        ThermalMaterial.Stone => Tweaks.World.EnableStoneAmbientExchange ? Tweaks.World.ThermalKAmbientStone : 0f,
+        ThermalMaterial.Stone => _settings.EnableStoneAmbientExchange ? Tweaks.World.ThermalKAmbientStone : 0f,
         _ => Tweaks.World.ThermalKAmbientBase,
     };
 

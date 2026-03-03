@@ -6,6 +6,7 @@ using Tunnerer.Core.Config;
 using Tunnerer.Core.Entities;
 using Tunnerer.Core.Resources;
 using Tunnerer.Core.Collision;
+using Tunnerer.Core.Rendering;
 
 /// <summary>
 /// Defines per-type projectile behavior: how it advances and what color it draws.
@@ -199,5 +200,19 @@ public class ProjectileList
 
             surface.Pixels[ipos.X + ipos.Y * surface.Width] = Behaviors[(int)p.Type].DrawColor.ToArgb();
         }
+    }
+
+    public int CopyRenderStates(Span<ProjectileRenderState> destination)
+    {
+        int count = Math.Min(destination.Length, _projectiles.Count);
+        for (int i = 0; i < count; i++)
+        {
+            var p = _projectiles[i];
+            destination[i] = new ProjectileRenderState(
+                Position: (Position)p.Position,
+                Type: p.Type,
+                IsAlive: p.IsAlive);
+        }
+        return count;
     }
 }

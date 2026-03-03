@@ -4,6 +4,7 @@ using Tunnerer.Core.Types;
 using Tunnerer.Core.Config;
 using Tunnerer.Core.Collision;
 using Tunnerer.Core.Terrain;
+using Tunnerer.Core.Rendering;
 
 public class LinkMap
 {
@@ -17,6 +18,8 @@ public class LinkMap
 
     public IReadOnlyList<LinkPoint> Points => _points;
     public IReadOnlyList<Link> Links => _links;
+    public int PointCount => _points.Count;
+    public int LinkCount => _links.Count;
 
     public LinkMap(bool deterministicSimulation = false, int idSeed = 0)
     {
@@ -111,5 +114,20 @@ public class LinkMap
                     surface.Pixels[pos.X + pos.Y * surface.Width] = color;
             });
         }
+    }
+
+    public int CopyRenderStates(Span<LinkRenderState> destination)
+    {
+        int count = Math.Min(destination.Length, _links.Count);
+        for (int i = 0; i < count; i++)
+        {
+            var link = _links[i];
+            destination[i] = new LinkRenderState(
+                From: link.From.Position,
+                To: link.To.Position,
+                Type: link.Type,
+                IsAlive: link.IsAlive);
+        }
+        return count;
     }
 }

@@ -1,6 +1,6 @@
 using Tunnerer.Core.LevelGen;
-using Tunnerer.Core.Config;
 using Tunnerer.Core.Types;
+using Tunnerer.Desktop.Config;
 
 Size? terrainSize = null;
 bool fastGen = false;

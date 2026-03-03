@@ -218,6 +218,7 @@ public class Tank
             frameDugPixels: _frameDugPixels,
             frameShotFired: _frameShotFired,
             atOwnBase: atOwnBase,
+            includeAmbientExchange: world.Settings.EnableThermalAmbientExchange,
             sampledTerrainTemperature: sampledTerrainTemperature,
             sampleCells: sampleCells,
             applyTerrainTotalDelta: desiredTotal =>

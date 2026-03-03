@@ -14,6 +14,7 @@ public sealed class TankHeatEngine
         int frameDugPixels,
         bool frameShotFired,
         bool atOwnBase,
+        bool includeAmbientExchange,
         float sampledTerrainTemperature,
         int sampleCells,
         Func<int, int> applyTerrainTotalDelta,
@@ -22,7 +23,6 @@ public sealed class TankHeatEngine
         float nextHeat = currentHeat;
         nextHeat += TankHeatModel.ComputeActionHeat(frameDugPixels, frameShotFired);
 
-        bool includeAmbientExchange = Tweaks.World.EnableThermalAmbientExchange;
         float terrainTemperature = sampledTerrainTemperature;
         if (includeAmbientExchange)
         {

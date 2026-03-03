@@ -6,8 +6,8 @@ using Tunnerer.Core.Config;
 using Tunnerer.Core.Input;
 using Tunnerer.Core.LevelGen;
 using Tunnerer.Core.Types;
-using Surface = Tunnerer.Core.Types.Surface;
 using Tunnerer.Desktop.Gui;
+using Tunnerer.Desktop.Config;
 using Tunnerer.Desktop.Input;
 using Tunnerer.Desktop.Rendering;
 using System.Diagnostics;
@@ -20,6 +20,7 @@ public class Game : IDisposable
     private readonly IGameRenderBackend _renderBackend;
     private readonly ITextureLoader _textures;
     private readonly GameHud _hud;
+    private readonly WorldCompositeRenderer _compositeRenderer = new();
 
     private readonly Size _terrainSize;
     private readonly World _world;
@@ -44,9 +45,7 @@ public class Game : IDisposable
     public const int DefaultSeed = 42;
 
     private readonly DrawProfile _drawProfile = new();
-    private readonly PerfCaptureOptions? _perfCapture;
-    private readonly List<double> _perfFrameMs = new();
-    private int _perfFramesSeen;
+    private readonly PerfCaptureSession _perfSession;
     private bool _isRunning = true;
 
     public unsafe Game(
@@ -57,18 +56,10 @@ public class Game : IDisposable
     {
         var windowSize = Tweaks.Screen.WindowSize;
         _terrainSize = terrainSizeOverride ?? Tweaks.Screen.RenderSurfaceSize;
-        RenderBackendKind selectedBackend = renderBackendOverride ?? Tweaks.System.RenderBackend;
+        RenderBackendKind selectedBackend = renderBackendOverride ?? DesktopTweaks.DefaultRenderBackend;
         bool deterministicSimulation = genMode == LevelGenMode.Deterministic;
         bool parallel = genMode == LevelGenMode.Optimized;
-        if (perfCapture is PerfCaptureOptions perf)
-        {
-            _perfCapture = new PerfCaptureOptions(
-                Math.Max(0, perf.WarmupFrames),
-                Math.Max(1, perf.MeasureFrames),
-                string.IsNullOrWhiteSpace(perf.CsvPath) ? null : perf.CsvPath);
-            _perfFrameMs = new List<double>(_perfCapture.Value.MeasureFrames);
-            Console.WriteLine($"[Perf] enabled warmup={_perfCapture.Value.WarmupFrames} measure={_perfCapture.Value.MeasureFrames}");
-        }
+        _perfSession = PerfCaptureSession.Create(perfCapture);
 
         _renderer = new SdlRenderer(Tweaks.System.WindowTitle, windowSize);
 
@@ -162,14 +153,7 @@ public class Game : IDisposable
 
                     ProfileSection(ref _drawProfile.ObjectsDraw, () =>
                     {
-                        Array.Copy(_worldPixels, _compositePixels, _worldPixels.Length);
-                        var compositeSurface = new Surface(_compositePixels, _terrainSize.X, _terrainSize.Y);
-                        _world.LinkMap.Draw(compositeSurface);
-                        _world.Machines.Draw(compositeSurface);
-                        _world.Projectiles.Draw(compositeSurface);
-                        _world.Sprites.Draw(compositeSurface);
-                        _world.TankList.Draw(compositeSurface);
-
+                        _compositeRenderer.Compose(_world, _worldPixels, _compositePixels);
                         MarkEntityPixels(_worldPixels, _compositePixels);
                     });
 
@@ -180,12 +164,12 @@ public class Game : IDisposable
                     if (_drawProfile.FrameCount >= 100)
                         _drawProfile.Report();
 
-                    if (CapturePerfFrame(totalFrameWatch.Elapsed))
+                    if (_perfSession.Capture(totalFrameWatch.Elapsed))
                         _isRunning = false;
                 }
             }
 
-            ReportPerfCaptureIfEnabled();
+            _perfSession.ReportIfEnabled();
         }
         finally
         {
@@ -193,63 +177,6 @@ public class Game : IDisposable
             _renderBackend.Dispose();
             _renderer.Dispose();
         }
-    }
-
-    private bool CapturePerfFrame(TimeSpan totalFrame)
-    {
-        if (_perfCapture is not PerfCaptureOptions perf)
-            return false;
-
-        _perfFramesSeen++;
-        if (_perfFramesSeen > perf.WarmupFrames)
-            _perfFrameMs.Add(totalFrame.TotalMilliseconds);
-
-        return _perfFrameMs.Count >= perf.MeasureFrames;
-    }
-
-    private void ReportPerfCaptureIfEnabled()
-    {
-        if (_perfCapture is not PerfCaptureOptions perf || _perfFrameMs.Count == 0)
-            return;
-
-        double sum = 0;
-        for (int i = 0; i < _perfFrameMs.Count; i++)
-            sum += _perfFrameMs[i];
-
-        double[] sorted = _perfFrameMs.ToArray();
-        Array.Sort(sorted);
-        double avg = sum / _perfFrameMs.Count;
-        double min = sorted[0];
-        double max = sorted[^1];
-        double p50 = Percentile(sorted, 0.50);
-        double p95 = Percentile(sorted, 0.95);
-        double p99 = Percentile(sorted, 0.99);
-
-        Console.WriteLine(
-            $"[Perf] frames={_perfFrameMs.Count} warmup={perf.WarmupFrames} avg={avg:F3}ms " +
-            $"p50={p50:F3}ms p95={p95:F3}ms p99={p99:F3}ms min={min:F3}ms max={max:F3}ms");
-
-        if (perf.CsvPath is null)
-            return;
-
-        string fullPath = Path.GetFullPath(perf.CsvPath);
-        string? dir = Path.GetDirectoryName(fullPath);
-        if (!string.IsNullOrEmpty(dir))
-            Directory.CreateDirectory(dir);
-
-        using var writer = new StreamWriter(fullPath, false);
-        writer.WriteLine("frame,ms");
-        for (int i = 0; i < _perfFrameMs.Count; i++)
-            writer.WriteLine($"{i},{_perfFrameMs[i].ToString("F6", CultureInfo.InvariantCulture)}");
-        Console.WriteLine($"[Perf] wrote csv: {fullPath}");
-    }
-
-    private static double Percentile(double[] sorted, double p)
-    {
-        if (sorted.Length == 0) return 0;
-        int idx = (int)Math.Ceiling(sorted.Length * p) - 1;
-        idx = Math.Clamp(idx, 0, sorted.Length - 1);
-        return sorted[idx];
     }
 
     private void RenderImGuiFrame(IReadOnlyList<Core.Entities.Tank> tanks)
@@ -717,6 +644,90 @@ public class DrawProfile
         ScreenQualityAdjust = ScreenClearFrame = ScreenNewFrame = ScreenHudDraw = TimeSpan.Zero;
         ScreenUi = ScreenImGuiRender = ScreenSwap = TimeSpan.Zero;
         FrameCount = 0;
+    }
+}
+
+internal sealed class PerfCaptureSession
+{
+    private readonly PerfCaptureOptions? _options;
+    private readonly List<double> _frameMs;
+    private int _framesSeen;
+
+    private PerfCaptureSession(PerfCaptureOptions? options)
+    {
+        _options = options;
+        _frameMs = options is PerfCaptureOptions o ? new List<double>(o.MeasureFrames) : [];
+    }
+
+    public static PerfCaptureSession Create(PerfCaptureOptions? options)
+    {
+        if (options is not PerfCaptureOptions perf)
+            return new PerfCaptureSession(null);
+
+        var normalized = new PerfCaptureOptions(
+            WarmupFrames: Math.Max(0, perf.WarmupFrames),
+            MeasureFrames: Math.Max(1, perf.MeasureFrames),
+            CsvPath: string.IsNullOrWhiteSpace(perf.CsvPath) ? null : perf.CsvPath);
+        Console.WriteLine($"[Perf] enabled warmup={normalized.WarmupFrames} measure={normalized.MeasureFrames}");
+        return new PerfCaptureSession(normalized);
+    }
+
+    public bool Capture(TimeSpan totalFrame)
+    {
+        if (_options is not PerfCaptureOptions perf)
+            return false;
+
+        _framesSeen++;
+        if (_framesSeen > perf.WarmupFrames)
+            _frameMs.Add(totalFrame.TotalMilliseconds);
+
+        return _frameMs.Count >= perf.MeasureFrames;
+    }
+
+    public void ReportIfEnabled()
+    {
+        if (_options is not PerfCaptureOptions perf || _frameMs.Count == 0)
+            return;
+
+        double sum = 0;
+        for (int i = 0; i < _frameMs.Count; i++)
+            sum += _frameMs[i];
+
+        double[] sorted = _frameMs.ToArray();
+        Array.Sort(sorted);
+        double avg = sum / _frameMs.Count;
+        double min = sorted[0];
+        double max = sorted[^1];
+        double p50 = Percentile(sorted, 0.50);
+        double p95 = Percentile(sorted, 0.95);
+        double p99 = Percentile(sorted, 0.99);
+
+        Console.WriteLine(
+            $"[Perf] frames={_frameMs.Count} warmup={perf.WarmupFrames} avg={avg:F3}ms " +
+            $"p50={p50:F3}ms p95={p95:F3}ms p99={p99:F3}ms min={min:F3}ms max={max:F3}ms");
+
+        if (perf.CsvPath is null)
+            return;
+
+        string fullPath = Path.GetFullPath(perf.CsvPath);
+        string? dir = Path.GetDirectoryName(fullPath);
+        if (!string.IsNullOrEmpty(dir))
+            Directory.CreateDirectory(dir);
+
+        using var writer = new StreamWriter(fullPath, false);
+        writer.WriteLine("frame,ms");
+        for (int i = 0; i < _frameMs.Count; i++)
+            writer.WriteLine($"{i},{_frameMs[i].ToString("F6", CultureInfo.InvariantCulture)}");
+        Console.WriteLine($"[Perf] wrote csv: {fullPath}");
+    }
+
+    private static double Percentile(double[] sorted, double p)
+    {
+        if (sorted.Length == 0)
+            return 0;
+        int idx = (int)Math.Ceiling(sorted.Length * p) - 1;
+        idx = Math.Clamp(idx, 0, sorted.Length - 1);
+        return sorted[idx];
     }
 }
 

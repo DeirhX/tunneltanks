@@ -10,6 +10,7 @@ using Tunnerer.Core.Entities.Projectiles;
 using Tunnerer.Core.Entities.Machines;
 using Tunnerer.Core.Entities.Links;
 using System.Diagnostics;
+using Tunnerer.Core.Rendering;
 
 public class World
 {
@@ -24,6 +25,7 @@ public class World
     private readonly bool _deterministicSimulation;
     private readonly bool _enableTerrainRegrowth;
     private readonly int _simulationSeed;
+    private readonly SimulationSettings _simulationSettings;
 
     private int _advanceCount;
     private TimeSpan _elapsed;
@@ -41,6 +43,7 @@ public class World
     public CollisionSolver CollisionSolver => _collisionSolver;
     public int AdvanceCount => _advanceCount;
     public bool IsGameOver => _gameOver;
+    public SimulationSettings Settings => _simulationSettings;
 
     public SimulationProfile Profile { get; } = new();
 
@@ -48,12 +51,14 @@ public class World
         Size terrainSize,
         bool deterministicSimulation = false,
         int simulationSeed = 0,
-        bool enableTerrainRegrowth = true)
+        bool enableTerrainRegrowth = true,
+        SimulationSettings? simulationSettings = null)
     {
         _deterministicSimulation = deterministicSimulation;
         _enableTerrainRegrowth = enableTerrainRegrowth;
         _simulationSeed = simulationSeed != 0 ? simulationSeed : 0x51A7E3;
-        _terrain = new TerrainGrid(terrainSize);
+        _simulationSettings = simulationSettings ?? SimulationSettings.FromTweaks();
+        _terrain = new TerrainGrid(terrainSize, _simulationSettings);
         _projectiles = new ProjectileList(deterministicSimulation ? _simulationSeed ^ 0x5f3759df : null);
         _linkMap = new LinkMap(deterministicSimulation, _simulationSeed ^ 0x13579BDF);
         _collisionSolver = new CollisionSolver(_terrain);
@@ -115,6 +120,8 @@ public class World
     }
 
     public void SetGameOver() => _gameOver = true;
+
+    public TerrainRenderSnapshot CaptureTerrainRenderSnapshot() => new(_terrain);
 
     private static void ProfileSection(ref TimeSpan accumulator, Action action)
     {

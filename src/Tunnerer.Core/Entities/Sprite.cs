@@ -2,6 +2,7 @@ namespace Tunnerer.Core.Entities;
 
 using Tunnerer.Core.Types;
 using Tunnerer.Core.Config;
+using Tunnerer.Core.Rendering;
 
 public class Sprite
 {
@@ -59,6 +60,7 @@ public enum SpriteType { FailedInteraction, InfoMarker }
 public class SpriteList
 {
     private readonly List<Sprite> _sprites = new();
+    public int Count => _sprites.Count;
 
     public void Add(Sprite sprite) => _sprites.Add(sprite);
 
@@ -76,6 +78,20 @@ public class SpriteList
     {
         foreach (var sprite in _sprites)
             sprite.Draw(surface);
+    }
+
+    public int CopyRenderStates(Span<SpriteRenderState> destination)
+    {
+        int count = Math.Min(destination.Length, _sprites.Count);
+        for (int i = 0; i < count; i++)
+        {
+            var s = _sprites[i];
+            destination[i] = new SpriteRenderState(
+                Position: s.Position,
+                Type: s.Type,
+                IsAlive: s.IsAlive);
+        }
+        return count;
     }
 
     public void RemoveAll() => _sprites.Clear();

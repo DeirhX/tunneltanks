@@ -35,6 +35,7 @@ public sealed unsafe partial class Backend : IGameRenderBackend
     private int _nativeSourceW, _nativeSourceH;
     private ID3D11Texture2D* _terrainAuxTexture;
     private ID3D11ShaderResourceView* _terrainAuxSrv;
+    private byte[]? _terrainAuxUploadScratch;
     private ID3D11VertexShader* _fullscreenVs;
     private ID3D11PixelShader* _blitPs;
     private ID3D11PixelShader* _postPs;

@@ -228,7 +228,10 @@ public sealed unsafe partial class Backend
         int rh = maxY - minY + 1;
         if (rw <= 0 || rh <= 0) return;
         var box = new Box((uint)minX, (uint)minY, 0u, (uint)(maxX + 1), (uint)(maxY + 1), 1u);
-        byte[] scratch = new byte[rw * rh * 4];
+        int required = rw * rh * 4;
+        if (_terrainAuxUploadScratch == null || _terrainAuxUploadScratch.Length < required)
+            _terrainAuxUploadScratch = new byte[required];
+        byte[] scratch = _terrainAuxUploadScratch;
         for (int y = 0; y < rh; y++)
         {
             int src = ((minY + y) * worldW + minX) * 4;

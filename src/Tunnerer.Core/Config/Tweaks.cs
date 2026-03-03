@@ -3,11 +3,6 @@ namespace Tunnerer.Core.Config;
 using Tunnerer.Core.Types;
 
 public readonly record struct ExplosionParams(int ShrapnelCount, float Speed, int Frames);
-public enum RenderBackendKind
-{
-    Dx11 = 0,
-    Dx12 = 1,
-}
 
 public static class Tweaks
 {
@@ -15,7 +10,6 @@ public static class Tweaks
     {
         public const string WindowTitle = "Tunnerer";
         public const string Version = "0.1 alpha";
-        public const RenderBackendKind RenderBackend = RenderBackendKind.Dx11;
     }
 
     public static class Perf

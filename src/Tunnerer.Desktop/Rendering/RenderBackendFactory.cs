@@ -1,7 +1,7 @@
 namespace Tunnerer.Desktop.Rendering;
 
 using Silk.NET.SDL;
-using Tunnerer.Core.Config;
+using Tunnerer.Desktop.Config;
 using Tunnerer.Desktop.Rendering.Dx11;
 
 public static unsafe class RenderBackendFactory
