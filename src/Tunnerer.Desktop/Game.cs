@@ -34,7 +34,7 @@ public class Game : IDisposable
     private readonly TerrainBlurField _gpuBlurField = new();
     private bool _gpuAuxFullUploadPending = true;
     private Size _hiResSize;
-    private int _nativeContinuousSampleCount = Tweaks.Screen.NativeContinuousSampleHigh;
+    private int _nativeContinuousSampleCount = DesktopScreenTweaks.NativeContinuousSampleHigh;
     private int _nativeOverBudgetFrames;
     private int _nativeUnderBudgetFrames;
     private readonly Stopwatch _gameTimer = Stopwatch.StartNew();
@@ -54,8 +54,8 @@ public class Game : IDisposable
         PerfCaptureOptions? perfCapture = null,
         RenderBackendKind? renderBackendOverride = null)
     {
-        var windowSize = Tweaks.Screen.WindowSize;
-        _terrainSize = terrainSizeOverride ?? Tweaks.Screen.RenderSurfaceSize;
+        var windowSize = DesktopScreenTweaks.WindowSize;
+        _terrainSize = terrainSizeOverride ?? DesktopScreenTweaks.RenderSurfaceSize;
         RenderBackendKind selectedBackend = renderBackendOverride ?? DesktopTweaks.DefaultRenderBackend;
         bool deterministicSimulation = genMode == LevelGenMode.Deterministic;
         bool parallel = genMode == LevelGenMode.Optimized;
@@ -183,7 +183,7 @@ public class Game : IDisposable
     {
         var (winW, winH) = _renderer.GetWindowSize();
         float dt = 1f / Tweaks.Perf.TargetFps;
-        int scale = Tweaks.Screen.PixelScale;
+        int scale = DesktopScreenTweaks.PixelScale;
         int viewportHeight = _renderBackend.SupportsUi
             ? Math.Max(1, winH - (int)GameHud.BottomPanelHeight)
             : Math.Max(1, winH);
@@ -341,7 +341,7 @@ public class Game : IDisposable
             if (tank.IsDead) continue;
 
             float t = tank.Heat / Tweaks.Tank.HeatMax;
-            float minVisible = Tweaks.Screen.PostTankHeatGlowMinHeat / Tweaks.Tank.HeatMax;
+            float minVisible = DesktopScreenTweaks.PostTankHeatGlowMinHeat / Tweaks.Tank.HeatMax;
             float damageStart = Tweaks.Tank.HeatSafeMax / Tweaks.Tank.HeatMax;
             float visibleRange = Math.Max(0.0001f, damageStart - minVisible);
             // Visual heat reaches peak around overheat onset, so damage state already looks max-hot.
@@ -358,7 +358,7 @@ public class Game : IDisposable
             // Keep visibility from lower heat while giving max heat a strong punch.
             float intensity = visibleT * (0.35f + 2.8f * visibleT * visibleT);
             float radiusFactor = 0.45f + 0.55f * MathF.Sqrt(visibleT);
-            float glowRadiusPx = pixelScale * (Tweaks.Screen.PostTankHeatGlowBaseRadius + Tweaks.Screen.PostTankHeatGlowScaleRadius * radiusFactor);
+            float glowRadiusPx = pixelScale * (DesktopScreenTweaks.PostTankHeatGlowBaseRadius + DesktopScreenTweaks.PostTankHeatGlowScaleRadius * radiusFactor);
             float cx = (tank.Position.X + 0.5f) * pixelScale - camPixelX;
             float cy = (tank.Position.Y + 0.5f) * pixelScale - camPixelY;
 
@@ -436,19 +436,19 @@ public class Game : IDisposable
         switch (pixel)
         {
             case Core.Terrain.TerrainPixel.EnergyLow:
-                energy = Tweaks.Screen.PostEmissiveEnergyLow;
+                energy = DesktopScreenTweaks.PostEmissiveEnergyLow;
                 break;
             case Core.Terrain.TerrainPixel.EnergyMedium:
-                energy = Tweaks.Screen.PostEmissiveEnergyMedium;
+                energy = DesktopScreenTweaks.PostEmissiveEnergyMedium;
                 break;
             case Core.Terrain.TerrainPixel.EnergyHigh:
-                energy = Tweaks.Screen.PostEmissiveEnergyHigh;
+                energy = DesktopScreenTweaks.PostEmissiveEnergyHigh;
                 break;
             case Core.Terrain.TerrainPixel.DecalHigh:
-                scorched = Tweaks.Screen.PostEmissiveScorchedHigh;
+                scorched = DesktopScreenTweaks.PostEmissiveScorchedHigh;
                 break;
             case Core.Terrain.TerrainPixel.DecalLow:
-                scorched = Tweaks.Screen.PostEmissiveScorchedLow;
+                scorched = DesktopScreenTweaks.PostEmissiveScorchedLow;
                 break;
         }
 
@@ -480,7 +480,7 @@ public class Game : IDisposable
         if (!IsMouseInViewport(out float relX, out float relY))
             return null;
 
-        int scale = Tweaks.Screen.PixelScale;
+        int scale = DesktopScreenTweaks.PixelScale;
         float aimWorldX = (_camPixelX + relX) / scale;
         float aimWorldY = (_camPixelY + relY) / scale;
 
@@ -535,14 +535,14 @@ public class Game : IDisposable
 
     private void UpdateNativeContinuousQuality(double frameMs)
     {
-        float budget = Tweaks.Screen.NativeContinuousRenderBudgetMs;
-        int hysteresis = Tweaks.Screen.NativeContinuousBudgetHysteresisFrames;
+        float budget = DesktopScreenTweaks.NativeContinuousRenderBudgetMs;
+        int hysteresis = DesktopScreenTweaks.NativeContinuousBudgetHysteresisFrames;
         if (frameMs > budget)
         {
             _nativeOverBudgetFrames++;
             _nativeUnderBudgetFrames = 0;
         }
-        else if (frameMs < budget * Tweaks.Screen.NativeContinuousBudgetUnderThreshold)
+        else if (frameMs < budget * DesktopScreenTweaks.NativeContinuousBudgetUnderThreshold)
         {
             _nativeUnderBudgetFrames++;
             _nativeOverBudgetFrames = 0;
@@ -553,21 +553,21 @@ public class Game : IDisposable
             _nativeUnderBudgetFrames = 0;
         }
 
-        if (_nativeOverBudgetFrames >= hysteresis && _nativeContinuousSampleCount > Tweaks.Screen.NativeContinuousSampleLow)
+        if (_nativeOverBudgetFrames >= hysteresis && _nativeContinuousSampleCount > DesktopScreenTweaks.NativeContinuousSampleLow)
         {
-            _nativeContinuousSampleCount = _nativeContinuousSampleCount >= Tweaks.Screen.NativeContinuousSampleHigh
-                ? Tweaks.Screen.NativeContinuousSampleMedium
-                : Tweaks.Screen.NativeContinuousSampleLow;
+            _nativeContinuousSampleCount = _nativeContinuousSampleCount >= DesktopScreenTweaks.NativeContinuousSampleHigh
+                ? DesktopScreenTweaks.NativeContinuousSampleMedium
+                : DesktopScreenTweaks.NativeContinuousSampleLow;
             _nativeOverBudgetFrames = 0;
             _nativeUnderBudgetFrames = 0;
             Console.WriteLine($"[Render] Native continuous sample count reduced to {_nativeContinuousSampleCount}");
         }
-        else if (_nativeUnderBudgetFrames >= hysteresis * Tweaks.Screen.NativeContinuousRecoveryFramesMultiplier &&
-                 _nativeContinuousSampleCount < Tweaks.Screen.NativeContinuousSampleHigh)
+        else if (_nativeUnderBudgetFrames >= hysteresis * DesktopScreenTweaks.NativeContinuousRecoveryFramesMultiplier &&
+                 _nativeContinuousSampleCount < DesktopScreenTweaks.NativeContinuousSampleHigh)
         {
-            _nativeContinuousSampleCount = _nativeContinuousSampleCount <= Tweaks.Screen.NativeContinuousSampleLow
-                ? Tweaks.Screen.NativeContinuousSampleMedium
-                : Tweaks.Screen.NativeContinuousSampleHigh;
+            _nativeContinuousSampleCount = _nativeContinuousSampleCount <= DesktopScreenTweaks.NativeContinuousSampleLow
+                ? DesktopScreenTweaks.NativeContinuousSampleMedium
+                : DesktopScreenTweaks.NativeContinuousSampleHigh;
             _nativeOverBudgetFrames = 0;
             _nativeUnderBudgetFrames = 0;
             Console.WriteLine($"[Render] Native continuous sample count increased to {_nativeContinuousSampleCount}");

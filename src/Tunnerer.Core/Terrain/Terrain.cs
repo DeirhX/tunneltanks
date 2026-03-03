@@ -63,7 +63,7 @@ public class TerrainGrid
         float old = _heatTemperature[offset];
         _heatEngine.AddEnergyAt(_heatTemperature, offset, amount);
         float next = _heatTemperature[offset];
-        if (MathF.Abs(next - old) > 0.0001f)
+        if (ShouldMarkHeatDirty(old, next))
             MarkHeatDirty(pos.X, pos.Y);
         CommitPixel(pos);
     }
@@ -89,7 +89,7 @@ public class TerrainGrid
             float old = _heatTemperature[offset];
             _heatEngine.AddEnergyAt(_heatTemperature, offset, scaled);
             float next = _heatTemperature[offset];
-            if (MathF.Abs(next - old) > 0.0001f)
+            if (ShouldMarkHeatDirty(old, next))
                 MarkHeatDirty(nx, ny);
         });
     }
@@ -112,7 +112,7 @@ public class TerrainGrid
             _heatEngine.Step(_heatTemperature, _data, w, h);
             for (int i = 0; i < len; i++)
             {
-                if (MathF.Abs(_heatTemperature[i] - _heatTemp[i]) < 0.0001f) continue;
+                if (!ShouldMarkHeatDirty(_heatTemp[i], _heatTemperature[i])) continue;
                 int x = i % w;
                 int y = i / w;
                 MarkHeatDirty(x, y);
@@ -148,7 +148,7 @@ public class TerrainGrid
                 float mixed = center + (blurred - center) * diffuseRate;
                 float next = mixed - decayAmount;
                 _heatTemp[idx] = next;
-                if (MathF.Abs(next - _heatTemperature[idx]) > 0.0001f)
+                if (ShouldMarkHeatDirty(_heatTemperature[idx], next))
                     MarkHeatDirty(x, y);
             }
         }
@@ -209,7 +209,7 @@ public class TerrainGrid
             float old = _heatTemperature[offset];
             _heatEngine.AddEnergyAt(_heatTemperature, offset, delta);
             float next = _heatTemperature[offset];
-            if (MathF.Abs(next - old) > 0.0001f)
+            if (ShouldMarkHeatDirty(old, next))
                 MarkHeatDirty(nx, ny);
             applied += (int)MathF.Round(next - old);
         });
@@ -355,6 +355,16 @@ public class TerrainGrid
         if (x > _heatDirtyMaxX) _heatDirtyMaxX = x;
         if (y < _heatDirtyMinY) _heatDirtyMinY = y;
         if (y > _heatDirtyMaxY) _heatDirtyMaxY = y;
+    }
+
+    private static bool ShouldMarkHeatDirty(float oldTemperature, float newTemperature)
+    {
+        return HeatToByte(oldTemperature) != HeatToByte(newTemperature);
+    }
+
+    private static byte HeatToByte(float temperature)
+    {
+        return (byte)Math.Clamp((int)MathF.Round(temperature), 0, 255);
     }
 
     public void DrawChangesToSurface(uint[] surface)
