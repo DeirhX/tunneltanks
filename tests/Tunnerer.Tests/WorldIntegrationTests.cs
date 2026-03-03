@@ -37,6 +37,22 @@ public class WorldIntegrationTests
     }
 
     [Fact]
+    public void Tank_LastLife_DoesNotGoNegative()
+    {
+        var (world, _) = SetupWorld();
+        var tank = world.TankList.Tanks[0];
+        tank.LivesLeft = 1;
+        tank.Die();
+        Assert.Equal(0, tank.LivesLeft);
+
+        TestSimulation.AdvanceIdle(world, frames: 300);
+        Assert.Equal(0, tank.LivesLeft);
+
+        TestSimulation.AdvanceIdle(world, frames: 300);
+        Assert.Equal(0, tank.LivesLeft);
+    }
+
+    [Fact]
     public void World_TanksSpawnAtBases()
     {
         var (world, _) = SetupWorld();

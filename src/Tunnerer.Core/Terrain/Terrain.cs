@@ -1,5 +1,6 @@
 namespace Tunnerer.Core.Terrain;
 
+using System.Diagnostics;
 using Tunnerer.Core.Config;
 using Tunnerer.Core.Thermal;
 using Tunnerer.Core.Types;
@@ -38,16 +39,19 @@ public class TerrainGrid
 
     public float GetHeatTemperature(Position pos)
     {
-        int offset = pos.X + pos.Y * Width;
-        if ((uint)offset >= (uint)_heatTemperature.Length)
+        if ((uint)pos.X >= (uint)Width || (uint)pos.Y >= (uint)Height)
             return 0f;
+        int offset = pos.X + pos.Y * Width;
+        Debug.Assert((uint)offset < (uint)_heatTemperature.Length, "Validated position must map to a valid offset.");
         return _heatEngine.GetTemperatureAt(_heatTemperature, _heatTemperature.Length, offset);
     }
 
     public void AddHeat(Position pos, int amount)
     {
+        if ((uint)pos.X >= (uint)Width || (uint)pos.Y >= (uint)Height)
+            return;
         int offset = pos.X + pos.Y * Width;
-        if ((uint)offset >= (uint)_heatTemperature.Length) return;
+        Debug.Assert((uint)offset < (uint)_heatTemperature.Length, "Validated position must map to a valid offset.");
         float old = _heatTemperature[offset];
         _heatEngine.AddEnergyAt(_heatTemperature, offset, amount);
         float next = _heatTemperature[offset];
@@ -58,6 +62,13 @@ public class TerrainGrid
 
     public void AddHeatRadius(Position center, int amount, int radius)
     {
+        Debug.Assert(radius >= 0, "Heat radius is expected to be non-negative.");
+        if (radius <= 0)
+        {
+            AddHeat(center, amount);
+            return;
+        }
+
         int radiusSq = radius * radius;
         ForEachInRadius(center, radius, (nx, ny, dx, dy) =>
         {
@@ -262,6 +273,7 @@ public class TerrainGrid
 
     public int CountDirtNeighbors(Position pos)
     {
+        AssertHasNeighborMargin(pos.X, pos.Y);
         int offset = pos.X + pos.Y * Width;
         int count = 0;
         for (int i = 0; i < 8; i++)
@@ -275,6 +287,7 @@ public class TerrainGrid
     /// </summary>
     public int CountLevelGenNeighbors(Position pos)
     {
+        AssertHasNeighborMargin(pos.X, pos.Y);
         int offset = pos.X + pos.Y * Width;
         int sum = 0;
         for (int i = 0; i < 8; i++)
@@ -284,10 +297,19 @@ public class TerrainGrid
 
     public bool HasLevelGenNeighbor(int x, int y)
     {
+        AssertHasNeighborMargin(x, y);
         int offset = x + y * Width;
         for (int i = 0; i < 8; i++)
             if (_data[offset + _neighborOffsets[i]] == TerrainPixel.LevelGenDirt) return true;
         return false;
+    }
+
+    [Conditional("DEBUG")]
+    private void AssertHasNeighborMargin(int x, int y)
+    {
+        Debug.Assert(
+            x > 0 && x < Width - 1 && y > 0 && y < Height - 1,
+            "Neighbor queries require an interior position (not on map boundary).");
     }
 
     public IReadOnlyList<Position> GetChangeList() => _changeList;

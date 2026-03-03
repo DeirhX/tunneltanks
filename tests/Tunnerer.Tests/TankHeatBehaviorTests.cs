@@ -32,6 +32,22 @@ public class TankHeatBehaviorTests
     }
 
     [Fact]
+    public void TankHeat_SingleShot_UsesModelShotHeatOnce()
+    {
+        var (world, tank) = CreateWorldWithPrimaryTank(seed: 7777);
+        SetTankHeat(tank, 0f);
+
+        tank.Advance(world, new ControllerOutput
+        {
+            ShootPrimary = true,
+            AimDirection = new DirectionF(1f, 0f),
+        });
+
+        // Shot heat is applied once via TankHeatModel, then same-frame base ambient exchange cools it.
+        Assert.InRange(tank.Heat, 0.15f, 0.25f);
+    }
+
+    [Fact]
     public void TankHeat_OutsideBase_DriftsTowardAmbientZero()
     {
         var (world, tank) = CreateWorldWithPrimaryTank(seed: 2222);

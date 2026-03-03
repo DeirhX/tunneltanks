@@ -100,7 +100,6 @@ public class Tank
         var bullet = Turret.TryShoot(Position, world.Projectiles);
         if (bullet != null)
         {
-            Heat += Tweaks.Tank.ShootHeatGain;
             _frameShotFired = true;
         }
     }
@@ -247,9 +246,13 @@ public class Tank
 
     public void Die(ProjectileList? projectiles = null)
     {
+        if (_respawning)
+            return;
+
         Reactor.Exhaust(new ReactorState(Reactor.Heat, Reactor.Health));
+        LivesLeft = Math.Max(0, LivesLeft - 1);
         _respawning = true;
-        _respawnTimer = Tweaks.Tank.RespawnDelay;
+        _respawnTimer = LivesLeft > 0 ? Tweaks.Tank.RespawnDelay : TimeSpan.Zero;
 
         projectiles?.AddExplosion(Position, Tweaks.Explosion.Death);
     }
@@ -259,12 +262,14 @@ public class Tank
         if (!_respawning)
             Die(world.Projectiles);
 
+        if (LivesLeft <= 0)
+            return;
+
         _respawnTimer -= Tweaks.World.AdvanceStep;
-        if (_respawnTimer <= TimeSpan.Zero)
-        {
-            if (--LivesLeft > 0)
-                Spawn();
-        }
+        if (_respawnTimer > TimeSpan.Zero)
+            return;
+
+        Spawn();
     }
 
     public void Draw(Surface surface)

@@ -162,6 +162,28 @@ public class CollisionTests
     }
 
     [Fact]
+    public void TestPoint_TankTransparentSpritePixel_DoesNotHit()
+    {
+        var t = new TerrainGrid(new Size(200, 200));
+        for (int i = 0; i < t.Size.Area; i++) t[i] = TerrainPixel.Blank;
+        var solver = new CollisionSolver(t);
+
+        var tankBases = new TankBases();
+        tankBases.AddBase(new Position(100, 100), 0);
+        var tankList = new TankList();
+        var tank = tankList.AddTank(0, tankBases.GetSpawn(0)!);
+        tank.Direction = 1; // Direction 1 has transparent corners in the 7x7 sprite.
+        var machines = new MachineList();
+
+        solver.Update(tankList, machines);
+
+        bool hit = solver.TestPoint(new Position(97, 97),
+            onTank: _ => true);
+
+        Assert.False(hit);
+    }
+
+    [Fact]
     public void TestPoint_MachineHit_WhenPlanted()
     {
         var t = new TerrainGrid(new Size(100, 100));
