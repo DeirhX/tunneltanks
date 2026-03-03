@@ -1,5 +1,6 @@
 namespace Tunnerer.Core.Entities;
 
+using System.Diagnostics;
 using Tunnerer.Core.Types;
 using Tunnerer.Core.Config;
 using Tunnerer.Core.Entities.Projectiles;
@@ -18,7 +19,15 @@ public class TankTurret
         _ownerColor = ownerColor;
     }
 
-    public void SetDirection(DirectionF dir) => _direction = dir;
+    public void SetDirection(DirectionF dir)
+    {
+        float lenSq = dir.X * dir.X + dir.Y * dir.Y;
+        Debug.Assert(!float.IsNaN(lenSq) && !float.IsInfinity(lenSq), "Turret direction must be finite.");
+        if (lenSq < 0.000001f)
+            return;
+        float invLen = 1f / MathF.Sqrt(lenSq);
+        _direction = new DirectionF(dir.X * invLen, dir.Y * invLen);
+    }
 
     public void Update(bool shooting)
     {

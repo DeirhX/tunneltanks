@@ -62,6 +62,7 @@ public sealed unsafe partial class Backend : IGameRenderBackend
 
     internal ID3D11Device* Device => _device;
     public nint GameTextureId => (nint)(_displaySrv != null ? _displaySrv : _sceneSrv);
+    public Size GameTextureSize => new(Math.Max(1, _sceneTexW), Math.Max(1, _sceneTexH));
     public bool SupportsUi => _imgui != null;
 
     public Backend(Sdl sdl, Window* window)

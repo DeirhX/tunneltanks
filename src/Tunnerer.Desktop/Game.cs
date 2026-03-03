@@ -350,8 +350,9 @@ public class Game : IDisposable
                 else
                     _hud.CrosshairScreenPos = null;
 
+                var gameTextureSize = _renderBackend.GameTextureSize;
                 ProfileSection(ref _drawProfile.ScreenHudDraw, () =>
-                    _hud.Draw(_renderBackend.GameTextureId, _hiResSize.X, _hiResSize.Y, player, _world, dt));
+                    _hud.Draw(_renderBackend.GameTextureId, gameTextureSize.X, gameTextureSize.Y, player, _world, dt));
             }
 
             _drawProfile.ScreenUi += imguiWatch.Elapsed;
@@ -577,6 +578,16 @@ public class Game : IDisposable
         relY = my - vp.y;
         if (relX < 0 || relY < 0 || relX >= vp.w || relY >= vp.h)
             return false;
+
+        if (_renderBackend.SupportsUi)
+        {
+            // Input space must match the simulation render view, even if the HUD viewport
+            // is showing a texture whose displayed size differs from _hiResSize.
+            float sx = _hiResSize.X / Math.Max(1f, vp.w);
+            float sy = _hiResSize.Y / Math.Max(1f, vp.h);
+            relX *= sx;
+            relY *= sy;
+        }
 
         return true;
     }
