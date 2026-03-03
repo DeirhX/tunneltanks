@@ -147,30 +147,5 @@ public sealed unsafe partial class Backend
     {
         public void** LpVtbl;
     }
-
-    private unsafe struct PostParamsCBuffer
-    {
-        public float TexelSizeX, TexelSizeY, PixelScale, Time;
-        public float WorldSizeX, WorldSizeY, CameraPixelsX, CameraPixelsY;
-        public float ViewSizeX, ViewSizeY, UseTerrainAux, BloomThreshold;
-        public float BloomStrength, BloomWeightCenter, BloomWeightAxis, BloomWeightDiagonal;
-        public float VignetteStrength, EdgeLightStrength, EdgeLightBias, TankHeatGlowR;
-        public float TankHeatGlowG, TankHeatGlowB, TankHeatGlowA, TerrainHeatGlowR;
-        public float TerrainHeatGlowG, TerrainHeatGlowB, TerrainHeatThreshold, TerrainMaskEdgeStrength;
-        public float TerrainMaskCaveDarken,
-                     TerrainMaskSolidLift,
-                     TerrainMaskOutlineDarken,
-                     TerrainMaskRimLift;
-        public float TerrainMaskBoundaryScale, VignetteInnerRadius, VignetteOuterRadius, Quality;
-        public float MaterialEnergyR, MaterialEnergyG, MaterialEnergyB, MaterialEnergyStrength;
-        public float MaterialScorchedR, MaterialScorchedG, MaterialScorchedB, MaterialScorchedStrength;
-        public float MaterialPulseFreq, MaterialPulseMin, MaterialPulseRange, MaterialPulsePad;
-        public float NativeEdgeSoftness, NativeBoundaryBlend, NativeSampleFactor, NativePad;
-        public float LightDirX, LightDirY, LightDirZ, LightNormalStrength;
-        public float HalfVecX, HalfVecY, HalfVecZ, LightMicroNormalStrength;
-        public float LightAmbient, LightDiffuseWeight, LightShininess, LightSpecularIntensity;
-        public float TankGlowCount, _pad0, _pad1, _pad2;
-        public fixed float TankGlow[32];
-    }
     #pragma warning restore CS0649
 }
