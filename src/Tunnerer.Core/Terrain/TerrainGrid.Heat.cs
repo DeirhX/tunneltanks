@@ -43,6 +43,7 @@ public partial class TerrainGrid
     private readonly TerrainHeatEngine _heatEngine;
     private readonly SimulationSettings _simulationSettings;
     private float[]? _heatTemp;
+    private float[]? _airTemp;
     private bool _hasHeatDirtyRect;
     private int _heatDirtyMinX;
     private int _heatDirtyMinY;
@@ -54,6 +55,9 @@ public partial class TerrainGrid
     public float GetHeatTemperature(int offset)
         => (uint)offset < (uint)_heatTemperature.Length ? _heatTemperature[offset] : 0f;
 
+    public float GetAirTemperature(int offset)
+        => (uint)offset < (uint)_airTemperature.Length ? _airTemperature[offset] : 0f;
+
     public float GetHeatTemperature(Position pos)
     {
         if ((uint)pos.X >= (uint)Width || (uint)pos.Y >= (uint)Height)
@@ -61,6 +65,15 @@ public partial class TerrainGrid
         int offset = pos.X + pos.Y * Width;
         Debug.Assert((uint)offset < (uint)_heatTemperature.Length, "Validated position must map to a valid offset.");
         return _heatEngine.GetTemperatureAt(_heatTemperature, _heatTemperature.Length, offset);
+    }
+
+    public float GetAirTemperature(Position pos)
+    {
+        if ((uint)pos.X >= (uint)Width || (uint)pos.Y >= (uint)Height)
+            return 0f;
+        int offset = pos.X + pos.Y * Width;
+        Debug.Assert((uint)offset < (uint)_airTemperature.Length, "Validated position must map to a valid offset.");
+        return _heatEngine.GetTemperatureAt(_airTemperature, _airTemperature.Length, offset);
     }
 
     public void AddHeat(Position pos, int amount)
@@ -124,8 +137,11 @@ public partial class TerrainGrid
             EnsureThermalTiles();
             if (_heatTemp == null || _heatTemp.Length < len)
                 _heatTemp = new float[len];
+            if (_airTemp == null || _airTemp.Length < len)
+                _airTemp = new float[len];
             long t0 = Stopwatch.GetTimestamp();
             Array.Copy(_heatTemperature, _heatTemp, len);
+            Array.Copy(_airTemperature, _airTemp, len);
             prep = Stopwatch.GetElapsedTime(t0);
 
             activeTiles = CountActiveTiles();
@@ -136,7 +152,7 @@ public partial class TerrainGrid
             if (fallbackToFull)
             {
                 t0 = Stopwatch.GetTimestamp();
-                _heatEngine.Step(_heatTemperature, _data, w, h);
+                _heatEngine.StepConservative(_heatTemperature, _airTemperature, _data, w, h);
                 simulate = Stopwatch.GetElapsedTime(t0);
                 t0 = Stopwatch.GetTimestamp();
                 ClearNextActiveTiles();
@@ -148,7 +164,7 @@ public partial class TerrainGrid
                         int y = i / w;
                         MarkHeatDirty(x, y);
                     }
-                    if (IsThermallyActive(_heatTemperature[i]))
+                    if (IsThermallyActive(_heatTemperature[i], _airTemperature[i]))
                     {
                         ActivateNextTileByCell(i % w, i / w);
                     }
@@ -225,6 +241,19 @@ public partial class TerrainGrid
         return count > 0 ? sum / (count * 255f) : 0f;
     }
 
+    public float SampleAverageAirTemperature(Position center, int radius)
+    {
+        float sum = 0f;
+        int count = 0;
+        ForEachInRadius(center, radius, (nx, ny, _, _) =>
+        {
+            int idx = ny * Width + nx;
+            sum += _heatEngine.GetTemperatureAt(_airTemperature, _airTemperature.Length, idx);
+            count++;
+        });
+        return count > 0 ? sum / count : 0f;
+    }
+
     public int CountCellsInRadiusArea(Position center, int radius)
     {
         int count = 0;
@@ -272,6 +301,48 @@ public partial class TerrainGrid
         });
 
         return applied;
+    }
+
+    public int AddAirHeatTotalInRadiusArea(Position center, int radius, int totalAmount)
+    {
+        if (totalAmount == 0)
+            return 0;
+        int count = CountCellsInRadiusArea(center, radius);
+        if (count <= 0)
+            return 0;
+
+        int baseDelta = totalAmount / count;
+        int remainder = totalAmount % count;
+        int remainderAbs = Math.Abs(remainder);
+        int remainderSign = Math.Sign(remainder);
+
+        int applied = 0;
+        int i = 0;
+        ForEachInRadius(center, radius, (nx, ny, _, _) =>
+        {
+            int delta = baseDelta;
+            if (i < remainderAbs)
+                delta += remainderSign;
+            i++;
+
+            if (delta == 0)
+                return;
+
+            int offset = nx + ny * Width;
+            float old = _airTemperature[offset];
+            _heatEngine.AddEnergyAt(_airTemperature, offset, delta);
+            float next = _airTemperature[offset];
+            if (IsThermallyActive(_heatTemperature[offset], next))
+                ActivateTileByCell(nx, ny);
+            applied += (int)MathF.Round(next - old);
+        });
+
+        return applied;
+    }
+
+    public double SumTotalThermalEnergy()
+    {
+        return _heatEngine.SumTotalEnergy(_heatTemperature, _airTemperature, _data);
     }
 
     private void ForEachInRadius(Position center, int radius, Action<int, int, int, int> visitor)

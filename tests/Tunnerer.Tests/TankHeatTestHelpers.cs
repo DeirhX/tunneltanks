@@ -143,9 +143,11 @@ internal static class TankHeatTestHelpers
     internal static double SumSystemThermalEnergy(World world)
     {
         double total = 0.0;
-        total += SumTerrainThermalEnergy(world.Terrain);
+        total += world.Terrain.SumTotalThermalEnergy();
         foreach (var tank in world.TankList.Tanks)
             total += tank.Heat * Tweaks.Tank.TankHeatCapacity;
+        foreach (var tankBase in world.TankBases.Bases)
+            total += (int)tankBase.Reactor.Heat * Tweaks.World.ThermalCapacityBase;
         return total;
     }
 
@@ -167,6 +169,7 @@ internal static class TankHeatTestHelpers
         {
             float capacity = ThermalCapacityFor(terrain.GetPixelRaw(i));
             total += terrain.GetHeatTemperature(i) * capacity;
+            total += terrain.GetAirTemperature(i) * Tweaks.World.ThermalCapacityAir;
         }
 
         return total;
@@ -176,6 +179,7 @@ internal static class TankHeatTestHelpers
     {
         ThermalMaterial.Air => Tweaks.World.ThermalCapacityAir,
         ThermalMaterial.Dirt => Tweaks.World.ThermalCapacityDirt,
+        ThermalMaterial.Base => Tweaks.World.ThermalCapacityBase,
         _ => Tweaks.World.ThermalCapacityStone,
     };
 

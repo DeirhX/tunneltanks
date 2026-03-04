@@ -11,6 +11,7 @@ public sealed class TerrainHeatEngine
 {
     private readonly SimulationSettings _settings;
     private float[]? _delta;
+    private float[]? _airDelta;
 
     public TerrainHeatEngine()
         : this(SimulationSettings.FromTweaks())
@@ -44,6 +45,137 @@ public sealed class TerrainHeatEngine
         if ((uint)index >= (uint)len)
             return 0f;
         return temperature[index];
+    }
+
+    public void StepConservative(float[] terrainTemperature, float[] airTemperature, TerrainPixel[] pixels, int width, int height)
+    {
+        int len = width * height;
+        if (terrainTemperature.Length < len || airTemperature.Length < len)
+            throw new ArgumentException("temperature lengths must cover simulation grid");
+
+        if (_delta == null || _delta.Length < len)
+            _delta = new float[len];
+        if (_airDelta == null || _airDelta.Length < len)
+            _airDelta = new float[len];
+        Array.Clear(_delta, 0, len);
+        Array.Clear(_airDelta, 0, len);
+
+        for (int y = 0; y < height; y++)
+        {
+            int row = y * width;
+            for (int x = 0; x < width; x++)
+            {
+                int idx = row + x;
+                ThermalMaterial m1 = Pixel.GetThermalMaterial(pixels[idx]);
+                float t1 = terrainTemperature[idx];
+                float a1 = airTemperature[idx];
+
+                // In-cell coupling between matter and local air volume.
+                ExchangeTerrainAir(idx, m1, t1, a1, _delta!, _airDelta!);
+
+                if (x + 1 < width)
+                {
+                    int idxR = idx + 1;
+                    ThermalMaterial mR = Pixel.GetThermalMaterial(pixels[idxR]);
+                    float tR = terrainTemperature[idxR];
+                    float aR = airTemperature[idxR];
+                    ExchangeTerrainPair(idx, idxR, m1, t1, mR, tR, _delta!);
+                    ExchangeAirPair(idx, idxR, a1, aR, _airDelta!);
+                }
+                if (y + 1 < height)
+                {
+                    int idxD = idx + width;
+                    ThermalMaterial mD = Pixel.GetThermalMaterial(pixels[idxD]);
+                    float tD = terrainTemperature[idxD];
+                    float aD = airTemperature[idxD];
+                    ExchangeTerrainPair(idx, idxD, m1, t1, mD, tD, _delta!);
+                    ExchangeAirPair(idx, idxD, a1, aD, _airDelta!);
+                }
+            }
+        }
+
+        for (int i = 0; i < len; i++)
+        {
+            terrainTemperature[i] += _delta[i];
+            airTemperature[i] += _airDelta[i];
+            if (Pixel.GetThermalMaterial(pixels[i]) == ThermalMaterial.Air)
+                terrainTemperature[i] = airTemperature[i];
+        }
+    }
+
+    public void ComputeRegionDeltaConservative(
+        float[] terrainTemperature,
+        float[] airTemperature,
+        TerrainPixel[] pixels,
+        int width,
+        int height,
+        int minX,
+        int minY,
+        int maxXInclusive,
+        int maxYInclusive,
+        float[] terrainDelta,
+        float[] airDelta)
+    {
+        int rw = maxXInclusive - minX + 1;
+        int rh = maxYInclusive - minY + 1;
+        int required = rw * rh;
+        if (terrainDelta.Length < required || airDelta.Length < required)
+            throw new ArgumentException("region delta lengths must cover region area");
+        Array.Clear(terrainDelta, 0, required);
+        Array.Clear(airDelta, 0, required);
+
+        for (int y = minY; y <= maxYInclusive; y++)
+        {
+            int row = y * width;
+            for (int x = minX; x <= maxXInclusive; x++)
+            {
+                int idx = row + x;
+                int local = (y - minY) * rw + (x - minX);
+                ThermalMaterial m1 = Pixel.GetThermalMaterial(pixels[idx]);
+                float t1 = terrainTemperature[idx];
+                float a1 = airTemperature[idx];
+
+                ExchangeTerrainAir(local, m1, t1, a1, terrainDelta, airDelta);
+
+                if (x + 1 <= maxXInclusive)
+                {
+                    int idxR = idx + 1;
+                    int localR = local + 1;
+                    ThermalMaterial mR = Pixel.GetThermalMaterial(pixels[idxR]);
+                    float tR = terrainTemperature[idxR];
+                    float aR = airTemperature[idxR];
+                    ExchangeTerrainPair(local, localR, m1, t1, mR, tR, terrainDelta);
+                    ExchangeAirPair(local, localR, a1, aR, airDelta);
+                }
+                if (y + 1 <= maxYInclusive)
+                {
+                    int idxD = idx + width;
+                    int localD = local + rw;
+                    ThermalMaterial mD = Pixel.GetThermalMaterial(pixels[idxD]);
+                    float tD = terrainTemperature[idxD];
+                    float aD = airTemperature[idxD];
+                    ExchangeTerrainPair(local, localD, m1, t1, mD, tD, terrainDelta);
+                    ExchangeAirPair(local, localD, a1, aD, airDelta);
+                }
+            }
+        }
+    }
+
+    public double SumTotalEnergy(float[] terrainTemperature, float[] airTemperature, TerrainPixel[] pixels)
+    {
+        if (pixels.Length < terrainTemperature.Length || airTemperature.Length < terrainTemperature.Length)
+            throw new ArgumentException("state lengths must cover internal state");
+
+        double sum = 0.0;
+        for (int i = 0; i < terrainTemperature.Length; i++)
+        {
+            ThermalMaterial m = Pixel.GetThermalMaterial(pixels[i]);
+            float cTerrain = GetHeatCapacity(m);
+            sum += terrainTemperature[i] * cTerrain;
+            sum += airTemperature[i] * Tweaks.World.ThermalCapacityAir;
+        }
+
+        return sum;
     }
 
     public void Step(float[] temperature, TerrainPixel[] pixels, int width, int height)
@@ -143,6 +275,78 @@ public sealed class TerrainHeatEngine
         }
 
         return sum;
+    }
+
+    private static void ExchangeTerrainPair(
+        int idxA,
+        int idxB,
+        ThermalMaterial mA,
+        float tA,
+        ThermalMaterial mB,
+        float tB,
+        float[] terrainDelta)
+    {
+        if (mA == ThermalMaterial.Air || mB == ThermalMaterial.Air)
+            return;
+
+        float delta = tA - tB;
+        if (MathF.Abs(delta) < 0.0001f)
+            return;
+
+        float cA = GetHeatCapacity(mA);
+        float cB = GetHeatCapacity(mB);
+        float k = GetConductance(mA, mB);
+        float dQ = StablePairHeatFlow(delta, cA, cB, k);
+        if (MathF.Abs(dQ) < 0.0001f)
+            return;
+
+        terrainDelta[idxA] -= dQ / cA;
+        terrainDelta[idxB] += dQ / cB;
+    }
+
+    private static void ExchangeAirPair(int idxA, int idxB, float aA, float aB, float[] airDelta)
+    {
+        float delta = aA - aB;
+        if (MathF.Abs(delta) < 0.0001f)
+            return;
+
+        float c = Tweaks.World.ThermalCapacityAir;
+        float dQ = StablePairHeatFlow(delta, c, c, Tweaks.World.ThermalKAirAir * 0.5f + Tweaks.World.ThermalAirNeighborCoupling);
+        if (MathF.Abs(dQ) < 0.0001f)
+            return;
+
+        airDelta[idxA] -= dQ / c;
+        airDelta[idxB] += dQ / c;
+    }
+
+    private void ExchangeTerrainAir(int idx, ThermalMaterial material, float terrainT, float airT, float[] terrainDelta, float[] airDelta)
+    {
+        float delta = terrainT - airT;
+        if (MathF.Abs(delta) < 0.0001f)
+            return;
+
+        float cTerrain = material == ThermalMaterial.Air
+            ? Tweaks.World.ThermalCapacityAir
+            : GetHeatCapacity(material);
+        float cAir = Tweaks.World.ThermalCapacityAir;
+        float k = material == ThermalMaterial.Air
+            ? _settings.ThermalAirCellCoupling
+            : GetConductance(material, ThermalMaterial.Air) + 0.5f * _settings.ThermalAirCellCoupling;
+        float dQ = StablePairHeatFlow(delta, cTerrain, cAir, k);
+        if (MathF.Abs(dQ) < 0.0001f)
+            return;
+
+        terrainDelta[idx] -= dQ / cTerrain;
+        airDelta[idx] += dQ / cAir;
+    }
+
+    private static float StablePairHeatFlow(float deltaT, float cA, float cB, float k)
+    {
+        float dQ = k * deltaT * Tweaks.World.ThermalDt;
+        float maxStableDQ = MathF.Min(cA, cB) * MathF.Abs(deltaT) * 0.125f;
+        if (dQ > maxStableDQ) dQ = maxStableDQ;
+        else if (dQ < -maxStableDQ) dQ = -maxStableDQ;
+        return dQ;
     }
 
     private void ExchangePair(int idxA, int idxB, ThermalMaterial mA, float tA, TerrainPixel[] pixels, float[] temperature)

@@ -28,9 +28,20 @@ public class TankBase
 
     public bool IsInside(Position tested) => BoundingBox.IsInside(tested, Position);
 
-    public void Advance()
+    public void Advance(TerrainGrid terrain)
     {
+        int beforeHeat = Reactor.Heat;
         Reactor.Exhaust(new ReactorState(Tweaks.Base.HeatCooldown, 0));
+        int releasedHeat = Math.Max(0, beforeHeat - (int)Reactor.Heat);
+        if (releasedHeat > 0)
+        {
+            int toAir = (int)MathF.Round(releasedHeat * 0.8f);
+            int toTerrain = releasedHeat - toAir;
+            if (toAir != 0)
+                terrain.AddAirHeatTotalInRadiusArea(Position, Half, toAir);
+            if (toTerrain != 0)
+                terrain.AddHeatTotalInRadiusArea(Position, Half, toTerrain);
+        }
         Reactor.Add(new ReactorState(0, Tweaks.Base.HealthRegen));
     }
 
@@ -45,7 +56,11 @@ public class TankBase
     private void GiveReactorResources(Reactor target, int heatCooldown, int healthRegen)
     {
         // "Recharge" for heat means cooling: reduce target heat while healing health.
+        int before = target.Heat;
         target.Exhaust(new ReactorState(heatCooldown, 0));
+        int extracted = Math.Max(0, before - (int)target.Heat);
+        if (extracted > 0)
+            Reactor.Add(new ReactorState(extracted, 0));
         target.Add(new ReactorState(0, healthRegen));
     }
 

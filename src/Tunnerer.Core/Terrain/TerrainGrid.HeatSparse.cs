@@ -170,9 +170,10 @@ public partial class TerrainGrid
                a.MinY <= b.MaxYInclusive && b.MinY <= a.MaxYInclusive;
     }
 
-    private bool IsThermallyActive(float temperature)
+    private bool IsThermallyActive(float terrainTemperature, float airTemperature)
     {
-        return MathF.Abs(temperature) >= _simulationSettings.ThermalActiveTemperatureThreshold;
+        float threshold = _simulationSettings.ThermalActiveTemperatureThreshold;
+        return MathF.Abs(terrainTemperature) >= threshold || MathF.Abs(airTemperature) >= threshold;
     }
 
     public bool TryGetThermalTileInfo(out int tileSize, out int tileCountX, out int tileCountY)
@@ -212,7 +213,7 @@ public partial class TerrainGrid
             var r = regions[i];
             int rw = r.MaxXInclusive - r.MinX + 1;
             int rh = r.MaxYInclusive - r.MinY + 1;
-            workers.Add(new RegionWork(i, r, rw, rh, new float[rw * rh]));
+            workers.Add(new RegionWork(i, r, rw, rh, new float[rw * rh], new float[rw * rh]));
         }
 
         if (parallel)
@@ -222,17 +223,18 @@ public partial class TerrainGrid
                 po.MaxDegreeOfParallelism = _simulationSettings.ThermalMaxWorkers;
             Parallel.ForEach(workers, po, work =>
             {
-                _heatEngine.ComputeRegionDelta(
+                _heatEngine.ComputeRegionDeltaConservative(
                     _heatTemperature,
+                    _airTemperature,
                     _data,
                     Width,
                     Height,
-                    _simulationSettings.EnableThermalAmbientExchange,
                     work.Region.MinX,
                     work.Region.MinY,
                     work.Region.MaxXInclusive,
                     work.Region.MaxYInclusive,
-                    work.Delta);
+                    work.Delta,
+                    work.AirDelta);
             });
         }
         else
@@ -240,17 +242,18 @@ public partial class TerrainGrid
             for (int i = 0; i < workers.Count; i++)
             {
                 var work = workers[i];
-                _heatEngine.ComputeRegionDelta(
+                _heatEngine.ComputeRegionDeltaConservative(
                     _heatTemperature,
+                    _airTemperature,
                     _data,
                     Width,
                     Height,
-                    _simulationSettings.EnableThermalAmbientExchange,
                     work.Region.MinX,
                     work.Region.MinY,
                     work.Region.MaxXInclusive,
                     work.Region.MaxYInclusive,
-                    work.Delta);
+                    work.Delta,
+                    work.AirDelta);
             }
         }
 
@@ -269,10 +272,14 @@ public partial class TerrainGrid
                 {
                     int offset = row + x;
                     float next = _heatTemperature[offset] + work.Delta[idx];
+                    float nextAir = _airTemperature[offset] + work.AirDelta[idx];
+                    if (Pixel.GetThermalMaterial(_data[offset]) == ThermalMaterial.Air)
+                        next = nextAir;
                     _heatTemperature[offset] = next;
+                    _airTemperature[offset] = nextAir;
                     if (ShouldMarkHeatDirty(_heatTemp[offset], next))
                         MarkHeatDirty(x, y);
-                    if (IsThermallyActive(next))
+                    if (IsThermallyActive(next, nextAir))
                         ActivateNextTileByCell(x, y);
                 }
             }
@@ -286,5 +293,6 @@ public partial class TerrainGrid
         SparseRegion Region,
         int RegionWidth,
         int RegionHeight,
-        float[] Delta);
+        float[] Delta,
+        float[] AirDelta);
 }

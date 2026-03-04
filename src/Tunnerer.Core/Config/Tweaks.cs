@@ -109,12 +109,12 @@ public static class Tweaks
         public const float MaximumLiveLinkDistance = 100f;
         public const float MaximumTheoreticalLinkDistance = 170f;
 
-        // Optional physically-inspired material heat exchange model.
-        // Disabled by default to preserve current gameplay/visual behavior.
+        // Physically-inspired material heat exchange model.
         public static bool EnableMaterialHeatExchange => true;
-        // Keep weak ambient exchange enabled so isolated hotspots can eventually relax.
-        public static bool EnableThermalAmbientExchange => true;
+        // Legacy sink toggle; conservative mode keeps this off.
+        public static bool EnableThermalAmbientExchange => false;
         public static bool EnableStoneAmbientExchange { get; set; } = true;
+        public static bool EnableConservativeAirField => true;
         public const float ThermalDt = 2.0f;
         public const float ThermalAmbientTemperature = 0f;
 
@@ -135,6 +135,11 @@ public static class Tweaks
         public const float ThermalKStoneStone = 0.300f;
         public const float ThermalKStoneBase = 0.450f;
         public const float ThermalKBaseBase = 0.200f;
+
+        // Air-field coupling knobs for conservative air/terrain exchange.
+        public const float ThermalAirCellCoupling = 0.120f;
+        public const float ThermalAirNeighborCoupling = 0.060f;
+
         public const float ThermalFixedBaseTemperature = 0f;
         public const float ThermalKAmbientAir = 0.0120f;
         public const float ThermalKAmbientDirt = 0.0120f;
@@ -201,9 +206,9 @@ public static class Tweaks
         public const float HeatAmbientOutsideBase = 0f;
         public const float TankHeatCapacity = 20f;
         public const float TerrainHeatCapacity = 80f;
-        public const float TankTerrainConductance = 10.0f;
-        public const float TankAmbientConductance = 1.0f;
-        public const float TankBaseConductance = 12.0f;
+        public const float TankTerrainConductance = 2.0f;
+        public const float TankAmbientConductance = 0.2f;
+        public const float TankBaseConductance = 0.4f;
         public const float HeatSafeMax = 100f;
         public const float OverheatDamagePerDegree = 0.5f;
     }

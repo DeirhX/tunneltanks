@@ -15,7 +15,11 @@ internal static class TankHeatModel
     public static float ComputeTankTerrainHeatFlow(float tankTemperature, float terrainTemperature)
     {
         float deltaT = terrainTemperature - tankTemperature;
-        return Tweaks.Tank.TankTerrainConductance * deltaT;
+        float dQ = Tweaks.Tank.TankTerrainConductance * deltaT;
+        float maxStableDQ = Tweaks.Tank.TankHeatCapacity * MathF.Abs(deltaT) * 0.01f;
+        if (dQ > maxStableDQ) dQ = maxStableDQ;
+        else if (dQ < -maxStableDQ) dQ = -maxStableDQ;
+        return dQ;
     }
 
     public static float ComputeTankDeltaFromHeatFlow(float dQ)
@@ -28,12 +32,15 @@ internal static class TankHeatModel
         return Tweaks.Tank.TerrainHeatCapacity > 0f ? -dQ / Tweaks.Tank.TerrainHeatCapacity : 0f;
     }
 
-    public static float ComputeTankAmbientExchange(float tankTemperature, bool atOwnBase)
+    public static float ComputeTankAirHeatFlow(float tankTemperature, float airTemperature, bool atOwnBase)
     {
-        float ambient = atOwnBase ? 0f : Tweaks.Tank.HeatAmbientOutsideBase;
         float conductance = atOwnBase ? Tweaks.Tank.TankBaseConductance : Tweaks.Tank.TankAmbientConductance;
-        float dQ = conductance * (ambient - tankTemperature);
-        return Tweaks.Tank.TankHeatCapacity > 0f ? dQ / Tweaks.Tank.TankHeatCapacity : 0f;
+        float deltaT = airTemperature - tankTemperature;
+        float dQ = conductance * deltaT;
+        float maxStableDQ = Tweaks.Tank.TankHeatCapacity * MathF.Abs(deltaT) * 0.01f;
+        if (dQ > maxStableDQ) dQ = maxStableDQ;
+        else if (dQ < -maxStableDQ) dQ = -maxStableDQ;
+        return dQ;
     }
 
     public static int ComputeOverheatDamage(float heat)

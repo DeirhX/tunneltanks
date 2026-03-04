@@ -32,6 +32,7 @@ public class World
     private TimeSpan _regrowAccumulator;
     private readonly Stopwatch _regrowTimer = new();
     private bool _gameOver;
+    private double _lastThermalEnergy;
 
     public TerrainGrid Terrain => _terrain;
     public TankBases TankBases => _tankBases;
@@ -112,13 +113,22 @@ public class World
         Profile.CooldownRegionCount += _terrain.LastCoolDownProfile.RegionCount;
         if (_terrain.LastCoolDownProfile.UsedSparse) Profile.CooldownSparseFrames++;
         if (_terrain.LastCoolDownProfile.UsedParallel) Profile.CooldownParallelFrames++;
+        double thermalEnergy = _terrain.SumTotalThermalEnergy();
+        Profile.ThermalEnergy += thermalEnergy;
+        if (_advanceCount > 1)
+        {
+            double drift = thermalEnergy - _lastThermalEnergy;
+            Profile.ThermalEnergyDriftSigned += drift;
+            Profile.ThermalEnergyDriftAbs += Math.Abs(drift);
+        }
+        _lastThermalEnergy = thermalEnergy;
 
         ProfileSection(ref Profile.Regrow, RegrowPass);
         ProfileSection(ref Profile.Projectiles, () => _projectiles.Advance(_collisionSolver));
         ProfileSection(ref Profile.Tanks, () => _tankList.Advance(this, getInput));
         ProfileSection(ref Profile.Harvesters, () => _machines.Advance(_terrain, Tweaks.World.AdvanceStep));
         ProfileSection(ref Profile.Sprites, () => _sprites.Advance(Tweaks.World.AdvanceStep));
-        ProfileSection(ref Profile.Bases, () => _tankBases.Advance());
+        ProfileSection(ref Profile.Bases, () => _tankBases.Advance(_terrain));
         ProfileSection(ref Profile.Links, () => _linkMap.Advance(_terrain, Tweaks.World.AdvanceStep));
 
         Profile.Total += frameWatch.Elapsed;
@@ -308,6 +318,9 @@ public class SimulationProfile
     public long CooldownRegionCount;
     public int CooldownSparseFrames;
     public int CooldownParallelFrames;
+    public double ThermalEnergy;
+    public double ThermalEnergyDriftSigned;
+    public double ThermalEnergyDriftAbs;
     public TimeSpan Regrow;
     public TimeSpan Projectiles;
     public TimeSpan Tanks;
@@ -329,11 +342,14 @@ public class SimulationProfile
             $"coolMark={Avg(CooldownMark):F3} coolCopy={Avg(CooldownWriteBack):F3} ms");
         Console.WriteLine($"[Profile++] activeTiles={AvgCount(CooldownActiveTiles):F1} regions={AvgCount(CooldownRegionCount):F1} " +
             $"sparseFrames={CooldownSparseFrames}/{FrameCount} parallelFrames={CooldownParallelFrames}/{FrameCount}");
+        Console.WriteLine($"[ProfileE] thermal={AvgValue(ThermalEnergy):F3} driftSigned={AvgValue(ThermalEnergyDriftSigned):F5} " +
+            $"driftAbs={AvgValue(ThermalEnergyDriftAbs):F5}");
         Reset();
     }
 
     private double Avg(TimeSpan ts) => ts.TotalMilliseconds / FrameCount;
     private double AvgCount(long count) => FrameCount == 0 ? 0 : (double)count / FrameCount;
+    private double AvgValue(double value) => FrameCount == 0 ? 0 : value / FrameCount;
 
     public void Reset()
     {
@@ -343,6 +359,9 @@ public class SimulationProfile
         CooldownRegionCount = 0;
         CooldownSparseFrames = 0;
         CooldownParallelFrames = 0;
+        ThermalEnergy = 0;
+        ThermalEnergyDriftSigned = 0;
+        ThermalEnergyDriftAbs = 0;
         FrameCount = 0;
     }
 }

@@ -33,9 +33,9 @@ public class TankBases
             _bases[i].CreateInTerrain(terrain, i);
     }
 
-    public void Advance()
+    public void Advance(TerrainGrid terrain)
     {
         foreach (var b in _bases)
-            b.Advance();
+            b.Advance(terrain);
     }
 }

@@ -40,7 +40,7 @@ public class TankHeatBehaviorTests
             AimDirection = new DirectionF(1f, 0f),
         });
 
-        Assert.InRange(tank.Heat, 0.05f, 0.15f);
+        Assert.InRange(tank.Heat, 0.20f, 0.30f);
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public class TankHeatBehaviorTests
         visual.Capture(world, "end");
         Assert.True(observedMax <= 46f,
             $"Expected no runaway heating. start=45, observedMax={observedMax:0.00}");
-        Assert.InRange(tank.Heat, 0f, 6f);
+        Assert.InRange(tank.Heat, 0f, 15f);
     }
 
     [Fact]

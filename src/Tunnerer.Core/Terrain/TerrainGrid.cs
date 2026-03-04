@@ -7,6 +7,7 @@ using Tunnerer.Core.Types;
 public partial class TerrainGrid
 {
     private readonly TerrainPixel[] _data;
+    private readonly float[] _airTemperature;
     private readonly int[] _neighborOffsets;
     private readonly List<Position> _changeList = new();
 
@@ -25,6 +26,7 @@ public partial class TerrainGrid
         Size = size;
         _data = new TerrainPixel[size.Area];
         _heatTemperature = new float[size.Area];
+        _airTemperature = new float[size.Area];
         _heatEngine = new TerrainHeatEngine(simulationSettings);
         _neighborOffsets = BuildNeighborOffsets(size.X);
     }

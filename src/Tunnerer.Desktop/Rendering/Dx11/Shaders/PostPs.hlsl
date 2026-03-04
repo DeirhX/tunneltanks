@@ -239,28 +239,24 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
             // sqrt remapping for perceptual spread across the 0-1020 range.
             // Purely additive -- no opacity, just light on top of the scene.
             float t = sqrt(heatNorm);
-            float3 glow;
-            if (t < 0.35)
-            {
-                float s = t / 0.35;
-                glow = float3(s * 0.55, 0.0, 0.0);
-            }
-            else if (t < 0.55)
-            {
-                float s = (t - 0.35) / 0.20;
-                glow = float3(0.55 + 0.25 * s, 0.18 * s, 0.0);
-            }
-            else if (t < 0.80)
-            {
-                float s = (t - 0.55) / 0.25;
-                glow = float3(0.80 + 0.20 * s, 0.18 + 0.52 * s, 0.06 * s);
-            }
-            else
-            {
-                float s = (t - 0.80) / 0.20;
-                glow = float3(1.00, 0.70 + 0.30 * s, 0.06 + 0.74 * s);
-            }
-            color += glow;
+            // Build red, orange, and white targets then blend between them with
+            // overlap windows to avoid hard contour rings at threshold boundaries.
+            float sRed = saturate(t / 0.32);
+            float3 redGlow = float3(0.75 * sRed, 0.0, 0.0);
+
+            float sOrange = saturate((t - 0.32) / 0.18);
+            float3 orangeGlow = float3(0.75 + 0.25 * sOrange, 0.20 + 0.45 * sOrange, 0.06 + 0.10 * sOrange);
+
+            float sWhite = saturate((t - 0.50) / 0.50);
+            float3 whiteGlow = lerp(float3(1.00, 0.80, 0.25), float3(1.00, 1.00, 1.00), sWhite);
+
+            float redToOrange = smoothstep(0.26, 0.38, t);
+            float orangeToWhite = smoothstep(0.46, 0.56, t);
+            float3 glow = lerp(redGlow, orangeGlow, redToOrange);
+            glow = lerp(glow, whiteGlow, orangeToWhite);
+            // Boost low-mid heat visibility so ~100C reads as clearly hot.
+            float lowHeatBoost = lerp(1.45, 1.0, smoothstep(0.30, 0.65, t));
+            color += glow * lowHeatBoost;
         }
 
         float phase = frac(sin(dot(floor(worldCell), float2(12.9898, 78.233))) * 43758.5453) * 6.2831853;

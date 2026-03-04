@@ -212,17 +212,20 @@ public class Tank
 
         float terrainHeatNorm = world.Terrain.SampleAverageHeat(Position, Tweaks.Tank.DigRadius);
         float sampledTerrainTemperature = terrainHeatNorm * 255f;
+        float sampledAirTemperature = world.Terrain.SampleAverageAirTemperature(Position, Tweaks.Tank.DigRadius);
         int sampleCells = world.Terrain.CountCellsInRadiusArea(Position, Tweaks.Tank.DigRadius);
         float nextHeat = HeatEngine.Advance(
             currentHeat: Heat,
             frameDugPixels: _frameDugPixels,
             frameShotFired: _frameShotFired,
             atOwnBase: atOwnBase,
-            includeAmbientExchange: world.Settings.EnableThermalAmbientExchange,
             sampledTerrainTemperature: sampledTerrainTemperature,
+            sampledAirTemperature: sampledAirTemperature,
             sampleCells: sampleCells,
             applyTerrainTotalDelta: desiredTotal =>
                 world.Terrain.AddHeatTotalInRadiusArea(Position, Tweaks.Tank.DigRadius, desiredTotal),
+            applyAirTotalDelta: desiredTotal =>
+                world.Terrain.AddAirHeatTotalInRadiusArea(Position, Tweaks.Tank.DigRadius, desiredTotal),
             out int damage);
 
         if (damage > 0)

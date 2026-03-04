@@ -14,26 +14,21 @@ public sealed class TankHeatEngine
         int frameDugPixels,
         bool frameShotFired,
         bool atOwnBase,
-        bool includeAmbientExchange,
         float sampledTerrainTemperature,
+        float sampledAirTemperature,
         int sampleCells,
         Func<int, int> applyTerrainTotalDelta,
+        Func<int, int> applyAirTotalDelta,
         out int overheatDamage)
     {
         float nextHeat = currentHeat;
         nextHeat += TankHeatModel.ComputeActionHeat(frameDugPixels, frameShotFired);
 
-        float terrainTemperature = sampledTerrainTemperature;
-        if (includeAmbientExchange)
-        {
-            float ambientBaseline = atOwnBase ? 0f : Tweaks.Tank.HeatAmbientOutsideBase;
-            terrainTemperature = MathF.Max(ambientBaseline, sampledTerrainTemperature);
-        }
         float dQTerrain = atOwnBase
             ? 0f
-            : TankHeatModel.ComputeTankTerrainHeatFlow(nextHeat, terrainTemperature);
+            : TankHeatModel.ComputeTankTerrainHeatFlow(nextHeat, sampledTerrainTemperature);
 
-        if (!atOwnBase && sampleCells > 0 && Tweaks.Tank.TerrainHeatCapacity > 0f)
+        if (sampleCells > 0 && Tweaks.Tank.TerrainHeatCapacity > 0f)
         {
             float desiredTerrainAvgDelta = TankHeatModel.ComputeTerrainDeltaFromHeatFlow(dQTerrain);
             int desiredTerrainTotalDelta = (int)MathF.Round(desiredTerrainAvgDelta * sampleCells);
@@ -47,8 +42,23 @@ public sealed class TankHeatEngine
             nextHeat += TankHeatModel.ComputeTankDeltaFromHeatFlow(dQTerrain);
         }
 
-        if (includeAmbientExchange)
-            nextHeat += TankHeatModel.ComputeTankAmbientExchange(nextHeat, atOwnBase);
+        float dQAir = atOwnBase
+            ? 0f
+            : TankHeatModel.ComputeTankAirHeatFlow(nextHeat, sampledAirTemperature, atOwnBase);
+        if (sampleCells > 0 && Tweaks.World.ThermalCapacityAir > 0f)
+        {
+            float desiredAirAvgDelta = -dQAir / Tweaks.World.ThermalCapacityAir;
+            int desiredAirTotalDelta = (int)MathF.Round(desiredAirAvgDelta * sampleCells);
+            int appliedAirTotalDelta = applyAirTotalDelta(desiredAirTotalDelta);
+            float appliedAirAvgDelta = appliedAirTotalDelta / (float)sampleCells;
+            float appliedDQAir = -appliedAirAvgDelta * Tweaks.World.ThermalCapacityAir;
+            nextHeat += TankHeatModel.ComputeTankDeltaFromHeatFlow(appliedDQAir);
+        }
+        else
+        {
+            nextHeat += TankHeatModel.ComputeTankDeltaFromHeatFlow(dQAir);
+        }
+
         overheatDamage = TankHeatModel.ComputeOverheatDamage(nextHeat);
         return TankHeatModel.ClampHeat(nextHeat);
     }

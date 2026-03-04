@@ -356,6 +356,38 @@ public class TerrainTests
         Assert.InRange(max, expectedMean - 2f, expectedMean + 2f);
     }
 
+    [Fact]
+    public void TerrainHeatEngine_ConservativeAirField_ClosedSystem_PreservesTotalEnergy()
+    {
+        const int width = 32;
+        const int height = 32;
+        var engine = new TerrainHeatEngine();
+        var terrain = new float[width * height];
+        var air = new float[width * height];
+        var pixels = new TerrainPixel[width * height];
+
+        for (int i = 0; i < pixels.Length; i++)
+            pixels[i] = TerrainPixel.Rock;
+
+        int cx = width / 2;
+        int cy = height / 2;
+        terrain[cx + cy * width] = 255f;
+
+        double startEnergy = engine.SumTotalEnergy(terrain, air, pixels);
+        double maxAbsDrift = 0.0;
+        for (int step = 0; step < 20000; step++)
+        {
+            engine.StepConservative(terrain, air, pixels, width, height);
+            double now = engine.SumTotalEnergy(terrain, air, pixels);
+            double drift = Math.Abs(now - startEnergy);
+            if (drift > maxAbsDrift)
+                maxAbsDrift = drift;
+        }
+
+        Assert.True(maxAbsDrift <= 0.5,
+            $"Expected conservative closed-system behavior. start={startEnergy:0.000}, maxAbsDrift={maxAbsDrift:0.000}");
+    }
+
     private static double SumHeat(float[] heat)
     {
         double sum = 0.0;
