@@ -238,7 +238,7 @@ public class Tank
     public void Spawn()
     {
         if (Base == null) return;
-        Reactor.Add(new ReactorState(Reactor.HeatCapacity, Reactor.HealthCapacity));
+        Reactor.Add(new ReactorState(0, Reactor.HealthCapacity));
         Position = Base.Position;
         Heat = 0f;
         Reactor.Current.Heat = new Heat(0);
