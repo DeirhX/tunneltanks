@@ -140,6 +140,11 @@ public static class Tweaks
         public const float ThermalKAmbientDirt = 0.0120f;
         public const float ThermalKAmbientStone = 0.0100f;
         public const float ThermalKAmbientBase = 0.0000f;
+        public const int ThermalActiveTileSize = 32;
+        public const float ThermalSparseFallbackCoverage = 0.45f;
+        public const int ThermalParallelRegionThreshold = 4;
+        public const int ThermalMaxWorkers = 0; // 0 => default scheduler/CPU count
+        public const float ThermalActiveTemperatureThreshold = 0.5f;
     }
 
     public static class Base

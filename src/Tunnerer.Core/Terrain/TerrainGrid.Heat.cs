@@ -9,18 +9,34 @@ public partial class TerrainGrid
 {
     public readonly struct CoolDownProfile
     {
-        public CoolDownProfile(TimeSpan prep, TimeSpan simulate, TimeSpan markDirty, TimeSpan writeBack)
+        public CoolDownProfile(
+            TimeSpan prep,
+            TimeSpan simulate,
+            TimeSpan markDirty,
+            TimeSpan writeBack,
+            int activeTiles,
+            int regionCount,
+            bool usedSparse,
+            bool usedParallel)
         {
             Prep = prep;
             Simulate = simulate;
             MarkDirty = markDirty;
             WriteBack = writeBack;
+            ActiveTiles = activeTiles;
+            RegionCount = regionCount;
+            UsedSparse = usedSparse;
+            UsedParallel = usedParallel;
         }
 
         public TimeSpan Prep { get; }
         public TimeSpan Simulate { get; }
         public TimeSpan MarkDirty { get; }
         public TimeSpan WriteBack { get; }
+        public int ActiveTiles { get; }
+        public int RegionCount { get; }
+        public bool UsedSparse { get; }
+        public bool UsedParallel { get; }
     }
 
     private readonly float[] _heatTemperature;
@@ -58,6 +74,8 @@ public partial class TerrainGrid
         float next = _heatTemperature[offset];
         if (ShouldMarkHeatDirty(old, next))
             MarkHeatDirty(pos.X, pos.Y);
+        if (amount != 0)
+            ActivateTileByCell(pos.X, pos.Y);
         CommitPixel(pos);
     }
 
@@ -84,6 +102,7 @@ public partial class TerrainGrid
             float next = _heatTemperature[offset];
             if (ShouldMarkHeatDirty(old, next))
                 MarkHeatDirty(nx, ny);
+            ActivateTileByCell(nx, ny);
         });
     }
 
@@ -95,27 +114,60 @@ public partial class TerrainGrid
         TimeSpan simulate = TimeSpan.Zero;
         TimeSpan markDirty = TimeSpan.Zero;
         TimeSpan writeBack = TimeSpan.Zero;
+        int activeTiles = 0;
+        int regionCount = 0;
+        bool usedSparse = false;
+        bool usedParallel = false;
 
         if (_simulationSettings.EnableMaterialHeatExchange)
         {
+            EnsureThermalTiles();
             if (_heatTemp == null || _heatTemp.Length < len)
                 _heatTemp = new float[len];
             long t0 = Stopwatch.GetTimestamp();
             Array.Copy(_heatTemperature, _heatTemp, len);
             prep = Stopwatch.GetElapsedTime(t0);
-            t0 = Stopwatch.GetTimestamp();
-            _heatEngine.Step(_heatTemperature, _data, w, h);
-            simulate = Stopwatch.GetElapsedTime(t0);
-            t0 = Stopwatch.GetTimestamp();
-            for (int i = 0; i < len; i++)
+
+            activeTiles = CountActiveTiles();
+            bool canUseSparse = activeTiles > 0;
+            float coverage = _tileCount <= 0 ? 1f : activeTiles / (float)_tileCount;
+            bool fallbackToFull = !canUseSparse || coverage >= _simulationSettings.ThermalSparseFallbackCoverage;
+
+            if (fallbackToFull)
             {
-                if (!ShouldMarkHeatDirty(_heatTemp[i], _heatTemperature[i])) continue;
-                int x = i % w;
-                int y = i / w;
-                MarkHeatDirty(x, y);
+                t0 = Stopwatch.GetTimestamp();
+                _heatEngine.Step(_heatTemperature, _data, w, h);
+                simulate = Stopwatch.GetElapsedTime(t0);
+                t0 = Stopwatch.GetTimestamp();
+                ClearNextActiveTiles();
+                for (int i = 0; i < len; i++)
+                {
+                    if (ShouldMarkHeatDirty(_heatTemp[i], _heatTemperature[i]))
+                    {
+                        int x = i % w;
+                        int y = i / w;
+                        MarkHeatDirty(x, y);
+                    }
+                    if (IsThermallyActive(_heatTemperature[i]))
+                    {
+                        ActivateNextTileByCell(i % w, i / w);
+                    }
+                }
+                markDirty = Stopwatch.GetElapsedTime(t0);
+                SwapActiveTiles();
             }
-            markDirty = Stopwatch.GetElapsedTime(t0);
-            LastCoolDownProfile = new CoolDownProfile(prep, simulate, markDirty, writeBack);
+            else
+            {
+                usedSparse = true;
+                var regions = BuildSparseRegions();
+                regionCount = regions.Count;
+                bool parallel = regions.Count >= _simulationSettings.ThermalParallelRegionThreshold;
+                usedParallel = parallel;
+                t0 = Stopwatch.GetTimestamp();
+                CoolDownSparseRegions(regions, parallel, out markDirty);
+                simulate = Stopwatch.GetElapsedTime(t0) - markDirty;
+            }
+            LastCoolDownProfile = new CoolDownProfile(prep, simulate, markDirty, writeBack, activeTiles, regionCount, usedSparse, usedParallel);
             return;
         }
 
@@ -157,7 +209,7 @@ public partial class TerrainGrid
         long copyStart = Stopwatch.GetTimestamp();
         Array.Copy(_heatTemp, _heatTemperature, len);
         writeBack = Stopwatch.GetElapsedTime(copyStart);
-        LastCoolDownProfile = new CoolDownProfile(prep, simulate, markDirty, writeBack);
+        LastCoolDownProfile = new CoolDownProfile(prep, simulate, markDirty, writeBack, 0, 0, false, false);
     }
 
     public float SampleAverageHeat(Position center, int radius)
@@ -215,6 +267,7 @@ public partial class TerrainGrid
             float next = _heatTemperature[offset];
             if (ShouldMarkHeatDirty(old, next))
                 MarkHeatDirty(nx, ny);
+            ActivateTileByCell(nx, ny);
             applied += (int)MathF.Round(next - old);
         });
 

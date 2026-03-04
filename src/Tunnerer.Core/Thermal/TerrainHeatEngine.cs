@@ -90,6 +90,45 @@ public sealed class TerrainHeatEngine
         ApplyFixedTemperatureCells(temperature, pixels, len);
     }
 
+    public void ComputeRegionDelta(
+        float[] temperature,
+        TerrainPixel[] pixels,
+        int width,
+        int height,
+        bool includeAmbientExchange,
+        int minX,
+        int minY,
+        int maxXInclusive,
+        int maxYInclusive,
+        float[] regionDelta)
+    {
+        int rw = maxXInclusive - minX + 1;
+        int rh = maxYInclusive - minY + 1;
+        int required = rw * rh;
+        if (regionDelta.Length < required)
+            throw new ArgumentException("regionDelta length must cover region area", nameof(regionDelta));
+        Array.Clear(regionDelta, 0, required);
+
+        for (int y = minY; y <= maxYInclusive; y++)
+        {
+            int row = y * width;
+            for (int x = minX; x <= maxXInclusive; x++)
+            {
+                int idx = row + x;
+                int local = (y - minY) * rw + (x - minX);
+                ThermalMaterial m1 = Pixel.GetThermalMaterial(pixels[idx]);
+                float t1 = temperature[idx];
+
+                if (x + 1 <= maxXInclusive)
+                    ExchangePairRegion(idx, idx + 1, local, local + 1, m1, t1, pixels, temperature, regionDelta);
+                if (y + 1 <= maxYInclusive)
+                    ExchangePairRegion(idx, idx + width, local, local + rw, m1, t1, pixels, temperature, regionDelta);
+                if (includeAmbientExchange)
+                    ExchangeAmbientRegion(local, m1, t1, regionDelta);
+            }
+        }
+    }
+
     public double SumInternalEnergy(float[] temperature, TerrainPixel[] pixels)
     {
         if (pixels.Length < temperature.Length)
@@ -131,6 +170,37 @@ public sealed class TerrainHeatEngine
         _delta[idxB] += dQ / cB;
     }
 
+    private static void ExchangePairRegion(
+        int idxA,
+        int idxB,
+        int localA,
+        int localB,
+        ThermalMaterial mA,
+        float tA,
+        TerrainPixel[] pixels,
+        float[] temperature,
+        float[] regionDelta)
+    {
+        ThermalMaterial mB = Pixel.GetThermalMaterial(pixels[idxB]);
+        float tB = temperature[idxB];
+        float delta = tA - tB;
+        if (MathF.Abs(delta) < 0.0001f)
+            return;
+
+        float cA = GetHeatCapacity(mA);
+        float cB = GetHeatCapacity(mB);
+        float k = GetConductance(mA, mB);
+        float dQ = k * delta * Tweaks.World.ThermalDt;
+        float maxStableDQ = MathF.Min(cA, cB) * MathF.Abs(delta) * 0.125f;
+        if (dQ > maxStableDQ) dQ = maxStableDQ;
+        else if (dQ < -maxStableDQ) dQ = -maxStableDQ;
+        if (MathF.Abs(dQ) < 0.0001f)
+            return;
+
+        regionDelta[localA] -= dQ / cA;
+        regionDelta[localB] += dQ / cB;
+    }
+
     private void ExchangeAmbient(int idx, ThermalMaterial material, float temperature)
     {
         float ambient = Tweaks.World.ThermalAmbientTemperature;
@@ -143,6 +213,21 @@ public sealed class TerrainHeatEngine
 
         float capacity = GetHeatCapacity(material);
         _delta![idx] += dQ / capacity;
+    }
+
+    private void ExchangeAmbientRegion(int localIdx, ThermalMaterial material, float temperature, float[] regionDelta)
+    {
+        float ambient = Tweaks.World.ThermalAmbientTemperature;
+        if (temperature <= ambient)
+            return;
+
+        float k = GetAmbientConductance(material);
+        float dQ = k * (ambient - temperature) * Tweaks.World.ThermalDt;
+        if (MathF.Abs(dQ) < 0.0001f)
+            return;
+
+        float capacity = GetHeatCapacity(material);
+        regionDelta[localIdx] += dQ / capacity;
     }
 
     private void ApplyFixedTemperatureCells(float[] temperature, TerrainPixel[] pixels, int len)

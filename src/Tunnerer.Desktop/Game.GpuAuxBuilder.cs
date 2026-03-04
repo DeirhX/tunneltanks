@@ -26,18 +26,15 @@ public partial class Game
             float minVisible = DesktopScreenTweaks.PostTankHeatGlowMinHeat / Tweaks.Tank.HeatMax;
             float damageStart = Tweaks.Tank.HeatSafeMax / Tweaks.Tank.HeatMax;
             float visibleRange = Math.Max(0.0001f, damageStart - minVisible);
-            // Visual heat reaches peak around overheat onset, so damage state already looks max-hot.
             float visibleT = Math.Clamp((t - minVisible) / visibleRange, 0.0f, 1.0f);
             if (tank.Reactor.Health < tank.Reactor.HealthCapacity)
             {
-                // Health damage should already look close to max-hot for clear player feedback.
                 float damageFrac = 1.0f - (float)tank.Reactor.Health / Math.Max(1f, tank.Reactor.HealthCapacity);
                 float damageVisual = 0.85f + 0.15f * MathF.Sqrt(Math.Clamp(damageFrac * 8.0f, 0.0f, 1.0f));
                 visibleT = Math.Max(visibleT, damageVisual);
             }
             if (visibleT <= 0.0f) continue;
 
-            // Keep visibility from lower heat while giving max heat a strong punch.
             float intensity = visibleT * (0.35f + 2.8f * visibleT * visibleT);
             float radiusFactor = 0.45f + 0.55f * MathF.Sqrt(visibleT);
             float glowRadiusPx = pixelScale * (DesktopScreenTweaks.PostTankHeatGlowBaseRadius + DesktopScreenTweaks.PostTankHeatGlowScaleRadius * radiusFactor);
@@ -82,6 +79,40 @@ public partial class Game
             {
                 int idx = row + x;
                 WriteTerrainAux(terrain, idx, terrain.GetPixelRaw(idx), _gpuBlurField.SampleAsByte(x, y), target, idx * 4);
+            }
+        }
+    }
+
+    private static void UpdateGpuTerrainAuxHeatOnly(Core.Terrain.TerrainGrid terrain, byte[] target, in Rect dirtyRect)
+    {
+        RectMath.GetMinMaxInclusive(dirtyRect, out int minX, out int minY, out int maxX, out int maxY);
+        int w = terrain.Width;
+        int rowCount = maxY - minY + 1;
+
+        if (rowCount >= 32)
+        {
+            Parallel.For(minY, maxY + 1, y =>
+            {
+                int row = y * w;
+                for (int x = minX; x <= maxX; x++)
+                {
+                    int idx = row + x;
+                    float heat = terrain.GetHeatTemperature(idx);
+                    target[idx * 4] = (byte)Math.Clamp((int)MathF.Round(heat), 0, 255);
+                }
+            });
+        }
+        else
+        {
+            for (int y = minY; y <= maxY; y++)
+            {
+                int row = y * w;
+                for (int x = minX; x <= maxX; x++)
+                {
+                    int idx = row + x;
+                    float heat = terrain.GetHeatTemperature(idx);
+                    target[idx * 4] = (byte)Math.Clamp((int)MathF.Round(heat), 0, 255);
+                }
             }
         }
     }

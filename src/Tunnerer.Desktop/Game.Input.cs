@@ -1,10 +1,24 @@
 namespace Tunnerer.Desktop;
 
+using Silk.NET.SDL;
 using Tunnerer.Core.Types;
 using Tunnerer.Desktop.Config;
 
 public partial class Game
 {
+    private void HandleEvent(Event ev)
+    {
+        _renderBackend.ProcessEvent(ev);
+        if (ev.Type != (uint)EventType.Keydown)
+            return;
+
+        if ((Scancode)ev.Key.Keysym.Scancode == Scancode.ScancodeF9)
+        {
+            _showThermalRegionDebug = !_showThermalRegionDebug;
+            Console.WriteLine($"[Debug] Thermal regions overlay: {(_showThermalRegionDebug ? "ON" : "OFF")} (F9)");
+        }
+    }
+
     private DirectionF? ComputeAimDirection(IReadOnlyList<Core.Entities.Tank> tanks)
     {
         if (tanks.Count == 0) return null;

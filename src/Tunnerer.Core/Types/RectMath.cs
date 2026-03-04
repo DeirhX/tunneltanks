@@ -28,4 +28,21 @@ public static class RectMath
         if (b is null) return a;
         return Union(a.Value, b.Value);
     }
+
+    public static Rect? Intersect(in Rect a, in Rect b)
+    {
+        int minX = Math.Max(a.Left, b.Left);
+        int minY = Math.Max(a.Top, b.Top);
+        int maxX = Math.Min(a.Right, b.Right);
+        int maxY = Math.Min(a.Bottom, b.Bottom);
+        if (maxX <= minX || maxY <= minY)
+            return null;
+        return new Rect(minX, minY, maxX - minX, maxY - minY);
+    }
+
+    public static Rect? Intersect(Rect? a, Rect? b)
+    {
+        if (a is null || b is null) return null;
+        return Intersect(a.Value, b.Value);
+    }
 }

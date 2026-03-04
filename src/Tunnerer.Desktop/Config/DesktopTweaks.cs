@@ -27,6 +27,7 @@ public static class DesktopScreenTweaks
     public const int NativeContinuousBudgetHysteresisFrames = 10;
     public const float NativeContinuousBudgetUnderThreshold = 0.65f;
     public const int NativeContinuousRecoveryFramesMultiplier = 20;
+    public const int HeatAuxUpdateIntervalFrames = 2;
 
     public const float PostBloomThreshold = 0.72f;
     public const float PostBloomStrength = 0.60f;

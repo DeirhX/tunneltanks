@@ -31,7 +31,8 @@ public partial class Game
         ProfileSection(ref _drawProfile.ScreenDraw, () =>
         {
             var hiResWatch = Stopwatch.StartNew();
-            _ = (float)_gameTimer.Elapsed.TotalSeconds;
+
+            var visibleRect = ComputeVisibleWorldRect();
 
             Rect? auxDirtyRect;
             bool consumeHeatDirty;
@@ -44,18 +45,36 @@ public partial class Game
             }
             else
             {
-                Rect? terrainDirtyRect = TryGetDirtyCellBounds(_terrainDirtyCells);
+                Rect? terrainDirtyRect = ClampToViewport(TryGetDirtyCellBounds(_terrainDirtyCells), visibleRect);
                 bool includeHeatAux = (_heatAuxFrameCounter++ % DesktopScreenTweaks.HeatAuxUpdateIntervalFrames) == 0;
-                Rect? heatDirtyRect = includeHeatAux && _world.Terrain.TryGetHeatDirtyRect(out Rect dirtyRect) ? dirtyRect : null;
-                auxDirtyRect = MergeDirtyRects(terrainDirtyRect, heatDirtyRect);
+                Rect? heatDirtyRect = includeHeatAux && _world.Terrain.TryGetHeatDirtyRect(out Rect dirtyRect)
+                    ? ClampToViewport(dirtyRect, visibleRect)
+                    : null;
+
+                Rect? cameraRevealRect = ComputeCameraRevealRect(visibleRect);
+
+                // Terrain-change and camera-reveal need full 4-channel aux rebuild (SDF + material + heat)
+                Rect? fullAuxRect = MergeDirtyRects(terrainDirtyRect, cameraRevealRect);
+
+                if (fullAuxRect is Rect fullRect)
+                    ProfileSection(ref _drawProfile.AuxTerrainPack, () =>
+                        BuildGpuTerrainAuxRect(_world.Terrain, _gpuTerrainAux, fullRect));
+
+                // Heat-only R-channel fast path for the remaining visible heat area
+                Rect? heatOnlyRect = heatDirtyRect;
+                if (heatOnlyRect is not null && fullAuxRect is not null)
+                    heatOnlyRect = SubtractCoveredHeatRect(heatOnlyRect, fullAuxRect);
+
+                if (heatOnlyRect is Rect heatRect)
+                    ProfileSection(ref _drawProfile.AuxHeatPack, () =>
+                        UpdateGpuTerrainAuxHeatOnly(_world.Terrain, _gpuTerrainAux, heatRect));
+
+                auxDirtyRect = MergeDirtyRects(fullAuxRect, heatOnlyRect);
                 consumeHeatDirty = includeHeatAux;
-                if (auxDirtyRect is Rect rect)
-                    ProfileSection(ref _drawProfile.ScreenAuxBuild, () =>
-                        BuildGpuTerrainAuxRect(_world.Terrain, _gpuTerrainAux, rect));
             }
+            _lastAuxViewport = visibleRect;
             _terrainDirtyCells.Clear();
 
-            // NativeContinuous path uploads world-resolution composite pixels directly to GPU.
             _drawProfile.ScreenHiResTerrain += hiResWatch.Elapsed;
             double terrainMs = hiResWatch.Elapsed.TotalMilliseconds;
 
@@ -134,5 +153,15 @@ public partial class Game
         imguiWatch.Restart();
         _renderer.SwapWindow();
         _drawProfile.ScreenSwap += imguiWatch.Elapsed;
+    }
+
+    private static Rect? SubtractCoveredHeatRect(Rect? heat, Rect? full)
+    {
+        if (heat is null || full is null) return heat;
+        var h = heat.Value;
+        var f = full.Value;
+        if (h.Left >= f.Left && h.Top >= f.Top && h.Right <= f.Right && h.Bottom <= f.Bottom)
+            return null;
+        return heat;
     }
 }

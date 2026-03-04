@@ -37,6 +37,8 @@ public partial class Game : IDisposable
     private int _nativeOverBudgetFrames;
     private int _nativeUnderBudgetFrames;
     private int _heatAuxFrameCounter;
+    private bool _showThermalRegionDebug;
+    private Rect _lastAuxViewport;
     private readonly Stopwatch _gameTimer = Stopwatch.StartNew();
 
     private int _camPixelX;
@@ -112,7 +114,7 @@ public partial class Game : IDisposable
 
             while (_isRunning)
             {
-                if (!_renderer.PollEvents(ev => _renderBackend.ProcessEvent(ev)))
+                if (!_renderer.PollEvents(HandleEvent))
                 { _isRunning = false; break; }
 
                 if (_world.IsGameOver)
@@ -155,6 +157,7 @@ public partial class Game : IDisposable
                     {
                         _compositeRenderer.Compose(_world, _worldPixels, _compositePixels);
                         MarkEntityPixels(_worldPixels, _compositePixels);
+                        ApplyThermalRegionDebugOverlay(_compositePixels);
                     });
 
                     RenderImGuiFrame(tanks);

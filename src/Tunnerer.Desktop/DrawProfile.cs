@@ -11,6 +11,8 @@ public class DrawProfile
     public TimeSpan ScreenBackendUpload;
     public TimeSpan ScreenTankGlowBuild;
     public TimeSpan ScreenAuxBuild;
+    public TimeSpan AuxTerrainPack;
+    public TimeSpan AuxHeatPack;
     public TimeSpan ScreenQualityAdjust;
     public TimeSpan ScreenClearFrame;
     public TimeSpan ScreenNewFrame;
@@ -30,6 +32,7 @@ public class DrawProfile
             $"upload={Avg(ScreenUpload):F3} ui={Avg(ScreenUi):F3} imguiRender={Avg(ScreenImGuiRender):F3} " +
             $"swap={Avg(ScreenSwap):F3} ms");
         Console.WriteLine($"[Screen+] backendUpload={Avg(ScreenBackendUpload):F3} auxBuild={Avg(ScreenAuxBuild):F3} " +
+            $"auxTerrain={Avg(AuxTerrainPack):F3} auxHeat={Avg(AuxHeatPack):F3} " +
             $"tankGlowBuild={Avg(ScreenTankGlowBuild):F3} " +
             $"qualityAdjust={Avg(ScreenQualityAdjust):F3} clear={Avg(ScreenClearFrame):F3} newFrame={Avg(ScreenNewFrame):F3} hud={Avg(ScreenHudDraw):F3} ms");
         Reset();
@@ -41,7 +44,8 @@ public class DrawProfile
     {
         TerrainDraw = ObjectsDraw = ScreenDraw = TotalFrame = TimeSpan.Zero;
         ScreenHiResTerrain = ScreenHiResEntities = ScreenUpload = TimeSpan.Zero;
-        ScreenBackendUpload = ScreenAuxBuild = ScreenTankGlowBuild = TimeSpan.Zero;
+        ScreenBackendUpload = ScreenAuxBuild = AuxTerrainPack = AuxHeatPack = TimeSpan.Zero;
+        ScreenTankGlowBuild = TimeSpan.Zero;
         ScreenQualityAdjust = ScreenClearFrame = ScreenNewFrame = ScreenHudDraw = TimeSpan.Zero;
         ScreenUi = ScreenImGuiRender = ScreenSwap = TimeSpan.Zero;
         FrameCount = 0;

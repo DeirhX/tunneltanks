@@ -76,9 +76,22 @@ public sealed class TerrainBlurField
         int padMaxX = Math.Min(w - 1, maxX + 2);
         int padMaxY = Math.Min(h - 1, maxY + 2);
 
-        for (int cy = padMinY; cy <= padMaxY; cy++)
-            for (int cx = padMinX; cx <= padMaxX; cx++)
-                _field[cy * w + cx] = ComputeCell(terrain, cx, cy, w, h);
+        int rowCount = padMaxY - padMinY + 1;
+        if (rowCount >= 32)
+        {
+            float[] field = _field;
+            Parallel.For(padMinY, padMaxY + 1, cy =>
+            {
+                for (int cx = padMinX; cx <= padMaxX; cx++)
+                    field[cy * w + cx] = ComputeCell(terrain, cx, cy, w, h);
+            });
+        }
+        else
+        {
+            for (int cy = padMinY; cy <= padMaxY; cy++)
+                for (int cx = padMinX; cx <= padMaxX; cx++)
+                    _field[cy * w + cx] = ComputeCell(terrain, cx, cy, w, h);
+        }
     }
 
     public float Sample(int x, int y)
