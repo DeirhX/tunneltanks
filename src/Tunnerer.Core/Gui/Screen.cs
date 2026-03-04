@@ -37,7 +37,7 @@ public class Screen
         var statusRect = new Rect(9, H - 2 - 11, W - 16, 11);
         _statusBars.Add(new StatusBar(statusRect, player, BarDirection.DecreasesToLeft));
 
-        _letterBitmaps.Add(new LetterBitmap(3, statusRect.Y, 'E', GuiColors.StatusEnergy));
+        _letterBitmaps.Add(new LetterBitmap(3, statusRect.Y, 'T', GuiColors.StatusHeat));
         _letterBitmaps.Add(new LetterBitmap(3, statusRect.Y + 6, 'H', GuiColors.StatusHealth));
 
         _livesDots.Add(new LivesDots(statusRect.Right + 3, statusRect.Y + 1, player));
@@ -66,7 +66,7 @@ public class Screen
         _statusBars.Add(new StatusBar(status2, player2, BarDirection.DecreasesToLeft));
 
         int centerX = W / 2 - 2;
-        _letterBitmaps.Add(new LetterBitmap(centerX, statusY, 'E', GuiColors.StatusEnergy));
+        _letterBitmaps.Add(new LetterBitmap(centerX, statusY, 'T', GuiColors.StatusHeat));
         _letterBitmaps.Add(new LetterBitmap(centerX, statusY + 6, 'H', GuiColors.StatusHealth));
 
         _livesDots.Add(new LivesDots(status1.Right + 3, statusY + 1, player1));
@@ -201,11 +201,18 @@ public class LetterBitmap
 
     private static readonly byte[] LetterE = { 1,1,1,1, 1,0,0,0, 1,1,1,0, 1,0,0,0, 1,1,1,1 };
     private static readonly byte[] LetterH = { 1,0,0,1, 1,0,0,1, 1,1,1,1, 1,0,0,1, 1,0,0,1 };
+    private static readonly byte[] LetterT = { 1,1,1,1, 0,1,0,0, 0,1,0,0, 0,1,0,0, 0,1,0,0 };
 
     public LetterBitmap(int x, int y, char letter, Color color)
     {
         _x = x; _y = y;
-        _data = letter == 'E' ? LetterE : LetterH;
+        _data = letter switch
+        {
+            'E' => LetterE,
+            'H' => LetterH,
+            'T' => LetterT,
+            _ => LetterH
+        };
         _color = color.ToArgb();
     }
 
@@ -256,7 +263,7 @@ public class ResourceOverlay
         string baseDirt = (_tank.Base?.Materials.Dirt ?? 0).ToString();
 
         int textX = _rect.X + 2;
-        FontRenderer.DrawString(surface, textX, _rect.Y + 2, dirtText, GuiColors.StatusEnergy);
+        FontRenderer.DrawString(surface, textX, _rect.Y + 2, dirtText, GuiColors.StatusHeat);
         FontRenderer.DrawString(surface, textX, _rect.Y + 11, baseDirt, GuiColors.StatusHealth);
     }
 

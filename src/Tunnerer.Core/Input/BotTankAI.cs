@@ -13,7 +13,7 @@ public class BotTankAI
     private readonly record struct BehaviorProfile(
         string Name,
         float LowHealthRatio,
-        float LowEnergyRatio,
+        float HighHeatRatio,
         int OutgunnedHealthGap,
         int ShootChanceLosPermille,
         int ShootChanceDigPermille,
@@ -32,7 +32,7 @@ public class BotTankAI
         new(
             Name: "cautious",
             LowHealthRatio: 0.70f,
-            LowEnergyRatio: 0.45f,
+            HighHeatRatio: 0.55f,
             OutgunnedHealthGap: 40,
             ShootChanceLosPermille: 500,
             ShootChanceDigPermille: 250,
@@ -47,7 +47,7 @@ public class BotTankAI
         new(
             Name: "balanced",
             LowHealthRatio: 0.50f,
-            LowEnergyRatio: 0.33f,
+            HighHeatRatio: 0.67f,
             OutgunnedHealthGap: 100,
             ShootChanceLosPermille: 700,
             ShootChanceDigPermille: 450,
@@ -62,7 +62,7 @@ public class BotTankAI
         new(
             Name: "rush",
             LowHealthRatio: 0.30f,
-            LowEnergyRatio: 0.20f,
+            HighHeatRatio: 0.80f,
             OutgunnedHealthGap: 220,
             ShootChanceLosPermille: 900,
             ShootChanceDigPermille: 700,
@@ -76,6 +76,10 @@ public class BotTankAI
             HardTileBonus: 10f),
     };
     private const int ProfileSwitchSeconds = 4;
+    private const int ExitStuckThresholdFrames = 10;
+    private const int GeneralStuckThresholdFrames = 7;
+    private const int EvasiveSwitchMinFrames = 5;
+    private const int EvasiveSwitchMaxFrames = 11;
     private static readonly Offset[] MoveCandidates =
     {
         new(1, 0), new(-1, 0), new(0, 1), new(0, -1),
@@ -90,12 +94,18 @@ public class BotTankAI
     private readonly Random _rng;
     private int _activeProfileIdx;
     private int _framesUntilProfileSwitch = ProfileSwitchSeconds * Tweaks.Perf.TargetFps;
+    private Position _lastPosition;
+    private bool _hasLastPosition;
+    private int _stuckFrames;
+    private int _evasiveDir = 1;
+    private int _evasiveFramesRemaining;
 
     public BotTankAI(int? seed = null) { _rng = seed.HasValue ? new Random(seed.Value) : new Random(); }
 
     public ControllerOutput GetInput(Tank tank, Tank? enemy, TerrainGrid terrain)
     {
         AdvanceProfileCycle();
+        UpdateStuckState(tank.Position);
 
         var basePos = tank.Base?.Position ?? tank.Position;
         var relX = tank.Position.X - basePos.X;
@@ -103,9 +113,9 @@ public class BotTankAI
 
         return _mode switch
         {
-            TwitchMode.Start => DoStart(relY),
-            TwitchMode.ExitBaseUp => DoExitUp(relY),
-            TwitchMode.ExitBaseDown => DoExitDown(relY),
+            TwitchMode.Start => DoStart(),
+            TwitchMode.ExitBaseUp => DoExitUp(tank, terrain, relY),
+            TwitchMode.ExitBaseDown => DoExitDown(tank, terrain, relY),
             TwitchMode.Twitch => DoTwitch(tank, enemy, terrain, relX, relY),
             TwitchMode.Return => DoReturn(relX, relY),
             TwitchMode.Recharge => DoRecharge(tank, relX, relY),
@@ -113,28 +123,52 @@ public class BotTankAI
         };
     }
 
-    private ControllerOutput DoStart(int relY)
+    private ControllerOutput DoStart()
     {
         _mode = _rng.Next(2) == 0 ? TwitchMode.ExitBaseUp : TwitchMode.ExitBaseDown;
         return default;
     }
 
-    private ControllerOutput DoExitUp(int relY)
+    private ControllerOutput DoExitUp(Tank tank, TerrainGrid terrain, int relY)
     {
         if (relY < -OutsideBase) { _timeToChange = 0; _mode = TwitchMode.Twitch; return default; }
-        return new ControllerOutput { MoveSpeed = new Offset(0, -1) };
+        if (_stuckFrames >= ExitStuckThresholdFrames)
+        {
+            _mode = TwitchMode.ExitBaseDown;
+            return BuildUnstuckOutput(tank.Position, terrain, preferY: -1);
+        }
+
+        var move = new Offset(0, -1);
+        return new ControllerOutput
+        {
+            MoveSpeed = move,
+            ShootPrimary = NeedsDigging(tank.Position, move, terrain),
+            AimDirection = AimTowardsOffset(move),
+        };
     }
 
-    private ControllerOutput DoExitDown(int relY)
+    private ControllerOutput DoExitDown(Tank tank, TerrainGrid terrain, int relY)
     {
         if (relY > OutsideBase) { _timeToChange = 0; _mode = TwitchMode.Twitch; return default; }
-        return new ControllerOutput { MoveSpeed = new Offset(0, 1) };
+        if (_stuckFrames >= ExitStuckThresholdFrames)
+        {
+            _mode = TwitchMode.ExitBaseUp;
+            return BuildUnstuckOutput(tank.Position, terrain, preferY: 1);
+        }
+
+        var move = new Offset(0, 1);
+        return new ControllerOutput
+        {
+            MoveSpeed = move,
+            ShootPrimary = NeedsDigging(tank.Position, move, terrain),
+            AimDirection = AimTowardsOffset(move),
+        };
     }
 
     private ControllerOutput DoTwitch(Tank tank, Tank? enemy, TerrainGrid terrain, int relX, int relY)
     {
         var profile = ActiveProfile;
-        if (tank.Reactor.Health < 500 || tank.Reactor.Energy < 8000 ||
+        if (tank.Reactor.Health < 500 || tank.Reactor.Heat > 70 ||
             (Math.Abs(relX) < Tweaks.Base.BaseSize / 2 && Math.Abs(relY) < Tweaks.Base.BaseSize / 2))
         {
             _mode = TwitchMode.Return;
@@ -161,13 +195,25 @@ public class BotTankAI
             }
 
             bool shouldDig = NeedsDigging(tank.Position, new Offset(_dx, _dy), terrain);
-            _shoot = hasLos
-                ? _rng.Next(1000) < profile.ShootChanceLosPermille
-                : shouldDig && _rng.Next(1000) < profile.ShootChanceDigPermille;
+            _shoot = retreat && hasLos
+                ? _rng.Next(1000) < Math.Max(profile.ShootChanceLosPermille, 820)
+                : hasLos
+                    ? _rng.Next(1000) < profile.ShootChanceLosPermille
+                    : shouldDig && _rng.Next(1000) < profile.ShootChanceDigPermille;
             _aimDirection = hasTarget ? AimTowards(tank.Position, enemy!.Position) : AimTowardsOffset(new Offset(_dx, _dy));
             _timeToChange = hasLos
                 ? _rng.Next(profile.ReplanLosMin, profile.ReplanLosMax)
                 : _rng.Next(profile.ReplanTunnelMin, profile.ReplanTunnelMax);
+
+            if (_stuckFrames >= GeneralStuckThresholdFrames)
+            {
+                var unstuck = ChooseUnstuckMove(tank.Position, terrain);
+                _dx = unstuck.X;
+                _dy = unstuck.Y;
+                _shoot = NeedsDigging(tank.Position, unstuck, terrain);
+                _aimDirection = AimTowardsOffset(unstuck);
+                _timeToChange = _rng.Next(4, 8);
+            }
         }
 
         _timeToChange--;
@@ -200,7 +246,8 @@ public class BotTankAI
 
     private ControllerOutput DoRecharge(Tank tank, int relX, int relY)
     {
-        if (tank.Reactor.Health >= 1000 && tank.Reactor.Energy >= 24000)
+        if (tank.Reactor.Health >= Tweaks.Tank.InitialHealth &&
+            tank.Reactor.Heat <= (int)(Tweaks.Tank.HeatCapacity * 0.1f))
         {
             _mode = TwitchMode.Start;
             return default;
@@ -214,13 +261,16 @@ public class BotTankAI
     private bool ShouldRetreat(Tank self, Tank enemy, BehaviorProfile profile)
     {
         bool lowHealth = self.Reactor.Health < (int)(Tweaks.Tank.InitialHealth * profile.LowHealthRatio);
-        bool lowEnergy = self.Reactor.Energy < (int)(Tweaks.Tank.InitialEnergy * profile.LowEnergyRatio);
+        bool highHeat = self.Reactor.Heat > (int)(Tweaks.Tank.HeatCapacity * profile.HighHeatRatio);
         bool outgunned = self.Reactor.Health + profile.OutgunnedHealthGap < enemy.Reactor.Health;
-        return lowHealth || lowEnergy || outgunned;
+        return lowHealth || highHeat || outgunned;
     }
 
     private Offset ChooseCombatMove(Position self, Position enemy, TerrainGrid terrain, bool retreat)
     {
+        if (retreat)
+            return ChooseRetreatEvasiveMove(self, enemy, terrain);
+
         Position target = retreat
             ? new Position(self.X + (self.X - enemy.X) * 3, self.Y + (self.Y - enemy.Y) * 3)
             : enemy;
@@ -344,6 +394,93 @@ public class BotTankAI
         if (len < 0.001f)
             return default;
         return new DirectionF(dx / len, dy / len);
+    }
+
+    private void UpdateStuckState(Position current)
+    {
+        if (!_hasLastPosition)
+        {
+            _lastPosition = current;
+            _hasLastPosition = true;
+            _stuckFrames = 0;
+            return;
+        }
+
+        if (current == _lastPosition)
+            _stuckFrames++;
+        else
+            _stuckFrames = 0;
+
+        _lastPosition = current;
+    }
+
+    private ControllerOutput BuildUnstuckOutput(Position self, TerrainGrid terrain, int preferY)
+    {
+        var move = ChooseUnstuckMove(self, terrain, preferY);
+        return new ControllerOutput
+        {
+            MoveSpeed = move,
+            ShootPrimary = NeedsDigging(self, move, terrain),
+            AimDirection = AimTowardsOffset(move),
+        };
+    }
+
+    private Offset ChooseUnstuckMove(Position self, TerrainGrid terrain, int preferredYDirection = 0)
+    {
+        float bestScore = float.NegativeInfinity;
+        Offset best = MoveCandidates[_rng.Next(MoveCandidates.Length)];
+
+        foreach (var candidate in MoveCandidates)
+        {
+            var next = self + candidate;
+            if (!terrain.IsInside(next))
+                continue;
+
+            float score = 0f;
+            var pix = terrain.GetPixelRaw(next);
+            if (!Pixel.IsAnyCollision(pix))
+                score += 20f;
+            else if (!Pixel.IsBlockingCollision(pix))
+                score += 8f;
+
+            if (preferredYDirection != 0)
+                score += candidate.Y == preferredYDirection ? 6f : 0f;
+
+            score += (float)_rng.NextDouble();
+            if (score > bestScore)
+            {
+                bestScore = score;
+                best = candidate;
+            }
+        }
+
+        return best;
+    }
+
+    private Offset ChooseRetreatEvasiveMove(Position self, Position enemy, TerrainGrid terrain)
+    {
+        int awayX = Math.Sign(self.X - enemy.X);
+        int awayY = Math.Sign(self.Y - enemy.Y);
+        var away = new Offset(awayX, awayY);
+
+        if (_evasiveFramesRemaining <= 0)
+        {
+            _evasiveDir = _rng.Next(2) == 0 ? -1 : 1;
+            _evasiveFramesRemaining = _rng.Next(EvasiveSwitchMinFrames, EvasiveSwitchMaxFrames);
+        }
+        _evasiveFramesRemaining--;
+
+        var leftPerp = new Offset(-away.Y, away.X);
+        var strafe = _evasiveDir > 0 ? leftPerp : new Offset(-leftPerp.X, -leftPerp.Y);
+
+        var composite = new Offset(
+            Math.Clamp(away.X + strafe.X, -1, 1),
+            Math.Clamp(away.Y + strafe.Y, -1, 1));
+
+        if (composite.X == 0 && composite.Y == 0)
+            composite = away.X != 0 || away.Y != 0 ? away : strafe;
+
+        return ChooseBestMove(self, self + composite * 6, terrain);
     }
 
     private BehaviorProfile ActiveProfile => Profiles[_activeProfileIdx];

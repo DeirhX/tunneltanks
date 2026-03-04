@@ -6,6 +6,7 @@ using Tunnerer.Core.Config;
 using Tunnerer.Core.Entities;
 using Tunnerer.Core.Resources;
 using Tunnerer.Core.Collision;
+using Tunnerer.Core.Rendering;
 
 /// <summary>
 /// Defines per-type projectile behavior: how it advances and what color it draws.
@@ -19,6 +20,7 @@ public class ProjectileList
 {
     private readonly List<Projectile> _projectiles = new();
     private readonly List<Projectile> _pending = new();
+    private FastRandom _rng;
 
     /// <summary>
     /// Single source of truth for per-type projectile behavior.
@@ -37,14 +39,21 @@ public class ProjectileList
         behaviors[(int)ProjectileType.Bullet] = new(AdvanceBullet, Tweaks.Colors.FireHot);
         behaviors[(int)ProjectileType.Shrapnel] = new(AdvanceShrapnel, Tweaks.Colors.FireHot);
         behaviors[(int)ProjectileType.ConcreteFoam] = new(
-            (p, solver, self) => AdvanceFoam(p, solver.Terrain,
+            (p, solver, self) => AdvanceFoam(p, solver.Terrain, self,
                 TerrainPixel.ConcreteHigh, TerrainPixel.ConcreteLow, skipConcrete: true),
             Tweaks.Colors.Concrete);
         behaviors[(int)ProjectileType.DirtFoam] = new(
-            (p, solver, self) => AdvanceFoam(p, solver.Terrain,
+            (p, solver, self) => AdvanceFoam(p, solver.Terrain, self,
                 TerrainPixel.DirtHigh, TerrainPixel.DirtLow, skipConcrete: false),
             Tweaks.Colors.DirtProjectile);
         return behaviors;
+    }
+
+    public ProjectileList(int? seed = null)
+    {
+        _rng = seed.HasValue
+            ? new FastRandom(seed.Value)
+            : new FastRandom((uint)Environment.TickCount);
     }
 
     public int Count => _projectiles.Count + _pending.Count;
@@ -82,10 +91,8 @@ public class ProjectileList
 
         for (int s = 0; s < steps; s++)
         {
-            p.Position += stepDir;
-            var ipos = (Position)p.Position;
-
-            if (!terrain.IsInside(ipos)) { p.IsAlive = false; return; }
+            if (!TryAdvanceInside(terrain, p, stepDir, out var ipos))
+                return;
 
             bool hit = solver.TestPoint(ipos,
                 onTank: tank =>
@@ -99,6 +106,7 @@ public class ProjectileList
             if (hit)
             {
                 self.SpawnNormalExplosion(ipos);
+                terrain.AddHeatRadius(ipos, Tweaks.Explosion.BulletHeatAmount, Tweaks.Explosion.BulletHeatRadius);
                 p.IsAlive = false;
                 return;
             }
@@ -107,7 +115,12 @@ public class ProjectileList
 
     private void SpawnNormalExplosion(Position pos)
     {
-        AddRange(ExplosionFactory.CreateExplosion(pos, Tweaks.Explosion.Normal));
+        AddRange(ExplosionFactory.CreateExplosion(pos, Tweaks.Explosion.Normal, ref _rng));
+    }
+
+    public void AddExplosion(Position pos, ExplosionParams p)
+    {
+        AddRange(ExplosionFactory.CreateExplosion(pos, p, ref _rng));
     }
 
     private static void AdvanceShrapnel(Projectile p, CollisionSolver solver, ProjectileList self)
@@ -115,43 +128,66 @@ public class ProjectileList
         var terrain = solver.Terrain;
         if (p.Life-- <= 0) { p.IsAlive = false; return; }
 
-        p.Position += p.Speed;
-        var ipos = (Position)p.Position;
-        if (!terrain.IsInside(ipos)) { p.IsAlive = false; return; }
+        if (!TryAdvanceInside(terrain, p, out var ipos))
+            return;
 
         var pix = terrain.GetPixelRaw(ipos);
         if (Pixel.IsBlockingCollision(pix))
         {
-            var rng = Random.Shared;
-            if ((Pixel.IsConcrete(pix) && rng.Next(1000) < Tweaks.Explosion.ChanceToDestroyConcrete) ||
-                (Pixel.IsRock(pix) && rng.Next(1000) < Tweaks.Explosion.ChanceToDestroyRock))
+            if ((Pixel.IsConcrete(pix) && self._rng.Chance1000(Tweaks.Explosion.ChanceToDestroyConcrete)) ||
+                (Pixel.IsRock(pix) && self._rng.Chance1000(Tweaks.Explosion.ChanceToDestroyRock)))
             {
-                terrain.SetPixel(ipos, rng.Next(2) == 0 ? TerrainPixel.DecalHigh : TerrainPixel.DecalLow);
+                terrain.SetPixel(ipos, TerrainPixel.DecalHigh);
             }
+            terrain.AddHeat(ipos, Tweaks.Explosion.ShrapnelHitHeat);
             p.IsAlive = false;
             return;
         }
 
-        terrain.SetPixel(ipos, Random.Shared.Next(2) == 0 ? TerrainPixel.DecalHigh : TerrainPixel.DecalLow);
+        terrain.SetPixel(ipos, TerrainPixel.DecalHigh);
+        terrain.AddHeatRadius(ipos, Tweaks.Explosion.ShrapnelDigHeatAmount, Tweaks.Explosion.ShrapnelDigHeatRadius);
     }
 
-    private static void AdvanceFoam(Projectile p, TerrainGrid terrain,
+    private static void AdvanceFoam(Projectile p, TerrainGrid terrain, ProjectileList self,
         TerrainPixel highPixel, TerrainPixel lowPixel, bool skipConcrete)
     {
         if (p.Life-- <= 0) { p.IsAlive = false; return; }
 
         var prevPos = (Position)p.Position;
-        p.Position += p.Speed;
-        var ipos = (Position)p.Position;
-        if (!terrain.IsInside(ipos)) { p.IsAlive = false; return; }
+        if (!TryAdvanceInside(terrain, p, out var ipos))
+            return;
 
         var pix = terrain.GetPixelRaw(ipos);
         if (Pixel.IsAnyCollision(pix) && !(skipConcrete && Pixel.IsConcrete(pix)))
         {
             if (terrain.IsInside(prevPos))
-                terrain.SetPixel(prevPos, Random.Shared.Next(2) == 0 ? highPixel : lowPixel);
+                terrain.SetPixel(prevPos, self._rng.NextInt(2) == 0 ? highPixel : lowPixel);
             p.IsAlive = false;
         }
+    }
+
+    private static bool TryAdvanceInside(TerrainGrid terrain, Projectile p, out Position ipos)
+    {
+        p.Position += p.Speed;
+        ipos = (Position)p.Position;
+        if (!terrain.IsInside(ipos))
+        {
+            p.IsAlive = false;
+            return false;
+        }
+        return true;
+    }
+
+    private static bool TryAdvanceInside(TerrainGrid terrain, Projectile p, VectorF step, out Position ipos)
+    {
+        p.Position += step;
+        ipos = (Position)p.Position;
+        if (!terrain.IsInside(ipos))
+        {
+            p.IsAlive = false;
+            return false;
+        }
+        return true;
     }
 
     public void Draw(Surface surface)
@@ -164,5 +200,19 @@ public class ProjectileList
 
             surface.Pixels[ipos.X + ipos.Y * surface.Width] = Behaviors[(int)p.Type].DrawColor.ToArgb();
         }
+    }
+
+    public int CopyRenderStates(Span<ProjectileRenderState> destination)
+    {
+        int count = Math.Min(destination.Length, _projectiles.Count);
+        for (int i = 0; i < count; i++)
+        {
+            var p = _projectiles[i];
+            destination[i] = new ProjectileRenderState(
+                Position: (Position)p.Position,
+                Type: p.Type,
+                IsAlive: p.IsAlive);
+        }
+        return count;
     }
 }

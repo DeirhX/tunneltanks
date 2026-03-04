@@ -29,7 +29,7 @@ public class Machine
         OwnerColor = ownerColor;
         Reactor = new Reactor(
             initial: new ReactorState(0, Tweaks.Machine.ReactorHealthCapacity),
-            capacity: new ReactorState(Tweaks.Machine.ReactorEnergyCapacity, Tweaks.Machine.ReactorHealthCapacity));
+            capacity: new ReactorState(Tweaks.Machine.ReactorHeatCapacity, Tweaks.Machine.ReactorHealthCapacity));
     }
 
     public bool IsBlockingCollision => State == MachineState.Planted;

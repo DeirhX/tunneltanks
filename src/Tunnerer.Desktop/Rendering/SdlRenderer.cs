@@ -5,14 +5,13 @@ using Tunnerer.Core.Types;
 using System.Runtime.InteropServices;
 
 /// <summary>
-/// SDL2 window with an OpenGL context. No SDL_Renderer — all drawing goes through GL.
+/// SDL2 native-window wrapper used by the DX backends.
 /// </summary>
+
 public sealed unsafe class SdlRenderer : IDisposable
 {
     private readonly Sdl _sdl;
     private Window* _window;
-    private void* _glContext;
-    private readonly Size _windowSize;
     private bool _disposed;
 
     public Sdl Sdl => _sdl;
@@ -20,32 +19,22 @@ public sealed unsafe class SdlRenderer : IDisposable
 
     public SdlRenderer(string title, Size windowSize)
     {
-        _windowSize = windowSize;
         _sdl = Sdl.GetApi();
 
         if (_sdl.Init(Sdl.InitVideo | Sdl.InitEvents) < 0)
             throw new Exception($"SDL_Init failed: {Marshal.PtrToStringAnsi((nint)_sdl.GetError())}");
 
-        _sdl.GLSetAttribute(GLattr.ContextMajorVersion, 3);
-        _sdl.GLSetAttribute(GLattr.ContextMinorVersion, 3);
-        _sdl.GLSetAttribute(GLattr.ContextProfileMask, (int)GLprofile.Core);
-        _sdl.GLSetAttribute(GLattr.Doublebuffer, 1);
+        uint windowFlags = (uint)(WindowFlags.Shown | WindowFlags.Resizable);
 
         _window = _sdl.CreateWindow(
             title,
             Sdl.WindowposCentered, Sdl.WindowposCentered,
             windowSize.X, windowSize.Y,
-            (uint)(WindowFlags.Shown | WindowFlags.Resizable | WindowFlags.Opengl));
+            windowFlags);
 
         if (_window == null)
             throw new Exception($"SDL_CreateWindow failed: {Marshal.PtrToStringAnsi((nint)_sdl.GetError())}");
 
-        _glContext = _sdl.GLCreateContext(_window);
-        if (_glContext == null)
-            throw new Exception($"SDL_GL_CreateContext failed: {Marshal.PtrToStringAnsi((nint)_sdl.GetError())}");
-
-        _sdl.GLMakeCurrent(_window, _glContext);
-        _sdl.GLSetSwapInterval(1);
     }
 
     public (int w, int h) GetWindowSize()
@@ -64,7 +53,7 @@ public sealed unsafe class SdlRenderer : IDisposable
 
     public void SwapWindow()
     {
-        _sdl.GLSwapWindow(_window);
+        // DX backends present via swap chain; SDL swap is unused.
     }
 
     /// <summary>
@@ -91,7 +80,6 @@ public sealed unsafe class SdlRenderer : IDisposable
         if (_disposed) return;
         _disposed = true;
 
-        if (_glContext != null) _sdl.GLDeleteContext(_glContext);
         if (_window != null) _sdl.DestroyWindow(_window);
         _sdl.Quit();
         _sdl.Dispose();

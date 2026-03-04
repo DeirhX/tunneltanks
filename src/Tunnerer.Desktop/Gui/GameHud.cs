@@ -43,11 +43,9 @@ public class GameHud
     private void DrawGameViewport(nint gameTextureId, int texW, int texH)
     {
         var displaySize = ImGui.GetIO().DisplaySize;
-        float viewW = displaySize.X;
-        float viewH = displaySize.Y;
 
         ImGui.SetNextWindowPos(Vector2.Zero, ImGuiCond.Always);
-        ImGui.SetNextWindowSize(new Vector2(viewW, viewH), ImGuiCond.Always);
+        ImGui.SetNextWindowSize(new Vector2(displaySize.X, displaySize.Y), ImGuiCond.Always);
 
         var flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize |
                     ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoScrollbar |
@@ -59,27 +57,10 @@ public class GameHud
 
         if (ImGui.Begin("##Viewport", flags))
         {
-            var avail = ImGui.GetContentRegionAvail();
-            float aspect = (float)texW / texH;
-            float imgW, imgH;
-            if (avail.X / avail.Y > aspect)
-            {
-                imgH = avail.Y;
-                imgW = imgH * aspect;
-            }
-            else
-            {
-                imgW = avail.X;
-                imgH = imgW / aspect;
-            }
-
-            float offsetX = (avail.X - imgW) * 0.5f;
-            float offsetY = (avail.Y - imgH) * 0.5f;
             var cursorPos = ImGui.GetCursorScreenPos();
-
-            ImGui.SetCursorPos(new Vector2(offsetX, offsetY));
-            ImGui.Image(gameTextureId, new Vector2(imgW, imgH));
-            ViewportRect = (cursorPos.X + offsetX, cursorPos.Y + offsetY, imgW, imgH);
+            ImGui.SetCursorPos(Vector2.Zero);
+            ImGui.Image(gameTextureId, new Vector2(texW, texH));
+            ViewportRect = (cursorPos.X, cursorPos.Y, texW, texH);
         }
         ImGui.End();
         ImGui.PopStyleVar(2);
@@ -122,12 +103,12 @@ public class GameHud
         x += mW;
         dl.AddImage(_buildPanelTex, new Vector2(x, drawY), new Vector2(x + bW, drawY + h));
 
-        // Energy value: inside the green label plate below "ENERGY" text
-        int energy = player.Reactor.Energy;
+        // Heat value: inside the left label plate.
+        int heat = player.Reactor.Heat;
         float plateX = startX + 105f;
         float plateW = 130f;
         float plateY = drawY + 168f;
-        DrawNumberCentered(dl, energy, plateX, plateY, plateW);
+        DrawNumberCentered(dl, heat, plateX, plateY, plateW);
 
         // Shield/health value: inside the blue label plate below "SHIELD" text
         int health = player.Reactor.Health;

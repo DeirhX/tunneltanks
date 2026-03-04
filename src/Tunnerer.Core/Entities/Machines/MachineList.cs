@@ -2,12 +2,14 @@ namespace Tunnerer.Core.Entities.Machines;
 
 using Tunnerer.Core.Types;
 using Tunnerer.Core.Terrain;
+using Tunnerer.Core.Rendering;
 
 public class MachineList
 {
     private readonly List<Machine> _machines = new();
 
     public IReadOnlyList<Machine> Machines => _machines;
+    public int Count => _machines.Count;
 
     public Machine Add(Machine machine)
     {
@@ -36,6 +38,21 @@ public class MachineList
     {
         foreach (var m in _machines)
             m.Draw(surface);
+    }
+
+    public int CopyRenderStates(Span<MachineRenderState> destination)
+    {
+        int count = Math.Min(destination.Length, _machines.Count);
+        for (int i = 0; i < count; i++)
+        {
+            var m = _machines[i];
+            destination[i] = new MachineRenderState(
+                Position: m.Position,
+                Type: m.Type,
+                State: m.State,
+                IsAlive: m.IsAlive);
+        }
+        return count;
     }
 
     public void RemoveAll() => _machines.Clear();

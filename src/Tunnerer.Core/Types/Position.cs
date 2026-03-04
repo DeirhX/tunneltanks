@@ -1,5 +1,7 @@
 namespace Tunnerer.Core.Types;
 
+using System.Diagnostics;
+
 public readonly record struct Position(int X, int Y)
 {
     public static Position operator +(Position a, Offset b) => new(a.X + b.X, a.Y + b.Y);
@@ -69,8 +71,12 @@ public readonly record struct Rect(int X, int Y, int Width, int Height)
 
 public readonly record struct BoundingBox(int HalfWidth, int HalfHeight)
 {
-    public bool IsInside(Position tested, Position origin) =>
+    public bool IsInside(Position tested, Position origin)
+    {
+        Debug.Assert(HalfWidth >= 0 && HalfHeight >= 0, "Bounding box half-sizes must be non-negative.");
+        return
         Math.Abs(tested.X - origin.X) < HalfWidth && Math.Abs(tested.Y - origin.Y) < HalfHeight;
+    }
     public Size Size => new(HalfWidth * 2, HalfHeight * 2);
 }
 

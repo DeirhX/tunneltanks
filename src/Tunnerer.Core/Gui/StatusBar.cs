@@ -27,26 +27,30 @@ public class StatusBar
         int midY = (h - 1) / 2;
         int midH = (h % 2 != 0) ? 1 : 2;
 
-        int energyFilled = _tank.Reactor.EnergyCapacity > 0
-            ? _tank.Reactor.Energy * (w - Border * 2) / _tank.Reactor.EnergyCapacity
-            : 0;
+        int heatFilled = 0;
+        if (_tank.Reactor.HeatCapacity > 0)
+        {
+            int clampedHeat = Math.Clamp(_tank.Reactor.Heat, 0, _tank.Reactor.HeatCapacity);
+            int remainingHeatBudget = _tank.Reactor.HeatCapacity - clampedHeat;
+            heatFilled = remainingHeatBudget * (w - Border * 2) / _tank.Reactor.HeatCapacity;
+        }
         int healthFilled = _tank.Reactor.HealthCapacity > 0
             ? _tank.Reactor.Health * (w - Border * 2) / _tank.Reactor.HealthCapacity
             : 0;
 
         if (!_decreasesToLeft)
         {
-            energyFilled = w - Border - energyFilled;
+            heatFilled = w - Border - heatFilled;
             healthFilled = w - Border - healthFilled;
         }
         else
         {
-            energyFilled += Border;
+            heatFilled += Border;
             healthFilled += Border;
         }
 
         uint bgColor = GuiColors.StatusBackgroundArgb;
-        uint energyColor = GuiColors.StatusEnergyArgb;
+        uint heatColor = GuiColors.StatusHeatArgb;
         uint healthColor = GuiColors.StatusHealthArgb;
         uint blankColor = GuiColors.BlankArgb;
 
@@ -73,9 +77,9 @@ public class StatusBar
                 // Middle separator
                 else if (y >= midY && y < midY + midH)
                     c = bgColor;
-                // Energy bar (top half)
-                else if (y < midY && ((_decreasesToLeft && x < energyFilled) || (!_decreasesToLeft && x >= energyFilled)))
-                    c = energyColor;
+                // Heat bar (top half)
+                else if (y < midY && ((_decreasesToLeft && x < heatFilled) || (!_decreasesToLeft && x >= heatFilled)))
+                    c = heatColor;
                 // Health bar (bottom half)
                 else if (y > midY && ((_decreasesToLeft && x < healthFilled) || (!_decreasesToLeft && x >= healthFilled)))
                     c = healthColor;

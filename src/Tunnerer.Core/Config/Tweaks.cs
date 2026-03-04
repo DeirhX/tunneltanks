@@ -25,6 +25,71 @@ public static class Tweaks
         public static readonly Size WindowSize = new(1920, 1200);
         public static readonly Size RenderSurfaceSize = new(320, 200);
         public const float DrawStaticFuelThreshold = 0.2f;
+        public const int PixelScale = 6;
+        public const int NativeContinuousSampleLow = 1;
+        public const int NativeContinuousSampleMedium = 2;
+        public const int NativeContinuousSampleHigh = 4;
+        public const float NativeContinuousEdgeSoftness = 0.10f;
+        public const float NativeContinuousBoundaryBlend = 0.75f;
+        public const float NativeContinuousRenderBudgetMs = 5.0f;
+        public const int NativeContinuousBudgetHysteresisFrames = 10;
+        public const float NativeContinuousBudgetUnderThreshold = 0.65f;
+        public const int NativeContinuousRecoveryFramesMultiplier = 20;
+
+        // GPU post-processing / lighting tuning
+        public const float PostBloomThreshold = 0.72f;
+        public const float PostBloomStrength = 0.60f;
+        public const float PostBloomWeightCenter = 0.30f;
+        public const float PostBloomWeightAxis = 0.11f;
+        public const float PostBloomWeightDiagonal = 0.07f;
+        public const float PostVignetteStrength = 0.18f;
+        public const float PostVignetteInnerRadius = 0.35f;
+        public const float PostVignetteOuterRadius = 0.95f;
+        public const float PostTerrainEdgeLightStrength = 0.10f;
+        public const float PostTerrainEdgeLightBias = 0.05f;
+        public const float PostTerrainHeatThreshold = 0.10f;
+        public const float PostTerrainMaskEdgeStrength = 0.18f;
+        public const float PostTerrainMaskCaveDarken = 0.12f;
+        public const float PostTerrainMaskSolidLift = 0.04f;
+        public const float PostTerrainMaskOutlineDarken = 0.26f;
+        public const float PostTerrainMaskRimLift = 0.07f;
+        public const float PostTerrainMaskBoundaryScale = 2.4f;
+        public const float PostMaterialEmissiveEnergyR = 0.7843f;
+        public const float PostMaterialEmissiveEnergyG = 0.8627f;
+        public const float PostMaterialEmissiveEnergyB = 0.2353f;
+        public const float PostMaterialEmissiveScorchedR = 0.7059f;
+        public const float PostMaterialEmissiveScorchedG = 0.3137f;
+        public const float PostMaterialEmissiveScorchedB = 0.1176f;
+        public const float PostMaterialEmissiveEnergyStrength = 0.95f;
+        public const float PostMaterialEmissiveScorchedStrength = 0.32f;
+        public const float PostMaterialEmissivePulseFreq = 3.0f;
+        public const float PostMaterialEmissivePulseMin = 0.8f;
+        public const float PostMaterialEmissivePulseRange = 0.2f;
+        public const float PostTankHeatGlowR = 0.78f;
+        public const float PostTankHeatGlowG = 0.24f;
+        public const float PostTankHeatGlowB = 0.04f;
+        public const float PostTankHeatGlowMinHeat = 1.5f;
+        public const float PostTankHeatGlowBaseRadius = 2.5f;
+        public const float PostTankHeatGlowScaleRadius = 2.5f;
+        public const float PostTerrainHeatGlowR = 1.0000f;
+        public const float PostTerrainHeatGlowG = 0.4500f;
+        public const float PostTerrainHeatGlowB = 0.0500f;
+        public const byte PostEmissiveEnergyLow = 150;
+        public const byte PostEmissiveEnergyMedium = 190;
+        public const byte PostEmissiveEnergyHigh = 230;
+        public const byte PostEmissiveScorchedHigh = 64;
+        public const byte PostEmissiveScorchedLow = 32;
+
+        // Directional lighting (matches CPU path: top-left, slightly forward)
+        public const float LightDirX = -0.35f;
+        public const float LightDirY = -0.55f;
+        public const float LightDirZ = 0.70f;
+        public const float LightAmbient = 0.22f;
+        public const float LightDiffuseWeight = 0.68f;
+        public const float LightNormalStrength = 2.2f;
+        public const float LightShininess = 8f;
+        public const float LightSpecularIntensity = 0.10f;
+        public const float LightMicroNormalStrength = 0.35f;
     }
 
     public static class World
@@ -36,10 +101,46 @@ public static class Tweaks
         public const int DirtRegrowSpeed = 4;
         public const int DirtRegrowBlankModifier = 4;
         public const int DirtRegrowScorchedModifier = 1;
+        public const int DecalDecaySpeed = 40;
         public const int DigThroughRockChance = 250;
         public static readonly TimeSpan RefreshLinkMapInterval = TimeSpan.FromMilliseconds(200);
         public const float MaximumLiveLinkDistance = 100f;
         public const float MaximumTheoreticalLinkDistance = 170f;
+
+        // Keep weak ambient exchange enabled so isolated hotspots can eventually relax.
+        public static bool EnableThermalAmbientExchange => true;
+        public static bool EnableStoneAmbientExchange { get; set; } = true;
+        public const float ThermalDt = 2.0f;
+        public const float ThermalAmbientTemperature = 0f;
+
+        // Effective heat capacities (higher means temperature changes slower).
+        public const float ThermalCapacityAir = 0.8f;
+        public const float ThermalCapacityDirt = 1.4f;
+        public const float ThermalCapacityStone = 2.6f;
+        public const float ThermalCapacityBase = 2.6f;
+
+        // Pairwise transmission speed (conductance).
+        public const float ThermalKAirAir = 0.240f;
+        public const float ThermalKAirDirt = 0.110f;
+        public const float ThermalKAirStone = 0.220f;
+        public const float ThermalKAirBase = 0.450f;
+        public const float ThermalKDirtDirt = 0.160f;
+        public const float ThermalKDirtStone = 0.200f;
+        public const float ThermalKDirtBase = 0.350f;
+        public const float ThermalKStoneStone = 0.300f;
+        public const float ThermalKStoneBase = 0.450f;
+        public const float ThermalKBaseBase = 0.200f;
+        public const float ThermalFixedBaseTemperature = 0f;
+        public const float ThermalKAmbientAir = 0.0120f;
+        public const float ThermalKAmbientDirt = 0.0120f;
+        public const float ThermalKAmbientStone = 0.0100f;
+        public const float ThermalKAmbientBase = 0.0000f;
+        public const int ThermalActiveTileSize = 32;
+        public const float ThermalSparseFallbackCoverage = 0.45f;
+        public const int ThermalParallelRegionThreshold = 4;
+        public const int ThermalMaxWorkers = 0; // 0 => default scheduler/CPU count
+        public const float ThermalActiveTemperatureThreshold = 0.5f;
+        public const float ThermalArtificialCoolingPerFrame = 0f;
     }
 
     public static class Base
@@ -47,17 +148,17 @@ public static class Tweaks
         public const int MinDistance = 150;
         public const int BaseSize = 35;
         public const int DoorSize = 7;
-        public const int InitialEnergy = 15000;
+        public const int InitialHeat = 0;
         public const int InitialHealth = 2000;
-        public const int EnergyCapacity = 30000;
+        public const int HeatCapacity = 100;
         public const int HealthCapacity = 2000;
         public const int MaterialDirtCapacity = 2000;
         public const int MaterialMineralsCapacity = 20000;
-        public const int EnergyRegen = 100;
+        public const int HeatCooldown = 2;
         public const int HealthRegen = 10;
-        public const int HomeRechargeEnergy = 300;
+        public const int HomeCooldownHeat = 6;
         public const int HomeRechargeHealth = 3;
-        public const int ForeignRechargeEnergy = 90;
+        public const int ForeignCooldownHeat = 2;
         public const int ForeignRechargeHealth = 1;
         public const int HomeAbsorbDirt = 15;
         public const int HomeAbsorbMinerals = 15;
@@ -70,18 +171,37 @@ public static class Tweaks
         public const int TurretDelay = 3;
         public const int TurretLength = 4;
         public const int DigRadius = 3;
-        public const int InitialEnergy = 24000;
+        public const int InitialHeat = 0;
         public const int InitialHealth = 1000;
-        public const int EnergyCapacity = 24000;
+        public const int HeatCapacity = 100;
         public const int HealthCapacity = 1000;
         public const int ResourceDirtCapacity = 10000;
         public const int ResourceMineralsCapacity = 10000;
-        public const int IdleEnergyDrain = 3;
-        public const int MoveEnergyDrain = 8;
-        public const int ShootEnergyCost = 160;
-        public const int EnergyPickupLow = 100;
-        public const int EnergyPickupMedium = 200;
-        public const int EnergyPickupHigh = 400;
+        public const int IdleHeatGain = 0;
+        public const int MoveHeatGain = 1;
+        public const float ShootHeatGain = 2.0f;
+        public const int CoolingPickupLow = 8;
+        public const int CoolingPickupMedium = 14;
+        public const int CoolingPickupHigh = 20;
+
+        public const float HeatMax = 100f;
+        public const float HeatDigPerPixel = 0.008f;
+        public const float HeatShootPerShot = 0.25f;
+        public const float HeatTerrainAbsorb = 0.004f;
+        public const float HeatCoolPerFrame = 0.12f;
+        public const float HeatBaseCoolBonus = 0.20f;
+        public const float HeatColdCoolingBoost = 0.60f;
+        public const int TorchTerrainHeatAmount = 8;
+        public const int TorchRockHeatAmount = 14;
+        public const int TorchRockHeatRadius = 3;
+        public const float HeatAmbientOutsideBase = 0f;
+        public const float TankHeatCapacity = 20f;
+        public const float TerrainHeatCapacity = 80f;
+        public const float TankTerrainConductance = 10.0f;
+        public const float TankAmbientConductance = 1.0f;
+        public const float TankBaseConductance = 12.0f;
+        public const float HeatSafeMax = 100f;
+        public const float OverheatDamagePerDegree = 0.5f;
     }
 
     public static class Weapon
@@ -94,7 +214,7 @@ public static class Tweaks
 
     public static class Machine
     {
-        public const int ReactorEnergyCapacity = 10000;
+        public const int ReactorHeatCapacity = 100;
         public const int ReactorHealthCapacity = 1000;
         public const int HarvesterIntervalMs = 500;
         public const int ChargerIntervalMs = 200;
@@ -115,6 +235,12 @@ public static class Tweaks
         public static readonly ExplosionParams Dirt = new(ShrapnelCount: 10, Speed: 0.375f, Frames: 10);
         public static readonly ExplosionParams Normal = new(ShrapnelCount: 14, Speed: 0.56f, Frames: 13);
         public static readonly ExplosionParams Death = new(ShrapnelCount: 100, Speed: 0.25f, Frames: 72);
+
+        public const int BulletHeatAmount = 3;
+        public const int BulletHeatRadius = 7;
+        public const int ShrapnelHitHeat = 2;
+        public const int ShrapnelDigHeatAmount = 2;
+        public const int ShrapnelDigHeatRadius = 5;
     }
 
     public static class Colors
@@ -144,5 +270,12 @@ public static class Tweaks
         public const int MinSpawnDistanceSq = 150 * 150;
         public const int SmoothingSteps = -1; // -1 = smooth until convergence (matches C++)
         public static int TargetDirtAmount(Size size) => size.X * size.Y * DirtTargetPercent / 100;
+
+        public const int EnergyVeinCountDivisor = 40;
+        public const int EnergyVeinMinLength = 5;
+        public const int EnergyVeinMaxLength = 16;
+        public const int RuinAreaPerRuin = 16000;
+        public const int RuinWallMinLength = 2;
+        public const int RuinWallMaxLength = 5;
     }
 }

@@ -25,6 +25,14 @@ public enum TerrainPixel : byte
     EnergyHigh = (byte)'F',
 }
 
+public enum ThermalMaterial : byte
+{
+    Air = 0,
+    Dirt = 1,
+    Stone = 2,
+    Base = 3,
+}
+
 /// <summary>
 /// Single source of truth for terrain classification.
 /// Adding a new terrain pixel = one entry in <see cref="Pixel.BuildBehaviorTable"/>.
@@ -137,6 +145,20 @@ public static class Pixel
     public static bool IsMineral(TerrainPixel p) => _behaviors[(int)p].Mineral;
     public static bool IsEnergy(TerrainPixel p) => _behaviors[(int)p].Energy;
     public static bool IsEmpty(TerrainPixel p) => p == TerrainPixel.Blank;
+
+    public static ThermalMaterial GetThermalMaterial(TerrainPixel p)
+    {
+        var b = _behaviors[(int)p];
+        if (p == TerrainPixel.BaseBarrier) return ThermalMaterial.Base;
+        if (b.Base) return ThermalMaterial.Base;
+        if (b.Dirt) return ThermalMaterial.Dirt;
+
+        // Hard terrain and structures behave as stone for thermal exchange.
+        if (b.BlocksMovement || b.Concrete || b.Mineral)
+            return ThermalMaterial.Stone;
+
+        return ThermalMaterial.Air;
+    }
 
     public static Color GetColor(TerrainPixel p)
     {

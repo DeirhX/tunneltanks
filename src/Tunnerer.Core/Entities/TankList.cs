@@ -9,10 +9,11 @@ public class TankList
     private readonly List<Tank> _tanks = new();
 
     public IReadOnlyList<Tank> Tanks => _tanks;
+    public int Count => _tanks.Count;
 
-    public Tank AddTank(int color, TankBase tankBase)
+    public Tank AddTank(int color, TankBase tankBase, int rngSeed = 0)
     {
-        var tank = new Tank(color, tankBase);
+        var tank = new Tank(color, tankBase, rngSeed);
         _tanks.Add(tank);
         return tank;
     }
@@ -27,6 +28,22 @@ public class TankList
     {
         foreach (var tank in _tanks)
             tank.Draw(surface);
+    }
+
+    public int CopyRenderStates(Span<TankRenderState> destination)
+    {
+        int count = Math.Min(destination.Length, _tanks.Count);
+        for (int i = 0; i < count; i++)
+        {
+            var tank = _tanks[i];
+            destination[i] = new TankRenderState(
+                Position: tank.Position,
+                Color: tank.Color,
+                Direction: tank.Direction,
+                IsDead: tank.IsDead,
+                TurretDirection: tank.Turret.Direction);
+        }
+        return count;
     }
 
     public Tank? CheckTankCollision(Position position, int excludeColor)

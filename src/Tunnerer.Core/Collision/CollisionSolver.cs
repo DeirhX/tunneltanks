@@ -68,6 +68,7 @@ public class CollisionSolver
                 if (tank.IsDead) return false;
                 if (Math.Abs(pos.X - tank.Position.X) > halfW ||
                     Math.Abs(pos.Y - tank.Position.Y) > halfH) return false;
+                if (!IsTankSpritePixelSolid(tank, pos)) return false;
                 return onTank(tank);
             });
             if (tankHit) return true;
@@ -89,6 +90,23 @@ public class CollisionSolver
         }
 
         return false;
+    }
+
+    private static bool IsTankSpritePixelSolid(Tank tank, Position pos)
+    {
+        int dir = Math.Clamp(tank.Direction, 0, TankSprites.DirectionCount - 1);
+        var sprite = TankSprites.Sprites[dir];
+        int w = TankSprites.SpriteWidth;
+        int h = TankSprites.SpriteHeight;
+        int cx = w / 2;
+        int cy = h / 2;
+
+        int sx = pos.X - tank.Position.X + cx;
+        int sy = pos.Y - tank.Position.Y + cy;
+        if ((uint)sx >= (uint)w || (uint)sy >= (uint)h)
+            return false;
+
+        return sprite[sx + sy * w] != 0;
     }
 
     // --- Convenience methods for terrain-only queries (backward compatible) ---

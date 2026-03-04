@@ -10,17 +10,22 @@ using Tunnerer.Core.Entities.Projectiles;
 using Tunnerer.Core.Entities.Machines;
 using Tunnerer.Core.Entities.Links;
 using System.Diagnostics;
+using Tunnerer.Core.Rendering;
 
 public class World
 {
     private readonly TerrainGrid _terrain;
     private readonly TankBases _tankBases = new();
     private readonly TankList _tankList = new();
-    private readonly ProjectileList _projectiles = new();
+    private readonly ProjectileList _projectiles;
     private readonly MachineList _machines = new();
-    private readonly LinkMap _linkMap = new();
+    private readonly LinkMap _linkMap;
     private readonly SpriteList _sprites = new();
     private readonly CollisionSolver _collisionSolver;
+    private readonly bool _deterministicSimulation;
+    private readonly bool _enableTerrainRegrowth;
+    private readonly int _simulationSeed;
+    private readonly SimulationSettings _simulationSettings;
 
     private int _advanceCount;
     private TimeSpan _elapsed;
@@ -38,12 +43,24 @@ public class World
     public CollisionSolver CollisionSolver => _collisionSolver;
     public int AdvanceCount => _advanceCount;
     public bool IsGameOver => _gameOver;
+    public SimulationSettings Settings => _simulationSettings;
 
     public SimulationProfile Profile { get; } = new();
 
-    public World(Size terrainSize)
+    public World(
+        Size terrainSize,
+        bool deterministicSimulation = false,
+        int simulationSeed = 0,
+        bool enableTerrainRegrowth = true,
+        SimulationSettings? simulationSettings = null)
     {
-        _terrain = new TerrainGrid(terrainSize);
+        _deterministicSimulation = deterministicSimulation;
+        _enableTerrainRegrowth = enableTerrainRegrowth;
+        _simulationSeed = simulationSeed != 0 ? simulationSeed : 0x51A7E3;
+        _simulationSettings = simulationSettings ?? SimulationSettings.FromTweaks();
+        _terrain = new TerrainGrid(terrainSize, _simulationSettings);
+        _projectiles = new ProjectileList(deterministicSimulation ? _simulationSeed ^ 0x5f3759df : null);
+        _linkMap = new LinkMap(deterministicSimulation, _simulationSeed ^ 0x13579BDF);
         _collisionSolver = new CollisionSolver(_terrain);
         _regrowTimer.Start();
     }
@@ -55,6 +72,7 @@ public class World
             _terrain[i] = generatedTerrain[i];
 
         _terrain.MaterializeTerrain(materializeSeed, parallel: parallelMaterialize);
+        _terrain.DecorateTerrain(materializeSeed.HasValue ? materializeSeed.Value + 100 : null);
 
         for (int i = 0; i < spawns.Length; i++)
             _tankBases.AddBase(spawns[i], i);
@@ -65,7 +83,12 @@ public class World
         {
             var tankBase = _tankBases.GetSpawn(i);
             if (tankBase != null)
-                _tankList.AddTank(i, tankBase);
+            {
+                uint mixed = (uint)_simulationSeed ^ (uint)(i + 1) * 0x9e3779b9u;
+                int tankSeed = unchecked((int)mixed);
+                _tankList.AddTank(i, tankBase,
+                    _deterministicSimulation ? tankSeed : 0);
+            }
         }
     }
 
@@ -78,7 +101,16 @@ public class World
         _advanceCount++;
         _elapsed += Tweaks.World.AdvanceStep;
 
-        _collisionSolver.Update(_tankList, _machines);
+        ProfileSection(ref Profile.Collision, () => _collisionSolver.Update(_tankList, _machines));
+        ProfileSection(ref Profile.Cooldown, () => _terrain.CoolDown(Tweaks.World.ThermalArtificialCoolingPerFrame));
+        Profile.CooldownPrep += _terrain.LastCoolDownProfile.Prep;
+        Profile.CooldownSim += _terrain.LastCoolDownProfile.Simulate;
+        Profile.CooldownMark += _terrain.LastCoolDownProfile.MarkDirty;
+        Profile.CooldownWriteBack += _terrain.LastCoolDownProfile.WriteBack;
+        Profile.CooldownActiveTiles += _terrain.LastCoolDownProfile.ActiveTiles;
+        Profile.CooldownRegionCount += _terrain.LastCoolDownProfile.RegionCount;
+        if (_terrain.LastCoolDownProfile.UsedSparse) Profile.CooldownSparseFrames++;
+        if (_terrain.LastCoolDownProfile.UsedParallel) Profile.CooldownParallelFrames++;
 
         ProfileSection(ref Profile.Regrow, RegrowPass);
         ProfileSection(ref Profile.Projectiles, () => _projectiles.Advance(_collisionSolver));
@@ -86,7 +118,7 @@ public class World
         ProfileSection(ref Profile.Harvesters, () => _machines.Advance(_terrain, Tweaks.World.AdvanceStep));
         ProfileSection(ref Profile.Sprites, () => _sprites.Advance(Tweaks.World.AdvanceStep));
         ProfileSection(ref Profile.Bases, () => _tankBases.Advance());
-        ProfileSection(ref Profile.Links, () => _linkMap.Advance(_terrain));
+        ProfileSection(ref Profile.Links, () => _linkMap.Advance(_terrain, Tweaks.World.AdvanceStep));
 
         Profile.Total += frameWatch.Elapsed;
         Profile.FrameCount++;
@@ -97,6 +129,8 @@ public class World
 
     public void SetGameOver() => _gameOver = true;
 
+    public TerrainRenderSnapshot CaptureTerrainRenderSnapshot() => new(_terrain);
+
     private static void ProfileSection(ref TimeSpan accumulator, Action action)
     {
         var w = Stopwatch.StartNew();
@@ -106,11 +140,76 @@ public class World
 
     private void RegrowPass()
     {
-        if (_regrowTimer.Elapsed < _regrowAccumulator + Tweaks.World.DirtRecoverInterval)
+        if (_deterministicSimulation)
+        {
+            _regrowAccumulator += Tweaks.World.AdvanceStep;
+            if (_regrowAccumulator < Tweaks.World.DirtRecoverInterval)
+                return;
+            _regrowAccumulator -= Tweaks.World.DirtRecoverInterval;
+        }
+        else
+        {
+            if (_regrowTimer.Elapsed < _regrowAccumulator + Tweaks.World.DirtRecoverInterval)
+                return;
+            _regrowAccumulator += Tweaks.World.DirtRecoverInterval;
+        }
+
+        if (!_enableTerrainRegrowth)
             return;
-        _regrowAccumulator += Tweaks.World.DirtRecoverInterval;
 
         int w = _terrain.Width, h = _terrain.Height;
+
+        if (_deterministicSimulation)
+        {
+            var writes = new List<(int offset, TerrainPixel value)>(1024);
+            for (int y = 1; y < h - 1; y++)
+            {
+                for (int x = 1; x < w - 1; x++)
+                {
+                    var pos = new Position(x, y);
+                    var pix = _terrain.GetPixelRaw(pos);
+
+                    if (pix == TerrainPixel.Blank)
+                    {
+                        int neighbors = _terrain.CountDirtNeighbors(pos);
+                        if (TryQueueDirtRegrow(x, y, neighbors, Tweaks.World.DirtRegrowBlankModifier, 0))
+                            writes.Add((x + y * w, TerrainPixel.DirtGrow));
+                    }
+                    else if (Pixel.IsScorched(pix))
+                    {
+                        int neighbors = _terrain.CountDirtNeighbors(pos);
+                        if (TryQueueDirtRegrow(x, y, neighbors, Tweaks.World.DirtRegrowScorchedModifier, 1))
+                        {
+                            writes.Add((x + y * w, TerrainPixel.DirtGrow));
+                        }
+                        else if (pix == TerrainPixel.DecalHigh && Roll1000(x, y, 2) < Tweaks.World.DecalDecaySpeed)
+                        {
+                            writes.Add((x + y * w, TerrainPixel.DecalLow));
+                        }
+                        else if (pix == TerrainPixel.DecalLow && Roll1000(x, y, 3) < Tweaks.World.DecalDecaySpeed)
+                        {
+                            writes.Add((x + y * w, TerrainPixel.Blank));
+                        }
+                    }
+                    else if (pix == TerrainPixel.DirtGrow)
+                    {
+                        if (Roll1000(x, y, 4) < Tweaks.World.DirtRecoverSpeed)
+                        {
+                            var newPix = (Roll1000(x, y, 5) & 1) == 0 ? TerrainPixel.DirtHigh : TerrainPixel.DirtLow;
+                            writes.Add((x + y * w, newPix));
+                        }
+                    }
+                }
+            }
+
+            foreach (var (offset, value) in writes)
+            {
+                _terrain.SetPixelRaw(offset, value);
+                _terrain.CommitPixel(new Position(offset % w, offset / w));
+            }
+            return;
+        }
+
         var stagedWrites = new ThreadLocal<List<(int offset, TerrainPixel value)>>(
             () => new List<(int, TerrainPixel)>(), trackAllValues: true);
         var rng = new ThreadLocal<Random>(() => new Random(), trackAllValues: true);
@@ -125,15 +224,26 @@ public class World
                 var pos = new Position(x, y);
                 var pix = _terrain.GetPixelRaw(pos);
 
-                if (pix == TerrainPixel.Blank || Pixel.IsScorched(pix))
+                if (pix == TerrainPixel.Blank)
                 {
                     int neighbors = _terrain.CountDirtNeighbors(pos);
-                    int modifier = pix == TerrainPixel.Blank
-                        ? Tweaks.World.DirtRegrowBlankModifier
-                        : Tweaks.World.DirtRegrowScorchedModifier;
-                    if (neighbors > 2 && random.Next(1000) < Tweaks.World.DirtRegrowSpeed * neighbors * modifier)
+                    if (TryQueueDirtRegrow(random, neighbors, Tweaks.World.DirtRegrowBlankModifier))
+                        writes.Add((x + y * w, TerrainPixel.DirtGrow));
+                }
+                else if (Pixel.IsScorched(pix))
+                {
+                    int neighbors = _terrain.CountDirtNeighbors(pos);
+                    if (TryQueueDirtRegrow(random, neighbors, Tweaks.World.DirtRegrowScorchedModifier))
                     {
                         writes.Add((x + y * w, TerrainPixel.DirtGrow));
+                    }
+                    else if (pix == TerrainPixel.DecalHigh && random.Next(1000) < Tweaks.World.DecalDecaySpeed)
+                    {
+                        writes.Add((x + y * w, TerrainPixel.DecalLow));
+                    }
+                    else if (pix == TerrainPixel.DecalLow && random.Next(1000) < Tweaks.World.DecalDecaySpeed)
+                    {
+                        writes.Add((x + y * w, TerrainPixel.Blank));
                     }
                 }
                 else if (pix == TerrainPixel.DirtGrow)
@@ -159,10 +269,44 @@ public class World
         stagedWrites.Dispose();
         rng.Dispose();
     }
+
+    private static bool TryQueueDirtRegrow(Random random, int neighbors, int modifier)
+    {
+        if (neighbors <= 2) return false;
+        int chance = Tweaks.World.DirtRegrowSpeed * neighbors * modifier;
+        return random.Next(1000) < chance;
+    }
+
+    private bool TryQueueDirtRegrow(int x, int y, int neighbors, int modifier, uint salt)
+    {
+        if (neighbors <= 2) return false;
+        int chance = Tweaks.World.DirtRegrowSpeed * neighbors * modifier;
+        return Roll1000(x, y, salt) < chance;
+    }
+
+    private int Roll1000(int x, int y, uint salt)
+    {
+        uint mixed = (uint)_simulationSeed
+            ^ (uint)_advanceCount * 0x9e3779b9u
+            ^ (uint)(x * 73856093)
+            ^ (uint)(y * 19349663)
+            ^ (salt * 83492791u);
+        return (int)(FastRandom.Hash32(mixed) % 1000u);
+    }
 }
 
 public class SimulationProfile
 {
+    public TimeSpan Collision;
+    public TimeSpan Cooldown;
+    public TimeSpan CooldownPrep;
+    public TimeSpan CooldownSim;
+    public TimeSpan CooldownMark;
+    public TimeSpan CooldownWriteBack;
+    public long CooldownActiveTiles;
+    public long CooldownRegionCount;
+    public int CooldownSparseFrames;
+    public int CooldownParallelFrames;
     public TimeSpan Regrow;
     public TimeSpan Projectiles;
     public TimeSpan Tanks;
@@ -176,18 +320,28 @@ public class SimulationProfile
     public void Report()
     {
         if (FrameCount == 0) return;
-        Console.WriteLine($"[Profile] regrow={Avg(Regrow):F3} bases={Avg(Bases):F3} " +
-            $"proj={Avg(Projectiles):F3} tanks={Avg(Tanks):F3} harv={Avg(Harvesters):F3} " +
+        Console.WriteLine($"[Profile] coll={Avg(Collision):F3} cool={Avg(Cooldown):F3} regrow={Avg(Regrow):F3} " +
+            $"bases={Avg(Bases):F3} proj={Avg(Projectiles):F3} tanks={Avg(Tanks):F3} harv={Avg(Harvesters):F3} " +
             $"spr={Avg(Sprites):F3} links={Avg(Links):F3} " +
             $"| total={Avg(Total):F3} ms (avg over {FrameCount} frames)");
+        Console.WriteLine($"[Profile+] coolPrep={Avg(CooldownPrep):F3} coolSim={Avg(CooldownSim):F3} " +
+            $"coolMark={Avg(CooldownMark):F3} coolCopy={Avg(CooldownWriteBack):F3} ms");
+        Console.WriteLine($"[Profile++] activeTiles={AvgCount(CooldownActiveTiles):F1} regions={AvgCount(CooldownRegionCount):F1} " +
+            $"sparseFrames={CooldownSparseFrames}/{FrameCount} parallelFrames={CooldownParallelFrames}/{FrameCount}");
         Reset();
     }
 
     private double Avg(TimeSpan ts) => ts.TotalMilliseconds / FrameCount;
+    private double AvgCount(long count) => FrameCount == 0 ? 0 : (double)count / FrameCount;
 
     public void Reset()
     {
-        Regrow = Projectiles = Tanks = Harvesters = Sprites = Bases = Links = Total = TimeSpan.Zero;
+        Collision = Cooldown = CooldownPrep = CooldownSim = CooldownMark = CooldownWriteBack
+            = Regrow = Projectiles = Tanks = Harvesters = Sprites = Bases = Links = Total = TimeSpan.Zero;
+        CooldownActiveTiles = 0;
+        CooldownRegionCount = 0;
+        CooldownSparseFrames = 0;
+        CooldownParallelFrames = 0;
         FrameCount = 0;
     }
 }

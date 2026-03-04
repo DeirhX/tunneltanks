@@ -1,10 +1,10 @@
 namespace Tunnerer.Core.Resources;
 
-public readonly record struct Energy(int Value)
+public readonly record struct Heat(int Value)
 {
-    public static implicit operator int(Energy e) => e.Value;
-    public static Energy operator +(Energy a, Energy b) => new(a.Value + b.Value);
-    public static Energy operator -(Energy a, Energy b) => new(a.Value - b.Value);
+    public static implicit operator int(Heat h) => h.Value;
+    public static Heat operator +(Heat a, Heat b) => new(a.Value + b.Value);
+    public static Heat operator -(Heat a, Heat b) => new(a.Value - b.Value);
 }
 
 public readonly record struct Health(int Value)
@@ -16,16 +16,16 @@ public readonly record struct Health(int Value)
 
 public struct ReactorState
 {
-    public Energy Energy;
+    public Heat Heat;
     public Health Health;
 
-    public ReactorState(Energy energy, Health health) { Energy = energy; Health = health; }
-    public ReactorState(int energy, int health) { Energy = new(energy); Health = new(health); }
+    public ReactorState(Heat heat, Health health) { Heat = heat; Health = health; }
+    public ReactorState(int heat, int health) { Heat = new(heat); Health = new(health); }
 
-    public static ReactorState operator +(ReactorState a, ReactorState b) => new(a.Energy + b.Energy, a.Health + b.Health);
-    public static ReactorState operator -(ReactorState a, ReactorState b) => new(a.Energy - b.Energy, a.Health - b.Health);
-    public bool IsNegative => Energy < 0 || Health < 0;
-    public void TrimNegative() { Energy = new(Math.Max(0, Energy)); Health = new(Math.Max(0, Health)); }
+    public static ReactorState operator +(ReactorState a, ReactorState b) => new(a.Heat + b.Heat, a.Health + b.Health);
+    public static ReactorState operator -(ReactorState a, ReactorState b) => new(a.Heat - b.Heat, a.Health - b.Health);
+    public bool IsNegative => Heat < 0 || Health < 0;
+    public void TrimNegative() { Heat = new(Math.Max(0, Heat)); Health = new(Math.Max(0, Health)); }
 }
 
 public struct MaterialAmount
@@ -52,9 +52,9 @@ public class Reactor
         Capacity = capacity;
     }
 
-    public Energy Energy => Current.Energy;
+    public Heat Heat => Current.Heat;
     public Health Health => Current.Health;
-    public Energy EnergyCapacity => Capacity.Energy;
+    public Heat HeatCapacity => Capacity.Heat;
     public Health HealthCapacity => Capacity.Health;
 
     public bool CanPay(ReactorState cost) => !(Current - cost).IsNegative;

@@ -12,13 +12,11 @@ public class LinkPoint
     public bool IsPowered { get; set; }
     public int Id { get; }
 
-    private static int _nextId;
-
-    public LinkPoint(Position position, LinkPointType type)
+    public LinkPoint(Position position, LinkPointType type, int id)
     {
         Position = position;
         Type = type;
-        Id = Interlocked.Increment(ref _nextId);
+        Id = id;
         IsPowered = type == LinkPointType.Base;
     }
 }

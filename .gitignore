@@ -1,5 +1,6 @@
 # Build output
 build/
+artifacts/
 
 # Visual Studio
 .vs/
@@ -29,6 +30,7 @@ build/
 # .NET
 **/obj/
 **/bin/
+**/out/
 *.nupkg
 *.snupkg
 project.assets.json

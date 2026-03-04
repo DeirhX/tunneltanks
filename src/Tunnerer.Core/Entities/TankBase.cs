@@ -11,8 +11,8 @@ public class TankBase
     public int Color { get; }
     public BoundingBox BoundingBox { get; } = new(Tweaks.Base.BaseSize / 2, Tweaks.Base.BaseSize / 2);
     public Reactor Reactor { get; } = new(
-        initial: new ReactorState(Tweaks.Base.InitialEnergy, Tweaks.Base.InitialHealth),
-        capacity: new ReactorState(Tweaks.Base.EnergyCapacity, Tweaks.Base.HealthCapacity));
+        initial: new ReactorState(Tweaks.Base.InitialHeat, Tweaks.Base.InitialHealth),
+        capacity: new ReactorState(Tweaks.Base.HeatCapacity, Tweaks.Base.HealthCapacity));
     public MaterialContainer Materials { get; } = new(
         initial: new MaterialAmount(0, 0),
         capacity: new MaterialAmount(Tweaks.Base.MaterialDirtCapacity, Tweaks.Base.MaterialMineralsCapacity));
@@ -30,23 +30,23 @@ public class TankBase
 
     public void Advance()
     {
-        Reactor.Add(new ReactorState(Tweaks.Base.EnergyRegen, Tweaks.Base.HealthRegen));
+        Reactor.Exhaust(new ReactorState(Tweaks.Base.HeatCooldown, 0));
+        Reactor.Add(new ReactorState(0, Tweaks.Base.HealthRegen));
     }
 
     public void RechargeTank(Reactor tankReactor, int tankColor)
     {
         if (tankColor == Color)
-            GiveReactorResources(tankReactor, new ReactorState(Tweaks.Base.HomeRechargeEnergy, Tweaks.Base.HomeRechargeHealth));
+            GiveReactorResources(tankReactor, heatCooldown: Tweaks.Base.HomeCooldownHeat, healthRegen: Tweaks.Base.HomeRechargeHealth);
         else
-            GiveReactorResources(tankReactor, new ReactorState(Tweaks.Base.ForeignRechargeEnergy, Tweaks.Base.ForeignRechargeHealth));
+            GiveReactorResources(tankReactor, heatCooldown: Tweaks.Base.ForeignCooldownHeat, healthRegen: Tweaks.Base.ForeignRechargeHealth);
     }
 
-    private void GiveReactorResources(Reactor target, ReactorState rate)
+    private void GiveReactorResources(Reactor target, int heatCooldown, int healthRegen)
     {
-        var absorber = new Reactor(initial: default, capacity: rate);
-        absorber.Absorb(Reactor);
-        target.Absorb(absorber);
-        Reactor.Absorb(absorber);
+        // "Recharge" for heat means cooling: reduce target heat while healing health.
+        target.Exhaust(new ReactorState(heatCooldown, 0));
+        target.Add(new ReactorState(0, healthRegen));
     }
 
     public void AbsorbResources(MaterialContainer other)
