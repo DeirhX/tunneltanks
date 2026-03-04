@@ -60,7 +60,7 @@ public static class DesktopScreenTweaks
     public const float PostTankHeatGlowR = 0.78f;
     public const float PostTankHeatGlowG = 0.24f;
     public const float PostTankHeatGlowB = 0.04f;
-    public const float PostTankHeatGlowMinHeat = 1.5f;
+    public const float PostTankHeatGlowMinHeat = 0.5f;
     public const float PostTankHeatGlowBaseRadius = 2.5f;
     public const float PostTankHeatGlowScaleRadius = 2.5f;
     public const float PostTerrainHeatGlowR = 1.0f;

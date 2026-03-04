@@ -93,7 +93,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
 
         float2 swirlDir = normalize(float2(-d.y, d.x) + float2(1e-4, -1e-4));
         float shimmer = sin(Time * 14.0 + (uv.x * 210.0 + uv.y * 170.0) + i * 1.7);
-        float hazeStrength = g.w * falloff * falloff * 0.0100;
+        float hazeStrength = g.w * falloff * falloff * 0.0180;
         hazeOffset += swirlDir * shimmer * hazeStrength;
     }
 

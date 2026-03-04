@@ -190,7 +190,7 @@ public static class Tweaks
 
         public const float HeatMax = 100f;
         public const float HeatDigPerPixel = 0.008f;
-        public const float HeatShootPerShot = 0.50f;
+        public const float HeatShootPerShot = 0.25f;
         public const float HeatTerrainAbsorb = 0.004f;
         public const float HeatCoolPerFrame = 0.12f;
         public const float HeatBaseCoolBonus = 0.20f;
@@ -240,10 +240,10 @@ public static class Tweaks
         public static readonly ExplosionParams Normal = new(ShrapnelCount: 14, Speed: 0.56f, Frames: 13);
         public static readonly ExplosionParams Death = new(ShrapnelCount: 100, Speed: 0.25f, Frames: 72);
 
-        public const int BulletHeatAmount = 5;
+        public const int BulletHeatAmount = 3;
         public const int BulletHeatRadius = 7;
-        public const int ShrapnelHitHeat = 3;
-        public const int ShrapnelDigHeatAmount = 4;
+        public const int ShrapnelHitHeat = 2;
+        public const int ShrapnelDigHeatAmount = 2;
         public const int ShrapnelDigHeatRadius = 5;
     }
 

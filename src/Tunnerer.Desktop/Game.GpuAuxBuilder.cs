@@ -35,7 +35,7 @@ public partial class Game
             }
             if (visibleT <= 0.0f) continue;
 
-            float intensity = visibleT * (0.35f + 2.8f * visibleT * visibleT);
+            float intensity = MathF.Sqrt(visibleT) * (0.5f + 1.5f * visibleT);
             float radiusFactor = 0.45f + 0.55f * MathF.Sqrt(visibleT);
             float glowRadiusPx = pixelScale * (DesktopScreenTweaks.PostTankHeatGlowBaseRadius + DesktopScreenTweaks.PostTankHeatGlowScaleRadius * radiusFactor);
             float cx = (tank.Position.X + 0.5f) * pixelScale - camPixelX;

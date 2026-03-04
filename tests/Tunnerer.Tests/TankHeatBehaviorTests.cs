@@ -40,7 +40,7 @@ public class TankHeatBehaviorTests
             AimDirection = new DirectionF(1f, 0f),
         });
 
-        Assert.InRange(tank.Heat, 0.15f, 0.25f);
+        Assert.InRange(tank.Heat, 0.05f, 0.15f);
     }
 
     [Fact]
