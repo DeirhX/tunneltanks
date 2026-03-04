@@ -143,7 +143,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     {
         float2 screenPx = uv * ViewSize;
         float2 worldCell = (CameraPixels + screenPx) / PixelScale;
-        float2 auxUv = worldCell / WorldSize + float2(-0.15, 0.15) / WorldSize;
+        float2 auxUv = worldCell / WorldSize;
         float2 mTexel = float2(1.0 / WorldSize.x, 1.0 / WorldSize.y);
         float4 a0 = auxTex.Sample(s0, auxUv);
         float4 ax1 = auxTex.Sample(s0, auxUv + float2(mTexel.x, 0.0));
@@ -225,17 +225,42 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
             color = lerp(color, color * lit + spec, lightMix);
         }
 
-        float heat = a0.r * 0.50 + (ax1.r + ax2.r + ay1.r + ay2.r) * 0.125;
-        float heatNorm = saturate((heat - TerrainHeatGlowColorAndThreshold.a) / max(1e-4, 1.0 - TerrainHeatGlowColorAndThreshold.a));
-        if (heatNorm > 0.0)
+        // Wider spatial blur: center 0.30, cardinal 0.10, diagonal 0.05 for smooth falloff
+        float heat = a0.r * 0.30
+            + (ax1.r + ax2.r + ay1.r + ay2.r) * 0.10
+            + (ad1.r + ad2.r + ad3.r + ad4.r) * 0.05;
+
+        // Soft fade-in starting at ~30 degrees (byte ~7.5, norm ~0.03).
+        // smoothstep gives a gentle ramp instead of a hard threshold cutoff.
+        float fadeIn = smoothstep(0.02, 0.06, heat);
+        float heatNorm = heat * fadeIn;
+        if (heatNorm > 0.001)
         {
-            // Orange at warm levels, red at highest heat; ambient is hidden via threshold.
-            float tail = pow(heatNorm, 1.20);
-            float peakBoost = 1.0 + 2.6 * pow(heatNorm, 4.0);
-            float glow = tail * peakBoost;
-            color.r += TerrainHeatGlowColorAndThreshold.r * glow;
-            color.g += TerrainHeatGlowColorAndThreshold.g * glow * lerp(1.20, 0.55, heatNorm);
-            color.b += TerrainHeatGlowColorAndThreshold.b * glow * lerp(1.00, 0.35, heatNorm);
+            // sqrt remapping for perceptual spread across the 0-1020 range.
+            // Purely additive -- no opacity, just light on top of the scene.
+            float t = sqrt(heatNorm);
+            float3 glow;
+            if (t < 0.35)
+            {
+                float s = t / 0.35;
+                glow = float3(s * 0.55, 0.0, 0.0);
+            }
+            else if (t < 0.55)
+            {
+                float s = (t - 0.35) / 0.20;
+                glow = float3(0.55 + 0.25 * s, 0.18 * s, 0.0);
+            }
+            else if (t < 0.80)
+            {
+                float s = (t - 0.55) / 0.25;
+                glow = float3(0.80 + 0.20 * s, 0.18 + 0.52 * s, 0.06 * s);
+            }
+            else
+            {
+                float s = (t - 0.80) / 0.20;
+                glow = float3(1.00, 0.70 + 0.30 * s, 0.06 + 0.74 * s);
+            }
+            color += glow;
         }
 
         float phase = frac(sin(dot(floor(worldCell), float2(12.9898, 78.233))) * 43758.5453) * 6.2831853;

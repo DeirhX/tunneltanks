@@ -89,6 +89,7 @@ public partial class Game
         int w = terrain.Width;
         int rowCount = maxY - minY + 1;
 
+        const float scale = Core.Terrain.TerrainGrid.HeatByteScale;
         if (rowCount >= 32)
         {
             Parallel.For(minY, maxY + 1, y =>
@@ -98,7 +99,7 @@ public partial class Game
                 {
                     int idx = row + x;
                     float heat = terrain.GetHeatTemperature(idx);
-                    target[idx * 4] = (byte)Math.Clamp((int)MathF.Round(heat), 0, 255);
+                    target[idx * 4] = (byte)Math.Clamp((int)MathF.Round(heat / scale), 0, 255);
                 }
             });
         }
@@ -111,7 +112,7 @@ public partial class Game
                 {
                     int idx = row + x;
                     float heat = terrain.GetHeatTemperature(idx);
-                    target[idx * 4] = (byte)Math.Clamp((int)MathF.Round(heat), 0, 255);
+                    target[idx * 4] = (byte)Math.Clamp((int)MathF.Round(heat / scale), 0, 255);
                 }
             }
         }
@@ -141,7 +142,7 @@ public partial class Game
         }
 
         float heat = terrain.GetHeatTemperature(idx);
-        target[writeIndex] = (byte)Math.Clamp((int)MathF.Round(heat), 0, 255);
+        target[writeIndex] = (byte)Math.Clamp((int)MathF.Round(heat / Core.Terrain.TerrainGrid.HeatByteScale), 0, 255);
         target[writeIndex + 1] = sdfValue;
         target[writeIndex + 2] = energy;
         target[writeIndex + 3] = scorched;

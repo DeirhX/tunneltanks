@@ -39,7 +39,7 @@ public static class DesktopScreenTweaks
     public const float PostVignetteOuterRadius = 0.95f;
     public const float PostTerrainEdgeLightStrength = 0.10f;
     public const float PostTerrainEdgeLightBias = 0.05f;
-    public const float PostTerrainHeatThreshold = 0.10f;
+    public const float PostTerrainHeatThreshold = 0.025f;
     public const float PostTerrainMaskEdgeStrength = 0.18f;
     public const float PostTerrainMaskCaveDarken = 0.12f;
     public const float PostTerrainMaskSolidLift = 0.04f;

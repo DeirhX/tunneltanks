@@ -61,9 +61,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     float2 texUv = worldCell / WorldSize;
     float3 bilinearColor = sourceTex.Sample(s0, texUv).rgb;
 
-    // Nudge SDF sampling toward bottom-left so the visible outline shifts
-    // toward top-right, covering raw pixel edges at cell boundaries.
-    float2 sdfUv = texUv + float2(-0.15, 0.15) / WorldSize;
+    float2 sdfUv = texUv;
     float sdf = auxTex.Sample(s0, sdfUv).g;
 
     // Bias SDF slightly toward cave — expands the curve outward into solid
@@ -91,6 +89,12 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
             smoothstep(0.5 - edgeSoftness, 0.5 + edgeSoftness, s4);
         alpha = (alpha + aSub * 0.25) * 0.5;
     }
+
+    // Thin-feature protection: the 5x5 blur kernel dilutes SDF for 1-2px walls,
+    // making them invisible. Use the source pixel's actual solidity as a floor.
+    float sourceLum = dot(nearestColor, float3(0.299, 0.587, 0.114));
+    float sourceIsSolid = smoothstep(0.005, 0.02, sourceLum);
+    alpha = max(alpha, sourceIsSolid * 0.65);
 
     // Blend bilinear (smooth at boundaries) with nearest (sharp deep inside)
     float boundaryProximity = 1.0 - abs(sdf * 2.0 - 1.0);

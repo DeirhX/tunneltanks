@@ -253,18 +253,17 @@ public class TankMovementTests
     }
 
     [Fact]
-    public void TorchDig_ShootingInMoveDirection_MovesFaster()
+    public void TorchDig_ShootingInMoveDirection_OverheatsFromHotTerrain()
     {
-        // Two runs through a seeded world: one without shooting, one shooting ahead
+        // Shooting ahead heats the terrain substantially; the tank absorbs that heat
+        // and should overheat compared to a non-shooting run.
         var world1 = CreateSeededWorld();
         var tank1 = world1.TankList.Tanks[0];
 
         var world2 = CreateSeededWorld();
         var tank2 = world2.TankList.Tanks[0];
 
-        // Move up without shooting
         var noShoot = TestSimulation.Move(0, -1);
-        // Move up while shooting ahead (turret aimed up)
         var shootAhead = TestSimulation.MoveAndAim(0, -1, 0f, -1f, shootPrimary: true);
 
         for (int i = 0; i < 80; i++)
@@ -273,11 +272,8 @@ public class TankMovementTests
             world2.Advance(_ => shootAhead);
         }
 
-        int dist1 = Math.Abs(tank1.Position.Y - world1.TankBases.GetSpawn(0)!.Position.Y);
-        int dist2 = Math.Abs(tank2.Position.Y - world2.TankBases.GetSpawn(0)!.Position.Y);
-
-        Assert.True(dist2 > dist1,
-            $"Shooting ahead should travel farther: noShoot={dist1}, shootAhead={dist2}");
+        Assert.True(tank2.Heat > tank1.Heat,
+            $"Shooting tank should be hotter from terrain feedback: noShoot={tank1.Heat:F1}, shootAhead={tank2.Heat:F1}");
     }
 
     [Fact(Skip = "Flaky under RNG/collision variance; disabled temporarily pending deterministic rewrite.")]

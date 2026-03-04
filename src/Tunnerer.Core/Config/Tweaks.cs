@@ -195,9 +195,9 @@ public static class Tweaks
         public const float HeatCoolPerFrame = 0.12f;
         public const float HeatBaseCoolBonus = 0.20f;
         public const float HeatColdCoolingBoost = 0.60f;
-        public const int TorchTerrainHeatAmount = 14;
-        public const int TorchRockHeatAmount = 26;
-        public const int TorchRockHeatRadius = 2;
+        public const int TorchTerrainHeatAmount = 8;
+        public const int TorchRockHeatAmount = 14;
+        public const int TorchRockHeatRadius = 3;
         public const float HeatAmbientOutsideBase = 0f;
         public const float TankHeatCapacity = 20f;
         public const float TerrainHeatCapacity = 80f;
@@ -240,11 +240,11 @@ public static class Tweaks
         public static readonly ExplosionParams Normal = new(ShrapnelCount: 14, Speed: 0.56f, Frames: 13);
         public static readonly ExplosionParams Death = new(ShrapnelCount: 100, Speed: 0.25f, Frames: 72);
 
-        public const int BulletHeatAmount = 4;
-        public const int BulletHeatRadius = 6;
-        public const int ShrapnelHitHeat = 2;
-        public const int ShrapnelDigHeatAmount = 2;
-        public const int ShrapnelDigHeatRadius = 4;
+        public const int BulletHeatAmount = 5;
+        public const int BulletHeatRadius = 7;
+        public const int ShrapnelHitHeat = 3;
+        public const int ShrapnelDigHeatAmount = 4;
+        public const int ShrapnelDigHeatRadius = 5;
     }
 
     public static class Colors

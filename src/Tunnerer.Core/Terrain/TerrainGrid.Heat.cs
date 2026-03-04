@@ -329,8 +329,10 @@ public partial class TerrainGrid
         return HeatToByte(oldTemperature) != HeatToByte(newTemperature);
     }
 
+    public const float HeatByteScale = 4.0f;
+
     private static byte HeatToByte(float temperature)
     {
-        return (byte)Math.Clamp((int)MathF.Round(temperature), 0, 255);
+        return (byte)Math.Clamp((int)MathF.Round(temperature / HeatByteScale), 0, 255);
     }
 }
