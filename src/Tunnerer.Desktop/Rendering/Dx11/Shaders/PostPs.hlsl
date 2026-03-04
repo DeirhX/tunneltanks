@@ -76,6 +76,29 @@ float fbmNoise(float2 p, int octaves)
     return val;
 }
 
+float3 HeatRamp(float t)
+{
+    t = saturate(t);
+    // Non-black start so low temperatures remain visibly warm.
+    float3 c0 = float3(0.14, 0.01, 0.00);
+    float3 c1 = float3(0.75, 0.02, 0.00);
+    float3 c2 = float3(0.95, 0.26, 0.02);
+    float3 c3 = float3(1.00, 0.78, 0.10);
+    float3 c4 = float3(1.00, 1.00, 0.80);
+
+    // Smoothly blend through anchor colors to avoid visible band edges.
+    float w1 = smoothstep(0.16, 0.42, t);
+    float w2 = smoothstep(0.38, 0.66, t);
+    float w3 = smoothstep(0.68, 0.92, t);
+    float w4 = smoothstep(0.90, 1.00, t);
+
+    float3 col = lerp(c0, c1, w1);
+    col = lerp(col, c2, w2);
+    col = lerp(col, c3, w3);
+    col = lerp(col, c4, w4);
+    return col;
+}
+
 float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
 {
     // Tank heat haze: distort scene lookup around hot tanks before post-lighting.
@@ -225,43 +248,29 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
             color = lerp(color, color * lit + spec, lightMix);
         }
 
-        // Wider spatial blur: center 0.30, cardinal 0.10, diagonal 0.05
-        float heat = a0.r * 0.30
+        // Local + wider blur so boosted low-temperature glow does not form hard contours.
+        float heatLocal = a0.r * 0.30
             + (ax1.r + ax2.r + ay1.r + ay2.r) * 0.10
             + (ad1.r + ad2.r + ad3.r + ad4.r) * 0.05;
-        // Additional broad neighborhood blend to avoid a sharp halo edge over
-        // unaffected terrain near hot pixels.
-        float heatWide = (ax1.r + ax2.r + ay1.r + ay2.r + ad1.r + ad2.r + ad3.r + ad4.r) * (1.0 / 8.0);
-        heat = lerp(heat, heatWide, 0.35);
+        float2 mTexel2 = mTexel * 2.0;
+        float heatWide =
+            auxTex.Sample(s0, auxUv + float2(mTexel2.x, 0.0)).r * 0.25 +
+            auxTex.Sample(s0, auxUv - float2(mTexel2.x, 0.0)).r * 0.25 +
+            auxTex.Sample(s0, auxUv + float2(0.0, mTexel2.y)).r * 0.25 +
+            auxTex.Sample(s0, auxUv - float2(0.0, mTexel2.y)).r * 0.25;
+        float heat = lerp(heatLocal, heatWide, 0.28);
 
-        // Soft fade-in starting at ~30 degrees (byte ~7.5, norm ~0.03).
-        // smoothstep gives a gentle ramp instead of a hard threshold cutoff.
-        float fadeIn = smoothstep(0.015, 0.08, heat);
-        float heatNorm = pow(saturate(heat * fadeIn), 0.88);
-        if (heatNorm > 0.001)
-        {
-            // sqrt remapping for perceptual spread across the 0-1020 range.
-            // Purely additive -- no opacity, just light on top of the scene.
-            float t = sqrt(heatNorm);
-            // Build red, orange, and white targets then blend between them with
-            // overlap windows to avoid hard contour rings at threshold boundaries.
-            float sRed = saturate(t / 0.32);
-            float3 redGlow = float3(0.75 * sRed, 0.0, 0.0);
+        // Anti-aliased fade-in: widen transition where heat gradient is steep.
+        float edgeSoft = max(0.006, fwidth(heat) * 3.0);
+        float fadeIn = smoothstep(0.003 - edgeSoft, 0.07 + edgeSoft, heat);
+        float heatNorm = heat * fadeIn;
 
-            float sOrange = saturate((t - 0.32) / 0.18);
-            float3 orangeGlow = float3(0.75 + 0.25 * sOrange, 0.20 + 0.45 * sOrange, 0.06 + 0.10 * sOrange);
-
-            float sWhite = saturate((t - 0.50) / 0.50);
-            float3 whiteGlow = lerp(float3(1.00, 0.80, 0.25), float3(1.00, 1.00, 1.00), sWhite);
-
-            float redToOrange = smoothstep(0.26, 0.38, t);
-            float orangeToWhite = smoothstep(0.46, 0.56, t);
-            float3 glow = lerp(redGlow, orangeGlow, redToOrange);
-            glow = lerp(glow, whiteGlow, orangeToWhite);
-            // Boost low-mid heat visibility so ~100C reads as clearly hot.
-            float lowHeatBoost = lerp(1.45, 1.0, smoothstep(0.30, 0.65, t));
-            color += glow * lowHeatBoost;
-        }
+        // Keep strong saturation/intensity while smoothly masking low-end onset.
+        float t = pow(saturate(heatNorm), 0.58);
+        float3 glow = HeatRamp(t);
+        float heatGain = lerp(2.05, 2.45, t);
+        float visible = smoothstep(0.0, 0.025, heatNorm);
+        color += glow * heatGain * visible;
 
         float phase = frac(sin(dot(floor(worldCell), float2(12.9898, 78.233))) * 43758.5453) * 6.2831853;
         float pulse = MaterialEmissivePulse.y + MaterialEmissivePulse.z * (0.5 + 0.5 * sin(Time * MaterialEmissivePulse.x + phase));

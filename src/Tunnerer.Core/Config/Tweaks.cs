@@ -22,7 +22,7 @@ public static class Tweaks
 
     public static class Screen
     {
-        public static readonly Size WindowSize = new(1920, 1200);
+        public static readonly Size WindowSize = new(1280, 720);
         public static readonly Size RenderSurfaceSize = new(320, 200);
         public const float DrawStaticFuelThreshold = 0.2f;
         public const int PixelScale = 6;
