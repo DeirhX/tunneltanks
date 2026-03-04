@@ -225,15 +225,19 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
             color = lerp(color, color * lit + spec, lightMix);
         }
 
-        // Wider spatial blur: center 0.30, cardinal 0.10, diagonal 0.05 for smooth falloff
+        // Wider spatial blur: center 0.30, cardinal 0.10, diagonal 0.05
         float heat = a0.r * 0.30
             + (ax1.r + ax2.r + ay1.r + ay2.r) * 0.10
             + (ad1.r + ad2.r + ad3.r + ad4.r) * 0.05;
+        // Additional broad neighborhood blend to avoid a sharp halo edge over
+        // unaffected terrain near hot pixels.
+        float heatWide = (ax1.r + ax2.r + ay1.r + ay2.r + ad1.r + ad2.r + ad3.r + ad4.r) * (1.0 / 8.0);
+        heat = lerp(heat, heatWide, 0.35);
 
         // Soft fade-in starting at ~30 degrees (byte ~7.5, norm ~0.03).
         // smoothstep gives a gentle ramp instead of a hard threshold cutoff.
-        float fadeIn = smoothstep(0.02, 0.06, heat);
-        float heatNorm = heat * fadeIn;
+        float fadeIn = smoothstep(0.015, 0.08, heat);
+        float heatNorm = pow(saturate(heat * fadeIn), 0.88);
         if (heatNorm > 0.001)
         {
             // sqrt remapping for perceptual spread across the 0-1020 range.
