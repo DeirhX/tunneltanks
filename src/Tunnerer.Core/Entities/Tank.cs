@@ -199,7 +199,7 @@ public class Tank
                     TerrainPixel.EnergyHigh => Tweaks.Tank.CoolingPickupHigh,
                     _ => Tweaks.Tank.CoolingPickupLow,
                 };
-                Heat -= cooling;
+                Heat = TankHeatModel.ClampHeat(Heat - cooling);
             }
             return true;
         });

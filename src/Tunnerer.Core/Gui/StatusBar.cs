@@ -27,9 +27,13 @@ public class StatusBar
         int midY = (h - 1) / 2;
         int midH = (h % 2 != 0) ? 1 : 2;
 
-        int heatFilled = _tank.Reactor.HeatCapacity > 0
-            ? _tank.Reactor.Heat * (w - Border * 2) / _tank.Reactor.HeatCapacity
-            : 0;
+        int heatFilled = 0;
+        if (_tank.Reactor.HeatCapacity > 0)
+        {
+            int clampedHeat = Math.Clamp(_tank.Reactor.Heat, 0, _tank.Reactor.HeatCapacity);
+            int remainingHeatBudget = _tank.Reactor.HeatCapacity - clampedHeat;
+            heatFilled = remainingHeatBudget * (w - Border * 2) / _tank.Reactor.HeatCapacity;
+        }
         int healthFilled = _tank.Reactor.HealthCapacity > 0
             ? _tank.Reactor.Health * (w - Border * 2) / _tank.Reactor.HealthCapacity
             : 0;
@@ -46,7 +50,7 @@ public class StatusBar
         }
 
         uint bgColor = GuiColors.StatusBackgroundArgb;
-        uint heatColor = GuiColors.StatusEnergyArgb;
+        uint heatColor = GuiColors.StatusHeatArgb;
         uint healthColor = GuiColors.StatusHealthArgb;
         uint blankColor = GuiColors.BlankArgb;
 
