@@ -102,8 +102,6 @@ public static class Tweaks
         public const int DirtRegrowBlankModifier = 4;
         public const int DirtRegrowScorchedModifier = 1;
         public const int DecalDecaySpeed = 40;
-        public const int HeatCooldownPerTick = 1;
-        public const float HeatDiffuseRate = 0.12f;
         public const int DigThroughRockChance = 250;
         public static readonly TimeSpan RefreshLinkMapInterval = TimeSpan.FromMilliseconds(200);
         public const float MaximumLiveLinkDistance = 100f;
@@ -150,6 +148,7 @@ public static class Tweaks
         public const int ThermalParallelRegionThreshold = 4;
         public const int ThermalMaxWorkers = 0; // 0 => default scheduler/CPU count
         public const float ThermalActiveTemperatureThreshold = 0.5f;
+        public const float ThermalArtificialCoolingPerFrame = 0f;
     }
 
     public static class Base

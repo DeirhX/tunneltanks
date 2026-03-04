@@ -180,7 +180,7 @@ public class TerrainTests
 
         float startCenter = t.GetHeatTemperature(hot);
         for (int i = 0; i < 200; i++)
-            t.CoolDown(Tweaks.World.HeatCooldownPerTick, Tweaks.World.HeatDiffuseRate);
+            t.CoolDown();
 
         float endCenter = t.GetHeatTemperature(hot);
         float ambient = Tweaks.World.ThermalAmbientTemperature;
@@ -200,7 +200,7 @@ public class TerrainTests
         t.AddHeatRadius(hot, 255, 6);
 
         double startTotal = SumHeat(t);
-        t.CoolDown(Tweaks.World.HeatCooldownPerTick, Tweaks.World.HeatDiffuseRate);
+        t.CoolDown();
         double afterFirstTick = SumHeat(t);
         Assert.True(afterFirstTick <= startTotal + 0.001,
             $"Expected first CoolDown tick to be non-increasing. start={startTotal}, tick1={afterFirstTick}");
@@ -221,7 +221,7 @@ public class TerrainTests
 
         for (int i = 0; i < 300; i++)
         {
-            t.CoolDown(Tweaks.World.HeatCooldownPerTick, Tweaks.World.HeatDiffuseRate);
+            t.CoolDown();
             double currentTotal = SumHeat(t);
             double upstep = currentTotal - previousTotal;
             if (upstep > maxUpstep)
@@ -235,6 +235,22 @@ public class TerrainTests
         double endTotal = previousTotal;
         Assert.True(endTotal <= startTotal + 0.001, $"Expected non-increasing total heat. start={startTotal}, end={endTotal}");
         Assert.True(maxUpstep <= 0.001, $"Expected no positive up-step, got {maxUpstep:0.000000}");
+    }
+
+    [Fact]
+    public void CoolDown_ArtificialCooling_AppliesGlobally_AndClampsAtZero()
+    {
+        var t = MakeTerrain(4, 4);
+        for (int i = 0; i < 16; i++)
+            t[i] = TerrainPixel.Rock;
+
+        t.AddHeat(new Position(0, 0), 2);
+        t.AddHeat(new Position(3, 3), 12);
+
+        t.CoolDown(artificialCoolingPerFrame: 1000f);
+
+        Assert.Equal(0f, t.GetHeatTemperature(new Position(0, 0)));
+        Assert.Equal(0f, t.GetHeatTemperature(new Position(3, 3)));
     }
 
     [Fact]

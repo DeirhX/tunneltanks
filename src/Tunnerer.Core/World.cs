@@ -103,8 +103,7 @@ public class World
         _elapsed += Tweaks.World.AdvanceStep;
 
         ProfileSection(ref Profile.Collision, () => _collisionSolver.Update(_tankList, _machines));
-        ProfileSection(ref Profile.Cooldown, () =>
-            _terrain.CoolDown(Tweaks.World.HeatCooldownPerTick, Tweaks.World.HeatDiffuseRate));
+        ProfileSection(ref Profile.Cooldown, () => _terrain.CoolDown(Tweaks.World.ThermalArtificialCoolingPerFrame));
         Profile.CooldownPrep += _terrain.LastCoolDownProfile.Prep;
         Profile.CooldownSim += _terrain.LastCoolDownProfile.Simulate;
         Profile.CooldownMark += _terrain.LastCoolDownProfile.MarkDirty;

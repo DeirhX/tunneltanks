@@ -127,7 +127,7 @@ public class GuiLayoutTests
         Assert.Equal(new Color(0x00, 0x00, 0x00), GuiColors.Background);
         Assert.Equal(new Color(0x20, 0x20, 0x20), GuiColors.BackgroundDot);
         Assert.Equal(new Color(0x65, 0x65, 0x65), GuiColors.StatusBackground);
-        Assert.Equal(new Color(0xF5, 0xEB, 0x1A), GuiColors.StatusEnergy);
+        Assert.Equal(new Color(0xF5, 0xEB, 0x1A), GuiColors.StatusHeat);
         Assert.Equal(new Color(0x26, 0xF4, 0xF2), GuiColors.StatusHealth);
     }
 }
