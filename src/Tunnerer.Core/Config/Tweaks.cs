@@ -186,7 +186,7 @@ public static class Tweaks
         public const int ResourceDirtCapacity = 10000;
         public const int ResourceMineralsCapacity = 10000;
         public const int IdleHeatGain = 0;
-        public const int MoveHeatGain = 1;
+        public const int MoveHeatGain = 0;
         public const float ShootHeatGain = 2.0f;
         public const int CoolingPickupLow = 8;
         public const int CoolingPickupMedium = 14;
