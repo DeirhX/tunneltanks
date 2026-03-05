@@ -32,11 +32,10 @@ internal static class TankHeatModel
         return Tweaks.Tank.TerrainHeatCapacity > 0f ? -dQ / Tweaks.Tank.TerrainHeatCapacity : 0f;
     }
 
-    public static float ComputeTankAirHeatFlow(float tankTemperature, float airTemperature, bool atOwnBase)
+    public static float ComputeTankAirHeatFlow(float tankTemperature, float airTemperature)
     {
-        float conductance = atOwnBase ? Tweaks.Tank.TankBaseConductance : Tweaks.Tank.TankAmbientConductance;
         float deltaT = airTemperature - tankTemperature;
-        float dQ = conductance * deltaT;
+        float dQ = Tweaks.Tank.TankAmbientConductance * deltaT;
         float maxStableDQ = Tweaks.Tank.TankHeatCapacity * MathF.Abs(deltaT) * 0.01f;
         if (dQ > maxStableDQ) dQ = maxStableDQ;
         else if (dQ < -maxStableDQ) dQ = -maxStableDQ;

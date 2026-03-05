@@ -5,7 +5,11 @@ using Tunnerer.Core.Config;
 
 public static class ExplosionFactory
 {
-    public static List<Projectile> CreateExplosion(Position center, ExplosionParams p, ref FastRandom rng)
+    public static List<Projectile> CreateExplosion(
+        Position center,
+        ExplosionParams p,
+        ref FastRandom rng,
+        float shrapnelHeatScale = 1f)
     {
         var result = new List<Projectile>(p.ShrapnelCount);
 
@@ -16,7 +20,7 @@ public static class ExplosionFactory
                     + p.Speed * Tweaks.Explosion.SpeedVarianceBase;
             var dir = new VectorF(MathF.Cos(angle) * s, MathF.Sin(angle) * s);
             int life = rng.NextInt(0, p.Frames);
-            result.Add(Projectile.CreateShrapnel(center, dir, life));
+            result.Add(Projectile.CreateShrapnel(center, dir, life, shrapnelHeatScale));
         }
         return result;
     }

@@ -30,6 +30,24 @@ public class TankBase
 
     public void Advance(TerrainGrid terrain)
     {
+        int outerRadius = Half;
+        int midRadius = Math.Max(1, (outerRadius * 2) / 3);
+        int innerRadius = Math.Max(1, outerRadius / 3);
+
+        int pulledFromTerrain = 0;
+        pulledFromTerrain -= terrain.AddHeatTotalInRadiusArea(Position, outerRadius, -Tweaks.Base.AreaCoolingOuterHeatTotal);
+        pulledFromTerrain -= terrain.AddHeatTotalInRadiusArea(Position, midRadius, -Tweaks.Base.AreaCoolingMidHeatTotal);
+        pulledFromTerrain -= terrain.AddHeatTotalInRadiusArea(Position, innerRadius, -Tweaks.Base.AreaCoolingInnerHeatTotal);
+
+        int pulledFromAir = 0;
+        pulledFromAir -= terrain.AddAirHeatTotalInRadiusArea(Position, outerRadius, -Tweaks.Base.AreaCoolingOuterAirTotal);
+        pulledFromAir -= terrain.AddAirHeatTotalInRadiusArea(Position, midRadius, -Tweaks.Base.AreaCoolingMidAirTotal);
+        pulledFromAir -= terrain.AddAirHeatTotalInRadiusArea(Position, innerRadius, -Tweaks.Base.AreaCoolingInnerAirTotal);
+
+        int absorbedHeat = Math.Max(0, pulledFromTerrain + pulledFromAir);
+        if (absorbedHeat > 0)
+            Reactor.Add(new ReactorState(absorbedHeat, 0));
+
         int beforeHeat = Reactor.Heat;
         Reactor.Exhaust(new ReactorState(Tweaks.Base.HeatCooldown, 0));
         int releasedHeat = Math.Max(0, beforeHeat - (int)Reactor.Heat);
@@ -48,19 +66,13 @@ public class TankBase
     public void RechargeTank(Reactor tankReactor, int tankColor)
     {
         if (tankColor == Color)
-            GiveReactorResources(tankReactor, heatCooldown: Tweaks.Base.HomeCooldownHeat, healthRegen: Tweaks.Base.HomeRechargeHealth);
+            GiveReactorResources(tankReactor, Tweaks.Base.HomeRechargeHealth);
         else
-            GiveReactorResources(tankReactor, heatCooldown: Tweaks.Base.ForeignCooldownHeat, healthRegen: Tweaks.Base.ForeignRechargeHealth);
+            GiveReactorResources(tankReactor, Tweaks.Base.ForeignRechargeHealth);
     }
 
-    private void GiveReactorResources(Reactor target, int heatCooldown, int healthRegen)
+    private static void GiveReactorResources(Reactor target, int healthRegen)
     {
-        // "Recharge" for heat means cooling: reduce target heat while healing health.
-        int before = target.Heat;
-        target.Exhaust(new ReactorState(heatCooldown, 0));
-        int extracted = Math.Max(0, before - (int)target.Heat);
-        if (extracted > 0)
-            Reactor.Add(new ReactorState(extracted, 0));
         target.Add(new ReactorState(0, healthRegen));
     }
 

@@ -13,7 +13,6 @@ public sealed class TankHeatEngine
         float currentHeat,
         int frameDugPixels,
         bool frameShotFired,
-        bool atOwnBase,
         float sampledTerrainTemperature,
         float sampledAirTemperature,
         int sampleCells,
@@ -40,7 +39,7 @@ public sealed class TankHeatEngine
             nextHeat += TankHeatModel.ComputeTankDeltaFromHeatFlow(dQTerrain);
         }
 
-        float dQAir = TankHeatModel.ComputeTankAirHeatFlow(nextHeat, sampledAirTemperature, atOwnBase);
+        float dQAir = TankHeatModel.ComputeTankAirHeatFlow(nextHeat, sampledAirTemperature);
         if (sampleCells > 0 && Tweaks.World.ThermalCapacityAir > 0f)
         {
             float desiredAirAvgDelta = -dQAir / Tweaks.World.ThermalCapacityAir;

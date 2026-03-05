@@ -106,7 +106,9 @@ public class ProjectileList
             if (hit)
             {
                 self.SpawnNormalExplosion(ipos);
-                terrain.AddHeatRadius(ipos, Tweaks.Explosion.BulletHeatAmount, Tweaks.Explosion.BulletHeatRadius);
+                int bulletExplosionHeat = Math.Max(0, (int)MathF.Round(
+                    Tweaks.Explosion.BulletHeatAmount * Tweaks.Explosion.BulletExplosionHeatScale));
+                terrain.AddHeatRadius(ipos, bulletExplosionHeat, Tweaks.Explosion.BulletHeatRadius);
                 p.IsAlive = false;
                 return;
             }
@@ -115,12 +117,16 @@ public class ProjectileList
 
     private void SpawnNormalExplosion(Position pos)
     {
-        AddRange(ExplosionFactory.CreateExplosion(pos, Tweaks.Explosion.Normal, ref _rng));
+        AddRange(ExplosionFactory.CreateExplosion(
+            pos,
+            Tweaks.Explosion.Normal,
+            ref _rng,
+            Tweaks.Explosion.BulletExplosionHeatScale));
     }
 
-    public void AddExplosion(Position pos, ExplosionParams p)
+    public void AddExplosion(Position pos, ExplosionParams p, float shrapnelHeatScale = 1f)
     {
-        AddRange(ExplosionFactory.CreateExplosion(pos, p, ref _rng));
+        AddRange(ExplosionFactory.CreateExplosion(pos, p, ref _rng, shrapnelHeatScale));
     }
 
     private static void AdvanceShrapnel(Projectile p, CollisionSolver solver, ProjectileList self)
@@ -139,13 +145,15 @@ public class ProjectileList
             {
                 terrain.SetPixel(ipos, TerrainPixel.DecalHigh);
             }
-            terrain.AddHeat(ipos, Tweaks.Explosion.ShrapnelHitHeat);
+            int hitHeat = Math.Max(0, (int)MathF.Round(Tweaks.Explosion.ShrapnelHitHeat * p.HeatScale));
+            terrain.AddHeat(ipos, hitHeat);
             p.IsAlive = false;
             return;
         }
 
         terrain.SetPixel(ipos, TerrainPixel.DecalHigh);
-        terrain.AddHeatRadius(ipos, Tweaks.Explosion.ShrapnelDigHeatAmount, Tweaks.Explosion.ShrapnelDigHeatRadius);
+        int digHeat = Math.Max(0, (int)MathF.Round(Tweaks.Explosion.ShrapnelDigHeatAmount * p.HeatScale));
+        terrain.AddHeatRadius(ipos, digHeat, Tweaks.Explosion.ShrapnelDigHeatRadius);
     }
 
     private static void AdvanceFoam(Projectile p, TerrainGrid terrain, ProjectileList self,
