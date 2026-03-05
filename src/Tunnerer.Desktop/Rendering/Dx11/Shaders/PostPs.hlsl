@@ -258,16 +258,17 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
         color += maskSoft * edgeProfile * TerrainMaskSolidLift * terrainFactor;
         color += maskSoft * edgeProfile * outline * TerrainMaskRimLift * terrainFactor;
 
-        // Material classes come from aux.b (0=None, 85=Dirt, 170=Stone, 255=Base).
+        // Material classes come from aux.b (0=None, 85=Dirt, 170=Stone, 212=Energy, 255=Base).
         int2 auxMax = int2(max(1.0, WorldSize.x), max(1.0, WorldSize.y)) - int2(1, 1);
         int2 auxCell = clamp(int2(floor(worldCell)), int2(0, 0), auxMax);
         float4 aNearest = auxTex.Load(int3(auxCell, 0));
         float materialCode = aNearest.b * 255.0;
         float dirtMask = (1.0 - smoothstep(0.0, 40.0, abs(materialCode - 85.0))) * terrainFactor;
         float stoneMask = (1.0 - smoothstep(0.0, 40.0, abs(materialCode - 170.0))) * terrainFactor;
+        float energyMask = (1.0 - smoothstep(0.0, 28.0, abs(materialCode - 212.0))) * terrainFactor;
         float baseMask = (1.0 - smoothstep(0.0, 28.0, abs(materialCode - 255.0))) * terrainFactor;
         stoneMask = saturate(stoneMask + baseMask * 0.75);
-        dirtMask = saturate(dirtMask * (1.0 - stoneMask * 0.6));
+        dirtMask = saturate(dirtMask * (1.0 - stoneMask * 0.6) * (1.0 - energyMask));
 
         // Jagged, multi-source stone-wall material pass for stone/base only.
         float materialMask = stoneMask;
@@ -349,6 +350,25 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
             color = lerp(color, color * lerp(0.94, 1.06, looseDust), dirtMask * 0.30);
         }
 
+        // Energy material profile: smoother crystalline body + pulsing emissive veins.
+        if (energyMask > 0.0)
+        {
+            float2 eP = worldCell * 0.060;
+            float e0 = fbmNoise(eP + float2(7.0, 241.0), 4);
+            float enx = fbmNoise(eP + float2(9.0, 241.0), 4);
+            float eny = fbmNoise(eP + float2(7.0, 243.0), 4);
+            float2 eGrad = float2(enx - e0, eny - e0);
+            float3 eNormal = normalize(float3(-eGrad * 6.0, 1.0));
+            float eDiffuse = dot(eNormal, lightDir) * 0.5 + 0.5;
+
+            float veins = smoothstep(0.76, 0.95, 1.0 - abs(e0 * 2.0 - 1.0));
+            float pulseE = MaterialEmissivePulse.y + MaterialEmissivePulse.z * (0.5 + 0.5 * sin(Time * MaterialEmissivePulse.x + e0 * 9.0));
+            float3 energyTint = lerp(float3(0.88, 0.90, 0.66), float3(1.00, 1.00, 0.78), eDiffuse);
+
+            color = lerp(color, color * energyTint * (0.94 + 0.14 * eDiffuse), energyMask * 0.85);
+            color += MaterialEmissiveEnergy.rgb * (veins * MaterialEmissiveEnergy.a * pulseE * energyMask);
+        }
+
         float3 aaNeighborhood =
             sceneTex.Sample(s0, uv + float2(mTexel.x, 0.0)).rgb +
             sceneTex.Sample(s0, uv - float2(mTexel.x, 0.0)).rgb +
@@ -394,10 +414,8 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
 
         float phase = frac(sin(dot(floor(worldCell), float2(12.9898, 78.233))) * 43758.5453) * 6.2831853;
         float pulse = MaterialEmissivePulse.y + MaterialEmissivePulse.z * (0.5 + 0.5 * sin(Time * MaterialEmissivePulse.x + phase));
-        float emissive = a0.a * 0.50 + (ax1.a + ax2.a + ay1.a + ay2.a) * 0.10 + (ad1.a + ad2.a + ad3.a + ad4.a) * 0.025;
-        float emissiveStrength = max(MaterialEmissiveEnergy.a, MaterialEmissiveScorched.a);
-        float3 emissiveColor = lerp(MaterialEmissiveScorched.rgb, MaterialEmissiveEnergy.rgb, 0.5);
-        color += emissiveColor * (emissive * emissiveStrength * pulse * terrainFactor);
+        float scorch = a0.a * 0.50 + (ax1.a + ax2.a + ay1.a + ay2.a) * 0.10 + (ad1.a + ad2.a + ad3.a + ad4.a) * 0.025;
+        color += MaterialEmissiveScorched.rgb * (scorch * MaterialEmissiveScorched.a * pulse * terrainFactor);
     }
 
     float entityMaskBase = 1.0 - step(0.995, sceneTex.Sample(s0, uv).a);

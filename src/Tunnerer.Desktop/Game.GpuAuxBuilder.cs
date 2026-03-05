@@ -125,38 +125,32 @@ public partial class Game
     private static void WriteTerrainAux(Core.Terrain.TerrainGrid terrain, int idx, Core.Terrain.TerrainPixel pixel, byte sdfValue, byte[] target, int writeIndex)
     {
         // Aux channel layout:
-        // R = heat, G = smoothed SDF, B = material class, A = combined emissive/scorch signal.
+        // R = heat, G = smoothed SDF, B = material class, A = scorch damage level.
         const byte materialNone = 0;
         const byte materialDirt = 85;
         const byte materialStone = 170;
+        const byte materialEnergy = 212;
         const byte materialBase = 255;
 
         byte material = materialNone;
         if (pixel == Core.Terrain.TerrainPixel.DirtGrow || Core.Terrain.Pixel.IsDirt(pixel))
             material = materialDirt;
+        else if (Core.Terrain.Pixel.IsEnergy(pixel))
+            material = materialEnergy;
         else if (pixel == Core.Terrain.TerrainPixel.BaseBarrier || Core.Terrain.Pixel.IsBase(pixel))
             material = materialBase;
         else if (Core.Terrain.Pixel.IsRock(pixel) || Core.Terrain.Pixel.IsConcrete(pixel) ||
                  Core.Terrain.Pixel.IsMineral(pixel) || Core.Terrain.Pixel.IsBlockingCollision(pixel))
             material = materialStone;
 
-        byte emissive = 0;
+        byte scorch = 0;
         switch (pixel)
         {
-            case Core.Terrain.TerrainPixel.EnergyLow:
-                emissive = DesktopScreenTweaks.PostEmissiveEnergyLow;
-                break;
-            case Core.Terrain.TerrainPixel.EnergyMedium:
-                emissive = DesktopScreenTweaks.PostEmissiveEnergyMedium;
-                break;
-            case Core.Terrain.TerrainPixel.EnergyHigh:
-                emissive = DesktopScreenTweaks.PostEmissiveEnergyHigh;
-                break;
             case Core.Terrain.TerrainPixel.DecalHigh:
-                emissive = DesktopScreenTweaks.PostEmissiveScorchedHigh;
+                scorch = DesktopScreenTweaks.PostEmissiveScorchedHigh;
                 break;
             case Core.Terrain.TerrainPixel.DecalLow:
-                emissive = DesktopScreenTweaks.PostEmissiveScorchedLow;
+                scorch = DesktopScreenTweaks.PostEmissiveScorchedLow;
                 break;
         }
 
@@ -164,6 +158,6 @@ public partial class Game
         target[writeIndex] = (byte)Math.Clamp((int)MathF.Round(heat / Core.Terrain.TerrainGrid.HeatByteScale), 0, 255);
         target[writeIndex + 1] = sdfValue;
         target[writeIndex + 2] = material;
-        target[writeIndex + 3] = emissive;
+        target[writeIndex + 3] = scorch;
     }
 }
