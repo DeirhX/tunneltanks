@@ -254,10 +254,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
         float maskWidth = max(fwidth(m) * 1.4, 0.02);
         float maskSoft = smoothstep(0.5 - maskWidth, 0.5 + maskWidth, m);
         float edgeProfile = edgeAmt * smoothstep(0.05, 0.8, boundary);
-        float energyMask = saturate(a0.b * 2.0);
-        float outlineDarken = TerrainMaskOutlineDarken * (1.0 - 0.55 * energyMask);
-        color *= 1.0 - outline * outlineDarken * terrainFactor;
-        color *= 1.0 - (1.0 - maskSoft) * edgeProfile * TerrainMaskCaveDarken * terrainFactor;
+        // Remove edge darkening; keep curvature/lift shaping only.
         color += maskSoft * edgeProfile * TerrainMaskSolidLift * terrainFactor;
         color += maskSoft * edgeProfile * outline * TerrainMaskRimLift * terrainFactor;
 
@@ -274,36 +271,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
         float aaMix = saturate(edgeProfile * 0.30) * terrainFactor;
         color = lerp(color, aaNeighborhood, aaMix);
 
-        // --- Directional lighting from SDF-derived normals ---
-        if (Quality >= 1.0 && LightDir.w > 0.0)
-        {
-            float nStr = LightDir.w;
-            float3 normal = normalize(float3(-gx * nStr, -gy * nStr, 1.0));
-
-            // Procedural micro-normal perturbation for surface texture
-            float microStr = HalfVector.w;
-            if (microStr > 0.0)
-            {
-                float2 noiseP = worldCell * 0.08;
-                float mnx = (fbmNoise(noiseP, 3) - 0.5) * 2.0 * microStr;
-                float mny = (fbmNoise(noiseP + float2(97.0, 131.0), 3) - 0.5) * 2.0 * microStr;
-                normal = normalize(float3(normal.xy + float2(mnx, mny), normal.z));
-            }
-
-            // Half-Lambert diffuse
-            float NdotL = dot(normal, LightDir.xyz);
-            float diffuse = max(0.0, NdotL) * 0.6 + 0.4;
-
-            // Blinn-Phong specular
-            float NdotH = max(0.0, dot(normal, HalfVector.xyz));
-            float spec = pow(NdotH, LightParams.z) * LightParams.w;
-
-            float lit = LightParams.x + LightParams.y * diffuse;
-
-            // Apply lighting only to solid terrain, cave stays unlit
-            float lightMix = maskSoft * saturate(edgeProfile * 3.0 + maskSoft) * terrainFactor;
-            color = lerp(color, color * lit + spec, lightMix);
-        }
+        // Normal-map style terrain lighting disabled for now.
 
         // Local + wider blur so boosted low-temperature glow does not form hard contours.
         float heatLocal = a0.r * 0.30

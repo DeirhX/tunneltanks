@@ -29,8 +29,8 @@ public static class Tweaks
         public const int NativeContinuousSampleLow = 1;
         public const int NativeContinuousSampleMedium = 2;
         public const int NativeContinuousSampleHigh = 4;
-        public const float NativeContinuousEdgeSoftness = 0.10f;
-        public const float NativeContinuousBoundaryBlend = 0.75f;
+        public const float NativeContinuousEdgeSoftness = 0.06f;
+        public const float NativeContinuousBoundaryBlend = 0.45f;
         public const float NativeContinuousRenderBudgetMs = 5.0f;
         public const int NativeContinuousBudgetHysteresisFrames = 10;
         public const float NativeContinuousBudgetUnderThreshold = 0.65f;

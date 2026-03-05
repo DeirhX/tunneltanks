@@ -46,6 +46,9 @@ public sealed unsafe partial class Backend : IGameRenderBackend
     private ImGuiController? _imgui;
     private readonly bool _detailedProfileEnabled =
         string.Equals(Environment.GetEnvironmentVariable("TUNNERER_DX11_PROFILE"), "1", StringComparison.Ordinal);
+    private readonly bool _debugDumpFrames =
+        string.Equals(Environment.GetEnvironmentVariable("TUNNERER_DX11_DUMP_FRAMES"), "1", StringComparison.Ordinal);
+    private bool _debugDumpDone;
     private long _profileSceneUploadTicks;
     private long _profileAuxUploadTicks;
     private long _profilePostPassTicks;

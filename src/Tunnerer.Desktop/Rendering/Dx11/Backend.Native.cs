@@ -140,6 +140,7 @@ public sealed unsafe partial class Backend
         _context->PSSetShaderResources(0, 1, &nullSrv);
         _context->PSSetShaderResources(1, 1, &nullSrv);
         _displaySrv = _sceneSrv;
+        TryDumpDebugTexture(_sceneTexture, "scene");
     }
 
     private void EnsurePostTarget(int w, int h)
@@ -206,6 +207,78 @@ public sealed unsafe partial class Backend
         _context->PSSetShaderResources(0, 1, &nullSrv);
         _context->PSSetShaderResources(1, 1, &nullSrv);
         _displaySrv = _postSrv != null ? _postSrv : _sceneSrv;
+        TryDumpDebugTexture(_postTexture, "post");
+    }
+
+    private void TryDumpDebugTexture(ID3D11Texture2D* srcTex, string name)
+    {
+        if (!_debugDumpFrames || _debugDumpDone || srcTex == null || _sceneTexW <= 0 || _sceneTexH <= 0)
+            return;
+
+        var desc = new Texture2DDesc
+        {
+            Width = (uint)_sceneTexW,
+            Height = (uint)_sceneTexH,
+            MipLevels = 1,
+            ArraySize = 1,
+            Format = Format.FormatB8G8R8A8Unorm,
+            SampleDesc = new SampleDesc(1, 0),
+            Usage = Usage.Staging,
+            BindFlags = 0,
+            CPUAccessFlags = (uint)CpuAccessFlag.Read,
+            MiscFlags = 0,
+        };
+
+        ID3D11Texture2D* staging = null;
+        if (_device->CreateTexture2D(&desc, null, &staging) < 0 || staging == null)
+            return;
+
+        try
+        {
+            _context->CopyResource((ID3D11Resource*)staging, (ID3D11Resource*)srcTex);
+            MappedSubresource mapped;
+            if (_context->Map((ID3D11Resource*)staging, 0, Silk.NET.Direct3D11.Map.Read, 0, &mapped) < 0)
+                return;
+
+            try
+            {
+                string debugDir = Path.Combine(AppContext.BaseDirectory, "debug");
+                Directory.CreateDirectory(debugDir);
+                string outPath = Path.Combine(debugDir, $"{name}-dump.ppm");
+                using var fs = new FileStream(outPath, FileMode.Create, FileAccess.Write, FileShare.Read);
+                string header = $"P6\n{_sceneTexW} {_sceneTexH}\n255\n";
+                byte[] headerBytes = global::System.Text.Encoding.ASCII.GetBytes(header);
+                fs.Write(headerBytes, 0, headerBytes.Length);
+
+                byte* srcBase = (byte*)mapped.PData;
+                int rowPitch = (int)mapped.RowPitch;
+                byte[] rgb = new byte[_sceneTexW * 3];
+                for (int y = 0; y < _sceneTexH; y++)
+                {
+                    byte* row = srcBase + y * rowPitch;
+                    int dst = 0;
+                    for (int x = 0; x < _sceneTexW; x++)
+                    {
+                        int si = x * 4; // BGRA
+                        rgb[dst++] = row[si + 2];
+                        rgb[dst++] = row[si + 1];
+                        rgb[dst++] = row[si + 0];
+                    }
+                    fs.Write(rgb, 0, rgb.Length);
+                }
+                Console.WriteLine($"[DX11] dumped {name} frame to {outPath}");
+                if (string.Equals(name, "post", StringComparison.Ordinal))
+                    _debugDumpDone = true;
+            }
+            finally
+            {
+                _context->Unmap((ID3D11Resource*)staging, 0);
+            }
+        }
+        finally
+        {
+            staging->Release();
+        }
     }
 
     private void PrepareFullscreenPass(ID3D11RenderTargetView* target, int width, int height, ID3D11PixelShader* pixelShader)
