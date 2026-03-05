@@ -22,7 +22,7 @@ public static class Tweaks
 
     public static class Screen
     {
-        public static readonly Size WindowSize = new(1280, 720);
+        public static readonly Size WindowSize = new(1920, 1080);
         public static readonly Size RenderSurfaceSize = new(320, 200);
         public const float DrawStaticFuelThreshold = 0.2f;
         public const int PixelScale = 6;
@@ -68,6 +68,7 @@ public static class Tweaks
         public const float PostTankHeatGlowR = 0.78f;
         public const float PostTankHeatGlowG = 0.24f;
         public const float PostTankHeatGlowB = 0.04f;
+        public const bool PostTankHeatDistortionEnabled = false;
         public const float PostTankHeatGlowMinHeat = 1.5f;
         public const float PostTankHeatGlowBaseRadius = 2.5f;
         public const float PostTankHeatGlowScaleRadius = 2.5f;
@@ -164,6 +165,12 @@ public static class Tweaks
         public const int MaterialMineralsCapacity = 20000;
         public const int HeatCooldown = 2;
         public const int HealthRegen = 10;
+        public const int AreaCoolingInnerHeatTotal = 6;
+        public const int AreaCoolingMidHeatTotal = 3;
+        public const int AreaCoolingOuterHeatTotal = 1;
+        public const int AreaCoolingInnerAirTotal = 8;
+        public const int AreaCoolingMidAirTotal = 4;
+        public const int AreaCoolingOuterAirTotal = 2;
         public const int HomeCooldownHeat = 6;
         public const int HomeRechargeHealth = 3;
         public const int ForeignCooldownHeat = 2;
@@ -243,6 +250,8 @@ public static class Tweaks
         public static readonly ExplosionParams Dirt = new(ShrapnelCount: 10, Speed: 0.375f, Frames: 10);
         public static readonly ExplosionParams Normal = new(ShrapnelCount: 14, Speed: 0.56f, Frames: 13);
         public static readonly ExplosionParams Death = new(ShrapnelCount: 100, Speed: 0.25f, Frames: 72);
+        public const float BulletExplosionHeatScale = 1.5f;
+        public const float DeathHeatScale = 2.0f;
 
         public const int BulletHeatAmount = 3;
         public const int BulletHeatRadius = 7;

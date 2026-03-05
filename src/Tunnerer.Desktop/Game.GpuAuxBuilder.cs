@@ -24,9 +24,13 @@ public partial class Game
 
             float t = tank.Heat / Tweaks.Tank.HeatMax;
             float minVisible = DesktopScreenTweaks.PostTankHeatGlowMinHeat / Tweaks.Tank.HeatMax;
+            float visibleAtHeat = 10f / Tweaks.Tank.HeatMax;
             float damageStart = Tweaks.Tank.HeatSafeMax / Tweaks.Tank.HeatMax;
-            float visibleRange = Math.Max(0.0001f, damageStart - minVisible);
-            float visibleT = Math.Clamp((t - minVisible) / visibleRange, 0.0f, 1.0f);
+            float earlyRange = Math.Max(0.0001f, visibleAtHeat - minVisible);
+            float lateRange = Math.Max(0.0001f, damageStart - visibleAtHeat);
+            float earlyT = Math.Clamp((t - minVisible) / earlyRange, 0.0f, 1.0f);
+            float lateT = Math.Clamp((t - visibleAtHeat) / lateRange, 0.0f, 1.0f);
+            float visibleT = Math.Clamp(0.65f * MathF.Sqrt(earlyT) + 0.35f * lateT, 0.0f, 1.0f);
             if (tank.Reactor.Health < tank.Reactor.HealthCapacity)
             {
                 float damageFrac = 1.0f - (float)tank.Reactor.Health / Math.Max(1f, tank.Reactor.HealthCapacity);
@@ -35,8 +39,7 @@ public partial class Game
             }
             if (visibleT <= 0.0f) continue;
 
-            float intensity = MathF.Sqrt(visibleT) * (0.5f + 1.5f * visibleT);
-            float radiusFactor = 0.45f + 0.55f * MathF.Sqrt(visibleT);
+            float radiusFactor = (0.55f + 0.45f * MathF.Sqrt(visibleT)) * 1.35f;
             float glowRadiusPx = pixelScale * (DesktopScreenTweaks.PostTankHeatGlowBaseRadius + DesktopScreenTweaks.PostTankHeatGlowScaleRadius * radiusFactor);
             float cx = (tank.Position.X + 0.5f) * pixelScale - camPixelX;
             float cy = (tank.Position.Y + 0.5f) * pixelScale - camPixelY;
@@ -48,7 +51,8 @@ public partial class Game
             _gpuTankHeatGlow[baseIdx + 0] = cx / targetW;
             _gpuTankHeatGlow[baseIdx + 1] = cy / targetH;
             _gpuTankHeatGlow[baseIdx + 2] = glowRadiusPx / MathF.Max(targetW, targetH);
-            _gpuTankHeatGlow[baseIdx + 3] = intensity;
+            // Store normalized heat visibility; shader derives glow/distortion from this directly.
+            _gpuTankHeatGlow[baseIdx + 3] = visibleT;
             count++;
         }
 

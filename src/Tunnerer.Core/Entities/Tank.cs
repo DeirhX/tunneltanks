@@ -75,8 +75,30 @@ public class Tank
         if (baseColl == null) return;
 
         baseColl.RechargeTank(Reactor, Color);
-        Heat = Reactor.Heat;
-        if (baseColl.Color == Color)
+        bool atOwnBase = baseColl.Color == Color;
+        int baseCooldown = atOwnBase ? Tweaks.Base.HomeCooldownHeat : Tweaks.Base.ForeignCooldownHeat;
+        if (baseCooldown > 0)
+        {
+            // Cool only the local environment; tank follows naturally via thermal exchange in AdvanceHeat.
+            int half = Math.Max(1, Tweaks.Base.BaseSize / 2);
+            int dist2 = global::Tunnerer.Core.Types.Position.DistanceSquared(Position, baseColl.Position);
+            float radial = 1f - MathF.Sqrt(dist2) / half;
+            float centerWeight = Math.Clamp(radial, 0f, 1f);
+            float centerBonus = 1f + Tweaks.Tank.HeatBaseCoolBonus * centerWeight;
+            int sinkAmount = (int)MathF.Round(Math.Max(0f, baseCooldown * centerBonus));
+            if (sinkAmount > 0)
+            {
+                int terrainShare = (int)MathF.Round(sinkAmount * 0.40f);
+                int airShare = sinkAmount - terrainShare;
+                int radius = Math.Max(1, Tweaks.Tank.DigRadius);
+                if (terrainShare > 0)
+                    world.Terrain.AddHeatTotalInRadiusArea(Position, radius, -terrainShare);
+                if (airShare > 0)
+                    world.Terrain.AddAirHeatTotalInRadiusArea(Position, radius, -airShare);
+            }
+        }
+
+        if (atOwnBase)
             baseColl.AbsorbResources(Resources, new MaterialAmount(Tweaks.Base.HomeAbsorbDirt, Tweaks.Base.HomeAbsorbMinerals));
     }
 
@@ -207,9 +229,6 @@ public class Tank
 
     private void AdvanceHeat(World world)
     {
-        var baseColl = world.TankBases.CheckBaseCollision(Position);
-        bool atOwnBase = baseColl != null && baseColl.Color == Color;
-
         float terrainHeatNorm = world.Terrain.SampleAverageHeat(Position, Tweaks.Tank.DigRadius);
         float sampledTerrainTemperature = terrainHeatNorm * 255f;
         float sampledAirTemperature = world.Terrain.SampleAverageAirTemperature(Position, Tweaks.Tank.DigRadius);
@@ -218,7 +237,6 @@ public class Tank
             currentHeat: Heat,
             frameDugPixels: _frameDugPixels,
             frameShotFired: _frameShotFired,
-            atOwnBase: atOwnBase,
             sampledTerrainTemperature: sampledTerrainTemperature,
             sampledAirTemperature: sampledAirTemperature,
             sampleCells: sampleCells,
@@ -258,7 +276,7 @@ public class Tank
         _respawning = true;
         _respawnTimer = LivesLeft > 0 ? Tweaks.Tank.RespawnDelay : TimeSpan.Zero;
 
-        projectiles?.AddExplosion(Position, Tweaks.Explosion.Death);
+        projectiles?.AddExplosion(Position, Tweaks.Explosion.Death, Tweaks.Explosion.DeathHeatScale);
     }
 
     private void AdvanceDeath(World world)

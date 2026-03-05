@@ -103,21 +103,78 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
 {
     // Tank heat haze: distort scene lookup around hot tanks before post-lighting.
     float2 hazeOffset = float2(0.0, 0.0);
+    float outlineHeatMask = 0.0;
+    float distortionEnabled = step(0.5, TankHeatGlowColor.a);
     [loop]
     for (int i = 0; i < 8; i++)
     {
+        if (distortionEnabled <= 0.0) break;
         if (i >= (int)TankGlowCount) break;
         float4 g = TankGlow[i];
+        float heatT = saturate(g.w);
         float2 d = uv - g.xy;
-        float dist2 = dot(d, d);
-        float radius2 = max(1e-6, g.z * g.z);
+        float2 dPx = d * ViewSize;
+        float dist2 = dot(dPx, dPx);
+        float radiusPx = max(1e-3, g.z * max(ViewSize.x, ViewSize.y));
+        float radius2 = radiusPx * radiusPx;
         float falloff = saturate(1.0 - dist2 / radius2);
         if (falloff <= 0.0) continue;
 
-        float2 swirlDir = normalize(float2(-d.y, d.x) + float2(1e-4, -1e-4));
-        float shimmer = sin(Time * 14.0 + (uv.x * 210.0 + uv.y * 170.0) + i * 1.7);
-        float hazeStrength = g.w * falloff * falloff * 0.0180;
-        hazeOffset += swirlDir * shimmer * hazeStrength;
+        float distNorm = sqrt(saturate(1.0 - falloff));
+        float tankEdgeBand = smoothstep(0.34, 0.16, distNorm) * (1.0 - smoothstep(0.16, 0.03, distNorm));
+        float2 swirlDirPx = normalize(float2(-dPx.y, dPx.x) + float2(1e-4, -1e-4));
+        float shimmer =
+            sin(Time * 14.0 + (uv.x * 210.0 + uv.y * 170.0) + i * 1.7) * 0.65 +
+            sin(Time * 22.0 + (uv.x * 120.0 - uv.y * 140.0) + i * 2.3) * 0.35;
+        float heatGate = smoothstep(0.40, 0.75, heatT);
+        float hazeStrengthPx = heatGate * (0.8 + 4.0 * heatT) * (0.35 + 0.65 * tankEdgeBand) * falloff;
+        hazeOffset += swirlDirPx * shimmer * hazeStrengthPx * TexelSize;
+
+        // Overheat(50+) mask derived from glow intensity; used for outline-only shimmer below.
+        float over50 = smoothstep(0.78, 0.95, heatT);
+        outlineHeatMask += over50 * falloff;
+
+        // Dedicated hot-tank edge wobble so tank outlines visibly shimmer once heat is high.
+        float2 tankEdgeDirPx = normalize(float2(dPx.y, -dPx.x) + float2(1e-4, -1e-4));
+        float tankWave =
+            sin(Time * 31.0 + distNorm * 96.0 + i * 2.4) * 0.65 +
+            sin(Time * 19.0 - distNorm * 71.0 + i * 1.3) * 0.35;
+        float edgeWobblePx = over50 * tankEdgeBand * (0.40 + 2.20 * heatT);
+        hazeOffset += tankEdgeDirPx * tankWave * edgeWobblePx * TexelSize;
+
+    }
+    outlineHeatMask = saturate(outlineHeatMask);
+
+    // Extra distortion on geometric outlines (terrain+tanks) once tanks are sufficiently hot.
+    if (distortionEnabled > 0.0 && outlineHeatMask > 0.0)
+    {
+        float2 tx = float2(TexelSize.x, 0.0);
+        float2 ty = float2(0.0, TexelSize.y);
+        float3 cL = sceneTex.Sample(s0, uv - tx).rgb;
+        float3 cR = sceneTex.Sample(s0, uv + tx).rgb;
+        float3 cU = sceneTex.Sample(s0, uv - ty).rgb;
+        float3 cD = sceneTex.Sample(s0, uv + ty).rgb;
+        float aL = sceneTex.Sample(s0, uv - tx).a;
+        float aR = sceneTex.Sample(s0, uv + tx).a;
+        float aU = sceneTex.Sample(s0, uv - ty).a;
+        float aD = sceneTex.Sample(s0, uv + ty).a;
+
+        float lL = dot(cL, float3(0.299, 0.587, 0.114));
+        float lR = dot(cR, float3(0.299, 0.587, 0.114));
+        float lU = dot(cU, float3(0.299, 0.587, 0.114));
+        float lD = dot(cD, float3(0.299, 0.587, 0.114));
+        float2 edgeGrad = float2(lR - lL, lD - lU);
+
+        float edgeLum = saturate(length(edgeGrad) * 3.5);
+        float edgeAlpha = saturate((abs(aR - aL) + abs(aD - aU)) * 2.8);
+        float outlineEdge = max(edgeLum, edgeAlpha);
+
+        // Shimmer tangent to the edge gradient so silhouettes appear to wobble.
+        float2 edgeDir = normalize(float2(edgeGrad.y, -edgeGrad.x) + float2(1e-4, -1e-4));
+        float outlineWave =
+            sin(Time * 28.0 + uv.x * 260.0 - uv.y * 220.0) * 0.60 +
+            sin(Time * 17.0 + uv.x * 120.0 + uv.y * 145.0) * 0.40;
+        hazeOffset += edgeDir * outlineWave * (outlineHeatMask * outlineEdge * 0.012);
     }
 
     float2 hazeUv = clamp(uv + hazeOffset, TexelSize * 0.5, 1.0 - TexelSize * 0.5);
@@ -258,18 +315,22 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
             auxTex.Sample(s0, auxUv - float2(mTexel2.x, 0.0)).r * 0.25 +
             auxTex.Sample(s0, auxUv + float2(0.0, mTexel2.y)).r * 0.25 +
             auxTex.Sample(s0, auxUv - float2(0.0, mTexel2.y)).r * 0.25;
-        float heat = lerp(heatLocal, heatWide, 0.28);
+        // Detect steep thermal transitions so we can soften hard contour rings.
+        float heatGrad = abs(ax1.r - ax2.r) + abs(ay1.r - ay2.r);
+        float heatEdge = saturate(heatGrad * 1.80);
+        float heatBlend = lerp(0.35, 0.75, heatEdge);
+        float heat = lerp(heatLocal, heatWide, heatBlend);
 
         // Anti-aliased fade-in: widen transition where heat gradient is steep.
-        float edgeSoft = max(0.006, fwidth(heat) * 3.0);
-        float fadeIn = smoothstep(0.003 - edgeSoft, 0.07 + edgeSoft, heat);
+        float edgeSoft = max(0.008, fwidth(heat) * (4.0 + 4.0 * heatEdge));
+        float fadeIn = smoothstep(0.002 - edgeSoft, 0.09 + edgeSoft, heat);
         float heatNorm = heat * fadeIn;
 
         // Keep strong saturation/intensity while smoothly masking low-end onset.
-        float t = pow(saturate(heatNorm), 0.58);
+        float t = pow(saturate(heatNorm), lerp(0.62, 0.86, heatEdge));
         float3 glow = HeatRamp(t);
-        float heatGain = lerp(2.05, 2.45, t);
-        float visible = smoothstep(0.0, 0.025, heatNorm);
+        float heatGain = lerp(2.00, 2.35, t) * lerp(1.0, 0.92, heatEdge);
+        float visible = smoothstep(0.0, lerp(0.040, 0.085, heatEdge), heatNorm);
         color += glow * heatGain * visible;
 
         float phase = frac(sin(dot(floor(worldCell), float2(12.9898, 78.233))) * 43758.5453) * 6.2831853;
@@ -279,24 +340,43 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
         color += MaterialEmissiveScorched.rgb * (a0.a * MaterialEmissiveScorched.a * pulse * terrainFactor);
     }
 
+    float entityMaskBase = 1.0 - step(0.995, sceneTex.Sample(s0, uv).a);
+
     [loop]
     for (int j = 0; j < 8; j++)
     {
         if (j >= (int)TankGlowCount) break;
         float4 g = TankGlow[j];
+        float heatT = saturate(g.w);
         float2 d = uv - g.xy;
-        float falloff = 1.0 - dot(d, d) / max(1e-6, g.z * g.z);
+        float2 dPx = d * ViewSize;
+        float radiusPx = max(1e-3, g.z * max(ViewSize.x, ViewSize.y));
+        float falloff = 1.0 - dot(dPx, dPx) / (radiusPx * radiusPx);
         if (falloff > 0.0)
         {
             float f2 = falloff * falloff;
             float halo = saturate(pow(saturate(falloff), 0.55) - f2 * 0.35);
-            float glow = g.w * (f2 + 1.20 * halo);
-            color += TankHeatGlowColor.rgb * glow;
+            float core = pow(saturate(falloff), 0.30);
+            float orangeT = smoothstep(0.86, 1.0, heatT);
+            float3 tankHeatColor = lerp(float3(0.95, 0.08, 0.02), float3(1.00, 0.46, 0.06), orangeT);
+            float metalHot = smoothstep(0.28, 1.0, heatT);
+            float metalMask = entityMaskBase * core * (0.20 + 0.80 * metalHot);
+            float baseLum = dot(color, float3(0.299, 0.587, 0.114));
+            float3 steelBase = lerp(float3(0.18, 0.22, 0.28), float3(0.34, 0.38, 0.44), saturate(baseLum * 1.5));
+            float3 hotMetal = lerp(steelBase, tankHeatColor, metalHot);
+            hotMetal += float3(1.00, 0.92, 0.70) * pow(core, 4.0) * (0.08 + 0.34 * heatT);
+            color = lerp(color, color * 0.30 + hotMetal * 1.18, saturate(metalMask));
 
-            // Make the tank sprite itself radiate when hot, not only the surrounding aura.
-            float entityMask = 1.0 - step(0.999, sceneTex.Sample(s0, uv).a);
-            float core = pow(saturate(falloff), 0.38);
-            color += TankHeatGlowColor.rgb * (g.w * core * 2.0 * entityMask);
+            // Make tank body pixels self-emit when hot, not only the surrounding aura.
+            float coreBoost = heatT * (0.45 + 1.15 * heatT);
+            float bodyHeat = coreBoost * core * entityMaskBase;
+            color += tankHeatColor * bodyHeat;
+
+            // Animated body shimmer (stronger at mid/high heat so it is clearly visible).
+            float bodyShimmer = 0.5 + 0.5 * sin(Time * 16.0 + (uv.x * 190.0 + uv.y * 160.0) + j * 1.9);
+            float bodyShimmerAmp = lerp(0.10, 0.35, heatT);
+            float rimShimmer = heatT * halo * (0.02 + 0.12 * bodyShimmer);
+            color += tankHeatColor * (bodyHeat * (0.06 + bodyShimmerAmp * bodyShimmer) + rimShimmer);
         }
     }
 

@@ -219,4 +219,87 @@ public class TankHeatBehaviorTests
         Assert.True(baseInteriorHeat < 8f,
             $"Expected base interior to stay cool, not heat-fill. Avg terrain heat={baseInteriorHeat:0.00}");
     }
+
+    [Fact]
+    public void TankHeat_AtOwnBase_CenterCoolsFasterThanEdge()
+    {
+        var (worldCenter, tankCenter) = CreateWorldWithPrimaryTank(seed: 9191);
+        var (worldEdge, tankEdge) = CreateWorldWithPrimaryTank(seed: 9191);
+
+        var baseCenter = RequireBasePosition(tankCenter);
+        int insideOffset = Math.Max(1, Tweaks.Base.BaseSize / 2 - 2);
+        var baseEdgeInside = baseCenter + new Offset(insideOffset, 0);
+
+        SetTankHeat(tankCenter, 80f);
+        SetTankHeat(tankEdge, 80f);
+        tankCenter.Position = baseCenter;
+        tankEdge.Position = baseEdgeInside;
+
+        AdvanceTank(tankCenter, worldCenter, frames: 30);
+        AdvanceTank(tankEdge, worldEdge, frames: 30);
+
+        Assert.True(tankCenter.Heat < tankEdge.Heat,
+            $"Expected stronger cooling near base center. center={tankCenter.Heat:0.00}, edge={tankEdge.Heat:0.00}");
+    }
+
+    [Fact]
+    public void TankHeat_AtForeignBase_CoolsButLessThanOwnBase()
+    {
+        var (worldOwn, tankOwn) = CreateWorldWithPrimaryTank(seed: 9292);
+        var (worldForeign, tankForeign) = CreateWorldWithPrimaryTank(seed: 9292);
+
+        var ownBasePos = RequireBasePosition(tankOwn);
+        var foreignBasePos = worldForeign.TankBases.Bases[1].Position;
+
+        SetTankHeat(tankOwn, 60f);
+        SetTankHeat(tankForeign, 60f);
+        tankOwn.Position = ownBasePos;
+        tankForeign.Position = foreignBasePos;
+
+        CoolAreaToZero(worldOwn.Terrain, ownBasePos, radius: 20);
+        CoolAreaToZero(worldForeign.Terrain, foreignBasePos, radius: 20);
+
+        AdvanceTank(tankOwn, worldOwn, frames: 8);
+        AdvanceTank(tankForeign, worldForeign, frames: 8);
+
+        Assert.True(tankOwn.Heat < 60f && tankForeign.Heat < 60f,
+            $"Expected both bases to cool tanks. own={tankOwn.Heat:0.00}, foreign={tankForeign.Heat:0.00}");
+        Assert.True(tankOwn.Heat < tankForeign.Heat,
+            $"Expected own base to cool more than foreign base. own={tankOwn.Heat:0.00}, foreign={tankForeign.Heat:0.00}");
+    }
+
+    [Fact]
+    public void TankHeat_AtBase_CoolsLocalTerrainAndAirMoreThanOutsideBase()
+    {
+        var (worldInBase, tankInBase) = CreateWorldWithPrimaryTank(seed: 9393);
+        var (worldOutside, tankOutside) = CreateWorldWithPrimaryTank(seed: 9393);
+
+        var basePos = RequireBasePosition(tankInBase);
+        int outsideOffset = Tweaks.Base.BaseSize / 2 + 8;
+        var outsidePos = basePos + new Offset(outsideOffset, 0);
+
+        tankInBase.Position = basePos;
+        tankOutside.Position = outsidePos;
+        SetTankHeat(tankInBase, 75f);
+        SetTankHeat(tankOutside, 75f);
+
+        int radius = Tweaks.Tank.DigRadius;
+        worldInBase.Terrain.AddHeatTotalInRadiusArea(basePos, radius, 2400);
+        worldInBase.Terrain.AddAirHeatTotalInRadiusArea(basePos, radius, 2400);
+        worldOutside.Terrain.AddHeatTotalInRadiusArea(outsidePos, radius, 2400);
+        worldOutside.Terrain.AddAirHeatTotalInRadiusArea(outsidePos, radius, 2400);
+
+        AdvanceTank(tankInBase, worldInBase, frames: 12);
+        AdvanceTank(tankOutside, worldOutside, frames: 12);
+
+        float terrainInBase = worldInBase.Terrain.SampleAverageHeat(basePos, radius) * 255f;
+        float terrainOutside = worldOutside.Terrain.SampleAverageHeat(outsidePos, radius) * 255f;
+        float airInBase = worldInBase.Terrain.SampleAverageAirTemperature(basePos, radius);
+        float airOutside = worldOutside.Terrain.SampleAverageAirTemperature(outsidePos, radius);
+
+        Assert.True(terrainInBase < terrainOutside,
+            $"Expected base cooldown to lower nearby terrain heat too. inBase={terrainInBase:0.00}, outside={terrainOutside:0.00}");
+        Assert.True(airInBase < airOutside,
+            $"Expected base cooldown to lower nearby air heat too. inBase={airInBase:0.00}, outside={airOutside:0.00}");
+    }
 }

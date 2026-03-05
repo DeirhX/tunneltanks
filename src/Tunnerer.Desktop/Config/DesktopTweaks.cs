@@ -61,6 +61,7 @@ public static class DesktopScreenTweaks
     public static float PostTankHeatGlowR => Tweaks.Screen.PostTankHeatGlowR;
     public static float PostTankHeatGlowG => Tweaks.Screen.PostTankHeatGlowG;
     public static float PostTankHeatGlowB => Tweaks.Screen.PostTankHeatGlowB;
+    public static bool PostTankHeatDistortionEnabled => Tweaks.Screen.PostTankHeatDistortionEnabled;
     public static float PostTankHeatGlowMinHeat => Tweaks.Screen.PostTankHeatGlowMinHeat;
     public static float PostTankHeatGlowBaseRadius => Tweaks.Screen.PostTankHeatGlowBaseRadius;
     public static float PostTankHeatGlowScaleRadius => Tweaks.Screen.PostTankHeatGlowScaleRadius;

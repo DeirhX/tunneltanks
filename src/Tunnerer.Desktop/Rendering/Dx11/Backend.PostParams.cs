@@ -33,7 +33,7 @@ public sealed unsafe partial class Backend
         cbData.TankHeatGlowR = DesktopScreenTweaks.PostTankHeatGlowR;
         cbData.TankHeatGlowG = DesktopScreenTweaks.PostTankHeatGlowG;
         cbData.TankHeatGlowB = DesktopScreenTweaks.PostTankHeatGlowB;
-        cbData.TankHeatGlowA = 0f;
+        cbData.TankHeatGlowA = DesktopScreenTweaks.PostTankHeatDistortionEnabled ? 1f : 0f;
         cbData.TerrainHeatGlowR = DesktopScreenTweaks.PostTerrainHeatGlowR;
         cbData.TerrainHeatGlowG = DesktopScreenTweaks.PostTerrainHeatGlowG;
         cbData.TerrainHeatGlowB = DesktopScreenTweaks.PostTerrainHeatGlowB;
@@ -113,14 +113,12 @@ public sealed unsafe partial class Backend
         public float WorldSizeX, WorldSizeY, CameraPixelsX, CameraPixelsY;
         public float ViewSizeX, ViewSizeY, UseTerrainAux, BloomThreshold;
         public float BloomStrength, BloomWeightCenter, BloomWeightAxis, BloomWeightDiagonal;
-        public float VignetteStrength, EdgeLightStrength, EdgeLightBias, TankHeatGlowR;
-        public float TankHeatGlowG, TankHeatGlowB, TankHeatGlowA, TerrainHeatGlowR;
-        public float TerrainHeatGlowG, TerrainHeatGlowB, TerrainHeatThreshold, TerrainMaskEdgeStrength;
-        public float TerrainMaskCaveDarken,
-                     TerrainMaskSolidLift,
-                     TerrainMaskOutlineDarken,
-                     TerrainMaskRimLift;
-        public float TerrainMaskBoundaryScale, VignetteInnerRadius, VignetteOuterRadius, Quality;
+        public float VignetteStrength, EdgeLightStrength, EdgeLightBias, _padEdgeAlign0;
+        public float TankHeatGlowR, TankHeatGlowG, TankHeatGlowB, TankHeatGlowA;
+        public float TerrainHeatGlowR, TerrainHeatGlowG, TerrainHeatGlowB, TerrainHeatThreshold;
+        public float TerrainMaskEdgeStrength, TerrainMaskCaveDarken, TerrainMaskSolidLift, TerrainMaskOutlineDarken;
+        public float TerrainMaskRimLift, TerrainMaskBoundaryScale, VignetteInnerRadius, VignetteOuterRadius;
+        public float Quality, _padQuality0, _padQuality1, _padQuality2;
         public float MaterialEnergyR, MaterialEnergyG, MaterialEnergyB, MaterialEnergyStrength;
         public float MaterialScorchedR, MaterialScorchedG, MaterialScorchedB, MaterialScorchedStrength;
         public float MaterialPulseFreq, MaterialPulseMin, MaterialPulseRange, MaterialPulsePad;
