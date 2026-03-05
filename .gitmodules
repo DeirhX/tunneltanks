@@ -1,7 +1,0 @@
-[submodule "libs/nanogui"]
-	path = legacy/libs/nanogui
-	url = https://github.com/DeirhX/nanogui-sdl2.git
-	branch = master
-[submodule "libs/ecs"]
-	path = legacy/libs/ecs
-	url = https://github.com/DeirhX/ecs.hpp.git
