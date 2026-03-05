@@ -53,7 +53,8 @@ public partial class Game
 
                 Rect? cameraRevealRect = ComputeCameraRevealRect(visibleRect);
 
-                // Terrain-change and camera-reveal need full 4-channel aux rebuild (SDF + material + heat)
+                // Terrain-change and camera-reveal need full 4-channel aux rebuild
+                // (R=heat, G=SDF, B=material class, A=combined emissive/scorch).
                 Rect? fullAuxRect = MergeDirtyRects(terrainDirtyRect, cameraRevealRect);
 
                 if (fullAuxRect is Rect fullRect)

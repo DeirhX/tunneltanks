@@ -258,34 +258,96 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
         color += maskSoft * edgeProfile * TerrainMaskSolidLift * terrainFactor;
         color += maskSoft * edgeProfile * outline * TerrainMaskRimLift * terrainFactor;
 
-        // Broad material texture, inspired by the old normal-map feel but detached from tunnel edges.
-        float edgeDistance = abs(m * 2.0 - 1.0);
-        float interiorMask = smoothstep(0.42, 0.78, edgeDistance) * maskSoft * terrainFactor;
-        float2 texP = worldCell * 0.028;
-        float h0 = fbmNoise(texP + float2(17.0, 3.0), 4);
-        float hx = fbmNoise(texP + float2(19.0, 3.0), 4);
-        float hy = fbmNoise(texP + float2(17.0, 5.0), 4);
-        float2 dH = float2(hx - h0, hy - h0);
-        float3 pseudoNormal = normalize(float3(-dH * 9.0, 1.0));
-        float3 lightDir = normalize(float3(LightDir.xy, max(0.35, LightDir.z)));
-        float pseudoDiffuse = dot(pseudoNormal, lightDir) * 0.5 + 0.5;
-        float cavity = smoothstep(0.45, 0.05, h0);
-        float darken = (0.04 + 0.10 * cavity) * interiorMask;
-        color *= 1.0 - darken;
-        color = lerp(color, color * (0.80 + 0.36 * pseudoDiffuse), interiorMask * 0.80);
+        // Material classes come from aux.b (0=None, 85=Dirt, 170=Stone, 255=Base).
+        int2 auxMax = int2(max(1.0, WorldSize.x), max(1.0, WorldSize.y)) - int2(1, 1);
+        int2 auxCell = clamp(int2(floor(worldCell)), int2(0, 0), auxMax);
+        float4 aNearest = auxTex.Load(int3(auxCell, 0));
+        float materialCode = aNearest.b * 255.0;
+        float dirtMask = (1.0 - smoothstep(0.0, 40.0, abs(materialCode - 85.0))) * terrainFactor;
+        float stoneMask = (1.0 - smoothstep(0.0, 40.0, abs(materialCode - 170.0))) * terrainFactor;
+        float baseMask = (1.0 - smoothstep(0.0, 28.0, abs(materialCode - 255.0))) * terrainFactor;
+        stoneMask = saturate(stoneMask + baseMask * 0.75);
+        dirtMask = saturate(dirtMask * (1.0 - stoneMask * 0.6));
 
-        // Fine stone grain layered over the broad relief.
-        float2 hiP = worldCell * 0.115;
-        float g0 = fbmNoise(hiP + float2(121.0, 33.0), 2);
-        float gnx = fbmNoise(hiP + float2(123.0, 33.0), 2);
-        float gny = fbmNoise(hiP + float2(121.0, 35.0), 2);
+        // Jagged, multi-source stone-wall material pass for stone/base only.
+        float materialMask = stoneMask;
+        float3 lightDir = normalize(float3(LightDir.xy, max(0.35, LightDir.z)));
+
+        // Base relief with ridged breakup.
+        float2 baseP = worldCell * 0.026;
+        float b0 = fbmNoise(baseP + float2(17.0, 3.0), 5);
+        float bnx = fbmNoise(baseP + float2(19.0, 3.0), 5);
+        float bny = fbmNoise(baseP + float2(17.0, 5.0), 5);
+        float2 bGrad = float2(bnx - b0, bny - b0);
+        float ridgedBase = 1.0 - abs(b0 * 2.0 - 1.0);
+        float3 baseNormal = normalize(float3(-bGrad * 11.0, 1.0));
+        float baseDiffuse = dot(baseNormal, lightDir) * 0.5 + 0.5;
+        float baseCavity = smoothstep(0.55, 0.10, b0);
+        float baseDark = (0.04 + 0.12 * baseCavity + 0.05 * ridgedBase) * materialMask;
+        color *= 1.0 - baseDark;
+        color = lerp(color, color * (0.76 + 0.42 * baseDiffuse), materialMask * 0.88);
+
+        // High-frequency chipped grain.
+        float2 grainP = worldCell * 0.145;
+        float g0 = fbmNoise(grainP + float2(121.0, 33.0), 3);
+        float gnx = fbmNoise(grainP + float2(123.0, 33.0), 3);
+        float gny = fbmNoise(grainP + float2(121.0, 35.0), 3);
         float2 gGrad = float2(gnx - g0, gny - g0);
-        float3 grainNormal = normalize(float3(-gGrad * 4.2, 1.0));
+        float3 grainNormal = normalize(float3(-gGrad * 5.3, 1.0));
         float grainDiffuse = dot(grainNormal, lightDir) * 0.5 + 0.5;
-        float grainMask = interiorMask * 0.55;
-        float grainCavity = smoothstep(0.58, 0.18, g0);
-        color *= 1.0 - grainMask * (0.010 + 0.035 * grainCavity);
-        color = lerp(color, color * (0.92 + 0.16 * grainDiffuse), grainMask);
+        float grainMask = materialMask * 0.75;
+        float grainCavity = smoothstep(0.60, 0.20, g0);
+        color *= 1.0 - grainMask * (0.015 + 0.045 * grainCavity);
+        color = lerp(color, color * (0.88 + 0.22 * grainDiffuse), grainMask);
+
+        // Angular strata and fracture lines for wall-like structure.
+        float2 strataP = float2(
+            worldCell.x * 0.060 + worldCell.y * 0.022,
+            -worldCell.x * 0.022 + worldCell.y * 0.060);
+        float strataNoise = fbmNoise(strataP + float2(211.0, 87.0), 4);
+        float ridge = 1.0 - abs(strataNoise * 2.0 - 1.0);
+        float strata = pow(saturate(ridge), 3.2);
+        float crack = smoothstep(0.80, 0.985, strata);
+        color *= 1.0 - materialMask * (0.055 * strata + 0.090 * crack);
+
+        // Block/chisel breakup from coarse cell noise.
+        float2 blockP = worldCell * 0.095;
+        float2 blockCell = floor(blockP);
+        float2 blockLocal = frac(blockP) - 0.5;
+        float blockRnd = hash21(blockCell + float2(401.0, 59.0));
+        float ang = blockRnd * 6.2831853;
+        float2 blockDir = normalize(float2(cos(ang), sin(ang)) + float2(1e-4, -1e-4));
+        float chisel = 0.5 + dot(blockLocal, blockDir) * 1.9;
+        float blockEdge = smoothstep(0.32, 0.50, max(abs(blockLocal.x), abs(blockLocal.y)));
+        color *= 1.0 - materialMask * (0.020 * saturate(chisel) + 0.040 * blockEdge);
+
+        // Macro breakup prevents broad uniform patches.
+        float macro = fbmNoise(worldCell * 0.011 + float2(301.0, 133.0), 3);
+        float macroShade = lerp(0.86, 1.12, macro);
+        color = lerp(color, color * macroShade, materialMask * 0.45);
+
+        // Dirt has its own soft clumpy profile (no stone fractures/chisel lines).
+        if (dirtMask > 0.0)
+        {
+            float2 dirtP = worldCell * 0.040;
+            float d0 = fbmNoise(dirtP + float2(19.0, 201.0), 4);
+            float dnx = fbmNoise(dirtP + float2(21.0, 201.0), 4);
+            float dny = fbmNoise(dirtP + float2(19.0, 203.0), 4);
+            float2 dGrad = float2(dnx - d0, dny - d0);
+            float3 dirtNormal = normalize(float3(-dGrad * 4.8, 1.0));
+            float dirtDiffuse = dot(dirtNormal, lightDir) * 0.5 + 0.5;
+
+            float clump = smoothstep(0.24, 0.74, d0);
+            float pore = smoothstep(0.56, 0.18, fbmNoise(worldCell * 0.155 + float2(71.0, 13.0), 2));
+            float dirtDark = 0.020 + 0.060 * pore + 0.025 * (1.0 - clump);
+            color *= 1.0 - dirtMask * dirtDark;
+
+            float3 dirtTint = lerp(float3(0.92, 0.82, 0.70), float3(1.05, 0.92, 0.78), clump);
+            color = lerp(color, color * dirtTint * (0.90 + 0.18 * dirtDiffuse), dirtMask * 0.82);
+
+            float looseDust = fbmNoise(worldCell * 0.095 + float2(151.0, 39.0), 3);
+            color = lerp(color, color * lerp(0.94, 1.06, looseDust), dirtMask * 0.30);
+        }
 
         float3 aaNeighborhood =
             sceneTex.Sample(s0, uv + float2(mTexel.x, 0.0)).rgb +
@@ -332,9 +394,10 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
 
         float phase = frac(sin(dot(floor(worldCell), float2(12.9898, 78.233))) * 43758.5453) * 6.2831853;
         float pulse = MaterialEmissivePulse.y + MaterialEmissivePulse.z * (0.5 + 0.5 * sin(Time * MaterialEmissivePulse.x + phase));
-        float energy = a0.b * 0.50 + (ax1.b + ax2.b + ay1.b + ay2.b) * 0.10 + (ad1.b + ad2.b + ad3.b + ad4.b) * 0.025;
-        color += MaterialEmissiveEnergy.rgb * (energy * MaterialEmissiveEnergy.a * pulse * terrainFactor);
-        color += MaterialEmissiveScorched.rgb * (a0.a * MaterialEmissiveScorched.a * pulse * terrainFactor);
+        float emissive = a0.a * 0.50 + (ax1.a + ax2.a + ay1.a + ay2.a) * 0.10 + (ad1.a + ad2.a + ad3.a + ad4.a) * 0.025;
+        float emissiveStrength = max(MaterialEmissiveEnergy.a, MaterialEmissiveScorched.a);
+        float3 emissiveColor = lerp(MaterialEmissiveScorched.rgb, MaterialEmissiveEnergy.rgb, 0.5);
+        color += emissiveColor * (emissive * emissiveStrength * pulse * terrainFactor);
     }
 
     float entityMaskBase = 1.0 - step(0.995, sceneTex.Sample(s0, uv).a);
