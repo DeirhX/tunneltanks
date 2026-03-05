@@ -258,6 +258,35 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
         color += maskSoft * edgeProfile * TerrainMaskSolidLift * terrainFactor;
         color += maskSoft * edgeProfile * outline * TerrainMaskRimLift * terrainFactor;
 
+        // Broad material texture, inspired by the old normal-map feel but detached from tunnel edges.
+        float edgeDistance = abs(m * 2.0 - 1.0);
+        float interiorMask = smoothstep(0.42, 0.78, edgeDistance) * maskSoft * terrainFactor;
+        float2 texP = worldCell * 0.028;
+        float h0 = fbmNoise(texP + float2(17.0, 3.0), 4);
+        float hx = fbmNoise(texP + float2(19.0, 3.0), 4);
+        float hy = fbmNoise(texP + float2(17.0, 5.0), 4);
+        float2 dH = float2(hx - h0, hy - h0);
+        float3 pseudoNormal = normalize(float3(-dH * 9.0, 1.0));
+        float3 lightDir = normalize(float3(LightDir.xy, max(0.35, LightDir.z)));
+        float pseudoDiffuse = dot(pseudoNormal, lightDir) * 0.5 + 0.5;
+        float cavity = smoothstep(0.45, 0.05, h0);
+        float darken = (0.04 + 0.10 * cavity) * interiorMask;
+        color *= 1.0 - darken;
+        color = lerp(color, color * (0.80 + 0.36 * pseudoDiffuse), interiorMask * 0.80);
+
+        // Fine stone grain layered over the broad relief.
+        float2 hiP = worldCell * 0.115;
+        float g0 = fbmNoise(hiP + float2(121.0, 33.0), 2);
+        float gnx = fbmNoise(hiP + float2(123.0, 33.0), 2);
+        float gny = fbmNoise(hiP + float2(121.0, 35.0), 2);
+        float2 gGrad = float2(gnx - g0, gny - g0);
+        float3 grainNormal = normalize(float3(-gGrad * 4.2, 1.0));
+        float grainDiffuse = dot(grainNormal, lightDir) * 0.5 + 0.5;
+        float grainMask = interiorMask * 0.55;
+        float grainCavity = smoothstep(0.58, 0.18, g0);
+        color *= 1.0 - grainMask * (0.010 + 0.035 * grainCavity);
+        color = lerp(color, color * (0.92 + 0.16 * grainDiffuse), grainMask);
+
         float3 aaNeighborhood =
             sceneTex.Sample(s0, uv + float2(mTexel.x, 0.0)).rgb +
             sceneTex.Sample(s0, uv - float2(mTexel.x, 0.0)).rgb +
