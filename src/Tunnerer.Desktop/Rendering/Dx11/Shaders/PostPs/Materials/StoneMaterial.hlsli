@@ -60,7 +60,7 @@ void ApplyStoneMaterial(inout float3 color, float2 worldCell, float materialMask
     float2 blockLocal = frac(blockP) - 0.5;
     float blockRnd = hash21(blockCell + float2(401.0, 59.0));
     float ang = blockRnd * 6.2831853;
-    float2 blockDir = normalize(float2(cos(ang), sin(ang)) + float2(1e-4, -1e-4));
+    float2 blockDir = normalize(float2(cos(ang), sin(ang)) + kSignedEpsilon2);
     float chisel = 0.5 + dot(blockLocal, blockDir) * 1.9;
     float blockEdge = smoothstep(0.32, 0.50, max(abs(blockLocal.x), abs(blockLocal.y)));
     color *= 1.0 - materialMask * (0.020 * saturate(chisel) + 0.040 * blockEdge);

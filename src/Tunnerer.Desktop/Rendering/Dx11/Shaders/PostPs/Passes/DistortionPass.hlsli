@@ -13,14 +13,14 @@ void ComputeTankHeatHaze(float2 uv, out float2 hazeOffset, out float outlineHeat
         float2 d = uv - g.xy;
         float2 dPx = d * ViewSize;
         float dist2 = dot(dPx, dPx);
-        float radiusPx = max(1e-3, g.z * max(ViewSize.x, ViewSize.y));
+        float radiusPx = max(kRadiusEpsilonPx, g.z * max(ViewSize.x, ViewSize.y));
         float radius2 = radiusPx * radiusPx;
         float falloff = saturate(1.0 - dist2 / radius2);
         if (falloff <= 0.0) continue;
 
         float distNorm = sqrt(saturate(1.0 - falloff));
         float tankEdgeBand = smoothstep(0.34, 0.16, distNorm) * (1.0 - smoothstep(0.16, 0.03, distNorm));
-        float2 swirlDirPx = normalize(float2(-dPx.y, dPx.x) + float2(1e-4, -1e-4));
+        float2 swirlDirPx = normalize(float2(-dPx.y, dPx.x) + kSignedEpsilon2);
         float shimmer =
             sin(Time * 14.0 + (uv.x * 210.0 + uv.y * 170.0) + i * 1.7) * 0.65 +
             sin(Time * 22.0 + (uv.x * 120.0 - uv.y * 140.0) + i * 2.3) * 0.35;
@@ -33,7 +33,7 @@ void ComputeTankHeatHaze(float2 uv, out float2 hazeOffset, out float outlineHeat
         outlineHeatMask += over50 * falloff;
 
         // Dedicated hot-tank edge wobble so tank outlines visibly shimmer once heat is high.
-        float2 tankEdgeDirPx = normalize(float2(dPx.y, -dPx.x) + float2(1e-4, -1e-4));
+        float2 tankEdgeDirPx = normalize(float2(dPx.y, -dPx.x) + kSignedEpsilon2);
         float tankWave =
             sin(Time * 31.0 + distNorm * 96.0 + i * 2.4) * 0.65 +
             sin(Time * 19.0 - distNorm * 71.0 + i * 1.3) * 0.35;
@@ -61,10 +61,10 @@ void ApplyOutlineHeatDistortion(float2 uv, float distortionEnabled, float outlin
     float aU = sceneTex.Sample(s0, uv - ty).a;
     float aD = sceneTex.Sample(s0, uv + ty).a;
 
-    float lL = dot(cL, float3(0.299, 0.587, 0.114));
-    float lR = dot(cR, float3(0.299, 0.587, 0.114));
-    float lU = dot(cU, float3(0.299, 0.587, 0.114));
-    float lD = dot(cD, float3(0.299, 0.587, 0.114));
+    float lL = dot(cL, kLumaWeights);
+    float lR = dot(cR, kLumaWeights);
+    float lU = dot(cU, kLumaWeights);
+    float lD = dot(cD, kLumaWeights);
     float2 edgeGrad = float2(lR - lL, lD - lU);
 
     float edgeLum = saturate(length(edgeGrad) * 3.5);
@@ -72,7 +72,7 @@ void ApplyOutlineHeatDistortion(float2 uv, float distortionEnabled, float outlin
     float outlineEdge = max(edgeLum, edgeAlpha);
 
     // Shimmer tangent to the edge gradient so silhouettes appear to wobble.
-    float2 edgeDir = normalize(float2(edgeGrad.y, -edgeGrad.x) + float2(1e-4, -1e-4));
+    float2 edgeDir = normalize(float2(edgeGrad.y, -edgeGrad.x) + kSignedEpsilon2);
     float outlineWave =
         sin(Time * 28.0 + uv.x * 260.0 - uv.y * 220.0) * 0.60 +
         sin(Time * 17.0 + uv.x * 120.0 + uv.y * 145.0) * 0.40;

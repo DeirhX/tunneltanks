@@ -10,7 +10,7 @@ void ApplyTankHeatGlowPass(float2 uv, inout float3 color)
         float heatT = saturate(g.w);
         float2 d = uv - g.xy;
         float2 dPx = d * ViewSize;
-        float radiusPx = max(1e-3, g.z * max(ViewSize.x, ViewSize.y));
+        float radiusPx = max(kRadiusEpsilonPx, g.z * max(ViewSize.x, ViewSize.y));
         float falloff = 1.0 - dot(dPx, dPx) / (radiusPx * radiusPx);
         if (falloff <= 0.0)
             continue;
@@ -22,7 +22,7 @@ void ApplyTankHeatGlowPass(float2 uv, inout float3 color)
         float3 tankHeatColor = lerp(float3(0.95, 0.08, 0.02), float3(1.00, 0.46, 0.06), orangeT);
         float metalHot = smoothstep(0.28, 1.0, heatT);
         float metalMask = entityMaskBase * core * (0.20 + 0.80 * metalHot);
-        float baseLum = dot(color, float3(0.299, 0.587, 0.114));
+        float baseLum = dot(color, kLumaWeights);
         float3 steelBase = lerp(float3(0.18, 0.22, 0.28), float3(0.34, 0.38, 0.44), saturate(baseLum * 1.5));
         float3 hotMetal = lerp(steelBase, tankHeatColor, metalHot);
         hotMetal += float3(1.00, 0.92, 0.70) * pow(core, 4.0) * (0.08 + 0.34 * heatT);

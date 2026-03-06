@@ -80,11 +80,11 @@ void ApplyTerrainAuxPass(float2 uv, float terrainFactor, inout float3 color)
     int2 auxMax = int2(max(1.0, WorldSize.x), max(1.0, WorldSize.y)) - int2(1, 1);
     int2 auxCell = clamp(int2(floor(worldCell)), int2(0, 0), auxMax);
     float4 aNearest = auxTex.Load(int3(auxCell, 0));
-    float materialCode = aNearest.b * 255.0;
-    float dirtMask = (1.0 - smoothstep(0.0, 40.0, abs(materialCode - 85.0))) * terrainFactor;
-    float stoneMask = (1.0 - smoothstep(0.0, 40.0, abs(materialCode - 170.0))) * terrainFactor;
-    float energyMask = (1.0 - smoothstep(0.0, 28.0, abs(materialCode - 212.0))) * terrainFactor;
-    float baseMask = (1.0 - smoothstep(0.0, 28.0, abs(materialCode - 255.0))) * terrainFactor;
+    float materialCode = aNearest.b * kMaterialCodeScale;
+    float dirtMask = (1.0 - smoothstep(0.0, kMaterialMaskWidthWide, abs(materialCode - kMaterialCodeDirt))) * terrainFactor;
+    float stoneMask = (1.0 - smoothstep(0.0, kMaterialMaskWidthWide, abs(materialCode - kMaterialCodeStone))) * terrainFactor;
+    float energyMask = (1.0 - smoothstep(0.0, kMaterialMaskWidthNarrow, abs(materialCode - kMaterialCodeEnergy))) * terrainFactor;
+    float baseMask = (1.0 - smoothstep(0.0, kMaterialMaskWidthNarrow, abs(materialCode - kMaterialCodeBase))) * terrainFactor;
     stoneMask = saturate(stoneMask + baseMask * 0.75);
     dirtMask = saturate(dirtMask * (1.0 - stoneMask * 0.6) * (1.0 - energyMask));
 
@@ -111,7 +111,7 @@ void ApplyTerrainAuxPass(float2 uv, float terrainFactor, inout float3 color)
     // Heat debug overlay: half-transparent temperature map (blue->yellow->red).
     if (HeatDebugOverlay > 0.5)
     {
-        float temperature = a0.r * 255.0 * 4.0;
+        float temperature = a0.r * kHeatDebugTemperatureScale;
         float heat01 = saturate(temperature / 100.0);
         color = lerp(color, HeatDebugRamp(heat01), 0.5);
     }
