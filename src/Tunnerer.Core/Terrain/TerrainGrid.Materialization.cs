@@ -34,7 +34,7 @@ public partial class TerrainGrid
 
     private static TerrainPixel MaterializePixel(TerrainPixel p, Random rng) => p switch
     {
-        TerrainPixel.LevelGenDirt => rng.Next(2) == 0 ? TerrainPixel.DirtHigh : TerrainPixel.DirtLow,
+        TerrainPixel.LevelGenDirt => TerrainPixel.DirtHigh,
         TerrainPixel.LevelGenRock => TerrainPixel.Rock,
         TerrainPixel.LevelGenMark => TerrainPixel.Rock,
         _ => p,

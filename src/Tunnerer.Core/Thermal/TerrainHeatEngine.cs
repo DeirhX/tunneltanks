@@ -100,6 +100,12 @@ public sealed class TerrainHeatEngine
             airTemperature[i] += _airDelta[i];
             if (Pixel.GetThermalMaterial(pixels[i]) == ThermalMaterial.Air)
                 terrainTemperature[i] = airTemperature[i];
+            else
+            {
+                ThermalMaterial material = Pixel.GetThermalMaterial(pixels[i]);
+                if (IsFixedTemperatureMaterial(material))
+                    terrainTemperature[i] = GetFixedTemperature(material);
+            }
         }
     }
 
@@ -451,6 +457,7 @@ public sealed class TerrainHeatEngine
         ThermalMaterial.Air => Tweaks.World.ThermalCapacityAir,
         ThermalMaterial.Dirt => Tweaks.World.ThermalCapacityDirt,
         ThermalMaterial.Stone => Tweaks.World.ThermalCapacityStone,
+        ThermalMaterial.ConstantEnergy => Tweaks.World.ThermalCapacityConstantEnergy,
         _ => Tweaks.World.ThermalCapacityBase,
     };
 
@@ -468,6 +475,11 @@ public sealed class TerrainHeatEngine
             (ThermalMaterial.Dirt, ThermalMaterial.Base) => Tweaks.World.ThermalKDirtBase,
             (ThermalMaterial.Stone, ThermalMaterial.Stone) => Tweaks.World.ThermalKStoneStone,
             (ThermalMaterial.Stone, ThermalMaterial.Base) => Tweaks.World.ThermalKStoneBase,
+            (ThermalMaterial.Air, ThermalMaterial.ConstantEnergy) => Tweaks.World.ThermalKAirConstantEnergy,
+            (ThermalMaterial.Dirt, ThermalMaterial.ConstantEnergy) => Tweaks.World.ThermalKDirtConstantEnergy,
+            (ThermalMaterial.Stone, ThermalMaterial.ConstantEnergy) => Tweaks.World.ThermalKStoneConstantEnergy,
+            (ThermalMaterial.Base, ThermalMaterial.ConstantEnergy) => Tweaks.World.ThermalKBaseConstantEnergy,
+            (ThermalMaterial.ConstantEnergy, ThermalMaterial.ConstantEnergy) => Tweaks.World.ThermalKConstantEnergyConstantEnergy,
             _ => Tweaks.World.ThermalKBaseBase,
         };
     }
@@ -477,12 +489,18 @@ public sealed class TerrainHeatEngine
         ThermalMaterial.Air => Tweaks.World.ThermalKAmbientAir,
         ThermalMaterial.Dirt => Tweaks.World.ThermalKAmbientDirt,
         ThermalMaterial.Stone => _settings.EnableStoneAmbientExchange ? Tweaks.World.ThermalKAmbientStone : 0f,
+        ThermalMaterial.ConstantEnergy => Tweaks.World.ThermalKAmbientConstantEnergy,
         _ => Tweaks.World.ThermalKAmbientBase,
     };
 
     private static bool IsFixedTemperatureMaterial(ThermalMaterial material)
-        => material == ThermalMaterial.Base;
+        => material == ThermalMaterial.Base || material == ThermalMaterial.ConstantEnergy;
 
     private static float GetFixedTemperature(ThermalMaterial material)
-        => material == ThermalMaterial.Base ? Tweaks.World.ThermalFixedBaseTemperature : 0f;
+        => material switch
+        {
+            ThermalMaterial.Base => Tweaks.World.ThermalFixedBaseTemperature,
+            ThermalMaterial.ConstantEnergy => Tweaks.World.ThermalFixedConstantEnergyTemperature,
+            _ => 0f,
+        };
 }

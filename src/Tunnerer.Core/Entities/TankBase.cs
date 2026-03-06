@@ -60,6 +60,25 @@ public class TankBase
             if (toTerrain != 0)
                 terrain.AddHeatTotalInRadiusArea(Position, Half, toTerrain);
         }
+
+        // Keep base center as a hard thermal sink for gameplay/readability:
+        // its cell should not retain residual terrain/air energy.
+        float centerTerrainTemp = terrain.GetHeatTemperature(Position);
+        if (centerTerrainTemp != 0f)
+        {
+            int centerTerrainDelta = -(int)MathF.Round(centerTerrainTemp);
+            if (centerTerrainDelta != 0)
+                terrain.AddHeatTotalInRadiusArea(Position, 0, centerTerrainDelta);
+        }
+
+        float centerAirTemp = terrain.GetAirTemperature(Position);
+        if (centerAirTemp != 0f)
+        {
+            int centerAirDelta = -(int)MathF.Round(centerAirTemp);
+            if (centerAirDelta != 0)
+                terrain.AddAirHeatTotalInRadiusArea(Position, 0, centerAirDelta);
+        }
+
         Reactor.Add(new ReactorState(0, Tweaks.Base.HealthRegen));
     }
 
@@ -120,7 +139,7 @@ public class TankBase
                 }
                 else
                 {
-                    terrain.SetPixel(pix, TerrainPixel.Blank);
+                    terrain.SetPixel(pix, TerrainPixel.BaseCore);
                 }
             }
     }

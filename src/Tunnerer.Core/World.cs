@@ -205,8 +205,7 @@ public class World
                     {
                         if (Roll1000(x, y, 4) < Tweaks.World.DirtRecoverSpeed)
                         {
-                            var newPix = (Roll1000(x, y, 5) & 1) == 0 ? TerrainPixel.DirtHigh : TerrainPixel.DirtLow;
-                            writes.Add((x + y * w, newPix));
+                            writes.Add((x + y * w, TerrainPixel.DirtHigh));
                         }
                     }
                 }
@@ -260,8 +259,7 @@ public class World
                 {
                     if (random.Next(1000) < Tweaks.World.DirtRecoverSpeed)
                     {
-                        var newPix = random.Next(2) == 0 ? TerrainPixel.DirtHigh : TerrainPixel.DirtLow;
-                        writes.Add((x + y * w, newPix));
+                        writes.Add((x + y * w, TerrainPixel.DirtHigh));
                     }
                 }
             }

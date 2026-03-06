@@ -1,6 +1,7 @@
 namespace Tunnerer.Core.Terrain;
 
 using System.Diagnostics;
+using Tunnerer.Core.Config;
 using Tunnerer.Core.Types;
 
 public partial class TerrainGrid
@@ -273,8 +274,19 @@ public partial class TerrainGrid
                     int offset = row + x;
                     float next = _heatTemperature[offset] + work.Delta[idx];
                     float nextAir = _airTemperature[offset] + work.AirDelta[idx];
-                    if (Pixel.GetThermalMaterial(_data[offset]) == ThermalMaterial.Air)
+                    ThermalMaterial material = Pixel.GetThermalMaterial(_data[offset]);
+                    if (material == ThermalMaterial.Air)
+                    {
                         next = nextAir;
+                    }
+                    else if (material == ThermalMaterial.Base)
+                    {
+                        next = Tweaks.World.ThermalFixedBaseTemperature;
+                    }
+                    else if (material == ThermalMaterial.ConstantEnergy)
+                    {
+                        next = Tweaks.World.ThermalFixedConstantEnergyTemperature;
+                    }
                     _heatTemperature[offset] = next;
                     _airTemperature[offset] = nextAir;
                     if (ShouldMarkHeatDirty(_heatTemp[offset], next))

@@ -122,6 +122,7 @@ public static class Tweaks
         public const float ThermalCapacityDirt = 1.4f;
         public const float ThermalCapacityStone = 2.6f;
         public const float ThermalCapacityBase = 2.6f;
+        public const float ThermalCapacityConstantEnergy = 2.0f;
 
         // Pairwise transmission speed (conductance).
         public const float ThermalKAirAir = 0.240f;
@@ -134,16 +135,23 @@ public static class Tweaks
         public const float ThermalKStoneStone = 0.300f;
         public const float ThermalKStoneBase = 0.450f;
         public const float ThermalKBaseBase = 0.200f;
+        public const float ThermalKAirConstantEnergy = 0.550f;
+        public const float ThermalKDirtConstantEnergy = 0.350f;
+        public const float ThermalKStoneConstantEnergy = 0.450f;
+        public const float ThermalKBaseConstantEnergy = 0.450f;
+        public const float ThermalKConstantEnergyConstantEnergy = 0.300f;
 
         // Air-field coupling knobs for conservative air/terrain exchange.
         public const float ThermalAirCellCoupling = 0.120f;
         public const float ThermalAirNeighborCoupling = 0.060f;
 
         public const float ThermalFixedBaseTemperature = 0f;
+        public const float ThermalFixedConstantEnergyTemperature = 0f;
         public const float ThermalKAmbientAir = 0.0120f;
         public const float ThermalKAmbientDirt = 0.0120f;
         public const float ThermalKAmbientStone = 0.0100f;
         public const float ThermalKAmbientBase = 0.0000f;
+        public const float ThermalKAmbientConstantEnergy = 0.0000f;
         public const int ThermalActiveTileSize = 32;
         public const float ThermalSparseFallbackCoverage = 0.45f;
         public const int ThermalParallelRegionThreshold = 4;

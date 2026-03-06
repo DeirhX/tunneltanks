@@ -44,7 +44,7 @@ public class ProjectileList
             Tweaks.Colors.Concrete);
         behaviors[(int)ProjectileType.DirtFoam] = new(
             (p, solver, self) => AdvanceFoam(p, solver.Terrain, self,
-                TerrainPixel.DirtHigh, TerrainPixel.DirtLow, skipConcrete: false),
+                TerrainPixel.DirtHigh, TerrainPixel.DirtHigh, skipConcrete: false),
             Tweaks.Colors.DirtProjectile);
         return behaviors;
     }

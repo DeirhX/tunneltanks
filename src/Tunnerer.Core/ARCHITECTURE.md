@@ -162,7 +162,7 @@ All `Pixel.Is*()` methods are single-lookup into the behavior table (256-element
 ### Materialization
 
 `MaterializeTerrain(int? seed)` converts generator markers to final values:
-- `LevelGenDirt` → `DirtHigh` or `DirtLow` (50/50 random)
+- `LevelGenDirt` → `DirtHigh`
 - `LevelGenRock` → `Rock`
 - `LevelGenMark` → `Blank`
 

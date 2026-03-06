@@ -33,7 +33,7 @@ public class TerrainTests
         var t = MakeTerrain(10, 10);
         Assert.Empty(t.GetChangeList());
 
-        t.SetPixel(new Position(3, 3), TerrainPixel.DirtLow);
+        t.SetPixel(new Position(3, 3), TerrainPixel.DirtHigh);
         Assert.Single(t.GetChangeList());
         Assert.Equal(new Position(3, 3), t.GetChangeList()[0]);
     }
@@ -42,7 +42,7 @@ public class TerrainTests
     public void ClearChangeList_EmptiesIt()
     {
         var t = MakeTerrain(10, 10);
-        t.SetPixel(new Position(3, 3), TerrainPixel.DirtLow);
+        t.SetPixel(new Position(3, 3), TerrainPixel.DirtHigh);
         t.ClearChangeList();
         Assert.Empty(t.GetChangeList());
     }
@@ -88,7 +88,7 @@ public class TerrainTests
             t[i] = TerrainPixel.Blank;
 
         t[1, 1] = TerrainPixel.DirtHigh;
-        t[2, 1] = TerrainPixel.DirtLow;
+        t[2, 1] = TerrainPixel.DirtHigh;
         t[3, 1] = TerrainPixel.DirtGrow; // not counted as dirt
         t[1, 2] = TerrainPixel.DirtHigh;
 

@@ -449,7 +449,6 @@ public class TerrainBehaviorTests
     [InlineData(TerrainPixel.ConcreteHigh, true, false)]
     [InlineData(TerrainPixel.ConcreteLow, true, false)]
     [InlineData(TerrainPixel.DirtHigh, false, true)]
-    [InlineData(TerrainPixel.DirtLow, false, true)]
     [InlineData(TerrainPixel.Blank, false, false)]
     [InlineData(TerrainPixel.DecalHigh, false, false)]
     public void BehaviorTable_MatchesLegacyMethods(TerrainPixel pix, bool blocksMovement, bool softCollision)
@@ -480,7 +479,6 @@ public class TerrainBehaviorTests
 
     [Theory]
     [InlineData(TerrainPixel.DirtHigh)]
-    [InlineData(TerrainPixel.DirtLow)]
     [InlineData(TerrainPixel.DirtGrow)]
     public void Diggable_IncludesAllDirtVariants(TerrainPixel pix)
     {
@@ -501,11 +499,11 @@ public class TerrainBehaviorTests
     {
         var magenta = new Color(0xff, 0x00, 0xff);
         TerrainPixel[] defined = [
-            TerrainPixel.Blank, TerrainPixel.DirtHigh, TerrainPixel.DirtLow,
+            TerrainPixel.Blank, TerrainPixel.DirtHigh,
             TerrainPixel.DirtGrow, TerrainPixel.Rock, TerrainPixel.DecalHigh,
             TerrainPixel.DecalLow, TerrainPixel.ConcreteLow, TerrainPixel.ConcreteHigh,
             TerrainPixel.EnergyLow, TerrainPixel.EnergyMedium, TerrainPixel.EnergyHigh,
-            TerrainPixel.BaseBarrier, TerrainPixel.BaseMin, TerrainPixel.BaseMax,
+            TerrainPixel.BaseBarrier, TerrainPixel.BaseCore, TerrainPixel.BaseMin, TerrainPixel.BaseMax,
         ];
 
         foreach (var pix in defined)
@@ -595,7 +593,6 @@ public class TerrainBehaviorTests
     [InlineData(TerrainPixel.ConcreteHigh)]
     [InlineData(TerrainPixel.ConcreteLow)]
     [InlineData(TerrainPixel.DirtHigh)]
-    [InlineData(TerrainPixel.DirtLow)]
     [InlineData(TerrainPixel.DirtGrow)]
     public void Torchable_MatchesDerivedProperty(TerrainPixel pix)
     {

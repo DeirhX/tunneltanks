@@ -10,7 +10,6 @@ public enum TerrainPixel : byte
 
     Blank = (byte)' ',
     DirtHigh = (byte)'D',
-    DirtLow = (byte)'d',
     DirtGrow = (byte)'g',
     Rock = (byte)'r',
     DecalHigh = (byte)'.',
@@ -18,6 +17,7 @@ public enum TerrainPixel : byte
     BaseMin = (byte)'0',
     BaseMax = (byte)'7',
     BaseBarrier = (byte)'8',
+    BaseCore = (byte)'9',
     ConcreteLow = (byte)'c',
     ConcreteHigh = (byte)'C',
     EnergyLow = (byte)'e',
@@ -31,6 +31,7 @@ public enum ThermalMaterial : byte
     Dirt = 1,
     Stone = 2,
     Base = 3,
+    ConstantEnergy = 4,
 }
 
 /// <summary>
@@ -75,10 +76,6 @@ public static class Pixel
             BlocksMovement: false, SoftCollision: true, Diggable: true,
             Concrete: false, Mineral: false, Energy: false, Base: false, Scorched: false,
             DisplayColor: new Color(0xc3, 0x79, 0x30)));
-        Set(TerrainPixel.DirtLow, new(
-            BlocksMovement: false, SoftCollision: true, Diggable: true,
-            Concrete: false, Mineral: false, Energy: false, Base: false, Scorched: false,
-            DisplayColor: new Color(0xba, 0x59, 0x04)));
         Set(TerrainPixel.DirtGrow, new(
             BlocksMovement: false, SoftCollision: false, Diggable: true,
             Concrete: false, Mineral: false, Energy: false, Base: false, Scorched: false,
@@ -119,6 +116,10 @@ public static class Pixel
             BlocksMovement: false, SoftCollision: false, Diggable: false,
             Concrete: false, Mineral: false, Energy: false, Base: false, Scorched: false,
             DisplayColor: new Color(0x40, 0x40, 0x40)));
+        Set(TerrainPixel.BaseCore, new(
+            BlocksMovement: false, SoftCollision: false, Diggable: false,
+            Concrete: false, Mineral: false, Energy: false, Base: false, Scorched: false,
+            DisplayColor: new Color(0x20, 0x20, 0x20)));
 
         var baseColor = new Color(0x40, 0x40, 0x40);
         for (byte b = (byte)TerrainPixel.BaseMin; b <= (byte)TerrainPixel.BaseMax; b++)
@@ -150,7 +151,9 @@ public static class Pixel
     {
         var b = _behaviors[(int)p];
         if (p == TerrainPixel.BaseBarrier) return ThermalMaterial.Base;
+        if (p == TerrainPixel.BaseCore) return ThermalMaterial.ConstantEnergy;
         if (b.Base) return ThermalMaterial.Base;
+        if (b.Energy) return ThermalMaterial.ConstantEnergy;
         if (b.Dirt) return ThermalMaterial.Dirt;
 
         // Hard terrain and structures behave as stone for thermal exchange.

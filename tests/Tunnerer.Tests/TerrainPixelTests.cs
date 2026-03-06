@@ -11,7 +11,6 @@ public class TerrainPixelTests
     [InlineData(TerrainPixel.LevelGenMark, 2)]
     [InlineData(TerrainPixel.Blank, (byte)' ')]
     [InlineData(TerrainPixel.DirtHigh, (byte)'D')]
-    [InlineData(TerrainPixel.DirtLow, (byte)'d')]
     [InlineData(TerrainPixel.DirtGrow, (byte)'g')]
     [InlineData(TerrainPixel.Rock, (byte)'r')]
     [InlineData(TerrainPixel.DecalHigh, (byte)'.')]
@@ -19,6 +18,7 @@ public class TerrainPixelTests
     [InlineData(TerrainPixel.BaseMin, (byte)'0')]
     [InlineData(TerrainPixel.BaseMax, (byte)'7')]
     [InlineData(TerrainPixel.BaseBarrier, (byte)'8')]
+    [InlineData(TerrainPixel.BaseCore, (byte)'9')]
     [InlineData(TerrainPixel.ConcreteLow, (byte)'c')]
     [InlineData(TerrainPixel.ConcreteHigh, (byte)'C')]
     public void EnumValues_MatchCpp(TerrainPixel pixel, byte expected)
@@ -28,7 +28,6 @@ public class TerrainPixelTests
 
     [Theory]
     [InlineData(TerrainPixel.DirtHigh, true)]
-    [InlineData(TerrainPixel.DirtLow, true)]
     [InlineData(TerrainPixel.DirtGrow, false)]
     [InlineData(TerrainPixel.Rock, false)]
     [InlineData(TerrainPixel.Blank, false)]
@@ -39,7 +38,6 @@ public class TerrainPixelTests
 
     [Theory]
     [InlineData(TerrainPixel.DirtHigh, true)]
-    [InlineData(TerrainPixel.DirtLow, true)]
     [InlineData(TerrainPixel.DirtGrow, true)]
     [InlineData(TerrainPixel.Rock, false)]
     [InlineData(TerrainPixel.Blank, false)]
@@ -76,11 +74,11 @@ public class TerrainPixelTests
         var magenta = new Color(255, 0, 255);
         TerrainPixel[] knownPixels =
         [
-            TerrainPixel.Blank, TerrainPixel.DirtHigh, TerrainPixel.DirtLow,
+            TerrainPixel.Blank, TerrainPixel.DirtHigh,
             TerrainPixel.DirtGrow, TerrainPixel.Rock, TerrainPixel.DecalHigh,
             TerrainPixel.DecalLow, TerrainPixel.ConcreteLow, TerrainPixel.ConcreteHigh,
             TerrainPixel.EnergyLow, TerrainPixel.EnergyMedium, TerrainPixel.EnergyHigh,
-            TerrainPixel.BaseMin
+            TerrainPixel.BaseMin, TerrainPixel.BaseBarrier, TerrainPixel.BaseCore
         ];
 
         foreach (var pix in knownPixels)
