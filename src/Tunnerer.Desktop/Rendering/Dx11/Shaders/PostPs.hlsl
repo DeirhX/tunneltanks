@@ -368,6 +368,13 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
             float crackMask = smoothstep(0.95, 0.997, crackField);
             float crackBreak = smoothstep(0.24, 0.80, fbmNoise(cP * 0.9 + float2(611.0, 43.0), 3));
             crackMask *= crackBreak;
+            // Broad sparse fissures for macro soil breakup.
+            float2 macroP = worldCell * 0.060 + (warp0 - 0.5) * 0.25;
+            float m1 = 1.0 - abs(fbmNoise(float2(macroP.x * 1.08 + macroP.y * 0.20, -macroP.x * 0.20 + macroP.y * 1.08) + float2(131.0, 761.0), 3) * 2.0 - 1.0);
+            float m2 = 1.0 - abs(fbmNoise(float2(macroP.x * 0.88 - macroP.y * 0.43, macroP.x * 0.43 + macroP.y * 0.88) + float2(521.0, 227.0), 3) * 2.0 - 1.0);
+            float macroRidge = max(m1, m2);
+            float macroFissure = smoothstep(0.965, 0.998, macroRidge);
+            macroFissure *= smoothstep(0.32, 0.84, fbmNoise(macroP * 0.65 + float2(83.0, 947.0), 3));
 
             // Sparse pebbly minerals without grid repetition.
             float pebbleSeed = fbmNoise(worldCell * 0.39 + float2(91.0, 17.0), 2);
@@ -390,12 +397,19 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
             dirtColor *= lerp(0.94, 1.06, dapple);
             float microSpark = fbmNoise(worldCell * 0.95 + float2(81.0, 403.0), 2);
             dirtColor *= lerp(0.91, 1.10, microSpark);
+            float microDustA = fbmNoise(worldCell * 1.35 + float2(607.0, 281.0), 2);
+            float microDustB = fbmNoise(float2(
+                worldCell.x * 1.05 + worldCell.y * 0.37,
+                -worldCell.x * 0.37 + worldCell.y * 1.05) + float2(211.0, 1181.0), 2);
+            dirtColor *= lerp(0.90, 1.12, microDustA);
+            dirtColor *= lerp(0.93, 1.09, microDustB);
             float tinyRidge = 1.0 - abs(fbmNoise(float2(
                 worldCell.x * 0.72 + worldCell.y * 0.19,
                 -worldCell.x * 0.19 + worldCell.y * 0.72) + float2(907.0, 151.0), 2) * 2.0 - 1.0);
             float tinyCrack = smoothstep(0.93, 0.995, tinyRidge) * (0.7 + 0.3 * (1.0 - moisture));
             dirtColor *= 1.0 - tinyCrack * 0.032;
             dirtColor *= 1.0 - crackMask * (0.045 + 0.055 * (1.0 - moisture));
+            dirtColor *= 1.0 - macroFissure * (0.060 + 0.050 * (1.0 - moisture));
             dirtColor = lerp(dirtColor, dirtColor * float3(0.77, 0.72, 0.68), pebbleMask * 0.20);
 
             // Dirt visuals are fully procedural and not dependent on base terrain dirt pixels.
