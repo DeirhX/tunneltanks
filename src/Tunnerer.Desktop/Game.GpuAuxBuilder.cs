@@ -137,7 +137,9 @@ public partial class Game
             material = materialDirt;
         else if (Core.Terrain.Pixel.IsEnergy(pixel))
             material = materialEnergy;
-        else if (pixel == Core.Terrain.TerrainPixel.BaseBarrier || Core.Terrain.Pixel.IsBase(pixel))
+        else if (pixel == Core.Terrain.TerrainPixel.BaseBarrier ||
+                 pixel == Core.Terrain.TerrainPixel.BaseCore ||
+                 Core.Terrain.Pixel.IsBase(pixel))
             material = materialBase;
         else if (Core.Terrain.Pixel.IsRock(pixel) || Core.Terrain.Pixel.IsConcrete(pixel) ||
                  Core.Terrain.Pixel.IsMineral(pixel) || Core.Terrain.Pixel.IsBlockingCollision(pixel))

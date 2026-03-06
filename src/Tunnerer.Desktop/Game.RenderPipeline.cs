@@ -92,6 +92,7 @@ public partial class Game
                 Pixels: Array.Empty<uint>(),
                 View: renderView,
                 Quality: HiResRenderQuality.High,
+                HeatDebugOverlayEnabled: _showHeatDebugOverlay,
                 TankHeatGlowData: _gpuTankHeatGlow,
                 TankHeatGlowCount: tankHeatGlowCount,
                 TerrainAux: _gpuTerrainAux,

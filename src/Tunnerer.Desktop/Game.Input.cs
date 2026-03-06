@@ -12,10 +12,20 @@ public partial class Game
         if (ev.Type != (uint)EventType.Keydown)
             return;
 
+        // Ignore key-repeat so toggles flip once per physical press.
+        if (ev.Key.Repeat != 0)
+            return;
+
         if ((Scancode)ev.Key.Keysym.Scancode == Scancode.ScancodeF9)
         {
             _showThermalRegionDebug = !_showThermalRegionDebug;
             Console.WriteLine($"[Debug] Thermal regions overlay: {(_showThermalRegionDebug ? "ON" : "OFF")} (F9)");
+        }
+
+        if ((Scancode)ev.Key.Keysym.Scancode == Scancode.Scancode1)
+        {
+            _showHeatDebugOverlay = !_showHeatDebugOverlay;
+            Console.WriteLine($"[Debug] Heat overlay: {(_showHeatDebugOverlay ? "ON" : "OFF")} (1)");
         }
     }
 

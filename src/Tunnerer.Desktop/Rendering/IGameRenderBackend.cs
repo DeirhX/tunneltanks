@@ -13,6 +13,7 @@ public readonly record struct GamePixelsUpload(
     uint[] Pixels,
     RenderView View,
     HiResRenderQuality Quality,
+    bool HeatDebugOverlayEnabled,
     float[]? TankHeatGlowData,
     int TankHeatGlowCount,
     byte[]? TerrainAux,

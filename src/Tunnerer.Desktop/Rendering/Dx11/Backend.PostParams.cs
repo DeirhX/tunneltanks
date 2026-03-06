@@ -30,6 +30,7 @@ public sealed unsafe partial class Backend
         cbData.VignetteStrength = DesktopScreenTweaks.PostVignetteStrength;
         cbData.EdgeLightStrength = DesktopScreenTweaks.PostTerrainEdgeLightStrength;
         cbData.EdgeLightBias = DesktopScreenTweaks.PostTerrainEdgeLightBias;
+        cbData.HeatDebugOverlay = upload.HeatDebugOverlayEnabled ? 1f : 0f;
         cbData.TankHeatGlowR = DesktopScreenTweaks.PostTankHeatGlowR;
         cbData.TankHeatGlowG = DesktopScreenTweaks.PostTankHeatGlowG;
         cbData.TankHeatGlowB = DesktopScreenTweaks.PostTankHeatGlowB;
@@ -113,7 +114,7 @@ public sealed unsafe partial class Backend
         public float WorldSizeX, WorldSizeY, CameraPixelsX, CameraPixelsY;
         public float ViewSizeX, ViewSizeY, UseTerrainAux, BloomThreshold;
         public float BloomStrength, BloomWeightCenter, BloomWeightAxis, BloomWeightDiagonal;
-        public float VignetteStrength, EdgeLightStrength, EdgeLightBias, _padEdgeAlign0;
+        public float VignetteStrength, EdgeLightStrength, EdgeLightBias, HeatDebugOverlay;
         public float TankHeatGlowR, TankHeatGlowG, TankHeatGlowB, TankHeatGlowA;
         public float TerrainHeatGlowR, TerrainHeatGlowG, TerrainHeatGlowB, TerrainHeatThreshold;
         public float TerrainMaskEdgeStrength, TerrainMaskCaveDarken, TerrainMaskSolidLift, TerrainMaskOutlineDarken;

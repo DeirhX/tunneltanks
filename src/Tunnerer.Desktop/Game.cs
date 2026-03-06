@@ -38,6 +38,7 @@ public partial class Game : IDisposable
     private int _nativeUnderBudgetFrames;
     private int _heatAuxFrameCounter;
     private bool _showThermalRegionDebug;
+    private bool _showHeatDebugOverlay;
     private Rect _lastAuxViewport;
     private readonly Stopwatch _gameTimer = Stopwatch.StartNew();
 
