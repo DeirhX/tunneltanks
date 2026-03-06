@@ -36,6 +36,7 @@
       <Profile>ps_5_0</Profile>
       <OutputFile>$(IntermediateOutputPath)Shaders\TerrainPs.cso</OutputFile>
     </Dx11Shader>
+    <Dx11ShaderInclude Include="Rendering\Dx11\Shaders\**\*.hlsli" />
   </ItemGroup>
 
   <Target Name="CompileDx11Shaders"
@@ -52,6 +53,10 @@
     <Copy Condition="'$(Configuration)' == 'Debug'"
           SourceFiles="@(Dx11Shader)"
           DestinationFolder="$(OutDir)Shaders"
+          SkipUnchangedFiles="true" />
+    <Copy Condition="'$(Configuration)' == 'Debug'"
+          SourceFiles="@(Dx11ShaderInclude)"
+          DestinationFolder="$(OutDir)Shaders\%(RecursiveDir)"
           SkipUnchangedFiles="true" />
   </Target>
 
