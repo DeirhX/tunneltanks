@@ -1,3 +1,15 @@
+// ============================================================================
+// Passes/EdgeLiftPass.hlsli — Edge-detection brightness boost
+// ============================================================================
+//
+// Computes a simple 1-pixel luminance edge magnitude (horizontal + vertical
+// Sobel-like differences) and adds brightness proportional to edge strength.
+// This lifts geometric edges slightly without altering flat areas, giving
+// the scene a subtle outlined look.
+//
+// Requires Quality >= 1 to activate.
+// ============================================================================
+
 void ApplyEdgeLiftPass(float2 uv, inout float3 color)
 {
     if (Quality < 1.0)

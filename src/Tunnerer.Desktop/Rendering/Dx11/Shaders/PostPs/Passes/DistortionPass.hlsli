@@ -1,8 +1,31 @@
+// ============================================================================
+// Passes/DistortionPass.hlsli — Heat-haze UV distortion
+// ============================================================================
+//
+// Computes per-pixel UV offsets that simulate heat shimmer around hot tanks.
+// Two layers of distortion are combined:
+//
+//   1. Tank-centered haze: radial falloff from each tank glow source, with
+//      swirl-direction shimmer that intensifies on the tank's edge band.
+//      Also includes dedicated overheat edge wobble for tanks above 50% heat.
+//
+//   2. Outline-based shimmer: detects geometric silhouettes (luminance +
+//      alpha edges) and adds tangential wobble so hot outlines visually waver.
+//
+// Both effects are animated with multi-frequency sine waves for organic motion.
+//
+// Outputs:
+//   hazeOffset       — accumulated UV displacement to apply to sceneTex fetch
+//   outlineHeatMask  — [0..1] mask of overheat proximity for outline shimmer
+//   distortionEnabled — 0 or 1, driven by TankHeatGlowColor.a
+// ============================================================================
+
 void ComputeTankHeatHaze(float2 uv, out float2 hazeOffset, out float outlineHeatMask, out float distortionEnabled)
 {
     hazeOffset = float2(0.0, 0.0);
     outlineHeatMask = 0.0;
     distortionEnabled = step(0.5, TankHeatGlowColor.a);
+
     [loop]
     for (int i = 0; i < 8; i++)
     {
@@ -18,6 +41,7 @@ void ComputeTankHeatHaze(float2 uv, out float2 hazeOffset, out float outlineHeat
         float falloff = saturate(1.0 - dist2 / radius2);
         if (falloff <= 0.0) continue;
 
+        // ---- Swirl haze around the tank -----------------------------------
         float distNorm = sqrt(saturate(1.0 - falloff));
         float tankEdgeBand = smoothstep(0.34, 0.16, distNorm) * (1.0 - smoothstep(0.16, 0.03, distNorm));
         float2 swirlDirPx = normalize(float2(-dPx.y, dPx.x) + kSignedEpsilon2);
@@ -28,11 +52,10 @@ void ComputeTankHeatHaze(float2 uv, out float2 hazeOffset, out float outlineHeat
         float hazeStrengthPx = heatGate * (0.8 + 4.0 * heatT) * (0.35 + 0.65 * tankEdgeBand) * falloff;
         hazeOffset += swirlDirPx * shimmer * hazeStrengthPx * TexelSize;
 
-        // Overheat(50+) mask derived from glow intensity; used for outline-only shimmer below.
+        // ---- Overheat (50%+) edge wobble ----------------------------------
         float over50 = smoothstep(0.78, 0.95, heatT);
         outlineHeatMask += over50 * falloff;
 
-        // Dedicated hot-tank edge wobble so tank outlines visibly shimmer once heat is high.
         float2 tankEdgeDirPx = normalize(float2(dPx.y, -dPx.x) + kSignedEpsilon2);
         float tankWave =
             sin(Time * 31.0 + distNorm * 96.0 + i * 2.4) * 0.65 +
@@ -44,14 +67,23 @@ void ComputeTankHeatHaze(float2 uv, out float2 hazeOffset, out float outlineHeat
     outlineHeatMask = saturate(outlineHeatMask);
 }
 
+// ============================================================================
+// Outline-based heat shimmer
+// ============================================================================
+// Adds extra UV wobble on geometric silhouettes (terrain edges, tank outlines)
+// when nearby tanks are overheated. Uses luminance + alpha edge detection to
+// find silhouettes, then applies tangent-direction sine-wave displacement.
+// ============================================================================
+
 void ApplyOutlineHeatDistortion(float2 uv, float distortionEnabled, float outlineHeatMask, inout float2 hazeOffset)
 {
-    // Extra distortion on geometric outlines (terrain+tanks) once tanks are sufficiently hot.
     if (distortionEnabled <= 0.0 || outlineHeatMask <= 0.0)
         return;
 
     float2 tx = float2(TexelSize.x, 0.0);
     float2 ty = float2(0.0, TexelSize.y);
+
+    // ---- Edge detection (luminance + alpha) -------------------------------
     float3 cL = sceneTex.Sample(s0, uv - tx).rgb;
     float3 cR = sceneTex.Sample(s0, uv + tx).rgb;
     float3 cU = sceneTex.Sample(s0, uv - ty).rgb;
@@ -71,7 +103,7 @@ void ApplyOutlineHeatDistortion(float2 uv, float distortionEnabled, float outlin
     float edgeAlpha = saturate((abs(aR - aL) + abs(aD - aU)) * 2.8);
     float outlineEdge = max(edgeLum, edgeAlpha);
 
-    // Shimmer tangent to the edge gradient so silhouettes appear to wobble.
+    // ---- Tangential wobble on detected edges ------------------------------
     float2 edgeDir = normalize(float2(edgeGrad.y, -edgeGrad.x) + kSignedEpsilon2);
     float outlineWave =
         sin(Time * 28.0 + uv.x * 260.0 - uv.y * 220.0) * 0.60 +

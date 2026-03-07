@@ -1,47 +1,87 @@
-Texture2D sceneTex : register(t0);
-Texture2D auxTex : register(t1);
-SamplerState s0 : register(s0);
+// ============================================================================
+// Common/Bindings.hlsli — Texture, sampler, and cbuffer declarations
+// ============================================================================
+//
+// Shared by all post-processing passes. Declares the two input textures,
+// the bilinear sampler, the PostParams constant buffer, and the bright()
+// helper used by the bloom pass.
+// ============================================================================
 
+Texture2D sceneTex : register(t0);  // Composited scene (TerrainPs output + entities)
+Texture2D auxTex : register(t1);    // Per-cell terrain aux (.r=heat, .g=SDF, .b=materialID, .a=scorch)
+SamplerState s0 : register(s0);     // Bilinear-clamp sampler
+
+// All post-process parameters packed into a single cbuffer, updated once per frame.
 cbuffer PostParams : register(b0)
 {
-    float2 TexelSize;
-    float PixelScale;
-    float Time;
-    float2 WorldSize;
-    float2 CameraPixels;
-    float2 ViewSize;
-    float UseTerrainAux;
-    float BloomThreshold;
-    float BloomStrength;
-    float BloomWeightCenter;
-    float BloomWeightAxis;
-    float BloomWeightDiagonal;
-    float VignetteStrength;
-    float EdgeLightStrength;
-    float EdgeLightBias;
-    float HeatDebugOverlay;
-    float4 TankHeatGlowColor;
-    float4 TerrainHeatGlowColorAndThreshold;
-    float TerrainMaskEdgeStrength;
-    float TerrainMaskCaveDarken;
-    float TerrainMaskSolidLift;
-    float TerrainMaskOutlineDarken;
-    float TerrainMaskRimLift;
-    float TerrainMaskBoundaryScale;
-    float VignetteInnerRadius;
-    float VignetteOuterRadius;
-    float Quality;
-    float4 MaterialEmissiveEnergy;
-    float4 MaterialEmissiveScorched;
-    float4 MaterialEmissivePulse;
-    float4 NativeContinuousParams;
-    float4 LightDir;     // xyz = direction, w = NormalStrength
-    float4 HalfVector;   // xyz = half-vector, w = MicroNormalStrength
-    float4 LightParams;  // x = Ambient, y = DiffuseWeight, z = Shininess, w = SpecularIntensity
-    float TankGlowCount;
-    float4 TankGlow[8];
+    // ---- Screen / world geometry ------------------------------------------
+    float2 TexelSize;               // 1 / render-target resolution (in UV)
+    float PixelScale;               // World-cell → screen-pixel scale factor
+    float Time;                     // Elapsed game time (seconds), for animation
+    float2 WorldSize;               // World grid dimensions (cells)
+    float2 CameraPixels;            // Camera top-left corner (screen pixels)
+    float2 ViewSize;                // Render-target resolution (pixels)
+
+    // ---- Feature toggles & terrain aux ------------------------------------
+    float UseTerrainAux;            // > 0.5 to enable terrain SDF / material passes
+
+    // ---- Bloom ------------------------------------------------------------
+    float BloomThreshold;           // Minimum brightness for bloom contribution
+    float BloomStrength;            // Global bloom intensity multiplier
+    float BloomWeightCenter;        // 3x3 bloom kernel: center weight
+    float BloomWeightAxis;          // 3x3 bloom kernel: axis-neighbor weight
+    float BloomWeightDiagonal;      // 3x3 bloom kernel: diagonal-neighbor weight
+
+    // ---- Vignette ---------------------------------------------------------
+    float VignetteStrength;         // Darkening intensity at screen edges
+
+    // ---- Edge lift --------------------------------------------------------
+    float EdgeLightStrength;        // Intensity of edge-detection brightness boost
+    float EdgeLightBias;            // Minimum edge magnitude before boost kicks in
+
+    // ---- Heat debug -------------------------------------------------------
+    float HeatDebugOverlay;         // > 0.5 to show temperature color overlay
+
+    // ---- Tank heat glow ---------------------------------------------------
+    float4 TankHeatGlowColor;      // .rgb = glow tint, .a = distortion enable flag
+
+    // ---- Terrain heat / scorch glow ---------------------------------------
+    float4 TerrainHeatGlowColorAndThreshold; // .rgb = glow tint, .a = onset threshold
+
+    // ---- Terrain SDF shading (TerrainAuxPass) -----------------------------
+    float TerrainMaskEdgeStrength;  // Sobel edge response multiplier
+    float TerrainMaskCaveDarken;    // Cave-side darkening factor
+    float TerrainMaskSolidLift;     // Solid-side brightness lift
+    float TerrainMaskOutlineDarken; // Outline ring darkening
+    float TerrainMaskRimLift;       // Rim highlight on boundary ring
+    float TerrainMaskBoundaryScale; // Width scaling for boundary ring detection
+
+    // ---- Vignette radius --------------------------------------------------
+    float VignetteInnerRadius;      // UV distance where darkening begins
+    float VignetteOuterRadius;      // UV distance where darkening reaches full
+
+    // ---- Quality level ----------------------------------------------------
+    float Quality;                  // 0 = minimal, 1 = bloom+edge, 2+ = vignette
+
+    // ---- Material emissive ------------------------------------------------
+    float4 MaterialEmissiveEnergy;  // .rgb = energy vein glow, .a = intensity
+    float4 MaterialEmissiveScorched;// .rgb = scorch glow color, .a = intensity
+    float4 MaterialEmissivePulse;   // .x = speed, .y = base, .z = amplitude, .w = unused
+
+    // ---- TerrainPs native-continuous rendering ----------------------------
+    float4 NativeContinuousParams;  // .x = EdgeSoftness, .y = BoundaryBlend
+
+    // ---- Directional lighting (material shading) --------------------------
+    float4 LightDir;                // .xyz = light direction, .w = NormalStrength
+    float4 HalfVector;              // .xyz = half-vector (view+light), .w = MicroNormalStrength
+    float4 LightParams;             // .x = Ambient, .y = DiffuseWeight, .z = Shininess, .w = SpecularIntensity
+
+    // ---- Per-tank glow positions ------------------------------------------
+    float TankGlowCount;            // Number of active entries in TankGlow[]
+    float4 TankGlow[8];             // .xy = screen UV, .z = radius, .w = heat [0..1]
 };
 
+// Bloom helper: subtracts threshold and clamps negative values to zero.
 float3 bright(float3 c)
 {
     return max(c - float3(BloomThreshold, BloomThreshold, BloomThreshold), 0.0);

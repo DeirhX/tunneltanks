@@ -1,8 +1,27 @@
+// ============================================================================
+// Materials/StoneMaterial.hlsli — Procedural stone overlay
+// ============================================================================
+//
+// Applies multi-scale procedural detail to pixels classified as stone terrain.
+// All patterns are derived from fbmNoise seeded with world-cell coordinates,
+// producing infinite, non-repeating, non-tiled detail.
+//
+// Layer stack (applied multiplicatively to darken/lighten base color):
+//   1. Macro landform  — hills, ridges, plateaus, terraces, cliff bands
+//   2. Base relief     — broad bumpy surface with ridged fold breakup
+//   3. Grain           — high-frequency chipped surface texture
+//   4. Strata          — angular sedimentary layers with fracture cracks
+//   5. Block chisel    — coarse Voronoi-like block edges (cell noise)
+//   6. Macro breakup   — prevents large uniform patches
+//   7. Mineral veins   — thin bright/dark vein lines
+//   8. Pitting         — sparse small-scale weathering holes
+// ============================================================================
+
 void ApplyStoneMaterial(inout float3 color, float2 worldCell, float materialMask, float3 lightDir)
 {
     if (materialMask <= 0.0) return;
 
-    // Large-scale structure (hills, ridges, plateaus, cliffs).
+    // ---- 1. Macro landform structure --------------------------------------
     float land = SampleLandformHeight(worldCell);
     float landX = SampleLandformHeight(worldCell + float2(4.0, 0.0));
     float landY = SampleLandformHeight(worldCell + float2(0.0, 4.0));
@@ -17,7 +36,7 @@ void ApplyStoneMaterial(inout float3 color, float2 worldCell, float materialMask
     color *= 1.0 - materialMask * (0.020 + 0.070 * cliff + 0.016 * (1.0 - ridges) + 0.018 * terrace);
     color = lerp(color, color * (0.88 + 0.28 * hill + 0.14 * plateau), materialMask * 0.78);
 
-    // Base relief with ridged breakup.
+    // ---- 2. Base relief with ridged breakup -------------------------------
     float2 baseP = worldCell * 0.026;
     float b0 = fbmNoise(baseP + float2(17.0, 3.0), 5);
     float bnx = fbmNoise(baseP + float2(19.0, 3.0), 5);
@@ -31,7 +50,7 @@ void ApplyStoneMaterial(inout float3 color, float2 worldCell, float materialMask
     color *= 1.0 - baseDark;
     color = lerp(color, color * (0.76 + 0.42 * baseDiffuse), materialMask * 0.88);
 
-    // High-frequency chipped grain.
+    // ---- 3. High-frequency chipped grain ----------------------------------
     float2 grainP = worldCell * 0.145;
     float g0 = fbmNoise(grainP + float2(121.0, 33.0), 3);
     float gnx = fbmNoise(grainP + float2(123.0, 33.0), 3);
@@ -44,7 +63,7 @@ void ApplyStoneMaterial(inout float3 color, float2 worldCell, float materialMask
     color *= 1.0 - grainMask * (0.015 + 0.045 * grainCavity);
     color = lerp(color, color * (0.88 + 0.22 * grainDiffuse), grainMask);
 
-    // Angular strata and fracture lines for wall-like structure.
+    // ---- 4. Angular strata and fracture lines -----------------------------
     float2 strataP = float2(
         worldCell.x * 0.060 + worldCell.y * 0.022,
         -worldCell.x * 0.022 + worldCell.y * 0.060);
@@ -54,7 +73,7 @@ void ApplyStoneMaterial(inout float3 color, float2 worldCell, float materialMask
     float crack = smoothstep(0.80, 0.985, strata);
     color *= 1.0 - materialMask * (0.055 * strata + 0.090 * crack);
 
-    // Block/chisel breakup from coarse cell noise.
+    // ---- 5. Block / chisel breakup ----------------------------------------
     float2 blockP = worldCell * 0.095;
     float2 blockCell = floor(blockP);
     float2 blockLocal = frac(blockP) - 0.5;
@@ -65,12 +84,12 @@ void ApplyStoneMaterial(inout float3 color, float2 worldCell, float materialMask
     float blockEdge = smoothstep(0.32, 0.50, max(abs(blockLocal.x), abs(blockLocal.y)));
     color *= 1.0 - materialMask * (0.020 * saturate(chisel) + 0.040 * blockEdge);
 
-    // Macro breakup prevents broad uniform patches.
+    // ---- 6. Macro breakup -------------------------------------------------
     float macro = fbmNoise(worldCell * 0.011 + float2(301.0, 133.0), 3);
     float macroShade = lerp(0.86, 1.12, macro);
     color = lerp(color, color * macroShade, materialMask * 0.45);
 
-    // Extra stone detail: mineral veins + pitted weathering.
+    // ---- 7. Mineral veins -------------------------------------------------
     float2 veinP = float2(
         worldCell.x * 0.082 + worldCell.y * 0.031,
         -worldCell.x * 0.031 + worldCell.y * 0.082);
@@ -81,6 +100,7 @@ void ApplyStoneMaterial(inout float3 color, float2 worldCell, float materialMask
     color *= 1.0 - veinMask * 0.060;
     color = lerp(color, color * float3(1.06, 1.02, 0.95), veinMask * 0.16);
 
+    // ---- 8. Pitting and chip dust -----------------------------------------
     float pit = smoothstep(0.72, 0.16, fbmNoise(worldCell * 0.235 + float2(607.0, 263.0), 2));
     float chipDust = fbmNoise(worldCell * 0.520 + float2(181.0, 73.0), 2);
     color *= 1.0 - materialMask * (0.016 * pit);

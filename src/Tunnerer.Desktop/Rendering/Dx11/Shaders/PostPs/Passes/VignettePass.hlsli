@@ -1,3 +1,13 @@
+// ============================================================================
+// Passes/VignettePass.hlsli — Screen-edge darkening
+// ============================================================================
+//
+// Darkens pixels near the screen edge using a radial smoothstep between
+// VignetteInnerRadius and VignetteOuterRadius. Multiplies color in-place.
+//
+// Requires Quality >= 2 to activate.
+// ============================================================================
+
 void ApplyVignettePass(float2 uv, inout float3 color)
 {
     if (Quality < 2.0)

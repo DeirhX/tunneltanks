@@ -1,3 +1,16 @@
+// ============================================================================
+// Materials/TerrainShared.hlsli — Shared terrain sampling utilities
+// ============================================================================
+//
+// Provides low-frequency landform sampling used by both stone and dirt
+// materials to create large-scale terrain features (hills, ridges, plateaus,
+// eroded cliff bands) that are consistent across material boundaries.
+// ============================================================================
+
+// Samples a broad landform height at the given world-cell position.
+// Returns [0..1] — 0 = valley, 1 = hilltop. Uses two overlapping 4-octave
+// and 3-octave fbmNoise passes with rotated coordinates to break up
+// axis-aligned repetition.
 float SampleLandformHeight(float2 worldCell)
 {
     float broad = fbmNoise(worldCell * 0.0075 + float2(71.0, 911.0), 4);
