@@ -56,15 +56,21 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     float4 sceneSample = sceneTex.Sample(s0, hazeUv);
     float3 baseColor = sceneSample.rgb;
     float3 color = baseColor;
-    float terrainFactor = step(0.999, sceneSample.a);
+    float terrainFactor = step(kTerrainAlphaThreshold, sceneSample.a);
 
     // ---- Post-process chain -----------------------------------------------
-    ApplyBloomPass(uv, baseColor, color);
-    ApplyVignettePass(uv, color);
-    ApplyEdgeLiftPass(uv, color);
-    ApplyTerrainCurvePass(uv, terrainFactor, color);
-    ApplyTerrainAuxPass(uv, terrainFactor, color);
-    ApplyTankHeatGlowPass(uv, color);
+    if (PostBloomEnabled > 0.5)
+        ApplyBloomPass(uv, baseColor, color);
+    if (PostVignetteEnabled > 0.5)
+        ApplyVignettePass(uv, color);
+    if (PostEdgeLiftEnabled > 0.5)
+        ApplyEdgeLiftPass(uv, color);
+    if (PostTerrainCurveEnabled > 0.5)
+        ApplyTerrainCurvePass(uv, terrainFactor, color);
+    if (PostTerrainAuxEnabled > 0.5)
+        ApplyTerrainAuxPass(uv, terrainFactor, color);
+    if (PostTankGlowEnabled > 0.5)
+        ApplyTankHeatGlowPass(uv, color);
 
     return float4(color, 1.0);
 }

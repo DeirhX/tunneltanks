@@ -3,6 +3,7 @@ namespace Tunnerer.Desktop;
 using Silk.NET.SDL;
 using Tunnerer.Core.Types;
 using Tunnerer.Desktop.Config;
+using Tunnerer.Desktop.Rendering;
 
 public partial class Game
 {
@@ -16,23 +17,58 @@ public partial class Game
         if (ev.Key.Repeat != 0)
             return;
 
-        if ((Scancode)ev.Key.Keysym.Scancode == Scancode.ScancodeF9)
-        {
-            _showThermalRegionDebug = !_showThermalRegionDebug;
-            Console.WriteLine($"[Debug] Thermal regions overlay: {(_showThermalRegionDebug ? "ON" : "OFF")} (F9)");
-        }
+        HandleHotkey((Scancode)ev.Key.Keysym.Scancode);
+    }
 
-        if ((Scancode)ev.Key.Keysym.Scancode == Scancode.Scancode1)
+    private void HandleHotkey(Scancode scancode)
+    {
+        switch (scancode)
         {
-            _showHeatDebugOverlay = !_showHeatDebugOverlay;
-            Console.WriteLine($"[Debug] Heat overlay: {(_showHeatDebugOverlay ? "ON" : "OFF")} (1)");
+            case Scancode.ScancodeF9:
+                ToggleWithLog(ref _showThermalRegionDebug, "Debug", "Thermal regions overlay", "F9");
+                break;
+            case Scancode.Scancode0:
+                ToggleWithLog(ref _showHeatDebugOverlay, "Debug", "Heat overlay", "0");
+                break;
+            case Scancode.Scancode1:
+                TogglePassWithLog(PostProcessPassFlags.Bloom, "Bloom", "1");
+                break;
+            case Scancode.Scancode2:
+                TogglePassWithLog(PostProcessPassFlags.Vignette, "Vignette", "2");
+                break;
+            case Scancode.Scancode3:
+                TogglePassWithLog(PostProcessPassFlags.EdgeLift, "Edge lift", "3");
+                break;
+            case Scancode.Scancode4:
+                TogglePassWithLog(PostProcessPassFlags.TerrainCurve, "Terrain curve", "4");
+                break;
+            case Scancode.Scancode5:
+                TogglePassWithLog(PostProcessPassFlags.TerrainAux, "Terrain aux", "5");
+                break;
+            case Scancode.Scancode6:
+                TogglePassWithLog(PostProcessPassFlags.TankGlow, "Tank glow", "6");
+                break;
+            case Scancode.ScancodeF10:
+                _renderBackend.RequestScreenshot("postps");
+                Console.WriteLine("[Debug] Screenshot requested (F10).");
+                break;
+            case Scancode.ScancodeF11:
+                ToggleWithLog(ref _showPostPassOverlay, "Debug", "Post pass overlay", "F11");
+                break;
         }
+    }
 
-        if ((Scancode)ev.Key.Keysym.Scancode == Scancode.ScancodeF10)
-        {
-            _renderBackend.RequestScreenshot("postps");
-            Console.WriteLine("[Debug] Screenshot requested (F10).");
-        }
+    private static void ToggleWithLog(ref bool flag, string group, string label, string key)
+    {
+        flag = !flag;
+        Console.WriteLine($"[{group}] {label}: {(flag ? "ON" : "OFF")} ({key})");
+    }
+
+    private void TogglePassWithLog(PostProcessPassFlags pass, string label, string key)
+    {
+        _enabledPostPasses ^= pass;
+        bool enabled = (_enabledPostPasses & pass) != 0;
+        Console.WriteLine($"[PostPs] {label}: {(enabled ? "ON" : "OFF")} ({key})");
     }
 
     private DirectionF? ComputeAimDirection(IReadOnlyList<Core.Entities.Tank> tanks)

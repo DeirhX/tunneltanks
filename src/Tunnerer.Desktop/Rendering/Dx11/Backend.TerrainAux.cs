@@ -19,19 +19,9 @@ public sealed unsafe partial class Backend
             if (_terrainAuxSrv != null) { _terrainAuxSrv->Release(); _terrainAuxSrv = null; }
             if (_terrainAuxTexture != null) { _terrainAuxTexture->Release(); _terrainAuxTexture = null; }
 
-            var desc = new Texture2DDesc
-            {
-                Width = (uint)worldW,
-                Height = (uint)worldH,
-                MipLevels = 1,
-                ArraySize = 1,
-                Format = Format.FormatR8G8B8A8Unorm,
-                SampleDesc = new SampleDesc(1, 0),
-                Usage = Usage.Default,
-                BindFlags = (uint)BindFlag.ShaderResource,
-                CPUAccessFlags = 0,
-                MiscFlags = 0,
-            };
+            var desc = CreateTextureDesc(
+                worldW, worldH, Format.FormatR8G8B8A8Unorm, Usage.Default,
+                (uint)BindFlag.ShaderResource, 0);
             fixed (byte* ptr = auxData)
             {
                 var sub = new SubresourceData

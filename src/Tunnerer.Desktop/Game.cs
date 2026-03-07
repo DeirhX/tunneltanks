@@ -41,6 +41,8 @@ public partial class Game : IDisposable
     private int _heatAuxFrameCounter;
     private bool _showThermalRegionDebug;
     private bool _showHeatDebugOverlay;
+    private bool _showPostPassOverlay = true;
+    private PostProcessPassFlags _enabledPostPasses = PostProcessPassFlags.All;
     private Rect _lastAuxViewport;
     private readonly Stopwatch _gameTimer = Stopwatch.StartNew();
 
@@ -191,9 +193,7 @@ public partial class Game : IDisposable
         }
         finally
         {
-            _textures.Dispose();
-            _renderBackend.Dispose();
-            _renderer.Dispose();
+            DisposeResources();
         }
     }
 
@@ -212,10 +212,15 @@ public partial class Game : IDisposable
 
     public void Dispose()
     {
+        DisposeResources();
+        GC.SuppressFinalize(this);
+    }
+
+    private void DisposeResources()
+    {
         _textures.Dispose();
         _renderBackend.Dispose();
         _renderer.Dispose();
-        GC.SuppressFinalize(this);
     }
 
     private static void MarkEntityPixels(uint[] terrain, uint[] composite)

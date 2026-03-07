@@ -80,8 +80,8 @@ void ApplyOutlineHeatDistortion(float2 uv, float distortionEnabled, float outlin
     if (distortionEnabled <= 0.0 || outlineHeatMask <= 0.0)
         return;
 
-    float2 tx = float2(TexelSize.x, 0.0);
-    float2 ty = float2(0.0, TexelSize.y);
+    float2 tx = TexelOffsetX();
+    float2 ty = TexelOffsetY();
 
     // ---- Edge detection (luminance + alpha) -------------------------------
     float3 cL = sceneTex.Sample(s0, uv - tx).rgb;

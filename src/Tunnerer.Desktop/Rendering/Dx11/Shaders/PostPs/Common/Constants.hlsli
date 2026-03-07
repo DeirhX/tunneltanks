@@ -9,10 +9,21 @@
 
 // ---- Perceptual luminance weights (Rec. 601) ------------------------------
 static const float3 kLumaWeights = float3(0.299, 0.587, 0.114);
+static const float kTerrainAlphaThreshold = 0.999;
 
 // ---- Epsilon helpers ------------------------------------------------------
 static const float2 kSignedEpsilon2 = float2(1e-4, -1e-4);
 static const float kRadiusEpsilonPx = 1e-3;
+
+float2 TexelOffsetX()
+{
+    return float2(TexelSize.x, 0.0);
+}
+
+float2 TexelOffsetY()
+{
+    return float2(0.0, TexelSize.y);
+}
 
 // ---- Terrain material ID encoding (auxTex.b channel) ----------------------
 // CPU writes material IDs as normalized [0..1]; decode by multiplying by 255.

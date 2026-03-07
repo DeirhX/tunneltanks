@@ -21,7 +21,15 @@ public sealed unsafe partial class Backend
         cbData.CameraPixelsY = upload.View.CameraPixels.Y;
         cbData.ViewSizeX = upload.View.ViewSize.X;
         cbData.ViewSizeY = upload.View.ViewSize.Y;
-        cbData.UseTerrainAux = upload.TerrainAux != null ? 1f : 0f;
+        cbData.UseTerrainAux = BoolToFloat(upload.TerrainAux.Data != null);
+        cbData.PostBloomEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.Bloom));
+        cbData.PostVignetteEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.Vignette));
+        cbData.PostEdgeLiftEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.EdgeLift));
+        cbData.PostTerrainCurveEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.TerrainCurve));
+        cbData.PostTerrainAuxEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.TerrainAux));
+        cbData.PostTankGlowEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.TankGlow));
+        cbData.PostPassPad0 = 0f;
+        cbData.PostPassPad1 = 0f;
         cbData.BloomThreshold = DesktopScreenTweaks.PostBloomThreshold;
         cbData.BloomStrength = DesktopScreenTweaks.PostBloomStrength;
         cbData.BloomWeightCenter = DesktopScreenTweaks.PostBloomWeightCenter;
@@ -30,7 +38,7 @@ public sealed unsafe partial class Backend
         cbData.VignetteStrength = DesktopScreenTweaks.PostVignetteStrength;
         cbData.EdgeLightStrength = DesktopScreenTweaks.PostTerrainEdgeLightStrength;
         cbData.EdgeLightBias = DesktopScreenTweaks.PostTerrainEdgeLightBias;
-        cbData.HeatDebugOverlay = upload.HeatDebugOverlayEnabled ? 1f : 0f;
+        cbData.HeatDebugOverlay = BoolToFloat(upload.PostProcess.HeatDebugOverlayEnabled);
         cbData.TankHeatGlowR = DesktopScreenTweaks.PostTankHeatGlowR;
         cbData.TankHeatGlowG = DesktopScreenTweaks.PostTankHeatGlowG;
         cbData.TankHeatGlowB = DesktopScreenTweaks.PostTankHeatGlowB;
@@ -47,7 +55,7 @@ public sealed unsafe partial class Backend
         cbData.TerrainMaskBoundaryScale = DesktopScreenTweaks.PostTerrainMaskBoundaryScale;
         cbData.VignetteInnerRadius = DesktopScreenTweaks.PostVignetteInnerRadius;
         cbData.VignetteOuterRadius = DesktopScreenTweaks.PostVignetteOuterRadius;
-        cbData.Quality = (float)upload.Quality;
+        cbData.Quality = (float)upload.PostProcess.Quality;
         cbData.MaterialEnergyR = DesktopScreenTweaks.PostMaterialEmissiveEnergyR;
         cbData.MaterialEnergyG = DesktopScreenTweaks.PostMaterialEmissiveEnergyG;
         cbData.MaterialEnergyB = DesktopScreenTweaks.PostMaterialEmissiveEnergyB;
@@ -62,19 +70,19 @@ public sealed unsafe partial class Backend
         cbData.MaterialPulsePad = 0f;
         cbData.NativeEdgeSoftness = DesktopScreenTweaks.NativeContinuousEdgeSoftness;
         cbData.NativeBoundaryBlend = DesktopScreenTweaks.NativeContinuousBoundaryBlend;
-        cbData.NativeSampleFactor = upload.NativeSampleCount <= 1 ? 0f : upload.NativeSampleCount <= 2 ? 0.5f : 1f;
+        cbData.NativeSampleFactor = upload.NativeContinuous.SampleCount <= 1
+            ? 0f
+            : upload.NativeContinuous.SampleCount <= 2 ? 0.5f : 1f;
         cbData.NativePad = 0f;
 
         float lx = DesktopScreenTweaks.LightDirX, ly = DesktopScreenTweaks.LightDirY, lz = DesktopScreenTweaks.LightDirZ;
-        float lLen = MathF.Sqrt(lx * lx + ly * ly + lz * lz);
-        if (lLen > 0.001f) { lx /= lLen; ly /= lLen; lz /= lLen; }
+        Normalize3(ref lx, ref ly, ref lz);
         cbData.LightDirX = lx;
         cbData.LightDirY = ly;
         cbData.LightDirZ = lz;
         cbData.LightNormalStrength = DesktopScreenTweaks.LightNormalStrength;
         float hx = lx, hy = ly, hz = lz + 1f;
-        float hLen = MathF.Sqrt(hx * hx + hy * hy + hz * hz);
-        if (hLen > 0.001f) { hx /= hLen; hy /= hLen; hz /= hLen; }
+        Normalize3(ref hx, ref hy, ref hz);
         cbData.HalfVecX = hx;
         cbData.HalfVecY = hy;
         cbData.HalfVecZ = hz;
@@ -84,18 +92,18 @@ public sealed unsafe partial class Backend
         cbData.LightShininess = DesktopScreenTweaks.LightShininess;
         cbData.LightSpecularIntensity = DesktopScreenTweaks.LightSpecularIntensity;
 
-        int glowCount = Math.Clamp(upload.TankHeatGlowCount, 0, 8);
+        int glowCount = Math.Clamp(upload.TankGlow.Count, 0, 8);
         cbData.TankGlowCount = glowCount;
-        if (upload.TankHeatGlowData != null)
+        if (upload.TankGlow.Data != null)
         {
             for (int i = 0; i < glowCount; i++)
             {
                 int src = i * 4;
                 int dst = i * 4;
-                cbData.TankGlow[dst + 0] = upload.TankHeatGlowData[src + 0];
-                cbData.TankGlow[dst + 1] = upload.TankHeatGlowData[src + 1];
-                cbData.TankGlow[dst + 2] = upload.TankHeatGlowData[src + 2];
-                cbData.TankGlow[dst + 3] = upload.TankHeatGlowData[src + 3];
+                cbData.TankGlow[dst + 0] = upload.TankGlow.Data[src + 0];
+                cbData.TankGlow[dst + 1] = upload.TankGlow.Data[src + 1];
+                cbData.TankGlow[dst + 2] = upload.TankGlow.Data[src + 2];
+                cbData.TankGlow[dst + 3] = upload.TankGlow.Data[src + 3];
             }
         }
 
@@ -107,12 +115,30 @@ public sealed unsafe partial class Backend
         }
     }
 
+    private static float BoolToFloat(bool value) => value ? 1f : 0f;
+
+    private static bool HasPass(PostProcessPassFlags flags, PostProcessPassFlags pass) =>
+        (flags & pass) != 0;
+
+    private static void Normalize3(ref float x, ref float y, ref float z)
+    {
+        float len = MathF.Sqrt(x * x + y * y + z * z);
+        if (len > 0.001f)
+        {
+            x /= len;
+            y /= len;
+            z /= len;
+        }
+    }
+
     #pragma warning disable CS0649
     private unsafe struct PostParamsCBuffer
     {
         public float TexelSizeX, TexelSizeY, PixelScale, Time;
         public float WorldSizeX, WorldSizeY, CameraPixelsX, CameraPixelsY;
         public float ViewSizeX, ViewSizeY, UseTerrainAux, BloomThreshold;
+        public float PostBloomEnabled, PostVignetteEnabled, PostEdgeLiftEnabled, PostTerrainCurveEnabled;
+        public float PostTerrainAuxEnabled, PostTankGlowEnabled, PostPassPad0, PostPassPad1;
         public float BloomStrength, BloomWeightCenter, BloomWeightAxis, BloomWeightDiagonal;
         public float VignetteStrength, EdgeLightStrength, EdgeLightBias, HeatDebugOverlay;
         public float TankHeatGlowR, TankHeatGlowG, TankHeatGlowB, TankHeatGlowA;

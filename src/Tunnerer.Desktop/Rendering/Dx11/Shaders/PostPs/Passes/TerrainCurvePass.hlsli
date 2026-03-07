@@ -80,8 +80,8 @@ void ApplyTerrainCurvePass(float2 uv, float terrainFactor, inout float3 color)
     else
     {
         // Luminance gradient from scene color differences.
-        grad.x = dot(scR - scL, float3(0.299, 0.587, 0.114));
-        grad.y = dot(scD - scU, float3(0.299, 0.587, 0.114));
+        grad.x = dot(scR - scL, kLumaWeights);
+        grad.y = dot(scD - scU, kLumaWeights);
     }
 
     float gradLen = length(grad);

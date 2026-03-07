@@ -91,15 +91,20 @@ public partial class Game
             var upload = new GamePixelsUpload(
                 Pixels: Array.Empty<uint>(),
                 View: renderView,
-                Quality: HiResRenderQuality.High,
-                HeatDebugOverlayEnabled: _showHeatDebugOverlay,
-                TankHeatGlowData: _gpuTankHeatGlow,
-                TankHeatGlowCount: tankHeatGlowCount,
-                TerrainAux: _gpuTerrainAux,
-                AuxDirtyRect: auxDirtyRect,
-                UseNativeContinuous: true,
-                NativeSourcePixels: _compositePixels,
-                NativeSampleCount: _nativeContinuousSampleCount);
+                PostProcess: new PostProcessUploadOptions(
+                    Quality: HiResRenderQuality.High,
+                    HeatDebugOverlayEnabled: _showHeatDebugOverlay,
+                    PassFlags: _enabledPostPasses),
+                TankGlow: new TankGlowUpload(
+                    Data: _gpuTankHeatGlow,
+                    Count: tankHeatGlowCount),
+                TerrainAux: new TerrainAuxUpload(
+                    Data: _gpuTerrainAux,
+                    DirtyRect: auxDirtyRect),
+                NativeContinuous: new NativeContinuousUpload(
+                    Enabled: true,
+                    SourcePixels: _compositePixels,
+                    SampleCount: _nativeContinuousSampleCount));
             ProfileSection(ref _drawProfile.ScreenBackendUpload, () =>
                 _renderBackend.UploadGamePixels(upload));
             if (consumeHeatDirty)
@@ -135,22 +140,23 @@ public partial class Game
 
                 var gameTextureSize = _renderBackend.GameTextureSize;
                 ProfileSection(ref _drawProfile.ScreenHudDraw, () =>
-                    _hud.Draw(_renderBackend.GameTextureId, gameTextureSize.X, gameTextureSize.Y, player, _world, dt));
+                    _hud.Draw(
+                        _renderBackend.GameTextureId,
+                        gameTextureSize.X,
+                        gameTextureSize.Y,
+                        player,
+                        _world,
+                        dt,
+                        _enabledPostPasses,
+                        _showPostPassOverlay));
             }
 
-            _drawProfile.ScreenUi += imguiWatch.Elapsed;
+        }
 
-            imguiWatch.Restart();
-            _renderBackend.Render();
-            _drawProfile.ScreenImGuiRender += imguiWatch.Elapsed;
-        }
-        else
-        {
-            _drawProfile.ScreenUi += imguiWatch.Elapsed;
-            imguiWatch.Restart();
-            _renderBackend.Render();
-            _drawProfile.ScreenImGuiRender += imguiWatch.Elapsed;
-        }
+        _drawProfile.ScreenUi += imguiWatch.Elapsed;
+        imguiWatch.Restart();
+        _renderBackend.Render();
+        _drawProfile.ScreenImGuiRender += imguiWatch.Elapsed;
 
         imguiWatch.Restart();
         _renderer.SwapWindow();

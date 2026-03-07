@@ -15,8 +15,8 @@ void ApplyBloomPass(float2 uv, float3 baseColor, inout float3 color)
     if (Quality < 1.0)
         return;
 
-    float2 tx = float2(TexelSize.x, 0.0);
-    float2 ty = float2(0.0, TexelSize.y);
+    float2 tx = TexelOffsetX();
+    float2 ty = TexelOffsetY();
     float2 d1 = float2(TexelSize.x, TexelSize.y);
     float2 d2 = float2(TexelSize.x, -TexelSize.y);
 

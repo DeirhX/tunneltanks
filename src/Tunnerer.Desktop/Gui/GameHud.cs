@@ -4,6 +4,7 @@ using System.Numerics;
 using ImGuiNET;
 using Tunnerer.Core;
 using Tunnerer.Core.Entities;
+using Tunnerer.Desktop.Rendering;
 
 public class GameHud
 {
@@ -31,13 +32,23 @@ public class GameHud
         _digitStripTex = digitStrip;
     }
 
-    public void Draw(nint gameTextureId, int texW, int texH, Tank player, World world, float deltaTime)
+    public void Draw(
+        nint gameTextureId,
+        int texW,
+        int texH,
+        Tank player,
+        World world,
+        float deltaTime,
+        PostProcessPassFlags postPassFlags,
+        bool showPostPassOverlay)
     {
         _ = world;
         _ = deltaTime;
         DrawGameViewport(gameTextureId, texW, texH);
         DrawCrosshair();
         DrawBottomPanel(player);
+        if (showPostPassOverlay)
+            DrawPostPassOverlay(postPassFlags);
     }
 
     private void DrawGameViewport(nint gameTextureId, int texW, int texH)
@@ -144,6 +155,45 @@ public class GameHud
             }
             x += DigitCellW + DigitSpacing;
         }
+    }
+
+    private void DrawPostPassOverlay(PostProcessPassFlags passFlags)
+    {
+        var vp = ViewportRect;
+        if (vp.w <= 0 || vp.h <= 0)
+            return;
+
+        ImGui.SetNextWindowPos(new Vector2(vp.x + 10f, vp.y + 10f), ImGuiCond.Always);
+        ImGui.SetNextWindowBgAlpha(0.60f);
+        var flags = ImGuiWindowFlags.NoDecoration |
+                    ImGuiWindowFlags.NoInputs |
+                    ImGuiWindowFlags.NoMove |
+                    ImGuiWindowFlags.AlwaysAutoResize |
+                    ImGuiWindowFlags.NoSavedSettings;
+
+        if (ImGui.Begin("##PostPassOverlay", flags))
+        {
+            ImGui.SetWindowFontScale(1.25f);
+            ImGui.TextUnformatted("Post Passes");
+            ImGui.Separator();
+            DrawPassStatusLine(passFlags, PostProcessPassFlags.Bloom, "1 Bloom");
+            DrawPassStatusLine(passFlags, PostProcessPassFlags.Vignette, "2 Vignette");
+            DrawPassStatusLine(passFlags, PostProcessPassFlags.EdgeLift, "3 EdgeLift");
+            DrawPassStatusLine(passFlags, PostProcessPassFlags.TerrainCurve, "4 TerrainCurve");
+            DrawPassStatusLine(passFlags, PostProcessPassFlags.TerrainAux, "5 TerrainAux");
+            DrawPassStatusLine(passFlags, PostProcessPassFlags.TankGlow, "6 TankGlow");
+            ImGui.SetWindowFontScale(1.0f);
+        }
+        ImGui.End();
+    }
+
+    private static void DrawPassStatusLine(PostProcessPassFlags passFlags, PostProcessPassFlags pass, string label)
+    {
+        bool enabled = (passFlags & pass) != 0;
+        Vector4 color = enabled
+            ? new Vector4(0.36f, 0.96f, 0.49f, 1.0f)
+            : new Vector4(0.92f, 0.33f, 0.33f, 1.0f);
+        ImGui.TextColored(color, $"{label}: {(enabled ? "ON" : "OFF")}");
     }
 
     private static uint ToAbgr(float r, float g, float b, float a)

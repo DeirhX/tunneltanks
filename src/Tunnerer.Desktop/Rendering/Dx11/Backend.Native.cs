@@ -16,17 +16,17 @@ public sealed unsafe partial class Backend
     {
         EnsureSceneTexture(w, h);
         long t0 = Stopwatch.GetTimestamp();
-        UpdateTerrainAuxTexture(upload.TerrainAux, upload.View.WorldSize, upload.AuxDirtyRect);
+        UpdateTerrainAuxTexture(upload.TerrainAux.Data, upload.View.WorldSize, upload.TerrainAux.DirtyRect);
         _profileAuxUploadTicks += Stopwatch.GetTimestamp() - t0;
         t0 = Stopwatch.GetTimestamp();
-        bool useNativeContinuous = upload.UseNativeContinuous &&
-                                   upload.NativeSourcePixels != null &&
+        bool useNativeContinuous = upload.NativeContinuous.Enabled &&
+                                   upload.NativeContinuous.SourcePixels != null &&
                                    upload.View.WorldSize.X > 0 &&
                                    upload.View.WorldSize.Y > 0;
         if (useNativeContinuous)
         {
             EnsureNativeSourceTexture(upload.View.WorldSize.X, upload.View.WorldSize.Y);
-            fixed (uint* ptr = upload.NativeSourcePixels)
+            fixed (uint* ptr = upload.NativeContinuous.SourcePixels)
             {
                 _context->UpdateSubresource(
                     (ID3D11Resource*)_nativeSourceTexture, 0, null, ptr,
@@ -62,19 +62,9 @@ public sealed unsafe partial class Backend
         if (_sceneRtv != null) { _sceneRtv->Release(); _sceneRtv = null; }
         if (_sceneTexture != null) { _sceneTexture->Release(); _sceneTexture = null; }
 
-        var desc = new Texture2DDesc
-        {
-            Width = (uint)w,
-            Height = (uint)h,
-            MipLevels = 1,
-            ArraySize = 1,
-            Format = Format.FormatB8G8R8A8Unorm,
-            SampleDesc = new SampleDesc(1, 0),
-            Usage = Usage.Default,
-            BindFlags = (uint)(BindFlag.ShaderResource | BindFlag.RenderTarget),
-            CPUAccessFlags = 0,
-            MiscFlags = 0,
-        };
+        var desc = CreateTextureDesc(
+            w, h, Format.FormatB8G8R8A8Unorm, Usage.Default,
+            (uint)(BindFlag.ShaderResource | BindFlag.RenderTarget), 0);
 
         ID3D11Texture2D* tex = null;
         _device->CreateTexture2D(&desc, null, &tex);
@@ -98,19 +88,9 @@ public sealed unsafe partial class Backend
         if (_nativeSourceSrv != null) { _nativeSourceSrv->Release(); _nativeSourceSrv = null; }
         if (_nativeSourceTexture != null) { _nativeSourceTexture->Release(); _nativeSourceTexture = null; }
 
-        var desc = new Texture2DDesc
-        {
-            Width = (uint)w,
-            Height = (uint)h,
-            MipLevels = 1,
-            ArraySize = 1,
-            Format = Format.FormatB8G8R8A8Unorm,
-            SampleDesc = new SampleDesc(1, 0),
-            Usage = Usage.Default,
-            BindFlags = (uint)BindFlag.ShaderResource,
-            CPUAccessFlags = 0,
-            MiscFlags = 0,
-        };
+        var desc = CreateTextureDesc(
+            w, h, Format.FormatB8G8R8A8Unorm, Usage.Default,
+            (uint)BindFlag.ShaderResource, 0);
 
         ID3D11Texture2D* tex = null;
         if (_device->CreateTexture2D(&desc, null, &tex) < 0 || tex == null)
@@ -151,19 +131,9 @@ public sealed unsafe partial class Backend
         if (_postSrv != null) { _postSrv->Release(); _postSrv = null; }
         if (_postTexture != null) { _postTexture->Release(); _postTexture = null; }
 
-        var desc = new Texture2DDesc
-        {
-            Width = (uint)w,
-            Height = (uint)h,
-            MipLevels = 1,
-            ArraySize = 1,
-            Format = Format.FormatB8G8R8A8Unorm,
-            SampleDesc = new SampleDesc(1, 0),
-            Usage = Usage.Default,
-            BindFlags = (uint)(BindFlag.RenderTarget | BindFlag.ShaderResource),
-            CPUAccessFlags = 0,
-            MiscFlags = 0,
-        };
+        var desc = CreateTextureDesc(
+            w, h, Format.FormatB8G8R8A8Unorm, Usage.Default,
+            (uint)(BindFlag.RenderTarget | BindFlag.ShaderResource), 0);
 
         ID3D11Texture2D* tex = null;
         if (_device->CreateTexture2D(&desc, null, &tex) < 0 || tex == null)
@@ -244,19 +214,9 @@ public sealed unsafe partial class Backend
         if (srcTex == null || _sceneTexW <= 0 || _sceneTexH <= 0)
             return false;
 
-        var desc = new Texture2DDesc
-        {
-            Width = (uint)_sceneTexW,
-            Height = (uint)_sceneTexH,
-            MipLevels = 1,
-            ArraySize = 1,
-            Format = Format.FormatB8G8R8A8Unorm,
-            SampleDesc = new SampleDesc(1, 0),
-            Usage = Usage.Staging,
-            BindFlags = 0,
-            CPUAccessFlags = (uint)CpuAccessFlag.Read,
-            MiscFlags = 0,
-        };
+        var desc = CreateTextureDesc(
+            _sceneTexW, _sceneTexH, Format.FormatB8G8R8A8Unorm, Usage.Staging,
+            0, (uint)CpuAccessFlag.Read);
 
         ID3D11Texture2D* staging = null;
         if (_device->CreateTexture2D(&desc, null, &staging) < 0 || staging == null)
@@ -323,6 +283,29 @@ public sealed unsafe partial class Backend
         _context->PSSetShader(pixelShader, null, 0);
         ID3D11SamplerState* sampler = _fullscreenSampler;
         _context->PSSetSamplers(0, 1, &sampler);
+    }
+
+    private static Texture2DDesc CreateTextureDesc(
+        int width,
+        int height,
+        Format format,
+        Usage usage,
+        uint bindFlags,
+        uint cpuAccessFlags)
+    {
+        return new Texture2DDesc
+        {
+            Width = (uint)width,
+            Height = (uint)height,
+            MipLevels = 1,
+            ArraySize = 1,
+            Format = format,
+            SampleDesc = new SampleDesc(1, 0),
+            Usage = usage,
+            BindFlags = bindFlags,
+            CPUAccessFlags = cpuAccessFlags,
+            MiscFlags = 0,
+        };
     }
 
 }

@@ -20,7 +20,7 @@
 void ApplyTankHeatGlowPass(float2 uv, inout float3 color)
 {
     // Entity mask: 1 for entity pixels, 0 for terrain.
-    float entityMaskBase = 1.0 - step(0.995, sceneTex.Sample(s0, uv).a);
+    float entityMaskBase = 1.0 - step(kTerrainAlphaThreshold, sceneTex.Sample(s0, uv).a);
 
     [loop]
     for (int j = 0; j < 8; j++)
