@@ -62,6 +62,7 @@ public sealed unsafe partial class Backend : IGameRenderBackend
     private int _sceneTexW, _sceneTexH;
     private int _terrainAuxW, _terrainAuxH;
     private int _swapChainW, _swapChainH;
+    private string? _pendingScreenshotPath;
     private bool _disposed;
 
     internal ID3D11Device* Device => _device;
@@ -142,6 +143,39 @@ public sealed unsafe partial class Backend : IGameRenderBackend
         }
 
         _swapChain->Present(1, 0);
+    }
+
+    public void RequestScreenshot(string? label = null)
+    {
+        string stamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss_fff");
+        string cleanLabel = string.IsNullOrWhiteSpace(label) ? "frame" : SanitizeFilePart(label);
+        string dir = Path.Combine(AppContext.BaseDirectory, "screenshots");
+        Directory.CreateDirectory(dir);
+        _pendingScreenshotPath = Path.Combine(dir, $"{stamp}_{cleanLabel}.ppm");
+        Console.WriteLine($"[Render] Queued screenshot capture: {_pendingScreenshotPath}");
+    }
+
+    private static string SanitizeFilePart(string value)
+    {
+        char[] invalid = Path.GetInvalidFileNameChars();
+        Span<char> buffer = stackalloc char[value.Length];
+        int j = 0;
+        for (int i = 0; i < value.Length; i++)
+        {
+            char c = value[i];
+            bool bad = false;
+            for (int k = 0; k < invalid.Length; k++)
+            {
+                if (c == invalid[k])
+                {
+                    bad = true;
+                    break;
+                }
+            }
+
+            buffer[j++] = bad || char.IsWhiteSpace(c) ? '_' : c;
+        }
+        return new string(buffer[..j]);
     }
 
     public void Dispose()

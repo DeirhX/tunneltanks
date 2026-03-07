@@ -207,13 +207,42 @@ public sealed unsafe partial class Backend
         _context->PSSetShaderResources(0, 1, &nullSrv);
         _context->PSSetShaderResources(1, 1, &nullSrv);
         _displaySrv = _postSrv != null ? _postSrv : _sceneSrv;
+        TryCapturePendingPostScreenshot();
         TryDumpDebugTexture(_postTexture, "post");
+    }
+
+    private void TryCapturePendingPostScreenshot()
+    {
+        string? targetPath = _pendingScreenshotPath;
+        if (string.IsNullOrWhiteSpace(targetPath) || _postTexture == null || _sceneTexW <= 0 || _sceneTexH <= 0)
+            return;
+
+        _pendingScreenshotPath = null;
+        if (DumpTextureToPpm(_postTexture, targetPath))
+            Console.WriteLine($"[Render] Screenshot saved: {targetPath}");
+        else
+            Console.WriteLine($"[Render] Screenshot failed: {targetPath}");
     }
 
     private void TryDumpDebugTexture(ID3D11Texture2D* srcTex, string name)
     {
         if (!_debugDumpFrames || _debugDumpDone || srcTex == null || _sceneTexW <= 0 || _sceneTexH <= 0)
             return;
+
+        string debugDir = Path.Combine(AppContext.BaseDirectory, "debug");
+        Directory.CreateDirectory(debugDir);
+        string outPath = Path.Combine(debugDir, $"{name}-dump.ppm");
+        if (!DumpTextureToPpm(srcTex, outPath))
+            return;
+        Console.WriteLine($"[DX11] dumped {name} frame to {outPath}");
+        if (string.Equals(name, "post", StringComparison.Ordinal))
+            _debugDumpDone = true;
+    }
+
+    private bool DumpTextureToPpm(ID3D11Texture2D* srcTex, string outPath)
+    {
+        if (srcTex == null || _sceneTexW <= 0 || _sceneTexH <= 0)
+            return false;
 
         var desc = new Texture2DDesc
         {
@@ -231,20 +260,20 @@ public sealed unsafe partial class Backend
 
         ID3D11Texture2D* staging = null;
         if (_device->CreateTexture2D(&desc, null, &staging) < 0 || staging == null)
-            return;
+            return false;
 
         try
         {
             _context->CopyResource((ID3D11Resource*)staging, (ID3D11Resource*)srcTex);
             MappedSubresource mapped;
             if (_context->Map((ID3D11Resource*)staging, 0, Silk.NET.Direct3D11.Map.Read, 0, &mapped) < 0)
-                return;
+                return false;
 
             try
             {
-                string debugDir = Path.Combine(AppContext.BaseDirectory, "debug");
-                Directory.CreateDirectory(debugDir);
-                string outPath = Path.Combine(debugDir, $"{name}-dump.ppm");
+                string? parent = Path.GetDirectoryName(outPath);
+                if (!string.IsNullOrEmpty(parent))
+                    Directory.CreateDirectory(parent);
                 using var fs = new FileStream(outPath, FileMode.Create, FileAccess.Write, FileShare.Read);
                 string header = $"P6\n{_sceneTexW} {_sceneTexH}\n255\n";
                 byte[] headerBytes = global::System.Text.Encoding.ASCII.GetBytes(header);
@@ -266,9 +295,7 @@ public sealed unsafe partial class Backend
                     }
                     fs.Write(rgb, 0, rgb.Length);
                 }
-                Console.WriteLine($"[DX11] dumped {name} frame to {outPath}");
-                if (string.Equals(name, "post", StringComparison.Ordinal))
-                    _debugDumpDone = true;
+                return true;
             }
             finally
             {

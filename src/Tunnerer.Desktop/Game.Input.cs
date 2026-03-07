@@ -27,6 +27,12 @@ public partial class Game
             _showHeatDebugOverlay = !_showHeatDebugOverlay;
             Console.WriteLine($"[Debug] Heat overlay: {(_showHeatDebugOverlay ? "ON" : "OFF")} (1)");
         }
+
+        if ((Scancode)ev.Key.Keysym.Scancode == Scancode.ScancodeF10)
+        {
+            _renderBackend.RequestScreenshot("postps");
+            Console.WriteLine("[Debug] Screenshot requested (F10).");
+        }
     }
 
     private DirectionF? ComputeAimDirection(IReadOnlyList<Core.Entities.Tank> tanks)

@@ -27,6 +27,8 @@ public partial class Game : IDisposable
     private readonly uint[] _compositePixels;
     private readonly KeyboardController _p1Controller;
     private readonly BotTankAI _p2AI;
+    private readonly ScriptedController? _scriptedController;
+    private readonly int _scriptScreenshotFrame;
     private readonly List<Position> _terrainDirtyCells = new();
     private readonly float[] _gpuTankHeatGlow = new float[Tweaks.World.MaxPlayers * 4];
     private readonly byte[] _gpuTerrainAux;
@@ -50,6 +52,7 @@ public partial class Game : IDisposable
     private readonly DrawProfile _drawProfile = new();
     private readonly PerfCaptureSession _perfSession;
     private bool _isRunning = true;
+    private int _simFrameCounter;
 
     public unsafe Game(
         Size? terrainSizeOverride = null,
@@ -102,6 +105,12 @@ public partial class Game : IDisposable
             Left: Scancode.ScancodeA, Right: Scancode.ScancodeD,
             Up: Scancode.ScancodeW, Down: Scancode.ScancodeS,
             Shoot: Scancode.ScancodeSpace));
+        _scriptedController = ScriptedController.TryParse(Environment.GetEnvironmentVariable("TUNNERER_SCRIPTED_INPUT"));
+        _scriptScreenshotFrame = ParseNonNegativeInt(Environment.GetEnvironmentVariable("TUNNERER_SCRIPT_SCREENSHOT_FRAME"), -1);
+        if (_scriptedController is not null)
+            Console.WriteLine("[Input] Scripted controller enabled via TUNNERER_SCRIPTED_INPUT.");
+        if (_scriptScreenshotFrame >= 0)
+            Console.WriteLine($"[Input] Scripted screenshot at sim frame {_scriptScreenshotFrame}.");
         Console.WriteLine("[Render] TerrainVisual=NativeContinuous");
     }
 
@@ -135,9 +144,10 @@ public partial class Game : IDisposable
                         if (i == 0)
                         {
                             var kb = _p1Controller.Poll();
+                            var move = _scriptedController?.GetMoveAtFrame(_simFrameCounter) ?? kb.MoveSpeed;
                             return new ControllerOutput
                             {
-                                MoveSpeed = kb.MoveSpeed,
+                                MoveSpeed = move,
                                 ShootPrimary = kb.ShootPrimary || mouseShoot,
                                 AimDirection = aimDir ?? default,
                             };
@@ -145,6 +155,10 @@ public partial class Game : IDisposable
                         var enemy = tanks.Count > 0 ? tanks[0] : null;
                         return _p2AI.GetInput(_world.TankList.Tanks[i], enemy, _world.Terrain);
                     });
+
+                    if (_scriptScreenshotFrame >= 0 && _simFrameCounter == _scriptScreenshotFrame)
+                        _renderBackend.RequestScreenshot($"script_frame_{_simFrameCounter:D4}");
+                    _simFrameCounter++;
 
                     _terrainDirtyCells.Clear();
                     var changedCells = _world.Terrain.GetChangeList();
@@ -218,5 +232,12 @@ public partial class Game : IDisposable
         var w = Stopwatch.StartNew();
         action();
         accumulator += w.Elapsed;
+    }
+
+    private static int ParseNonNegativeInt(string? value, int fallback)
+    {
+        if (int.TryParse(value, out int parsed) && parsed >= 0)
+            return parsed;
+        return fallback;
     }
 }

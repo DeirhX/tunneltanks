@@ -37,4 +37,6 @@ public interface IGameRenderBackend : IDisposable
     void NewFrame(int windowW, int windowH, float deltaTime);
 
     void Render();
+
+    void RequestScreenshot(string? label = null);
 }

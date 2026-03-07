@@ -41,7 +41,7 @@
 
   <Target Name="CompileDx11Shaders"
           BeforeTargets="BeforeBuild"
-          Inputs="@(Dx11Shader)"
+          Inputs="@(Dx11Shader);@(Dx11ShaderInclude)"
           Outputs="@(Dx11Shader->'%(OutputFile)')">
     <Error Condition="'$(Dx11ShaderCompiler)' == ''" Text="No DX11 shader compiler configured. Set Dx11ShaderCompiler to fxc.exe path." />
     <MakeDir Directories="$(IntermediateOutputPath)Shaders" />
