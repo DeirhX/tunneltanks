@@ -10,15 +10,17 @@ using Tunnerer.Core.Types;
 /// </summary>
 public sealed class TerrainBlurField
 {
-    private const float GaussianSigma = 1.8f;
-    private static readonly float[] Gauss5x5;
+    private const int KernelRadius = 7;
+    private const int KernelSize = KernelRadius * 2 + 1;
+    private const float GaussianSigma = 5.0f;
+    private static readonly float[] GaussKernel;
 
     static TerrainBlurField()
     {
-        Gauss5x5 = new float[25];
-        for (int ky = -2; ky <= 2; ky++)
-            for (int kx = -2; kx <= 2; kx++)
-                Gauss5x5[(ky + 2) * 5 + (kx + 2)] =
+        GaussKernel = new float[KernelSize * KernelSize];
+        for (int ky = -KernelRadius; ky <= KernelRadius; ky++)
+            for (int kx = -KernelRadius; kx <= KernelRadius; kx++)
+                GaussKernel[(ky + KernelRadius) * KernelSize + (kx + KernelRadius)] =
                     MathF.Exp(-(kx * kx + ky * ky) / (2f * GaussianSigma * GaussianSigma));
     }
 
@@ -52,11 +54,11 @@ public sealed class TerrainBlurField
         for (int i = 0; i < dirtyCells.Count; i++)
         {
             var p = dirtyCells[i];
-            for (int dy = -2; dy <= 2; dy++)
+            for (int dy = -KernelRadius; dy <= KernelRadius; dy++)
             {
                 int ny = p.Y + dy;
                 if ((uint)ny >= (uint)h) continue;
-                for (int dx = -2; dx <= 2; dx++)
+                for (int dx = -KernelRadius; dx <= KernelRadius; dx++)
                 {
                     int nx = p.X + dx;
                     if ((uint)nx >= (uint)w) continue;
@@ -71,10 +73,10 @@ public sealed class TerrainBlurField
         if (_field == null) { Rebuild(terrain); return; }
 
         int w = _width, h = _height;
-        int padMinX = Math.Max(0, minX - 2);
-        int padMinY = Math.Max(0, minY - 2);
-        int padMaxX = Math.Min(w - 1, maxX + 2);
-        int padMaxY = Math.Min(h - 1, maxY + 2);
+        int padMinX = Math.Max(0, minX - KernelRadius);
+        int padMinY = Math.Max(0, minY - KernelRadius);
+        int padMaxX = Math.Min(w - 1, maxX + KernelRadius);
+        int padMaxY = Math.Min(h - 1, maxY + KernelRadius);
 
         int rowCount = padMaxY - padMinY + 1;
         if (rowCount >= 32)
@@ -113,16 +115,16 @@ public sealed class TerrainBlurField
     private static float ComputeCell(TerrainGrid terrain, int cx, int cy, int w, int h)
     {
         float sum = 0f, wSum = 0f;
-        for (int ky = -2; ky <= 2; ky++)
+        for (int ky = -KernelRadius; ky <= KernelRadius; ky++)
         {
             int ny = cy + ky;
             if ((uint)ny >= (uint)h) continue;
             int rowOff = ny * w;
-            for (int kx = -2; kx <= 2; kx++)
+            for (int kx = -KernelRadius; kx <= KernelRadius; kx++)
             {
                 int nx = cx + kx;
                 if ((uint)nx >= (uint)w) continue;
-                float gw = Gauss5x5[(ky + 2) * 5 + (kx + 2)];
+                float gw = GaussKernel[(ky + KernelRadius) * KernelSize + (kx + KernelRadius)];
                 sum += gw * (IsSolidTerrain(terrain.GetPixelRaw(rowOff + nx)) ? 1f : -1f);
                 wSum += gw;
             }
