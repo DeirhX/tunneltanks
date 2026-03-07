@@ -142,6 +142,8 @@ public sealed unsafe partial class Backend : IGameRenderBackend
             _profileUiRenderTicks += Stopwatch.GetTimestamp() - t0;
         }
 
+        // Capture screenshot from final composited backbuffer (includes UI/HUD).
+        TryCapturePendingFinalScreenshot();
         _swapChain->Present(1, 0);
     }
 
@@ -152,7 +154,7 @@ public sealed unsafe partial class Backend : IGameRenderBackend
         string dir = Path.Combine(AppContext.BaseDirectory, "screenshots");
         Directory.CreateDirectory(dir);
         _pendingScreenshotPath = Path.Combine(dir, $"{stamp}_{cleanLabel}.ppm");
-        Console.WriteLine($"[Render] Queued screenshot capture: {_pendingScreenshotPath}");
+        Console.WriteLine($"[Render] Queued final-frame screenshot capture: {_pendingScreenshotPath}");
     }
 
     private static string SanitizeFilePart(string value)

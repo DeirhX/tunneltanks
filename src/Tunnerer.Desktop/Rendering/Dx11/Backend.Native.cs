@@ -177,18 +177,17 @@ public sealed unsafe partial class Backend
         _context->PSSetShaderResources(0, 1, &nullSrv);
         _context->PSSetShaderResources(1, 1, &nullSrv);
         _displaySrv = _postSrv != null ? _postSrv : _sceneSrv;
-        TryCapturePendingPostScreenshot();
         TryDumpDebugTexture(_postTexture, "post");
     }
 
-    private void TryCapturePendingPostScreenshot()
+    private void TryCapturePendingFinalScreenshot()
     {
         string? targetPath = _pendingScreenshotPath;
-        if (string.IsNullOrWhiteSpace(targetPath) || _postTexture == null || _sceneTexW <= 0 || _sceneTexH <= 0)
+        if (string.IsNullOrWhiteSpace(targetPath) || _backbufferTex == null || _swapChainW <= 0 || _swapChainH <= 0)
             return;
 
         _pendingScreenshotPath = null;
-        if (DumpTextureToPpm(_postTexture, targetPath))
+        if (DumpTextureToPpm(_backbufferTex, targetPath))
             Console.WriteLine($"[Render] Screenshot saved: {targetPath}");
         else
             Console.WriteLine($"[Render] Screenshot failed: {targetPath}");
@@ -211,11 +210,18 @@ public sealed unsafe partial class Backend
 
     private bool DumpTextureToPpm(ID3D11Texture2D* srcTex, string outPath)
     {
-        if (srcTex == null || _sceneTexW <= 0 || _sceneTexH <= 0)
+        if (srcTex == null)
+            return false;
+
+        Texture2DDesc srcDesc = default;
+        srcTex->GetDesc(&srcDesc);
+        int width = (int)srcDesc.Width;
+        int height = (int)srcDesc.Height;
+        if (width <= 0 || height <= 0)
             return false;
 
         var desc = CreateTextureDesc(
-            _sceneTexW, _sceneTexH, Format.FormatB8G8R8A8Unorm, Usage.Staging,
+            width, height, srcDesc.Format, Usage.Staging,
             0, (uint)CpuAccessFlag.Read);
 
         ID3D11Texture2D* staging = null;
@@ -235,18 +241,18 @@ public sealed unsafe partial class Backend
                 if (!string.IsNullOrEmpty(parent))
                     Directory.CreateDirectory(parent);
                 using var fs = new FileStream(outPath, FileMode.Create, FileAccess.Write, FileShare.Read);
-                string header = $"P6\n{_sceneTexW} {_sceneTexH}\n255\n";
+                string header = $"P6\n{width} {height}\n255\n";
                 byte[] headerBytes = global::System.Text.Encoding.ASCII.GetBytes(header);
                 fs.Write(headerBytes, 0, headerBytes.Length);
 
                 byte* srcBase = (byte*)mapped.PData;
                 int rowPitch = (int)mapped.RowPitch;
-                byte[] rgb = new byte[_sceneTexW * 3];
-                for (int y = 0; y < _sceneTexH; y++)
+                byte[] rgb = new byte[width * 3];
+                for (int y = 0; y < height; y++)
                 {
                     byte* row = srcBase + y * rowPitch;
                     int dst = 0;
-                    for (int x = 0; x < _sceneTexW; x++)
+                    for (int x = 0; x < width; x++)
                     {
                         int si = x * 4; // BGRA
                         rgb[dst++] = row[si + 2];
