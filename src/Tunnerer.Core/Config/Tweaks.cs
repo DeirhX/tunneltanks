@@ -37,16 +37,9 @@ public static class Tweaks
         public const int NativeContinuousRecoveryFramesMultiplier = 20;
 
         // GPU post-processing / lighting tuning
-        public const float PostBloomThreshold = 0.56f;
-        public const float PostBloomStrength = 1.35f;
-        public const float PostBloomWeightCenter = 0.42f;
-        public const float PostBloomWeightAxis = 0.20f;
-        public const float PostBloomWeightDiagonal = 0.12f;
         public const float PostVignetteStrength = 0.18f;
         public const float PostVignetteInnerRadius = 0.35f;
         public const float PostVignetteOuterRadius = 0.95f;
-        public const float PostTerrainEdgeLightStrength = 4.00f;
-        public const float PostTerrainEdgeLightBias = 0.00f;
         public const float PostTerrainHeatThreshold = 0.10f;
         public const float PostTerrainMaskEdgeStrength = 0.18f;
         public const float PostTerrainMaskCaveDarken = 0.12f;

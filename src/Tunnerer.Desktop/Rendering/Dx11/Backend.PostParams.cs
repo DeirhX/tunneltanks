@@ -6,6 +6,8 @@ using Tunnerer.Desktop.Config;
 
 public sealed unsafe partial class Backend
 {
+    private const float PostParamsLayoutVersionValue = 2.0f;
+
     private void UpdatePostParamsBuffer(in GamePixelsUpload upload)
     {
         if (_postParamsBuffer == null)
@@ -22,23 +24,16 @@ public sealed unsafe partial class Backend
         cbData.ViewSizeX = upload.View.ViewSize.X;
         cbData.ViewSizeY = upload.View.ViewSize.Y;
         cbData.UseTerrainAux = BoolToFloat(upload.TerrainAux.Data != null);
-        cbData.PostBloomEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.Bloom));
+        cbData.PostParamsLayoutVersion = PostParamsLayoutVersionValue;
+        cbData.HeatDebugOverlay = BoolToFloat(upload.PostProcess.HeatDebugOverlayEnabled);
         cbData.PostVignetteEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.Vignette));
-        cbData.PostEdgeLiftEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.EdgeLift));
         cbData.PostTerrainCurveEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.TerrainCurve));
         cbData.PostTerrainAuxEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.TerrainAux));
         cbData.PostTankGlowEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.TankGlow));
         cbData.PostTerrainHeatEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.TerrainHeat));
-        cbData.PostPassPad1 = 0f;
-        cbData.BloomThreshold = DesktopScreenTweaks.PostBloomThreshold;
-        cbData.BloomStrength = DesktopScreenTweaks.PostBloomStrength;
-        cbData.BloomWeightCenter = DesktopScreenTweaks.PostBloomWeightCenter;
-        cbData.BloomWeightAxis = DesktopScreenTweaks.PostBloomWeightAxis;
-        cbData.BloomWeightDiagonal = DesktopScreenTweaks.PostBloomWeightDiagonal;
         cbData.VignetteStrength = DesktopScreenTweaks.PostVignetteStrength;
-        cbData.EdgeLightStrength = DesktopScreenTweaks.PostTerrainEdgeLightStrength;
-        cbData.EdgeLightBias = DesktopScreenTweaks.PostTerrainEdgeLightBias;
-        cbData.HeatDebugOverlay = BoolToFloat(upload.PostProcess.HeatDebugOverlayEnabled);
+        cbData.VignetteInnerRadius = DesktopScreenTweaks.PostVignetteInnerRadius;
+        cbData.VignetteOuterRadius = DesktopScreenTweaks.PostVignetteOuterRadius;
         cbData.TankHeatGlowR = DesktopScreenTweaks.PostTankHeatGlowR;
         cbData.TankHeatGlowG = DesktopScreenTweaks.PostTankHeatGlowG;
         cbData.TankHeatGlowB = DesktopScreenTweaks.PostTankHeatGlowB;
@@ -53,8 +48,6 @@ public sealed unsafe partial class Backend
         cbData.TerrainMaskOutlineDarken = DesktopScreenTweaks.PostTerrainMaskOutlineDarken;
         cbData.TerrainMaskRimLift = DesktopScreenTweaks.PostTerrainMaskRimLift;
         cbData.TerrainMaskBoundaryScale = DesktopScreenTweaks.PostTerrainMaskBoundaryScale;
-        cbData.VignetteInnerRadius = DesktopScreenTweaks.PostVignetteInnerRadius;
-        cbData.VignetteOuterRadius = DesktopScreenTweaks.PostVignetteOuterRadius;
         cbData.Quality = (float)upload.PostProcess.Quality;
         cbData.MaterialEnergyR = DesktopScreenTweaks.PostMaterialEmissiveEnergyR;
         cbData.MaterialEnergyG = DesktopScreenTweaks.PostMaterialEmissiveEnergyG;
@@ -137,24 +130,22 @@ public sealed unsafe partial class Backend
     {
         public float TexelSizeX, TexelSizeY, PixelScale, Time;
         public float WorldSizeX, WorldSizeY, CameraPixelsX, CameraPixelsY;
-        public float ViewSizeX, ViewSizeY, UseTerrainAux, BloomThreshold;
-        public float PostBloomEnabled, PostVignetteEnabled, PostEdgeLiftEnabled, PostTerrainCurveEnabled;
-        public float PostTerrainAuxEnabled, PostTankGlowEnabled, PostTerrainHeatEnabled, PostPassPad1;
-        public float BloomStrength, BloomWeightCenter, BloomWeightAxis, BloomWeightDiagonal;
-        public float VignetteStrength, EdgeLightStrength, EdgeLightBias, HeatDebugOverlay;
-        public float TankHeatGlowR, TankHeatGlowG, TankHeatGlowB, TankHeatGlowA;
-        public float TerrainHeatGlowR, TerrainHeatGlowG, TerrainHeatGlowB, TerrainHeatThreshold;
-        public float TerrainMaskEdgeStrength, TerrainMaskCaveDarken, TerrainMaskSolidLift, TerrainMaskOutlineDarken;
-        public float TerrainMaskRimLift, TerrainMaskBoundaryScale, VignetteInnerRadius, VignetteOuterRadius;
-        public float Quality, _padQuality0, _padQuality1, _padQuality2;
-        public float MaterialEnergyR, MaterialEnergyG, MaterialEnergyB, MaterialEnergyStrength;
-        public float MaterialScorchedR, MaterialScorchedG, MaterialScorchedB, MaterialScorchedStrength;
-        public float MaterialPulseFreq, MaterialPulseMin, MaterialPulseRange, MaterialPulsePad;
-        public float NativeEdgeSoftness, NativeBoundaryBlend, NativeSampleFactor, NativePad;
-        public float LightDirX, LightDirY, LightDirZ, LightNormalStrength;
-        public float HalfVecX, HalfVecY, HalfVecZ, LightMicroNormalStrength;
-        public float LightAmbient, LightDiffuseWeight, LightShininess, LightSpecularIntensity;
-        public float TankGlowCount, _pad0, _pad1, _pad2;
+        public float ViewSizeX, ViewSizeY, UseTerrainAux, PostParamsLayoutVersion;
+        public float HeatDebugOverlay, PostVignetteEnabled, PostTerrainCurveEnabled, PostTerrainAuxEnabled;
+        public float PostTankGlowEnabled, PostTerrainHeatEnabled, VignetteStrength, VignetteInnerRadius;
+        public float VignetteOuterRadius, TerrainMaskEdgeStrength, TerrainMaskCaveDarken, TerrainMaskSolidLift;
+        public float TerrainMaskOutlineDarken, TerrainMaskRimLift, TerrainMaskBoundaryScale, Quality;
+        public float _padQuality0, MaterialEnergyR, MaterialEnergyG, MaterialEnergyB;
+        public float MaterialEnergyStrength, MaterialScorchedR, MaterialScorchedG, MaterialScorchedB;
+        public float MaterialScorchedStrength, MaterialPulseFreq, MaterialPulseMin, MaterialPulseRange;
+        public float MaterialPulsePad, NativeEdgeSoftness, NativeBoundaryBlend, NativeSampleFactor;
+        public float NativePad, LightDirX, LightDirY, LightDirZ;
+        public float LightNormalStrength, HalfVecX, HalfVecY, HalfVecZ;
+        public float LightMicroNormalStrength, LightAmbient, LightDiffuseWeight, LightShininess;
+        public float LightSpecularIntensity, TankHeatGlowR, TankHeatGlowG, TankHeatGlowB;
+        public float TankHeatGlowA, TerrainHeatGlowR, TerrainHeatGlowG, TerrainHeatGlowB;
+        public float TerrainHeatThreshold, TankGlowCount, _pad0, _pad1;
+        public float _pad2;
         public fixed float TankGlow[32];
     }
     #pragma warning restore CS0649

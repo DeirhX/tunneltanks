@@ -73,7 +73,7 @@ $env:TUNNERER_SCRIPTED_INPUT = "1,0,0:26;0,1,1:120;0,1,0:90"
 Use in-engine scripting (not OS key injection) for reliable ON/OFF comparisons:
 
 ```powershell
-$env:TUNNERER_COMMAND_SCRIPT = "40:TogglePostBloom,80:TogglePostBloom,120:TogglePostEdgeLift,160:TogglePostEdgeLift,200:TogglePostTankGlow,240:TogglePostTankGlow"
+$env:TUNNERER_COMMAND_SCRIPT = "40:TogglePostTerrainCurve,80:TogglePostTerrainCurve,120:TogglePostTerrainAux,160:TogglePostTerrainAux,200:TogglePostTankGlow,240:TogglePostTankGlow"
 $env:TUNNERER_SCRIPT_SCREENSHOT_FRAMES = "41,81,121,161,201,241"
 dotnet run --configuration Debug --project "src/Tunnerer.Desktop" -- --backend=dx11 --perf --perf-warmup=0 --perf-frames=260
 Remove-Item Env:TUNNERER_COMMAND_SCRIPT -ErrorAction SilentlyContinue
@@ -82,7 +82,7 @@ Remove-Item Env:TUNNERER_SCRIPT_SCREENSHOT_FRAMES -ErrorAction SilentlyContinue
 
 Format details:
 - `TUNNERER_COMMAND_SCRIPT`: comma/semicolon list of `frame:GameCommand`.
-- `GameCommand` token must match enum names (case-insensitive), e.g. `TogglePostBloom`, `TogglePostEdgeLift`, `RequestScreenshot`.
+- `GameCommand` token must match enum names (case-insensitive), e.g. `TogglePostTerrainCurve`, `TogglePostTerrainAux`, `RequestScreenshot`.
 - `TUNNERER_SCRIPT_SCREENSHOT_FRAMES`: comma/semicolon/space-separated frame list.
 
 ## Optional: Desktop Grab Fallback

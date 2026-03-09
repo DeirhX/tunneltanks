@@ -6,6 +6,8 @@
 // Included by both PostPs and TerrainPs shaders to prevent layout drift.
 // ============================================================================
 
+static const float kPostParamsLayoutVersion = 2.0;
+
 cbuffer PostParams : register(b0)
 {
     // ---- Screen / world geometry ------------------------------------------
@@ -16,41 +18,20 @@ cbuffer PostParams : register(b0)
     float2 CameraPixels;            // Camera top-left corner (screen pixels)
     float2 ViewSize;                // Render-target resolution (pixels)
 
-    // ---- Feature toggles & terrain aux ------------------------------------
+    // ---- Feature toggles / post toggles -----------------------------------
     float UseTerrainAux;            // > 0.5 to enable terrain SDF / material passes
-    float BloomThreshold;           // Minimum brightness for bloom contribution
-
-    // ---- Runtime post-pass toggles ----------------------------------------
-    float PostBloomEnabled;         // > 0.5 to run bloom
+    float PostParamsLayoutVersion;  // Must match kPostParamsLayoutVersion
+    float HeatDebugOverlay;         // > 0.5 to show temperature color overlay
     float PostVignetteEnabled;      // > 0.5 to run vignette
-    float PostEdgeLiftEnabled;      // > 0.5 to run edge lift
     float PostTerrainCurveEnabled;  // > 0.5 to run terrain curve pass
     float PostTerrainAuxEnabled;    // > 0.5 to run terrain texture pass
     float PostTankGlowEnabled;      // > 0.5 to run tank glow pass
     float PostTerrainHeatEnabled;   // > 0.5 to run terrain heat/scorch pass
-    float PostPassPad1;             // padding (16-byte alignment)
-
-    // ---- Bloom ------------------------------------------------------------
-    float BloomStrength;            // Global bloom intensity multiplier
-    float BloomWeightCenter;        // 3x3 bloom kernel: center weight
-    float BloomWeightAxis;          // 3x3 bloom kernel: axis-neighbor weight
-    float BloomWeightDiagonal;      // 3x3 bloom kernel: diagonal-neighbor weight
 
     // ---- Vignette ---------------------------------------------------------
     float VignetteStrength;         // Darkening intensity at screen edges
-
-    // ---- Edge lift --------------------------------------------------------
-    float EdgeLightStrength;        // Intensity of edge-detection brightness boost
-    float EdgeLightBias;            // Minimum edge magnitude before boost kicks in
-
-    // ---- Heat debug -------------------------------------------------------
-    float HeatDebugOverlay;         // > 0.5 to show temperature color overlay
-
-    // ---- Tank heat glow ---------------------------------------------------
-    float4 TankHeatGlowColor;      // .rgb = glow tint, .a = distortion enable flag
-
-    // ---- Terrain heat / scorch glow ---------------------------------------
-    float4 TerrainHeatGlowColorAndThreshold; // .rgb = glow tint, .a = onset threshold
+    float VignetteInnerRadius;      // UV distance where darkening begins
+    float VignetteOuterRadius;      // UV distance where darkening reaches full
 
     // ---- Terrain SDF shading (TerrainAuxPass) -----------------------------
     float TerrainMaskEdgeStrength;  // Sobel edge response multiplier
@@ -60,12 +41,8 @@ cbuffer PostParams : register(b0)
     float TerrainMaskRimLift;       // Rim highlight on boundary ring
     float TerrainMaskBoundaryScale; // Width scaling for boundary ring detection
 
-    // ---- Vignette radius --------------------------------------------------
-    float VignetteInnerRadius;      // UV distance where darkening begins
-    float VignetteOuterRadius;      // UV distance where darkening reaches full
-
     // ---- Quality level ----------------------------------------------------
-    float Quality;                  // 0 = minimal, 1 = bloom+edge, 2+ = vignette
+    float Quality;                  // 0 = minimal, higher = enable extra shading detail
 
     // ---- Material emissive ------------------------------------------------
     float4 MaterialEmissiveEnergy;  // .rgb = energy vein glow, .a = intensity
@@ -79,6 +56,12 @@ cbuffer PostParams : register(b0)
     float4 LightDir;                // .xyz = light direction, .w = NormalStrength
     float4 HalfVector;              // .xyz = half-vector (view+light), .w = MicroNormalStrength
     float4 LightParams;             // .x = Ambient, .y = DiffuseWeight, .z = Shininess, .w = SpecularIntensity
+
+    // ---- Tank heat glow ---------------------------------------------------
+    float4 TankHeatGlowColor;       // .rgb = glow tint, .a = distortion enable flag
+
+    // ---- Terrain heat / scorch glow ---------------------------------------
+    float4 TerrainHeatGlowColorAndThreshold; // .rgb = glow tint, .a = onset threshold
 
     // ---- Per-tank glow positions ------------------------------------------
     float TankGlowCount;            // Number of active entries in TankGlow[]

@@ -30,16 +30,9 @@ public static class DesktopScreenTweaks
     public static int NativeContinuousRecoveryFramesMultiplier => Tweaks.Screen.NativeContinuousRecoveryFramesMultiplier;
     public const int HeatAuxUpdateIntervalFrames = 2;
 
-    public static float PostBloomThreshold => Tweaks.Screen.PostBloomThreshold;
-    public static float PostBloomStrength => Tweaks.Screen.PostBloomStrength;
-    public static float PostBloomWeightCenter => Tweaks.Screen.PostBloomWeightCenter;
-    public static float PostBloomWeightAxis => Tweaks.Screen.PostBloomWeightAxis;
-    public static float PostBloomWeightDiagonal => Tweaks.Screen.PostBloomWeightDiagonal;
     public static float PostVignetteStrength => Tweaks.Screen.PostVignetteStrength;
     public static float PostVignetteInnerRadius => Tweaks.Screen.PostVignetteInnerRadius;
     public static float PostVignetteOuterRadius => Tweaks.Screen.PostVignetteOuterRadius;
-    public static float PostTerrainEdgeLightStrength => Tweaks.Screen.PostTerrainEdgeLightStrength;
-    public static float PostTerrainEdgeLightBias => Tweaks.Screen.PostTerrainEdgeLightBias;
     public static float PostTerrainHeatThreshold => Tweaks.Screen.PostTerrainHeatThreshold;
     public static float PostTerrainMaskEdgeStrength => Tweaks.Screen.PostTerrainMaskEdgeStrength;
     public static float PostTerrainMaskCaveDarken => Tweaks.Screen.PostTerrainMaskCaveDarken;

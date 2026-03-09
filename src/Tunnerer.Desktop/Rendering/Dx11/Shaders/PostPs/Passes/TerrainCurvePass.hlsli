@@ -104,7 +104,11 @@ void ApplyTerrainCurvePass(float2 uv, float terrainFactor, inout float3 color)
     bool isMaterialEdge = colorEdge > sdfBoundary * 3.0 && sdfBoundary < 0.10;
 
     // ---- Directional blur -------------------------------------------------
-    float3 blurred;
+    // Two kernels are produced:
+    //  - `blurredWide`: existing broad curve blur
+    //  - `blurredTight`: near-edge micro blur used as subtle layered contour
+    float3 blurredWide;
+    float3 blurredTight;
 
     if (isMaterialEdge)
     {
@@ -112,17 +116,28 @@ void ApplyTerrainCurvePass(float2 uv, float terrainFactor, inout float3 color)
         // Spreads color across the pixel step (normal) while also smoothing
         // along the boundary (tangent) to eliminate staircase corners.
         // Kernel shape: 9 taps, ±1.0 / ±2.2 cells normal, ±2.0 / ±4.0 tangent.
-        blurred = (
+        blurredWide = (
             sceneCenter * 2.5 +
             sceneTex.Sample(s0, uv + nUV * 1.0).rgb * 2.0 +
             sceneTex.Sample(s0, uv - nUV * 1.0).rgb * 2.0 +
-            sceneTex.Sample(s0, uv + nUV * 2.2).rgb * 1.0 +
-            sceneTex.Sample(s0, uv - nUV * 2.2).rgb * 1.0 +
-            sceneTex.Sample(s0, uv + tUV * 2.0).rgb * 1.5 +
-            sceneTex.Sample(s0, uv - tUV * 2.0).rgb * 1.5 +
-            sceneTex.Sample(s0, uv + tUV * 4.0).rgb * 0.6 +
-            sceneTex.Sample(s0, uv - tUV * 4.0).rgb * 0.6
+            sceneTex.Sample(s0, uv + nUV * 1.6).rgb * 0.9 +
+            sceneTex.Sample(s0, uv - nUV * 1.6).rgb * 0.9 +
+            sceneTex.Sample(s0, uv + tUV * 1.6).rgb * 1.3 +
+            sceneTex.Sample(s0, uv - tUV * 1.6).rgb * 1.3 +
+            sceneTex.Sample(s0, uv + tUV * 2.8).rgb * 0.45 +
+            sceneTex.Sample(s0, uv - tUV * 2.8).rgb * 0.45
         ) / 12.7;
+
+        // Tighter contour layer: smaller radius and lower contrast drift.
+        blurredTight = (
+            sceneCenter * 3.0 +
+            sceneTex.Sample(s0, uv + nUV * 0.6).rgb * 1.2 +
+            sceneTex.Sample(s0, uv - nUV * 0.6).rgb * 1.2 +
+            sceneTex.Sample(s0, uv + tUV * 1.0).rgb * 1.5 +
+            sceneTex.Sample(s0, uv - tUV * 1.0).rgb * 1.5 +
+            sceneTex.Sample(s0, uv + tUV * 2.0).rgb * 0.8 +
+            sceneTex.Sample(s0, uv - tUV * 2.0).rgb * 0.8
+        ) / 10.0;
     }
     else
     {
@@ -131,21 +146,34 @@ void ApplyTerrainCurvePass(float2 uv, float terrainFactor, inout float3 color)
         // Keeps the transition across the boundary crisp with only mild normal
         // samples to avoid fringing.
         // Kernel shape: 9 taps, ±1.5 / ±3.0 / ±4.5 cells tangent, ±1.2 normal.
-        blurred = (
+        blurredWide = (
             sceneCenter * 3.0 +
             sceneTex.Sample(s0, uv + tUV * 1.5).rgb * 2.0 +
             sceneTex.Sample(s0, uv - tUV * 1.5).rgb * 2.0 +
-            sceneTex.Sample(s0, uv + tUV * 3.0).rgb * 1.2 +
-            sceneTex.Sample(s0, uv - tUV * 3.0).rgb * 1.2 +
-            sceneTex.Sample(s0, uv + tUV * 4.5).rgb * 0.5 +
-            sceneTex.Sample(s0, uv - tUV * 4.5).rgb * 0.5 +
-            sceneTex.Sample(s0, uv + nUV * 1.2).rgb * 1.0 +
-            sceneTex.Sample(s0, uv - nUV * 1.2).rgb * 1.0
+            sceneTex.Sample(s0, uv + tUV * 2.4).rgb * 1.0 +
+            sceneTex.Sample(s0, uv - tUV * 2.4).rgb * 1.0 +
+            sceneTex.Sample(s0, uv + tUV * 3.2).rgb * 0.35 +
+            sceneTex.Sample(s0, uv - tUV * 3.2).rgb * 0.35 +
+            sceneTex.Sample(s0, uv + nUV * 1.0).rgb * 0.9 +
+            sceneTex.Sample(s0, uv - nUV * 1.0).rgb * 0.9
         ) / 12.4;
+
+        // Tighter contour layer for cave/solid edges to keep tiny formations
+        // readable while still adding edge curvature.
+        blurredTight = (
+            sceneCenter * 3.4 +
+            sceneTex.Sample(s0, uv + tUV * 0.9).rgb * 1.8 +
+            sceneTex.Sample(s0, uv - tUV * 0.9).rgb * 1.8 +
+            sceneTex.Sample(s0, uv + tUV * 1.8).rgb * 1.0 +
+            sceneTex.Sample(s0, uv - tUV * 1.8).rgb * 1.0 +
+            sceneTex.Sample(s0, uv + nUV * 0.8).rgb * 0.9 +
+            sceneTex.Sample(s0, uv - nUV * 0.8).rgb * 0.9
+        ) / 10.8;
     }
 
     // Re-apply post-process effects on top of the blurred terrain color.
-    float3 curvedColor = blurred + effectsDelta;
+    float3 curvedWide = blurredWide + effectsDelta;
+    float3 curvedTight = blurredTight + effectsDelta;
 
     // ---- Blend strength ---------------------------------------------------
     // Ramp up from zero near the boundary threshold to full strength at the
@@ -153,6 +181,25 @@ void ApplyTerrainCurvePass(float2 uv, float terrainFactor, inout float3 color)
     // contribute independently.
     float sdfStrength = smoothstep(0.02, 0.20, sdfBoundary);
     float colorStrength = smoothstep(0.06, 0.20, colorEdge);
-    float strength = max(sdfStrength, colorStrength) * terrainFactor * 0.90;
-    color = lerp(color, curvedColor, strength);
+    float boundarySignal = max(sdfStrength, colorStrength);
+    float sdfDist = abs(sdf - 0.5);
+    float edgeBandWide = 1.0 - smoothstep(0.05, 0.20, sdfDist);
+    float edgeBandTight = 1.0 - smoothstep(0.03, 0.13, sdfDist);
+    float materialBand = smoothstep(0.08, 0.45, colorStrength) * (1.0 - edgeBandWide * 0.75);
+
+    // Layer 1: lower-amplitude wide blur so small dirt islands stay visible.
+    float wideSignal = max(sdfStrength * edgeBandWide, materialBand * 0.45);
+    float wideStrength = wideSignal * terrainFactor * 0.34;
+    color = lerp(color, curvedWide, wideStrength);
+
+    // Layer 2: tighter edge-following contour, darker and more transparent.
+    float tightSignal = max(sdfStrength * edgeBandTight, materialBand * 0.30);
+    float tightStrength = smoothstep(0.18, 0.80, tightSignal) * terrainFactor * 0.16;
+    float3 tightLayerColor = curvedTight * 0.975;
+    color = lerp(color, tightLayerColor, tightStrength);
+
+    // Layer 3: very subtle near-edge micro contour to deepen curvature.
+    float microStrength = smoothstep(0.45, 0.98, sdfStrength * edgeBandTight) * terrainFactor * 0.07;
+    float3 microLayerColor = lerp(curvedTight, color, 0.35) * 0.965;
+    color = lerp(color, microLayerColor, microStrength);
 }

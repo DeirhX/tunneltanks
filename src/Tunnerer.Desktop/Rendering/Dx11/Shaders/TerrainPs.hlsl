@@ -47,6 +47,11 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     if (entityFlag < 0.999)
         return float4(nearestColor, entityFlag);
 
+    // Fail-safe against CPU/HLSL cbuffer drift: keep terrain unfiltered if
+    // layout version does not match the shader expectation.
+    if (abs(PostParamsLayoutVersion - kPostParamsLayoutVersion) > 0.001)
+        return float4(nearestColor, 1.0);
+
     // ---- Bilinear fetch ---------------------------------------------------
     float2 texUv = worldCell / WorldSize;
     float3 bilinearColor = sourceTex.Sample(s0, texUv).rgb;

@@ -4,9 +4,7 @@ public enum GameCommand
 {
     ToggleThermalRegionsOverlay,
     ToggleHeatOverlay,
-    TogglePostBloom,
     TogglePostVignette,
-    TogglePostEdgeLift,
     TogglePostTerrainCurve,
     TogglePostTerrainAux,
     TogglePostTerrainHeat,
@@ -14,4 +12,5 @@ public enum GameCommand
     TogglePostNativeTerrainSmoothing,
     RequestScreenshot,
     TogglePostPassOverlay,
+    ToggleInputRecording,
 }

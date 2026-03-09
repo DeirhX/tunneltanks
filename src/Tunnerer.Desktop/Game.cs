@@ -31,6 +31,9 @@ public partial class Game : IDisposable
     private readonly int _scriptScreenshotFrame;
     private readonly HashSet<int> _scriptScreenshotFrames = [];
     private readonly Dictionary<int, List<GameCommand>> _scriptCommandsByFrame = [];
+    private readonly InputRecorder _inputRecorder = new();
+    private readonly string? _recordInputPath;
+    private readonly bool _recordInputAutoStart;
     private readonly List<Position> _terrainDirtyCells = new();
     private readonly float[] _gpuTankHeatGlow = new float[Tweaks.World.MaxPlayers * 4];
     private readonly byte[] _gpuTerrainAux;
@@ -115,12 +118,21 @@ public partial class Game : IDisposable
             _scriptScreenshotFrames.Add(_scriptScreenshotFrame);
         ParseScriptScreenshotFrames(Environment.GetEnvironmentVariable("TUNNERER_SCRIPT_SCREENSHOT_FRAMES"), _scriptScreenshotFrames);
         ParseScriptCommands(Environment.GetEnvironmentVariable("TUNNERER_COMMAND_SCRIPT"), _scriptCommandsByFrame);
+        _recordInputPath = NormalizeRecordPath(Environment.GetEnvironmentVariable("TUNNERER_RECORD_INPUT_PATH"));
+        _recordInputAutoStart = IsTruthy(Environment.GetEnvironmentVariable("TUNNERER_RECORD_INPUT_AUTOSTART"));
         if (_scriptedController is not null)
             Console.WriteLine("[Input] Scripted controller enabled via TUNNERER_SCRIPTED_INPUT.");
         if (_scriptScreenshotFrames.Count > 0)
             Console.WriteLine($"[Input] Scripted screenshot frames enabled ({_scriptScreenshotFrames.Count} frame(s)).");
         if (_scriptCommandsByFrame.Count > 0)
             Console.WriteLine($"[Input] Scripted commands enabled via TUNNERER_COMMAND_SCRIPT ({_scriptCommandsByFrame.Count} frame slot(s)).");
+        if (_recordInputPath is not null)
+            Console.WriteLine($"[Input] Scripted input recording path: {_recordInputPath}");
+        if (_recordInputAutoStart)
+        {
+            Console.WriteLine("[Input] Scripted input recording autostart enabled.");
+            _inputRecorder.Start();
+        }
         Console.WriteLine("[Render] TerrainVisual=NativeContinuous");
     }
 
@@ -149,6 +161,7 @@ public partial class Game : IDisposable
                     var aimDir = ComputeAimDirection(tanks);
 
                     bool mouseShoot = IsMouseInViewport(out _, out _) && IsLeftMouseDown();
+                    ControllerOutput p1Output = default;
 
                     _world.Advance(i =>
                     {
@@ -157,16 +170,19 @@ public partial class Game : IDisposable
                             var kb = _p1Controller.Poll();
                             ControllerOutput scripted = _scriptedController?.GetOutputAtFrame(_simFrameCounter) ?? default;
                             var move = _scriptedController is null ? kb.MoveSpeed : scripted.MoveSpeed;
-                            return new ControllerOutput
+                            p1Output = new ControllerOutput
                             {
                                 MoveSpeed = move,
                                 ShootPrimary = kb.ShootPrimary || mouseShoot || scripted.ShootPrimary,
                                 AimDirection = aimDir ?? default,
                             };
+                            return p1Output;
                         }
                         var enemy = tanks.Count > 0 ? tanks[0] : null;
                         return _p2AI.GetInput(_world.TankList.Tanks[i], enemy, _world.Terrain);
                     });
+
+                    _inputRecorder.RecordFrame(p1Output.MoveSpeed, p1Output.ShootPrimary);
 
                     if (_scriptScreenshotFrames.Contains(_simFrameCounter))
                         _renderBackend.RequestScreenshot($"script_frame_{_simFrameCounter:D4}");
@@ -203,6 +219,7 @@ public partial class Game : IDisposable
         }
         finally
         {
+            FlushInputRecordingOnExit();
             DisposeResources();
         }
     }
@@ -254,6 +271,26 @@ public partial class Game : IDisposable
         if (int.TryParse(value, out int parsed) && parsed >= 0)
             return parsed;
         return fallback;
+    }
+
+    private static bool IsTruthy(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+        return value.Equals("1", StringComparison.OrdinalIgnoreCase)
+            || value.Equals("true", StringComparison.OrdinalIgnoreCase)
+            || value.Equals("yes", StringComparison.OrdinalIgnoreCase)
+            || value.Equals("on", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string? NormalizeRecordPath(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return null;
+        string trimmed = raw.Trim();
+        if (Path.IsPathRooted(trimmed))
+            return trimmed;
+        return Path.GetFullPath(trimmed, Directory.GetCurrentDirectory());
     }
 
     private static void ParseScriptScreenshotFrames(string? value, HashSet<int> targetFrames)

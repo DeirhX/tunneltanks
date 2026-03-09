@@ -92,8 +92,6 @@ void ApplyTerrainAuxPass(float2 uv, float terrainFactor, bool textureEnabled, bo
         textureEnabled &&
         !heatEnabled &&
         PostTerrainCurveEnabled <= 0.5 &&
-        PostEdgeLiftEnabled <= 0.5 &&
-        PostBloomEnabled <= 0.5 &&
         PostVignetteEnabled <= 0.5 &&
         PostTankGlowEnabled <= 0.5;
 
@@ -118,7 +116,9 @@ void ApplyTerrainAuxPass(float2 uv, float terrainFactor, bool textureEnabled, bo
     int2 auxCell = clamp(int2(floor(worldCell)), int2(0, 0), auxMax);
     float4 aNearest = auxTex.Load(int3(auxCell, 0));
     float sdfNearest = aNearest.g;
-    float solidCore = step(0.52, sdfNearest);
+    float solidCoreHard = step(0.52, sdfNearest);
+    float solidCoreSoft = smoothstep(0.52, 0.66, a0.g);
+    float solidCore = solidCoreHard * solidCoreSoft;
     float materialCodeNearest = aNearest.b * kMaterialCodeScale;
     float baseCenter = 1.0 - smoothstep(0.0, kMaterialMaskWidthNarrow, abs(materialCodeNearest - kMaterialCodeBase));
     float baseNeighbor = max(
@@ -229,8 +229,10 @@ void ApplyTerrainAuxPass(float2 uv, float terrainFactor, bool textureEnabled, bo
             float aaBase = nativeSmoothingOff ? 0.62 : 0.30;
             if (terrainAuxOnlyMode)
                 aaBase *= 0.55;
+            float terrainContent = saturate(dirtMask + stoneMask + energyMask);
+            float aaContentBoost = smoothstep(0.25, 0.90, terrainContent) * 0.10;
             float aaEdgeSignal = max(edgeProfile, materialBlend * 0.9) * (1.0 - baseInfluence);
-            float aaMix = saturate(aaEdgeSignal * aaBase) * terrainFactor;
+            float aaMix = saturate(aaEdgeSignal * (aaBase + aaContentBoost)) * terrainFactor;
             color = lerp(color, aaNeighborhood, aaMix);
         }
     }

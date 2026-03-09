@@ -34,27 +34,21 @@ public partial class Game
                 command = GameCommand.ToggleHeatOverlay;
                 return true;
             case Scancode.Scancode1:
-                command = GameCommand.TogglePostBloom;
-                return true;
-            case Scancode.Scancode2:
                 command = GameCommand.TogglePostVignette;
                 return true;
-            case Scancode.Scancode3:
-                command = GameCommand.TogglePostEdgeLift;
-                return true;
-            case Scancode.Scancode4:
+            case Scancode.Scancode2:
                 command = GameCommand.TogglePostTerrainCurve;
                 return true;
-            case Scancode.Scancode5:
+            case Scancode.Scancode3:
                 command = GameCommand.TogglePostTerrainAux;
                 return true;
-            case Scancode.Scancode6:
+            case Scancode.Scancode4:
                 command = GameCommand.TogglePostTankGlow;
                 return true;
-            case Scancode.Scancode7:
+            case Scancode.Scancode5:
                 command = GameCommand.TogglePostNativeTerrainSmoothing;
                 return true;
-            case Scancode.Scancode8:
+            case Scancode.Scancode6:
                 command = GameCommand.TogglePostTerrainHeat;
                 return true;
             case Scancode.ScancodeF10:
@@ -62,6 +56,9 @@ public partial class Game
                 return true;
             case Scancode.ScancodeF11:
                 command = GameCommand.TogglePostPassOverlay;
+                return true;
+            case Scancode.ScancodeF12:
+                command = GameCommand.ToggleInputRecording;
                 return true;
             default:
                 command = default;
@@ -71,6 +68,8 @@ public partial class Game
 
     private void ExecuteGameCommand(GameCommand command, string source)
     {
+        RecordInputCommandForReplay(command, source);
+
         switch (command)
         {
             case GameCommand.ToggleThermalRegionsOverlay:
@@ -79,14 +78,8 @@ public partial class Game
             case GameCommand.ToggleHeatOverlay:
                 ToggleWithLog(ref _showHeatDebugOverlay, "Debug", "Heat overlay", source);
                 return;
-            case GameCommand.TogglePostBloom:
-                TogglePassWithLog(PostProcessPassFlags.Bloom, "Bloom", source);
-                return;
             case GameCommand.TogglePostVignette:
                 TogglePassWithLog(PostProcessPassFlags.Vignette, "Vignette", source);
-                return;
-            case GameCommand.TogglePostEdgeLift:
-                TogglePassWithLog(PostProcessPassFlags.EdgeLift, "Edge lift", source);
                 return;
             case GameCommand.TogglePostTerrainCurve:
                 TogglePassWithLog(PostProcessPassFlags.TerrainCurve, "Terrain curve", source);
@@ -109,6 +102,9 @@ public partial class Game
                 return;
             case GameCommand.TogglePostPassOverlay:
                 ToggleWithLog(ref _showPostPassOverlay, "Debug", "Post pass overlay", source);
+                return;
+            case GameCommand.ToggleInputRecording:
+                ToggleInputRecording(source);
                 return;
             default:
                 return;

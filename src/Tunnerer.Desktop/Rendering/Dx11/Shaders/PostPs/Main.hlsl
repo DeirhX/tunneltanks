@@ -7,12 +7,10 @@
 //
 // Pipeline order:
 //   1. Heat haze distortion (ComputeTankHeatHaze + ApplyOutlineHeatDistortion)
-//   2. Bloom (ApplyBloomPass)
-//   3. Vignette (ApplyVignettePass)
-//   4. Edge lift (ApplyEdgeLiftPass)
-//   5. Terrain curve smoothing (ApplyTerrainCurvePass)
-//   6. Terrain aux: SDF shading, material overlays, heat glow (ApplyTerrainAuxPass)
-//   7. Tank heat glow (ApplyTankHeatGlowPass)
+//   2. Vignette (ApplyVignettePass)
+//   3. Terrain curve smoothing (ApplyTerrainCurvePass)
+//   4. Terrain aux: SDF shading, material overlays, heat glow (ApplyTerrainAuxPass)
+//   5. Tank heat glow (ApplyTankHeatGlowPass)
 //
 // Inputs:
 //   sceneTex (t0) — composited scene (terrain + entities)
@@ -36,9 +34,7 @@
 #include "Materials/EnergyMaterial.hlsli"
 
 #include "Passes/DistortionPass.hlsli"
-#include "Passes/BloomPass.hlsli"
 #include "Passes/VignettePass.hlsli"
-#include "Passes/EdgeLiftPass.hlsli"
 #include "Passes/TerrainCurvePass.hlsli"
 #include "Passes/TerrainAuxPass.hlsli"
 #include "Passes/TankGlowPass.hlsli"
@@ -63,17 +59,18 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     float3 color = baseColor;
     float terrainFactor = step(kTerrainAlphaThreshold, sceneSample.a);
 
+    // Fail-safe against CPU/HLSL cbuffer drift: disable post effects when
+    // layout version does not match the shader expectation.
+    if (abs(PostParamsLayoutVersion - kPostParamsLayoutVersion) > 0.001)
+        return float4(baseColor, 1.0);
+
     // ---- Post-process chain -----------------------------------------------
-    if (PostBloomEnabled > 0.5)
-        ApplyBloomPass(uv, baseColor, color);
     if (PostVignetteEnabled > 0.5)
         ApplyVignettePass(uv, color);
     if (PostTerrainCurveEnabled > 0.5)
         ApplyTerrainCurvePass(uv, terrainFactor, color);
     if (PostTerrainAuxEnabled > 0.5 || PostTerrainHeatEnabled > 0.5)
         ApplyTerrainAuxPass(uv, terrainFactor, PostTerrainAuxEnabled > 0.5, PostTerrainHeatEnabled > 0.5, color);
-    if (PostEdgeLiftEnabled > 0.5)
-        ApplyEdgeLiftPass(uv, terrainFactor, color);
     if (PostTankGlowEnabled > 0.5)
         ApplyTankHeatGlowPass(uv, color);
 
