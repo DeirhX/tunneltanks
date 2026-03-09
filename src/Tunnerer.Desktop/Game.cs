@@ -29,6 +29,8 @@ public partial class Game : IDisposable
     private readonly BotTankAI _p2AI;
     private readonly ScriptedController? _scriptedController;
     private readonly int _scriptScreenshotFrame;
+    private readonly HashSet<int> _scriptScreenshotFrames = [];
+    private readonly Dictionary<int, List<GameCommand>> _scriptCommandsByFrame = [];
     private readonly List<Position> _terrainDirtyCells = new();
     private readonly float[] _gpuTankHeatGlow = new float[Tweaks.World.MaxPlayers * 4];
     private readonly byte[] _gpuTerrainAux;
@@ -109,10 +111,16 @@ public partial class Game : IDisposable
             Shoot: Scancode.ScancodeSpace));
         _scriptedController = ScriptedController.TryParse(Environment.GetEnvironmentVariable("TUNNERER_SCRIPTED_INPUT"));
         _scriptScreenshotFrame = ParseNonNegativeInt(Environment.GetEnvironmentVariable("TUNNERER_SCRIPT_SCREENSHOT_FRAME"), -1);
+        if (_scriptScreenshotFrame >= 0)
+            _scriptScreenshotFrames.Add(_scriptScreenshotFrame);
+        ParseScriptScreenshotFrames(Environment.GetEnvironmentVariable("TUNNERER_SCRIPT_SCREENSHOT_FRAMES"), _scriptScreenshotFrames);
+        ParseScriptCommands(Environment.GetEnvironmentVariable("TUNNERER_COMMAND_SCRIPT"), _scriptCommandsByFrame);
         if (_scriptedController is not null)
             Console.WriteLine("[Input] Scripted controller enabled via TUNNERER_SCRIPTED_INPUT.");
-        if (_scriptScreenshotFrame >= 0)
-            Console.WriteLine($"[Input] Scripted screenshot at sim frame {_scriptScreenshotFrame}.");
+        if (_scriptScreenshotFrames.Count > 0)
+            Console.WriteLine($"[Input] Scripted screenshot frames enabled ({_scriptScreenshotFrames.Count} frame(s)).");
+        if (_scriptCommandsByFrame.Count > 0)
+            Console.WriteLine($"[Input] Scripted commands enabled via TUNNERER_COMMAND_SCRIPT ({_scriptCommandsByFrame.Count} frame slot(s)).");
         Console.WriteLine("[Render] TerrainVisual=NativeContinuous");
     }
 
@@ -136,6 +144,7 @@ public partial class Game : IDisposable
                 {
                     frameTimer.Restart();
                     var totalFrameWatch = Stopwatch.StartNew();
+                    ApplyScriptCommandsForFrame(_simFrameCounter);
 
                     var aimDir = ComputeAimDirection(tanks);
 
@@ -146,11 +155,12 @@ public partial class Game : IDisposable
                         if (i == 0)
                         {
                             var kb = _p1Controller.Poll();
-                            var move = _scriptedController?.GetMoveAtFrame(_simFrameCounter) ?? kb.MoveSpeed;
+                            ControllerOutput scripted = _scriptedController?.GetOutputAtFrame(_simFrameCounter) ?? default;
+                            var move = _scriptedController is null ? kb.MoveSpeed : scripted.MoveSpeed;
                             return new ControllerOutput
                             {
                                 MoveSpeed = move,
-                                ShootPrimary = kb.ShootPrimary || mouseShoot,
+                                ShootPrimary = kb.ShootPrimary || mouseShoot || scripted.ShootPrimary,
                                 AimDirection = aimDir ?? default,
                             };
                         }
@@ -158,7 +168,7 @@ public partial class Game : IDisposable
                         return _p2AI.GetInput(_world.TankList.Tanks[i], enemy, _world.Terrain);
                     });
 
-                    if (_scriptScreenshotFrame >= 0 && _simFrameCounter == _scriptScreenshotFrame)
+                    if (_scriptScreenshotFrames.Contains(_simFrameCounter))
                         _renderBackend.RequestScreenshot($"script_frame_{_simFrameCounter:D4}");
                     _simFrameCounter++;
 
@@ -244,5 +254,63 @@ public partial class Game : IDisposable
         if (int.TryParse(value, out int parsed) && parsed >= 0)
             return parsed;
         return fallback;
+    }
+
+    private static void ParseScriptScreenshotFrames(string? value, HashSet<int> targetFrames)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return;
+
+        string[] tokens = value.Split([',', ';', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        for (int i = 0; i < tokens.Length; i++)
+        {
+            if (int.TryParse(tokens[i], out int frame) && frame >= 0)
+                targetFrames.Add(frame);
+        }
+    }
+
+    private static void ParseScriptCommands(string? value, Dictionary<int, List<GameCommand>> target)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return;
+
+        string[] entries = value.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        for (int i = 0; i < entries.Length; i++)
+        {
+            string entry = entries[i];
+            int split = entry.IndexOf(':');
+            if (split < 0)
+                split = entry.IndexOf('=');
+            if (split <= 0 || split >= entry.Length - 1)
+                continue;
+
+            string frameToken = entry[..split].Trim();
+            string commandToken = entry[(split + 1)..].Trim();
+            if (!int.TryParse(frameToken, out int frame) || frame < 0)
+                continue;
+            if (!TryParseScriptCommand(commandToken, out GameCommand command))
+                continue;
+
+            if (!target.TryGetValue(frame, out List<GameCommand>? commands))
+            {
+                commands = [];
+                target[frame] = commands;
+            }
+            commands.Add(command);
+        }
+    }
+
+    private static bool TryParseScriptCommand(string token, out GameCommand command)
+    {
+        return Enum.TryParse(token.Trim(), ignoreCase: true, out command);
+    }
+
+    private void ApplyScriptCommandsForFrame(int frame)
+    {
+        if (!_scriptCommandsByFrame.TryGetValue(frame, out List<GameCommand>? commands))
+            return;
+
+        for (int i = 0; i < commands.Count; i++)
+            ExecuteGameCommand(commands[i], "script");
     }
 }

@@ -33,10 +33,14 @@
 
 void ApplyTerrainHeatAndScorch(
     inout float3 color, float2 worldCell, float2 auxUv, float2 mTexel,
-    float terrainFactor, float4 a0,
+    float terrainFactor, float baseInfluence, float4 a0,
     float4 ax1, float4 ax2, float4 ay1, float4 ay2,
     float4 ad1, float4 ad2, float4 ad3, float4 ad4)
 {
+    float heatMask = terrainFactor * (1.0 - baseInfluence);
+    if (heatMask <= 0.001)
+        return;
+
     // ---- Multi-scale heat blur --------------------------------------------
     // Local: 3x3 weighted average (center-heavy).
     float heatLocal = a0.r * 0.30
@@ -67,23 +71,31 @@ void ApplyTerrainHeatAndScorch(
     float3 glow = HeatRamp(t);
     float heatGain = lerp(2.00, 2.35, t) * lerp(1.0, 0.92, heatEdge);
     float visible = smoothstep(0.0, lerp(0.040, 0.085, heatEdge), heatNorm);
-    color += glow * heatGain * visible;
+    color += glow * heatGain * visible * heatMask;
 
     // ---- Scorch emissive with per-cell pulse animation --------------------
     float phase = frac(sin(dot(floor(worldCell), float2(12.9898, 78.233))) * 43758.5453) * 6.2831853;
     float pulse = MaterialEmissivePulse.y + MaterialEmissivePulse.z * (0.5 + 0.5 * sin(Time * MaterialEmissivePulse.x + phase));
     float scorch = a0.a * 0.50 + (ax1.a + ax2.a + ay1.a + ay2.a) * 0.10 + (ad1.a + ad2.a + ad3.a + ad4.a) * 0.025;
-    color += MaterialEmissiveScorched.rgb * (scorch * MaterialEmissiveScorched.a * pulse * terrainFactor);
+    color += MaterialEmissiveScorched.rgb * (scorch * MaterialEmissiveScorched.a * pulse * heatMask);
 }
 
 // ============================================================================
 // Main terrain aux pass entry point
 // ============================================================================
 
-void ApplyTerrainAuxPass(float2 uv, float terrainFactor, inout float3 color)
+void ApplyTerrainAuxPass(float2 uv, float terrainFactor, bool textureEnabled, bool heatEnabled, inout float3 color)
 {
-    if (UseTerrainAux <= 0.5 || PixelScale <= 0.0)
+    if (UseTerrainAux <= 0.5 || PixelScale <= 0.0 || (!textureEnabled && !heatEnabled))
         return;
+    bool terrainAuxOnlyMode =
+        textureEnabled &&
+        !heatEnabled &&
+        PostTerrainCurveEnabled <= 0.5 &&
+        PostEdgeLiftEnabled <= 0.5 &&
+        PostBloomEnabled <= 0.5 &&
+        PostVignetteEnabled <= 0.5 &&
+        PostTankGlowEnabled <= 0.5;
 
     // ---- Coordinate setup & 3x3 aux neighborhood -------------------------
     float2 screenPx = uv * ViewSize;
@@ -100,6 +112,21 @@ void ApplyTerrainAuxPass(float2 uv, float terrainFactor, inout float3 color)
     float4 ad2 = auxTex.Sample(s0, auxUv + float2( mTexel.x, -mTexel.y));
     float4 ad3 = auxTex.Sample(s0, auxUv + float2(-mTexel.x,  mTexel.y));
     float4 ad4 = auxTex.Sample(s0, auxUv + float2(-mTexel.x, -mTexel.y));
+
+    // ---- Material sampling (needed for base exclusion and texturing) -------
+    int2 auxMax = int2(max(1.0, WorldSize.x), max(1.0, WorldSize.y)) - int2(1, 1);
+    int2 auxCell = clamp(int2(floor(worldCell)), int2(0, 0), auxMax);
+    float4 aNearest = auxTex.Load(int3(auxCell, 0));
+    float materialCodeNearest = aNearest.b * kMaterialCodeScale;
+    float baseCenter = 1.0 - smoothstep(0.0, kMaterialMaskWidthNarrow, abs(materialCodeNearest - kMaterialCodeBase));
+    float baseNeighbor = max(
+        max(
+            1.0 - smoothstep(0.0, kMaterialMaskWidthNarrow, abs(ax1.b * kMaterialCodeScale - kMaterialCodeBase)),
+            1.0 - smoothstep(0.0, kMaterialMaskWidthNarrow, abs(ax2.b * kMaterialCodeScale - kMaterialCodeBase))),
+        max(
+            1.0 - smoothstep(0.0, kMaterialMaskWidthNarrow, abs(ay1.b * kMaterialCodeScale - kMaterialCodeBase)),
+            1.0 - smoothstep(0.0, kMaterialMaskWidthNarrow, abs(ay2.b * kMaterialCodeScale - kMaterialCodeBase))));
+    float baseInfluence = saturate(max(baseCenter, baseNeighbor));
 
     // ---- SDF edge shading -------------------------------------------------
     // Sobel gradient of the smooth SDF for edge detection and normal estimation.
@@ -118,54 +145,100 @@ void ApplyTerrainAuxPass(float2 uv, float terrainFactor, inout float3 color)
     float outline = min(1.0, boundary * TerrainMaskBoundaryScale);
     float maskWidth = max(fwidth(m) * 1.4, 0.02);
     float maskSoft = smoothstep(0.5 - maskWidth, 0.5 + maskWidth, m);
+    // Keep texture shaping on the solid side to avoid cave-side halos.
+    float solidSide = smoothstep(0.5 + maskWidth * 0.2, 0.5 + maskWidth * 1.8, m);
 
-    // Solid-side brightness lift and rim highlight near the boundary.
-    float edgeProfile = edgeAmt * smoothstep(0.05, 0.8, boundary);
-    color += maskSoft * edgeProfile * TerrainMaskSolidLift * terrainFactor;
-    color += maskSoft * edgeProfile * outline * TerrainMaskRimLift * terrainFactor;
+    if (textureEnabled)
+    {
+        // Solid-side brightness lift and rim highlight near the boundary.
+        // In TerrainAux-only mode, suppress ring-like edge accents to avoid the
+        // visible outline artifact around hard silhouettes.
+        float edgeProfile = edgeAmt * smoothstep(0.05, 0.8, boundary) * (1.0 - baseInfluence) * solidSide;
+        float solidLift = terrainAuxOnlyMode ? TerrainMaskSolidLift * 0.35 : TerrainMaskSolidLift;
+        float rimLift = terrainAuxOnlyMode ? 0.0 : TerrainMaskRimLift;
+        color += maskSoft * edgeProfile * solidLift * terrainFactor;
+        color += maskSoft * edgeProfile * outline * rimLift * terrainFactor;
 
-    // ---- Material classification ------------------------------------------
-    // Nearest-neighbor load of material ID to avoid bilinear blending between
-    // material codes, which would produce nonsensical intermediate values.
-    int2 auxMax = int2(max(1.0, WorldSize.x), max(1.0, WorldSize.y)) - int2(1, 1);
-    int2 auxCell = clamp(int2(floor(worldCell)), int2(0, 0), auxMax);
-    float4 aNearest = auxTex.Load(int3(auxCell, 0));
-    float materialCode = aNearest.b * kMaterialCodeScale;
+        // ---- Material classification --------------------------------------
+        // Use nearest IDs in stable interiors, but blend toward the bilinear
+        // material sample around boundaries to avoid re-introducing staircase.
+        float materialCodeSmooth = a0.b * kMaterialCodeScale;
+        float materialBoundary = abs(ax1.b - ax2.b) + abs(ay1.b - ay2.b);
+        float materialBlend = smoothstep(0.01, 0.08, materialBoundary);
+        float materialCode = lerp(materialCodeNearest, materialCodeSmooth, materialBlend);
 
-    float dirtMask   = (1.0 - smoothstep(0.0, kMaterialMaskWidthWide,   abs(materialCode - kMaterialCodeDirt)))   * terrainFactor;
-    float stoneMask  = (1.0 - smoothstep(0.0, kMaterialMaskWidthWide,   abs(materialCode - kMaterialCodeStone)))  * terrainFactor;
-    float energyMask = (1.0 - smoothstep(0.0, kMaterialMaskWidthNarrow, abs(materialCode - kMaterialCodeEnergy))) * terrainFactor;
-    float baseMask   = (1.0 - smoothstep(0.0, kMaterialMaskWidthNarrow, abs(materialCode - kMaterialCodeBase)))   * terrainFactor;
+        float contentMask = (1.0 - baseInfluence) * terrainFactor * solidSide;
+        float dirtMask   = (1.0 - smoothstep(0.0, kMaterialMaskWidthWide,   abs(materialCode - kMaterialCodeDirt)))   * contentMask;
+        float stoneMask  = (1.0 - smoothstep(0.0, kMaterialMaskWidthWide,   abs(materialCode - kMaterialCodeStone)))  * contentMask;
+        float energyMask = (1.0 - smoothstep(0.0, kMaterialMaskWidthNarrow, abs(materialCode - kMaterialCodeEnergy))) * contentMask;
 
-    // Bases share the stone overlay; dirt is reduced where stone/energy dominate.
-    stoneMask = saturate(stoneMask + baseMask * 0.75);
-    dirtMask = saturate(dirtMask * (1.0 - stoneMask * 0.6) * (1.0 - energyMask));
+        dirtMask = saturate(dirtMask * (1.0 - stoneMask * 0.6) * (1.0 - energyMask));
 
-    // ---- Procedural material overlays -------------------------------------
-    float3 lightDir = normalize(float3(LightDir.xy, max(0.35, LightDir.z)));
-    ApplyStoneMaterial(color, worldCell, stoneMask, lightDir);
-    ApplyDirtMaterial(color, worldCell, dirtMask, lightDir);
-    ApplyEnergyMaterial(color, worldCell, energyMask, lightDir);
+        // ---- Procedural material overlays ---------------------------------
+        float3 lightDir = normalize(float3(LightDir.xy, max(0.35, LightDir.z)));
+        ApplyStoneMaterial(color, worldCell, stoneMask, lightDir);
+        ApplyDirtMaterial(color, worldCell, dirtMask, lightDir);
+        ApplyEnergyMaterial(color, worldCell, energyMask, lightDir);
 
-    // ---- Neighborhood AA --------------------------------------------------
-    // Blend a lightweight 8-tap average at terrain edges to soften residual
-    // aliasing from the material overlays.
-    float3 aaNeighborhood =
-        sceneTex.Sample(s0, uv + float2( mTexel.x,  0.0)).rgb +
-        sceneTex.Sample(s0, uv + float2(-mTexel.x,  0.0)).rgb +
-        sceneTex.Sample(s0, uv + float2( 0.0,  mTexel.y)).rgb +
-        sceneTex.Sample(s0, uv + float2( 0.0, -mTexel.y)).rgb +
-        sceneTex.Sample(s0, uv + float2( mTexel.x,  mTexel.y)).rgb +
-        sceneTex.Sample(s0, uv + float2( mTexel.x, -mTexel.y)).rgb +
-        sceneTex.Sample(s0, uv + float2(-mTexel.x,  mTexel.y)).rgb +
-        sceneTex.Sample(s0, uv + float2(-mTexel.x, -mTexel.y)).rgb;
-    aaNeighborhood *= (1.0 / 8.0);
-    float aaMix = saturate(edgeProfile * 0.30) * terrainFactor;
-    color = lerp(color, aaNeighborhood, aaMix);
+        // ---- Neighborhood AA ----------------------------------------------
+        // Blend a lightweight 8-tap average at terrain edges to soften residual
+        // aliasing from the material overlays.
+        // Smaller AA radius in TerrainAux-only mode to avoid perceived boundary
+        // displacement while still softening jagged cell transitions.
+        float aaRadiusScale = terrainAuxOnlyMode ? 0.55 : 1.0;
+        float2 oneCell = PixelScale * TexelSize * aaRadiusScale;
+        float4 aaC = sceneTex.Sample(s0, uv);
+        float4 aaX1 = sceneTex.Sample(s0, uv + float2( oneCell.x,  0.0));
+        float4 aaX2 = sceneTex.Sample(s0, uv + float2(-oneCell.x,  0.0));
+        float4 aaY1 = sceneTex.Sample(s0, uv + float2( 0.0,  oneCell.y));
+        float4 aaY2 = sceneTex.Sample(s0, uv + float2( 0.0, -oneCell.y));
+        float4 aaD1 = sceneTex.Sample(s0, uv + float2( oneCell.x,  oneCell.y));
+        float4 aaD2 = sceneTex.Sample(s0, uv + float2( oneCell.x, -oneCell.y));
+        float4 aaD3 = sceneTex.Sample(s0, uv + float2(-oneCell.x,  oneCell.y));
+        float4 aaD4 = sceneTex.Sample(s0, uv + float2(-oneCell.x, -oneCell.y));
+
+        // Prevent AA from blending across cave/solid boundary (main halo source).
+        float sideC = step(0.5, m0);
+        float sideX1 = 1.0 - abs(sideC - step(0.5, ax1.g));
+        float sideX2 = 1.0 - abs(sideC - step(0.5, ax2.g));
+        float sideY1 = 1.0 - abs(sideC - step(0.5, ay1.g));
+        float sideY2 = 1.0 - abs(sideC - step(0.5, ay2.g));
+        float sideD1 = 1.0 - abs(sideC - step(0.5, ad1.g));
+        float sideD2 = 1.0 - abs(sideC - step(0.5, ad2.g));
+        float sideD3 = 1.0 - abs(sideC - step(0.5, ad3.g));
+        float sideD4 = 1.0 - abs(sideC - step(0.5, ad4.g));
+
+        float wC = step(kTerrainAlphaThreshold, aaC.a) * 2.0;
+        float wX1 = step(kTerrainAlphaThreshold, aaX1.a) * sideX1;
+        float wX2 = step(kTerrainAlphaThreshold, aaX2.a) * sideX2;
+        float wY1 = step(kTerrainAlphaThreshold, aaY1.a) * sideY1;
+        float wY2 = step(kTerrainAlphaThreshold, aaY2.a) * sideY2;
+        float wD1 = step(kTerrainAlphaThreshold, aaD1.a) * sideD1 * 0.8;
+        float wD2 = step(kTerrainAlphaThreshold, aaD2.a) * sideD2 * 0.8;
+        float wD3 = step(kTerrainAlphaThreshold, aaD3.a) * sideD3 * 0.8;
+        float wD4 = step(kTerrainAlphaThreshold, aaD4.a) * sideD4 * 0.8;
+        float wSum = wC + wX1 + wX2 + wY1 + wY2 + wD1 + wD2 + wD3 + wD4;
+        if (wSum > 0.001)
+        {
+            float3 aaNeighborhood =
+                (aaC.rgb * wC + aaX1.rgb * wX1 + aaX2.rgb * wX2 + aaY1.rgb * wY1 + aaY2.rgb * wY2 +
+                aaD1.rgb * wD1 + aaD2.rgb * wD2 + aaD3.rgb * wD3 + aaD4.rgb * wD4) / wSum;
+            bool nativeSmoothingOff = NativeContinuousParams.y <= 1e-5;
+            float aaBase = nativeSmoothingOff ? 0.62 : 0.30;
+            if (terrainAuxOnlyMode)
+                aaBase *= 0.55;
+            float aaEdgeSignal = max(edgeProfile, materialBlend * 0.9) * (1.0 - baseInfluence);
+            float aaMix = saturate(aaEdgeSignal * aaBase) * terrainFactor;
+            color = lerp(color, aaNeighborhood, aaMix);
+        }
+    }
 
     // ---- Heat & scorch glow -----------------------------------------------
-    ApplyTerrainHeatAndScorch(color, worldCell, auxUv, mTexel, terrainFactor,
-        a0, ax1, ax2, ay1, ay2, ad1, ad2, ad3, ad4);
+    if (heatEnabled)
+    {
+        ApplyTerrainHeatAndScorch(color, worldCell, auxUv, mTexel, terrainFactor, baseInfluence,
+            a0, ax1, ax2, ay1, ay2, ad1, ad2, ad3, ad4);
+    }
 
     // ---- Heat debug overlay (optional) ------------------------------------
     if (HeatDebugOverlay > 0.5)

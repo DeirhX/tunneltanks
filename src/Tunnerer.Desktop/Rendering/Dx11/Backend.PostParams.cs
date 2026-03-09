@@ -28,7 +28,7 @@ public sealed unsafe partial class Backend
         cbData.PostTerrainCurveEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.TerrainCurve));
         cbData.PostTerrainAuxEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.TerrainAux));
         cbData.PostTankGlowEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.TankGlow));
-        cbData.PostPassPad0 = 0f;
+        cbData.PostTerrainHeatEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.TerrainHeat));
         cbData.PostPassPad1 = 0f;
         cbData.BloomThreshold = DesktopScreenTweaks.PostBloomThreshold;
         cbData.BloomStrength = DesktopScreenTweaks.PostBloomStrength;
@@ -68,8 +68,9 @@ public sealed unsafe partial class Backend
         cbData.MaterialPulseMin = DesktopScreenTweaks.PostMaterialEmissivePulseMin;
         cbData.MaterialPulseRange = DesktopScreenTweaks.PostMaterialEmissivePulseRange;
         cbData.MaterialPulsePad = 0f;
-        cbData.NativeEdgeSoftness = DesktopScreenTweaks.NativeContinuousEdgeSoftness;
-        cbData.NativeBoundaryBlend = DesktopScreenTweaks.NativeContinuousBoundaryBlend;
+        bool nativeSmoothingEnabled = HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.NativeTerrainSmoothing);
+        cbData.NativeEdgeSoftness = nativeSmoothingEnabled ? DesktopScreenTweaks.NativeContinuousEdgeSoftness : 0f;
+        cbData.NativeBoundaryBlend = nativeSmoothingEnabled ? DesktopScreenTweaks.NativeContinuousBoundaryBlend : 0f;
         cbData.NativeSampleFactor = upload.NativeContinuous.SampleCount <= 1
             ? 0f
             : upload.NativeContinuous.SampleCount <= 2 ? 0.5f : 1f;
@@ -138,7 +139,7 @@ public sealed unsafe partial class Backend
         public float WorldSizeX, WorldSizeY, CameraPixelsX, CameraPixelsY;
         public float ViewSizeX, ViewSizeY, UseTerrainAux, BloomThreshold;
         public float PostBloomEnabled, PostVignetteEnabled, PostEdgeLiftEnabled, PostTerrainCurveEnabled;
-        public float PostTerrainAuxEnabled, PostTankGlowEnabled, PostPassPad0, PostPassPad1;
+        public float PostTerrainAuxEnabled, PostTankGlowEnabled, PostTerrainHeatEnabled, PostPassPad1;
         public float BloomStrength, BloomWeightCenter, BloomWeightAxis, BloomWeightDiagonal;
         public float VignetteStrength, EdgeLightStrength, EdgeLightBias, HeatDebugOverlay;
         public float TankHeatGlowR, TankHeatGlowG, TankHeatGlowB, TankHeatGlowA;

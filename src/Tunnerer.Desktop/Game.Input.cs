@@ -3,6 +3,7 @@ namespace Tunnerer.Desktop;
 using Silk.NET.SDL;
 using Tunnerer.Core.Types;
 using Tunnerer.Desktop.Config;
+using Tunnerer.Desktop.Input;
 using Tunnerer.Desktop.Rendering;
 
 public partial class Game
@@ -17,58 +18,114 @@ public partial class Game
         if (ev.Key.Repeat != 0)
             return;
 
-        HandleHotkey((Scancode)ev.Key.Keysym.Scancode);
+        Scancode scancode = (Scancode)ev.Key.Keysym.Scancode;
+        if (TryTranslateHotkey(scancode, out GameCommand command))
+            ExecuteGameCommand(command, "input");
     }
 
-    private void HandleHotkey(Scancode scancode)
+    private static bool TryTranslateHotkey(Scancode scancode, out GameCommand command)
     {
         switch (scancode)
         {
             case Scancode.ScancodeF9:
-                ToggleWithLog(ref _showThermalRegionDebug, "Debug", "Thermal regions overlay", "F9");
-                break;
+                command = GameCommand.ToggleThermalRegionsOverlay;
+                return true;
             case Scancode.Scancode0:
-                ToggleWithLog(ref _showHeatDebugOverlay, "Debug", "Heat overlay", "0");
-                break;
+                command = GameCommand.ToggleHeatOverlay;
+                return true;
             case Scancode.Scancode1:
-                TogglePassWithLog(PostProcessPassFlags.Bloom, "Bloom", "1");
-                break;
+                command = GameCommand.TogglePostBloom;
+                return true;
             case Scancode.Scancode2:
-                TogglePassWithLog(PostProcessPassFlags.Vignette, "Vignette", "2");
-                break;
+                command = GameCommand.TogglePostVignette;
+                return true;
             case Scancode.Scancode3:
-                TogglePassWithLog(PostProcessPassFlags.EdgeLift, "Edge lift", "3");
-                break;
+                command = GameCommand.TogglePostEdgeLift;
+                return true;
             case Scancode.Scancode4:
-                TogglePassWithLog(PostProcessPassFlags.TerrainCurve, "Terrain curve", "4");
-                break;
+                command = GameCommand.TogglePostTerrainCurve;
+                return true;
             case Scancode.Scancode5:
-                TogglePassWithLog(PostProcessPassFlags.TerrainAux, "Terrain aux", "5");
-                break;
+                command = GameCommand.TogglePostTerrainAux;
+                return true;
             case Scancode.Scancode6:
-                TogglePassWithLog(PostProcessPassFlags.TankGlow, "Tank glow", "6");
-                break;
+                command = GameCommand.TogglePostTankGlow;
+                return true;
+            case Scancode.Scancode7:
+                command = GameCommand.TogglePostNativeTerrainSmoothing;
+                return true;
+            case Scancode.Scancode8:
+                command = GameCommand.TogglePostTerrainHeat;
+                return true;
             case Scancode.ScancodeF10:
-                _renderBackend.RequestScreenshot("postps");
-                Console.WriteLine("[Debug] Screenshot requested (F10).");
-                break;
+                command = GameCommand.RequestScreenshot;
+                return true;
             case Scancode.ScancodeF11:
-                ToggleWithLog(ref _showPostPassOverlay, "Debug", "Post pass overlay", "F11");
-                break;
+                command = GameCommand.TogglePostPassOverlay;
+                return true;
+            default:
+                command = default;
+                return false;
         }
     }
 
-    private static void ToggleWithLog(ref bool flag, string group, string label, string key)
+    private void ExecuteGameCommand(GameCommand command, string source)
     {
-        flag = !flag;
-        Console.WriteLine($"[{group}] {label}: {(flag ? "ON" : "OFF")} ({key})");
+        switch (command)
+        {
+            case GameCommand.ToggleThermalRegionsOverlay:
+                ToggleWithLog(ref _showThermalRegionDebug, "Debug", "Thermal regions overlay", source);
+                return;
+            case GameCommand.ToggleHeatOverlay:
+                ToggleWithLog(ref _showHeatDebugOverlay, "Debug", "Heat overlay", source);
+                return;
+            case GameCommand.TogglePostBloom:
+                TogglePassWithLog(PostProcessPassFlags.Bloom, "Bloom", source);
+                return;
+            case GameCommand.TogglePostVignette:
+                TogglePassWithLog(PostProcessPassFlags.Vignette, "Vignette", source);
+                return;
+            case GameCommand.TogglePostEdgeLift:
+                TogglePassWithLog(PostProcessPassFlags.EdgeLift, "Edge lift", source);
+                return;
+            case GameCommand.TogglePostTerrainCurve:
+                TogglePassWithLog(PostProcessPassFlags.TerrainCurve, "Terrain curve", source);
+                return;
+            case GameCommand.TogglePostTerrainAux:
+                TogglePassWithLog(PostProcessPassFlags.TerrainAux, "Terrain texture", source);
+                return;
+            case GameCommand.TogglePostTerrainHeat:
+                TogglePassWithLog(PostProcessPassFlags.TerrainHeat, "Terrain heat", source);
+                return;
+            case GameCommand.TogglePostTankGlow:
+                TogglePassWithLog(PostProcessPassFlags.TankGlow, "Tank glow", source);
+                return;
+            case GameCommand.TogglePostNativeTerrainSmoothing:
+                TogglePassWithLog(PostProcessPassFlags.NativeTerrainSmoothing, "Native terrain smoothing", source);
+                return;
+            case GameCommand.RequestScreenshot:
+                _renderBackend.RequestScreenshot("postps");
+                Console.WriteLine($"[Debug] Screenshot requested [source={source}].");
+                return;
+            case GameCommand.TogglePostPassOverlay:
+                ToggleWithLog(ref _showPostPassOverlay, "Debug", "Post pass overlay", source);
+                return;
+            default:
+                return;
+        }
     }
 
-    private void TogglePassWithLog(PostProcessPassFlags pass, string label, string key)
+    private static void ToggleWithLog(ref bool flag, string group, string label, string source)
+    {
+        flag = !flag;
+        Console.WriteLine($"[{group}] {label}: {(flag ? "ON" : "OFF")} [source={source}]");
+    }
+
+    private void TogglePassWithLog(PostProcessPassFlags pass, string label, string source)
     {
         _enabledPostPasses ^= pass;
         bool enabled = (_enabledPostPasses & pass) != 0;
-        Console.WriteLine($"[PostPs] {label}: {(enabled ? "ON" : "OFF")} ({key})");
+        Console.WriteLine($"[PostPs] {label}: {(enabled ? "ON" : "OFF")} [source={source}]");
     }
 
     private DirectionF? ComputeAimDirection(IReadOnlyList<Core.Entities.Tank> tanks)

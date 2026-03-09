@@ -470,6 +470,24 @@ float4 main(PS_INPUT input) : SV_Target
             throw new Exception("Failed to create DX11 ImGui depth state.");
         _depthStencilState = depthStencilState;
 
+        var blendDesc = new BlendDesc
+        {
+            AlphaToCoverageEnable = 0,
+            IndependentBlendEnable = 0,
+        };
+        blendDesc.RenderTarget[0].BlendEnable = 1;
+        blendDesc.RenderTarget[0].SrcBlend = Blend.SrcAlpha;
+        blendDesc.RenderTarget[0].DestBlend = Blend.InvSrcAlpha;
+        blendDesc.RenderTarget[0].BlendOp = BlendOp.Add;
+        blendDesc.RenderTarget[0].SrcBlendAlpha = Blend.One;
+        blendDesc.RenderTarget[0].DestBlendAlpha = Blend.InvSrcAlpha;
+        blendDesc.RenderTarget[0].BlendOpAlpha = BlendOp.Add;
+        blendDesc.RenderTarget[0].RenderTargetWriteMask = (byte)ColorWriteEnable.All;
+        ID3D11BlendState* blendState = null;
+        if (_device->CreateBlendState(&blendDesc, &blendState) < 0)
+            throw new Exception("Failed to create DX11 ImGui blend state.");
+        _blendState = blendState;
+
         CreateFontTexture();
     }
 

@@ -51,6 +51,39 @@ python -c "from PIL import Image; Image.open(r'src/Tunnerer.Desktop/out/bin/Debu
 - Captures are written under `src/Tunnerer.Desktop/out/bin/.../screenshots/`.
 - Keep runtime bounded with `--perf` so automation exits cleanly.
 - Use `artifacts/debug/` for converted PNGs and comparisons.
+- For base-exit scripts, remember base "doors" are `BaseBarrier` cells: movement-only scripts can get stuck. Use scripted shooting while exiting (see below).
+
+## Scripted Movement With Shooting
+
+`TUNNERER_SCRIPTED_INPUT` now supports optional shoot flag per segment:
+
+```text
+dx,dy,shoot:frames
+```
+
+- `shoot` is optional (`0` or `1`); omitted means `0`.
+- Example bottom-center base exit:
+
+```powershell
+$env:TUNNERER_SCRIPTED_INPUT = "1,0,0:26;0,1,1:120;0,1,0:90"
+```
+
+## Automated Pass Toggle A/B
+
+Use in-engine scripting (not OS key injection) for reliable ON/OFF comparisons:
+
+```powershell
+$env:TUNNERER_COMMAND_SCRIPT = "40:TogglePostBloom,80:TogglePostBloom,120:TogglePostEdgeLift,160:TogglePostEdgeLift,200:TogglePostTankGlow,240:TogglePostTankGlow"
+$env:TUNNERER_SCRIPT_SCREENSHOT_FRAMES = "41,81,121,161,201,241"
+dotnet run --configuration Debug --project "src/Tunnerer.Desktop" -- --backend=dx11 --perf --perf-warmup=0 --perf-frames=260
+Remove-Item Env:TUNNERER_COMMAND_SCRIPT -ErrorAction SilentlyContinue
+Remove-Item Env:TUNNERER_SCRIPT_SCREENSHOT_FRAMES -ErrorAction SilentlyContinue
+```
+
+Format details:
+- `TUNNERER_COMMAND_SCRIPT`: comma/semicolon list of `frame:GameCommand`.
+- `GameCommand` token must match enum names (case-insensitive), e.g. `TogglePostBloom`, `TogglePostEdgeLift`, `RequestScreenshot`.
+- `TUNNERER_SCRIPT_SCREENSHOT_FRAMES`: comma/semicolon/space-separated frame list.
 
 ## Optional: Desktop Grab Fallback
 

@@ -46,11 +46,16 @@
 float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
 {
     // ---- Heat haze UV distortion ------------------------------------------
-    float2 hazeOffset;
-    float outlineHeatMask;
-    float distortionEnabled;
-    ComputeTankHeatHaze(uv, hazeOffset, outlineHeatMask, distortionEnabled);
-    ApplyOutlineHeatDistortion(uv, distortionEnabled, outlineHeatMask, hazeOffset);
+    // Distortion is part of the tank-glow feature set. Keep it disabled when
+    // the tank-glow pass is toggled off so "all passes off" is truly neutral.
+    float2 hazeOffset = float2(0.0, 0.0);
+    if (PostTankGlowEnabled > 0.5)
+    {
+        float outlineHeatMask;
+        float distortionEnabled;
+        ComputeTankHeatHaze(uv, hazeOffset, outlineHeatMask, distortionEnabled);
+        ApplyOutlineHeatDistortion(uv, distortionEnabled, outlineHeatMask, hazeOffset);
+    }
 
     float2 hazeUv = clamp(uv + hazeOffset, TexelSize * 0.5, 1.0 - TexelSize * 0.5);
     float4 sceneSample = sceneTex.Sample(s0, hazeUv);
@@ -63,12 +68,12 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
         ApplyBloomPass(uv, baseColor, color);
     if (PostVignetteEnabled > 0.5)
         ApplyVignettePass(uv, color);
-    if (PostEdgeLiftEnabled > 0.5)
-        ApplyEdgeLiftPass(uv, color);
     if (PostTerrainCurveEnabled > 0.5)
         ApplyTerrainCurvePass(uv, terrainFactor, color);
-    if (PostTerrainAuxEnabled > 0.5)
-        ApplyTerrainAuxPass(uv, terrainFactor, color);
+    if (PostTerrainAuxEnabled > 0.5 || PostTerrainHeatEnabled > 0.5)
+        ApplyTerrainAuxPass(uv, terrainFactor, PostTerrainAuxEnabled > 0.5, PostTerrainHeatEnabled > 0.5, color);
+    if (PostEdgeLiftEnabled > 0.5)
+        ApplyEdgeLiftPass(uv, terrainFactor, color);
     if (PostTankGlowEnabled > 0.5)
         ApplyTankHeatGlowPass(uv, color);
 

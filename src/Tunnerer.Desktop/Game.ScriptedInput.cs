@@ -1,5 +1,6 @@
 namespace Tunnerer.Desktop;
 
+using Tunnerer.Core.Input;
 using Tunnerer.Core.Types;
 
 public partial class Game
@@ -31,7 +32,8 @@ public partial class Game
                     return null;
 
                 string[] move = pair[0].Split(',', StringSplitOptions.TrimEntries);
-                if (move.Length != 2 ||
+                bool shoot = false;
+                if (move.Length != 2 && move.Length != 3 ||
                     !int.TryParse(move[0], out int mx) ||
                     !int.TryParse(move[1], out int my) ||
                     !int.TryParse(pair[1], out int frames) ||
@@ -39,25 +41,37 @@ public partial class Game
                 {
                     return null;
                 }
+                if (move.Length == 3)
+                {
+                    if (!int.TryParse(move[2], out int shootRaw))
+                        return null;
+                    shoot = shootRaw != 0;
+                }
 
                 end += frames;
-                segments.Add(new Segment(end, new Offset(mx, my)));
+                segments.Add(new Segment(end, new Offset(mx, my), shoot));
             }
 
             return new ScriptedController(segments.ToArray());
         }
 
-        public Offset GetMoveAtFrame(int frame)
+        public ControllerOutput GetOutputAtFrame(int frame)
         {
             for (int i = 0; i < _segments.Length; i++)
             {
                 if (frame < _segments[i].EndFrameExclusive)
-                    return _segments[i].Move;
+                {
+                    return new ControllerOutput
+                    {
+                        MoveSpeed = _segments[i].Move,
+                        ShootPrimary = _segments[i].Shoot,
+                    };
+                }
             }
 
-            return new Offset(0, 0);
+            return default;
         }
 
-        private readonly record struct Segment(int EndFrameExclusive, Offset Move);
+        private readonly record struct Segment(int EndFrameExclusive, Offset Move, bool Shoot);
     }
 }

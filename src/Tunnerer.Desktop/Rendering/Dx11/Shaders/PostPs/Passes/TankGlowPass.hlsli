@@ -19,6 +19,10 @@
 
 void ApplyTankHeatGlowPass(float2 uv, inout float3 color)
 {
+    // Keep only heat haze distortion from DistortionPass. Tank color/glow
+    // overshoots the palette for now, so this pass is intentionally disabled.
+    return;
+
     // Entity mask: 1 for entity pixels, 0 for terrain.
     float entityMaskBase = 1.0 - step(kTerrainAlphaThreshold, sceneTex.Sample(s0, uv).a);
 

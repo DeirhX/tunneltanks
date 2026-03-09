@@ -25,9 +25,9 @@ cbuffer PostParams : register(b0)
     float PostVignetteEnabled;      // > 0.5 to run vignette
     float PostEdgeLiftEnabled;      // > 0.5 to run edge lift
     float PostTerrainCurveEnabled;  // > 0.5 to run terrain curve pass
-    float PostTerrainAuxEnabled;    // > 0.5 to run terrain aux pass
+    float PostTerrainAuxEnabled;    // > 0.5 to run terrain texture pass
     float PostTankGlowEnabled;      // > 0.5 to run tank glow pass
-    float PostPassPad0;             // padding (16-byte alignment)
+    float PostTerrainHeatEnabled;   // > 0.5 to run terrain heat/scorch pass
     float PostPassPad1;             // padding (16-byte alignment)
 
     // ---- Bloom ------------------------------------------------------------

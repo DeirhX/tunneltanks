@@ -28,6 +28,8 @@ SamplerState s0 : register(s0);
 
 float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
 {
+    bool sharpMode = NativeContinuousParams.x <= 1e-5 && NativeContinuousParams.y <= 1e-5;
+
     // ---- Screen → World coordinate mapping --------------------------------
     float2 screenPx = uv * ViewSize;
     float2 worldCell = (CameraPixels + screenPx) / max(1.0, PixelScale);
@@ -69,7 +71,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     // ±3.5 cells). This merges consecutive staircase steps, shifting the
     // 0.5 isoline from axis-aligned zigzag toward the true diagonal.
     float gradLen = length(sdfGrad);
-    if (gradLen > 0.001)
+    if (!sharpMode && gradLen > 0.001)
     {
         float2 tangent = float2(-sdfGrad.y, sdfGrad.x) / gradLen;
         float2 t1 = tangent * cellPx * 3.5;
@@ -86,43 +88,61 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     }
 
     // Small inward bias to avoid a thin bright fringe on the cave side.
-    sdf -= 0.012;
+    if (!sharpMode)
+        sdf -= 0.012;
 
     // ---- Cave / solid alpha -----------------------------------------------
     // fwidth-adaptive softness: wider transitions where the SDF changes
     // rapidly in screen space (shallow-angle boundaries).
-    float fw = fwidth(sdf);
-    float baseSoftness = max(0.10, NativeContinuousParams.x);
-    float edgeSoftness = baseSoftness + fw * 6.0;
-    float alpha = smoothstep(0.5 - edgeSoftness, 0.5 + edgeSoftness, sdf);
+    float alpha;
+    if (sharpMode)
+    {
+        // Hard cave/solid cut with no soft transition in sharp mode.
+        alpha = step(0.5, sdf);
+    }
+    else
+    {
+        float fw = fwidth(sdf);
+        float baseSoftness = max(0.10, NativeContinuousParams.x);
+        float edgeSoftness = baseSoftness + fw * 6.0;
+        alpha = smoothstep(0.5 - edgeSoftness, 0.5 + edgeSoftness, sdf);
+    }
 
     // ---- Bilinear / nearest blending weight -------------------------------
     // Near the SDF boundary: prefer bilinear (smooth color transitions).
     // Deep inside solid terrain: prefer nearest (sharp cell textures).
-    float boundaryProximity = 1.0 - abs(sdf * 2.0 - 1.0);
-    float bilinearWeight = smoothstep(0.0, 0.6, boundaryProximity) * NativeContinuousParams.y;
+    float bilinearWeight = 0.0;
+    if (!sharpMode)
+    {
+        float boundaryProximity = 1.0 - abs(sdf * 2.0 - 1.0);
+        bilinearWeight = smoothstep(0.0, 0.6, boundaryProximity) * NativeContinuousParams.y;
+    }
 
     // ---- Material-boundary widening ---------------------------------------
     // At stone-dirt / dirt-energy boundaries (both solid in the SDF), the
     // color contrast between nearest and bilinear reveals a cell edge.
     // Widen the gradient with a 9-tap cross (±1.5 and ±2.5 cells) so the
     // transition spans ~5 cells instead of ~1, reducing the staircase.
-    float cellEdge = length(nearestColor - bilinearColor);
-    float materialEdgeFactor = smoothstep(0.04, 0.15, cellEdge);
-    if (materialEdgeFactor > 0.01)
+    float materialEdgeFactor = 0.0;
+    if (!sharpMode)
     {
-        float3 wider = (
-            bilinearColor * 2.0 +
-            sourceTex.Sample(s0, texUv + float2(cellPx.x * 1.5, 0)).rgb +
-            sourceTex.Sample(s0, texUv - float2(cellPx.x * 1.5, 0)).rgb +
-            sourceTex.Sample(s0, texUv + float2(0, cellPx.y * 1.5)).rgb +
-            sourceTex.Sample(s0, texUv - float2(0, cellPx.y * 1.5)).rgb +
-            sourceTex.Sample(s0, texUv + float2(cellPx.x * 2.5, 0)).rgb * 0.5 +
-            sourceTex.Sample(s0, texUv - float2(cellPx.x * 2.5, 0)).rgb * 0.5 +
-            sourceTex.Sample(s0, texUv + float2(0, cellPx.y * 2.5)).rgb * 0.5 +
-            sourceTex.Sample(s0, texUv - float2(0, cellPx.y * 2.5)).rgb * 0.5
-        ) / 8.0;
-        bilinearColor = lerp(bilinearColor, wider, materialEdgeFactor);
+        float cellEdge = length(nearestColor - bilinearColor);
+        materialEdgeFactor = smoothstep(0.04, 0.15, cellEdge);
+        if (materialEdgeFactor > 0.01)
+        {
+            float3 wider = (
+                bilinearColor * 2.0 +
+                sourceTex.Sample(s0, texUv + float2(cellPx.x * 1.5, 0)).rgb +
+                sourceTex.Sample(s0, texUv - float2(cellPx.x * 1.5, 0)).rgb +
+                sourceTex.Sample(s0, texUv + float2(0, cellPx.y * 1.5)).rgb +
+                sourceTex.Sample(s0, texUv - float2(0, cellPx.y * 1.5)).rgb +
+                sourceTex.Sample(s0, texUv + float2(cellPx.x * 2.5, 0)).rgb * 0.5 +
+                sourceTex.Sample(s0, texUv - float2(cellPx.x * 2.5, 0)).rgb * 0.5 +
+                sourceTex.Sample(s0, texUv + float2(0, cellPx.y * 2.5)).rgb * 0.5 +
+                sourceTex.Sample(s0, texUv - float2(0, cellPx.y * 2.5)).rgb * 0.5
+            ) / 8.0;
+            bilinearColor = lerp(bilinearColor, wider, materialEdgeFactor);
+        }
     }
 
     // Force high bilinear weight at detected material edges.

@@ -180,8 +180,10 @@ public class GameHud
             DrawPassStatusLine(passFlags, PostProcessPassFlags.Vignette, "2 Vignette");
             DrawPassStatusLine(passFlags, PostProcessPassFlags.EdgeLift, "3 EdgeLift");
             DrawPassStatusLine(passFlags, PostProcessPassFlags.TerrainCurve, "4 TerrainCurve");
-            DrawPassStatusLine(passFlags, PostProcessPassFlags.TerrainAux, "5 TerrainAux");
+            DrawPassStatusLine(passFlags, PostProcessPassFlags.TerrainAux, "5 TerrainTex");
             DrawPassStatusLine(passFlags, PostProcessPassFlags.TankGlow, "6 TankGlow");
+            DrawPassStatusLine(passFlags, PostProcessPassFlags.NativeTerrainSmoothing, "7 NativeSmoothing");
+            DrawPassStatusLine(passFlags, PostProcessPassFlags.TerrainHeat, "8 TerrainHeat");
             ImGui.SetWindowFontScale(1.0f);
         }
         ImGui.End();
