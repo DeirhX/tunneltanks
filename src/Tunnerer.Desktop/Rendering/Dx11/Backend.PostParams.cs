@@ -145,7 +145,6 @@ public sealed unsafe partial class Backend
         public float LightSpecularIntensity, TankHeatGlowR, TankHeatGlowG, TankHeatGlowB;
         public float TankHeatGlowA, TerrainHeatGlowR, TerrainHeatGlowG, TerrainHeatGlowB;
         public float TerrainHeatThreshold, TankGlowCount, _pad0, _pad1;
-        public float _pad2;
         public fixed float TankGlow[32];
     }
     #pragma warning restore CS0649
