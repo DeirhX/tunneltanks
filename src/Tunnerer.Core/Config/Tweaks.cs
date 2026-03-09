@@ -119,17 +119,17 @@ public static class Tweaks
 
         // Pairwise transmission speed (conductance).
         public const float ThermalKAirAir = 0.240f;
-        public const float ThermalKAirDirt = 0.110f;
+        public const float ThermalKAirDirt = 0.035f;
         public const float ThermalKAirStone = 0.220f;
         public const float ThermalKAirBase = 0.450f;
-        public const float ThermalKDirtDirt = 0.160f;
-        public const float ThermalKDirtStone = 0.200f;
-        public const float ThermalKDirtBase = 0.350f;
+        public const float ThermalKDirtDirt = 0.045f;
+        public const float ThermalKDirtStone = 0.070f;
+        public const float ThermalKDirtBase = 0.090f;
         public const float ThermalKStoneStone = 0.300f;
         public const float ThermalKStoneBase = 0.450f;
         public const float ThermalKBaseBase = 0.200f;
         public const float ThermalKAirConstantEnergy = 0.550f;
-        public const float ThermalKDirtConstantEnergy = 0.350f;
+        public const float ThermalKDirtConstantEnergy = 0.100f;
         public const float ThermalKStoneConstantEnergy = 0.450f;
         public const float ThermalKBaseConstantEnergy = 0.450f;
         public const float ThermalKConstantEnergyConstantEnergy = 0.300f;
@@ -149,8 +149,13 @@ public static class Tweaks
         public const float ThermalSparseFallbackCoverage = 0.45f;
         public const int ThermalParallelRegionThreshold = 4;
         public const int ThermalMaxWorkers = 0; // 0 => default scheduler/CPU count
-        public const float ThermalActiveTemperatureThreshold = 0.5f;
-        public const float ThermalArtificialCoolingPerFrame = 0f;
+        public const float ThermalActiveTemperatureThreshold = 2.5f;
+        public const float ThermalArtificialCoolingPerFrame = 0.02f;
+        public const float ThermalMaxDeltaSleepThreshold = 0.05f;
+        public const int ThermalNoActiveSleepFrames = 120;
+        public const float ThermalSaturationCoverageThreshold = 0.90f;
+        public const int ThermalSaturationFramesBeforeThrottle = 90;
+        public const int ThermalSaturationStepIntervalFrames = 4;
     }
 
     public static class Base

@@ -1,15 +1,17 @@
 namespace Tunnerer.Desktop;
 
 using Tunnerer.Core.Config;
+using Tunnerer.Core.Terrain;
 using Tunnerer.Core.Types;
 using Tunnerer.Desktop.Config;
 using Tunnerer.Desktop.Gui;
+using Tunnerer.Desktop.Input;
 using Tunnerer.Desktop.Rendering;
 using System.Diagnostics;
 
 public partial class Game
 {
-    private void RenderImGuiFrame(IReadOnlyList<Core.Entities.Tank> tanks)
+    private void RenderImGuiFrame(IReadOnlyList<Core.Entities.Tank> tanks, in FrameInputSnapshot frameInput)
     {
         var (winW, winH) = _renderer.GetWindowSize();
         float dt = 1f / Tweaks.Perf.TargetFps;
@@ -92,7 +94,8 @@ public partial class Game
                 PostProcess: new PostProcessUploadOptions(
                     Quality: HiResRenderQuality.High,
                     HeatDebugOverlayEnabled: _commandController.ShowHeatDebugOverlay,
-                    PassFlags: _commandController.EnabledPostPasses),
+                    PassFlags: _commandController.EnabledPostPasses,
+                    ThermalRegions: BuildThermalRegionOverlayUpload()),
                 TankGlow: new TankGlowUpload(
                     Data: _gpuTankHeatGlow,
                     Count: tankHeatGlowCount),
@@ -128,11 +131,13 @@ public partial class Game
 
             if (player != null)
             {
-                var (mx, my, _) = _renderer.GetMouseState();
                 var vp = _hud.ViewportRect;
                 if (vp.w > 0 && vp.h > 0 &&
-                    mx >= vp.x && my >= vp.y && mx < vp.x + vp.w && my < vp.y + vp.h)
-                    _hud.CrosshairScreenPos = (mx, my);
+                    frameInput.MouseX >= vp.x && frameInput.MouseY >= vp.y &&
+                    frameInput.MouseX < vp.x + vp.w && frameInput.MouseY < vp.y + vp.h)
+                {
+                    _hud.CrosshairScreenPos = (frameInput.MouseX, frameInput.MouseY);
+                }
                 else
                     _hud.CrosshairScreenPos = null;
 
@@ -145,6 +150,7 @@ public partial class Game
                         player,
                         _world,
                         dt,
+                        _commandController.ShowHeatDebugOverlay,
                         _commandController.EnabledPostPasses,
                         _commandController.ShowPostPassOverlay));
             }
@@ -159,5 +165,16 @@ public partial class Game
         imguiWatch.Restart();
         _renderer.SwapWindow();
         _drawProfile.ScreenSwap += imguiWatch.Elapsed;
+    }
+
+    private ThermalRegionOverlayUpload BuildThermalRegionOverlayUpload()
+    {
+        if (!_world.Terrain.TryGetThermalTileInfo(out int tileSize, out _, out _))
+            return default;
+
+        float threshold01 = _world.Settings.ThermalActiveTemperatureThreshold / (TerrainGrid.HeatByteScale * 255f);
+        return new ThermalRegionOverlayUpload(
+            TileSizeCells: Math.Max(1, tileSize),
+            ActiveThresholdHeat01: Math.Clamp(threshold01, 0f, 1f));
     }
 }

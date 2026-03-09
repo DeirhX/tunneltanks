@@ -39,6 +39,7 @@ public class GameHud
         Tank player,
         World world,
         float deltaTime,
+        bool heatDebugOverlayEnabled,
         PostProcessPassFlags postPassFlags,
         bool showPostPassOverlay)
     {
@@ -48,7 +49,7 @@ public class GameHud
         DrawCrosshair();
         DrawBottomPanel(player);
         if (showPostPassOverlay)
-            DrawPostPassOverlay(postPassFlags);
+            DrawPostPassOverlay(heatDebugOverlayEnabled, postPassFlags);
     }
 
     private void DrawGameViewport(nint gameTextureId, int texW, int texH)
@@ -157,7 +158,7 @@ public class GameHud
         }
     }
 
-    private void DrawPostPassOverlay(PostProcessPassFlags passFlags)
+    private void DrawPostPassOverlay(bool heatDebugOverlayEnabled, PostProcessPassFlags passFlags)
     {
         var vp = ViewportRect;
         if (vp.w <= 0 || vp.h <= 0)
@@ -176,6 +177,8 @@ public class GameHud
             ImGui.SetWindowFontScale(1.25f);
             ImGui.TextUnformatted("Post Passes");
             ImGui.Separator();
+            DrawToggleStatusLine(heatDebugOverlayEnabled, "0 HeatColormap");
+            DrawPassStatusLine(passFlags, PostProcessPassFlags.ThermalRegions, "9 ThermalRegions");
             DrawPassStatusLine(passFlags, PostProcessPassFlags.Vignette, "1 Vignette");
             DrawPassStatusLine(passFlags, PostProcessPassFlags.TerrainCurve, "2 TerrainCurve");
             DrawPassStatusLine(passFlags, PostProcessPassFlags.TerrainAux, "3 TerrainTex");
@@ -191,6 +194,11 @@ public class GameHud
     private static void DrawPassStatusLine(PostProcessPassFlags passFlags, PostProcessPassFlags pass, string label)
     {
         bool enabled = (passFlags & pass) != 0;
+        DrawToggleStatusLine(enabled, label);
+    }
+
+    private static void DrawToggleStatusLine(bool enabled, string label)
+    {
         Vector4 color = enabled
             ? new Vector4(0.36f, 0.96f, 0.49f, 1.0f)
             : new Vector4(0.92f, 0.33f, 0.33f, 1.0f);

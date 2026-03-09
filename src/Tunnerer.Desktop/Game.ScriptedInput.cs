@@ -6,6 +6,8 @@ using Tunnerer.Core.Types;
 public sealed class ScriptedController
 {
     private readonly Segment[] _segments;
+    private int _currentSegmentIndex;
+    private int _lastFrame = -1;
 
     private ScriptedController(Segment[] segments)
     {
@@ -55,16 +57,32 @@ public sealed class ScriptedController
 
     public ControllerOutput GetOutputAtFrame(int frame)
     {
-        for (int i = 0; i < _segments.Length; i++)
+        if (_segments.Length == 0)
+            return default;
+
+        // Typical playback is monotonic by frame; keep a cursor
+        // so we avoid scanning from the beginning every tick.
+        if (frame < _lastFrame)
+            _currentSegmentIndex = 0;
+        _lastFrame = frame;
+
+        while (_currentSegmentIndex < _segments.Length &&
+               frame >= _segments[_currentSegmentIndex].EndFrameExclusive)
         {
-            if (frame < _segments[i].EndFrameExclusive)
+            _currentSegmentIndex++;
+        }
+
+        if (_currentSegmentIndex >= _segments.Length)
+            return default;
+
+        ref readonly Segment segment = ref _segments[_currentSegmentIndex];
+        if (frame < segment.EndFrameExclusive)
+        {
+            return new ControllerOutput
             {
-                return new ControllerOutput
-                {
-                    MoveSpeed = _segments[i].Move,
-                    ShootPrimary = _segments[i].Shoot,
-                };
-            }
+                MoveSpeed = segment.Move,
+                ShootPrimary = segment.Shoot,
+            };
         }
 
         return default;

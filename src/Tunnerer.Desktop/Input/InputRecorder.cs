@@ -84,7 +84,7 @@ public sealed class InputRecorder
     {
         if (!IsRecording)
             return;
-        if (string.Equals(source, "script", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(source, InputCommandSources.Script, StringComparison.OrdinalIgnoreCase))
             return;
         if (command == GameCommand.ToggleInputRecording)
             return;

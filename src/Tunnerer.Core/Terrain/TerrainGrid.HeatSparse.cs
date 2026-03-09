@@ -202,9 +202,10 @@ public partial class TerrainGrid
         return _activeTiles[tileX + tileY * _tileCountX];
     }
 
-    private void CoolDownSparseRegions(IReadOnlyList<SparseRegion> regions, bool parallel, out TimeSpan markDirty)
+    private void CoolDownSparseRegions(IReadOnlyList<SparseRegion> regions, bool parallel, out TimeSpan markDirty, out float maxAbsDelta)
     {
         markDirty = TimeSpan.Zero;
+        maxAbsDelta = 0f;
         if (_heatTemp == null || _nextActiveTiles == null)
             return;
 
@@ -272,6 +273,8 @@ public partial class TerrainGrid
                 for (int x = work.Region.MinX; x <= work.Region.MaxXInclusive; x++, idx++)
                 {
                     int offset = row + x;
+                    float oldTerrain = _heatTemperature[offset];
+                    float oldAir = _airTemperature[offset];
                     float next = _heatTemperature[offset] + work.Delta[idx];
                     float nextAir = _airTemperature[offset] + work.AirDelta[idx];
                     ThermalMaterial material = Pixel.GetThermalMaterial(_data[offset]);
@@ -289,6 +292,11 @@ public partial class TerrainGrid
                     }
                     _heatTemperature[offset] = next;
                     _airTemperature[offset] = nextAir;
+                    float deltaTerrain = MathF.Abs(next - oldTerrain);
+                    float deltaAir = MathF.Abs(nextAir - oldAir);
+                    float cellMaxDelta = MathF.Max(deltaTerrain, deltaAir);
+                    if (cellMaxDelta > maxAbsDelta)
+                        maxAbsDelta = cellMaxDelta;
                     if (ShouldMarkHeatDirty(_heatTemp[offset], next))
                         MarkHeatDirty(x, y);
                     if (IsThermallyActive(next, nextAir))

@@ -6,7 +6,7 @@ using Tunnerer.Desktop.Config;
 
 public sealed unsafe partial class Backend
 {
-    private const float PostParamsLayoutVersionValue = 2.0f;
+    private const float PostParamsLayoutVersionValue = 3.0f;
 
     private void UpdatePostParamsBuffer(in GamePixelsUpload upload)
     {
@@ -31,6 +31,9 @@ public sealed unsafe partial class Backend
         cbData.PostTerrainAuxEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.TerrainAux));
         cbData.PostTankGlowEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.TankGlow));
         cbData.PostTerrainHeatEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.TerrainHeat));
+        cbData.PostThermalRegionsEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.ThermalRegions));
+        cbData.ThermalTileSizeCells = upload.PostProcess.ThermalRegions.TileSizeCells;
+        cbData.ThermalTileHeatThreshold01 = upload.PostProcess.ThermalRegions.ActiveThresholdHeat01;
         cbData.VignetteStrength = DesktopScreenTweaks.PostVignetteStrength;
         cbData.VignetteInnerRadius = DesktopScreenTweaks.PostVignetteInnerRadius;
         cbData.VignetteOuterRadius = DesktopScreenTweaks.PostVignetteOuterRadius;
@@ -132,7 +135,8 @@ public sealed unsafe partial class Backend
         public float WorldSizeX, WorldSizeY, CameraPixelsX, CameraPixelsY;
         public float ViewSizeX, ViewSizeY, UseTerrainAux, PostParamsLayoutVersion;
         public float HeatDebugOverlay, PostVignetteEnabled, PostTerrainCurveEnabled, PostTerrainAuxEnabled;
-        public float PostTankGlowEnabled, PostTerrainHeatEnabled, VignetteStrength, VignetteInnerRadius;
+        public float PostTankGlowEnabled, PostTerrainHeatEnabled, PostThermalRegionsEnabled, ThermalTileSizeCells;
+        public float ThermalTileHeatThreshold01, _padOverlay0, VignetteStrength, VignetteInnerRadius;
         public float VignetteOuterRadius, TerrainMaskEdgeStrength, TerrainMaskCaveDarken, TerrainMaskSolidLift;
         public float TerrainMaskOutlineDarken, TerrainMaskRimLift, TerrainMaskBoundaryScale, Quality;
         public float _padQuality0, MaterialEnergyR, MaterialEnergyG, MaterialEnergyB;

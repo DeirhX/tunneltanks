@@ -20,7 +20,7 @@ public partial class Game
 
         Scancode scancode = (Scancode)ev.Key.Keysym.Scancode;
         if (GameCommandController.TryTranslateHotkey(scancode, out GameCommand command))
-            ExecuteGameCommand(command, "input");
+            ExecuteGameCommand(command, InputCommandSources.Input);
     }
 
     private void ExecuteGameCommand(GameCommand command, string source)
@@ -33,12 +33,18 @@ public partial class Game
             toggleInputRecording: ToggleInputRecording);
     }
 
-    private DirectionF? ComputeAimDirection(IReadOnlyList<Core.Entities.Tank> tanks)
+    private FrameInputSnapshot CaptureFrameInput()
+    {
+        var (mx, my, buttons) = _renderer.GetMouseState();
+        return new FrameInputSnapshot(mx, my, buttons);
+    }
+
+    private DirectionF? ComputeAimDirection(IReadOnlyList<Core.Entities.Tank> tanks, in FrameInputSnapshot frameInput)
     {
         if (tanks.Count == 0) return null;
         var tank = tanks[0];
 
-        if (!IsMouseInViewport(out float relX, out float relY))
+        if (!IsMouseInViewport(frameInput, out float relX, out float relY))
             return null;
 
         int scale = DesktopScreenTweaks.PixelScale;
@@ -52,9 +58,8 @@ public partial class Game
         return new DirectionF(dx / len, dy / len);
     }
 
-    private bool IsMouseInViewport(out float relX, out float relY)
+    private bool IsMouseInViewport(in FrameInputSnapshot frameInput, out float relX, out float relY)
     {
-        var (mx, my, _) = _renderer.GetMouseState();
         (float x, float y, float w, float h) vp = _renderBackend.SupportsUi
             ? _hud.ViewportRect
             : (0f, 0f, _renderViewState.HiResSize.X, _renderViewState.HiResSize.Y);
@@ -62,8 +67,8 @@ public partial class Game
         relX = 0; relY = 0;
         if (vp.w <= 0 || vp.h <= 0) return false;
 
-        relX = mx - vp.x;
-        relY = my - vp.y;
+        relX = frameInput.MouseX - vp.x;
+        relY = frameInput.MouseY - vp.y;
         if (relX < 0 || relY < 0 || relX >= vp.w || relY >= vp.h)
             return false;
 
@@ -76,11 +81,5 @@ public partial class Game
         }
 
         return true;
-    }
-
-    private bool IsLeftMouseDown()
-    {
-        var (_, _, buttons) = _renderer.GetMouseState();
-        return (buttons & 1) != 0;
     }
 }

@@ -6,7 +6,7 @@
 // Included by both PostPs and TerrainPs shaders to prevent layout drift.
 // ============================================================================
 
-static const float kPostParamsLayoutVersion = 2.0;
+static const float kPostParamsLayoutVersion = 3.0;
 
 cbuffer PostParams : register(b0)
 {
@@ -27,6 +27,10 @@ cbuffer PostParams : register(b0)
     float PostTerrainAuxEnabled;    // > 0.5 to run terrain texture pass
     float PostTankGlowEnabled;      // > 0.5 to run tank glow pass
     float PostTerrainHeatEnabled;   // > 0.5 to run terrain heat/scorch pass
+    float PostThermalRegionsEnabled;// > 0.5 to draw thermal tile debug overlay
+    float ThermalTileSizeCells;     // Thermal active-tile size in world cells
+    float ThermalTileHeatThreshold01; // Thermal activation threshold mapped to [0..1] heat byte
+    float _PadThermalOverlay0;
 
     // ---- Vignette ---------------------------------------------------------
     float VignetteStrength;         // Darkening intensity at screen edges

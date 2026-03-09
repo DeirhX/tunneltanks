@@ -10,20 +10,10 @@ public partial class Game
     {
         if (_inputRecorder.IsRecording)
         {
-            string path = ResolveRecordOutputPath();
-            RecordingCapture capture = _inputRecorder.StopAndSerialize();
-            if (string.IsNullOrWhiteSpace(capture.InputScript) && string.IsNullOrWhiteSpace(capture.CommandScript))
-            {
-                Console.WriteLine($"[Input] Scripted input recording stopped [source={source}] (no input/commands captured).");
-                return;
-            }
-
-            SaveRecordedScript(path, capture);
-            Console.WriteLine($"[Input] Scripted input recording stopped [source={source}] -> {path}");
-            if (!string.IsNullOrWhiteSpace(capture.InputScript))
-                Console.WriteLine($"[Input] Replay with TUNNERER_SCRIPTED_INPUT=\"{capture.InputScript}\"");
-            if (!string.IsNullOrWhiteSpace(capture.CommandScript))
-                Console.WriteLine($"[Input] Replay with TUNNERER_COMMAND_SCRIPT=\"{capture.CommandScript}\"");
+            StopAndPersistInputRecording(
+                source,
+                stoppedPrefix: "[Input] Scripted input recording stopped",
+                emptyMessage: $"[Input] Scripted input recording stopped [source={source}] (no input/commands captured).");
             return;
         }
 
@@ -36,17 +26,10 @@ public partial class Game
         if (!_inputRecorder.IsRecording)
             return;
 
-        string path = ResolveRecordOutputPath();
-        RecordingCapture capture = _inputRecorder.StopAndSerialize();
-        if (string.IsNullOrWhiteSpace(capture.InputScript) && string.IsNullOrWhiteSpace(capture.CommandScript))
-            return;
-
-        SaveRecordedScript(path, capture);
-        Console.WriteLine($"[Input] Scripted input recording auto-saved on exit -> {path}");
-        if (!string.IsNullOrWhiteSpace(capture.InputScript))
-            Console.WriteLine($"[Input] Replay with TUNNERER_SCRIPTED_INPUT=\"{capture.InputScript}\"");
-        if (!string.IsNullOrWhiteSpace(capture.CommandScript))
-            Console.WriteLine($"[Input] Replay with TUNNERER_COMMAND_SCRIPT=\"{capture.CommandScript}\"");
+        StopAndPersistInputRecording(
+            source: null,
+            stoppedPrefix: "[Input] Scripted input recording auto-saved on exit",
+            emptyMessage: null);
     }
 
     private string ResolveRecordOutputPath()
@@ -72,6 +55,29 @@ public partial class Game
         if (!string.IsNullOrWhiteSpace(capture.CommandScript))
             text.AppendLine($"TUNNERER_COMMAND_SCRIPT={capture.CommandScript}");
         File.WriteAllText(path, text.ToString());
+    }
+
+    private void StopAndPersistInputRecording(string? source, string stoppedPrefix, string? emptyMessage)
+    {
+        string path = ResolveRecordOutputPath();
+        RecordingCapture capture = _inputRecorder.StopAndSerialize();
+        if (string.IsNullOrWhiteSpace(capture.InputScript) && string.IsNullOrWhiteSpace(capture.CommandScript))
+        {
+            if (!string.IsNullOrWhiteSpace(emptyMessage))
+                Console.WriteLine(emptyMessage);
+            return;
+        }
+
+        SaveRecordedScript(path, capture);
+        if (!string.IsNullOrWhiteSpace(source))
+            Console.WriteLine($"{stoppedPrefix} [source={source}] -> {path}");
+        else
+            Console.WriteLine($"{stoppedPrefix} -> {path}");
+
+        if (!string.IsNullOrWhiteSpace(capture.InputScript))
+            Console.WriteLine($"[Input] Replay with TUNNERER_SCRIPTED_INPUT=\"{capture.InputScript}\"");
+        if (!string.IsNullOrWhiteSpace(capture.CommandScript))
+            Console.WriteLine($"[Input] Replay with TUNNERER_COMMAND_SCRIPT=\"{capture.CommandScript}\"");
     }
 
     private void RecordInputCommandForReplay(GameCommand command, string source)

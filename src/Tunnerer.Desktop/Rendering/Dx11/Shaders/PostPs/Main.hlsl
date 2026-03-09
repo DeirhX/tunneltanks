@@ -69,8 +69,8 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
         ApplyVignettePass(uv, color);
     if (PostTerrainCurveEnabled > 0.5)
         ApplyTerrainCurvePass(uv, terrainFactor, color);
-    if (PostTerrainAuxEnabled > 0.5 || PostTerrainHeatEnabled > 0.5)
-        ApplyTerrainAuxPass(uv, terrainFactor, PostTerrainAuxEnabled > 0.5, PostTerrainHeatEnabled > 0.5, color);
+    if (PostTerrainAuxEnabled > 0.5 || PostTerrainHeatEnabled > 0.5 || PostThermalRegionsEnabled > 0.5)
+        ApplyTerrainAuxPass(uv, terrainFactor, PostTerrainAuxEnabled > 0.5, PostTerrainHeatEnabled > 0.5, PostThermalRegionsEnabled > 0.5, color);
     if (PostTankGlowEnabled > 0.5)
         ApplyTankHeatGlowPass(uv, color);
 

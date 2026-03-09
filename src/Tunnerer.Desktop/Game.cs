@@ -46,7 +46,6 @@ public partial class Game : IDisposable
     private readonly PerfCaptureSession _perfSession;
     private bool _isRunning = true;
     private int _simFrameCounter;
-    private TimeSpan _simTimeAccumulator;
     private const int MaxCatchUpSimulationSteps = 4;
 
     public unsafe Game(
@@ -129,54 +128,37 @@ public partial class Game : IDisposable
     {
         try
         {
-            var frameTimer = Stopwatch.StartNew();
             var targetFrameTime = Tweaks.World.AdvanceStep;
+            var frameCoordinator = new GameFrameCoordinator(targetFrameTime, MaxCatchUpSimulationSteps);
             var tanks = _world.TankList.Tanks;
 
-            while (_isRunning)
-            {
-                _simTimeAccumulator += frameTimer.Elapsed;
-                frameTimer.Restart();
-
-                if (!_renderer.PollEvents(HandleEvent))
-                { _isRunning = false; break; }
-
-                if (_world.IsGameOver)
-                { _isRunning = false; break; }
-
-                if (_simTimeAccumulator >= targetFrameTime)
+            frameCoordinator.Run(
+                isRunning: () => _isRunning,
+                requestStop: () => _isRunning = false,
+                pollEvents: () => _renderer.PollEvents(HandleEvent),
+                isGameOver: () => _world.IsGameOver,
+                onBeforeSimulationBatch: () => _terrainDirtyCells.Clear(),
+                captureFrameInput: CaptureFrameInput,
+                advanceOneSimulationStep: frameInput => AdvanceOneSimulationStep(tanks, frameInput),
+                composeFrame: () =>
                 {
-                    var totalFrameWatch = Stopwatch.StartNew();
-                    int simulatedSteps = 0;
-                    _terrainDirtyCells.Clear();
-                    while (_simTimeAccumulator >= targetFrameTime && simulatedSteps < MaxCatchUpSimulationSteps && _isRunning)
-                    {
-                        _simTimeAccumulator -= targetFrameTime;
-                        simulatedSteps++;
-                        AdvanceOneSimulationStep(tanks);
-                    }
-
-                    if (simulatedSteps == MaxCatchUpSimulationSteps && _simTimeAccumulator > targetFrameTime)
-                        _simTimeAccumulator = targetFrameTime;
-
                     ProfileSection(ref _drawProfile.ObjectsDraw, () =>
                     {
                         _compositeRenderer.Compose(_world, _worldPixels, _compositePixels);
                         MarkEntityPixels(_worldPixels, _compositePixels);
-                        ApplyThermalRegionDebugOverlay(_compositePixels);
                     });
-
-                    RenderImGuiFrame(tanks);
-
-                    _drawProfile.TotalFrame += totalFrameWatch.Elapsed;
+                },
+                renderFrame: frameInput => RenderImGuiFrame(tanks, frameInput),
+                onFrameMeasured: elapsed =>
+                {
+                    _drawProfile.TotalFrame += elapsed;
                     _drawProfile.FrameCount++;
                     if (_drawProfile.FrameCount >= 100)
                         _drawProfile.Report();
 
-                    if (_perfSession.Capture(totalFrameWatch.Elapsed))
+                    if (_perfSession.Capture(elapsed))
                         _isRunning = false;
-                }
-            }
+                });
 
             _perfSession.ReportIfEnabled();
         }
@@ -187,10 +169,10 @@ public partial class Game : IDisposable
         }
     }
 
-    private void AdvanceOneSimulationStep(IReadOnlyList<Core.Entities.Tank> tanks)
+    private void AdvanceOneSimulationStep(IReadOnlyList<Core.Entities.Tank> tanks, FrameInputSnapshot frameInput)
     {
-        var aimDir = ComputeAimDirection(tanks);
-        bool mouseShoot = IsMouseInViewport(out _, out _) && IsLeftMouseDown();
+        var aimDir = ComputeAimDirection(tanks, frameInput);
+        bool mouseShoot = IsMouseInViewport(frameInput, out _, out _) && frameInput.IsLeftMouseDown;
         SimulationStepResult stepResult = _simulationStepper.AdvanceOneStep(
             simFrame: _simFrameCounter,
             tanks: tanks,

@@ -72,7 +72,7 @@ public sealed class GameSimulationStepper
             return;
 
         for (int i = 0; i < commands.Count; i++)
-            _executeCommand(commands[i], "script");
+            _executeCommand(commands[i], InputCommandSources.Script);
     }
 }
 

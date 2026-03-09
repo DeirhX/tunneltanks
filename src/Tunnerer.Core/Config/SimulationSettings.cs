@@ -8,6 +8,7 @@ public readonly record struct SimulationSettings(
     float ThermalSparseFallbackCoverage,
     int ThermalParallelRegionThreshold,
     int ThermalMaxWorkers,
+    float ThermalMaxDeltaSleepThreshold,
     float ThermalActiveTemperatureThreshold,
     float ThermalAirCellCoupling,
     float ThermalAirNeighborCoupling)
@@ -21,6 +22,7 @@ public readonly record struct SimulationSettings(
             ThermalSparseFallbackCoverage: Tweaks.World.ThermalSparseFallbackCoverage,
             ThermalParallelRegionThreshold: Tweaks.World.ThermalParallelRegionThreshold,
             ThermalMaxWorkers: Tweaks.World.ThermalMaxWorkers,
+            ThermalMaxDeltaSleepThreshold: Tweaks.World.ThermalMaxDeltaSleepThreshold,
             ThermalActiveTemperatureThreshold: Tweaks.World.ThermalActiveTemperatureThreshold,
             ThermalAirCellCoupling: Tweaks.World.ThermalAirCellCoupling,
             ThermalAirNeighborCoupling: Tweaks.World.ThermalAirNeighborCoupling);

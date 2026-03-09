@@ -5,12 +5,10 @@ using Tunnerer.Desktop.Rendering;
 
 public sealed class GameCommandController
 {
-    private bool _showThermalRegionDebug;
     private bool _showHeatDebugOverlay;
     private bool _showPostPassOverlay = true;
     private PostProcessPassFlags _enabledPostPasses = PostProcessPassFlags.All;
 
-    public bool ShowThermalRegionDebug => _showThermalRegionDebug;
     public bool ShowHeatDebugOverlay => _showHeatDebugOverlay;
     public bool ShowPostPassOverlay => _showPostPassOverlay;
     public PostProcessPassFlags EnabledPostPasses => _enabledPostPasses;
@@ -20,10 +18,13 @@ public sealed class GameCommandController
         switch (scancode)
         {
             case Scancode.ScancodeF9:
-                command = GameCommand.ToggleThermalRegionsOverlay;
+                command = GameCommand.ToggleHeatOverlay;
                 return true;
             case Scancode.Scancode0:
                 command = GameCommand.ToggleHeatOverlay;
+                return true;
+            case Scancode.Scancode9:
+                command = GameCommand.ToggleThermalRegionsOverlay;
                 return true;
             case Scancode.Scancode1:
                 command = GameCommand.TogglePostVignette;
@@ -70,7 +71,7 @@ public sealed class GameCommandController
         switch (command)
         {
             case GameCommand.ToggleThermalRegionsOverlay:
-                ToggleWithLog(ref _showThermalRegionDebug, "Debug", "Thermal regions overlay", source);
+                TogglePassWithLog(PostProcessPassFlags.ThermalRegions, "Thermal regions", source);
                 return;
             case GameCommand.ToggleHeatOverlay:
                 ToggleWithLog(ref _showHeatDebugOverlay, "Debug", "Heat overlay", source);

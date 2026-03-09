@@ -84,9 +84,9 @@ void ApplyTerrainHeatAndScorch(
 // Main terrain aux pass entry point
 // ============================================================================
 
-void ApplyTerrainAuxPass(float2 uv, float terrainFactor, bool textureEnabled, bool heatEnabled, inout float3 color)
+void ApplyTerrainAuxPass(float2 uv, float terrainFactor, bool textureEnabled, bool heatEnabled, bool thermalRegionsEnabled, inout float3 color)
 {
-    if (UseTerrainAux <= 0.5 || PixelScale <= 0.0 || (!textureEnabled && !heatEnabled))
+    if (UseTerrainAux <= 0.5 || PixelScale <= 0.0 || (!textureEnabled && !heatEnabled && !thermalRegionsEnabled))
         return;
     bool terrainAuxOnlyMode =
         textureEnabled &&
@@ -250,5 +250,38 @@ void ApplyTerrainAuxPass(float2 uv, float terrainFactor, bool textureEnabled, bo
         float temperature = a0.r * kHeatDebugTemperatureScale;
         float heat01 = saturate(temperature / 100.0);
         color = lerp(color, HeatDebugRamp(heat01), 0.5);
+    }
+
+    if (thermalRegionsEnabled && ThermalTileSizeCells > 0.5)
+    {
+        float tileSize = max(1.0, ThermalTileSizeCells);
+        float2 tileCoord = worldCell / tileSize;
+        float2 tileFrac = frac(tileCoord);
+
+        float edgeDist = min(min(tileFrac.x, 1.0 - tileFrac.x), min(tileFrac.y, 1.0 - tileFrac.y));
+        float borderMask = 1.0 - smoothstep(0.03, 0.09, edgeDist);
+        float fillMask = 1.0 - borderMask;
+
+        float2 tileMinCell = floor(tileCoord) * tileSize;
+        float2 tileCenterCell = tileMinCell + tileSize * 0.5;
+        float2 tileCenterUv = tileCenterCell / WorldSize;
+        float2 tileSampleOffset = float2(tileSize / max(1.0, WorldSize.x), tileSize / max(1.0, WorldSize.y)) * 0.32;
+
+        float h0 = auxTex.Sample(s0, tileCenterUv).r;
+        float h1 = auxTex.Sample(s0, tileCenterUv + float2(tileSampleOffset.x, 0.0)).r;
+        float h2 = auxTex.Sample(s0, tileCenterUv - float2(tileSampleOffset.x, 0.0)).r;
+        float h3 = auxTex.Sample(s0, tileCenterUv + float2(0.0, tileSampleOffset.y)).r;
+        float h4 = auxTex.Sample(s0, tileCenterUv - float2(0.0, tileSampleOffset.y)).r;
+        float heatProxy = (h0 * 0.40) + ((h1 + h2 + h3 + h4) * 0.15);
+        float active = step(ThermalTileHeatThreshold01, heatProxy);
+
+        float3 inactiveTint = float3(35.0 / 255.0, 110.0 / 255.0, 220.0 / 255.0);
+        float3 activeTint = float3(40.0 / 255.0, 220.0 / 255.0, 75.0 / 255.0);
+        float3 tint = lerp(inactiveTint, activeTint, active);
+
+        float fillStrength = lerp(0.08, 0.18, active);
+        float edgeStrength = lerp(0.42, 0.60, active);
+        float strength = fillMask * fillStrength + borderMask * edgeStrength;
+        color = lerp(color, tint, saturate(strength));
     }
 }
