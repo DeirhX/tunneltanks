@@ -117,6 +117,8 @@ void ApplyTerrainAuxPass(float2 uv, float terrainFactor, bool textureEnabled, bo
     int2 auxMax = int2(max(1.0, WorldSize.x), max(1.0, WorldSize.y)) - int2(1, 1);
     int2 auxCell = clamp(int2(floor(worldCell)), int2(0, 0), auxMax);
     float4 aNearest = auxTex.Load(int3(auxCell, 0));
+    float sdfNearest = aNearest.g;
+    float solidCore = step(0.52, sdfNearest);
     float materialCodeNearest = aNearest.b * kMaterialCodeScale;
     float baseCenter = 1.0 - smoothstep(0.0, kMaterialMaskWidthNarrow, abs(materialCodeNearest - kMaterialCodeBase));
     float baseNeighbor = max(
@@ -153,7 +155,7 @@ void ApplyTerrainAuxPass(float2 uv, float terrainFactor, bool textureEnabled, bo
         // Solid-side brightness lift and rim highlight near the boundary.
         // In TerrainAux-only mode, suppress ring-like edge accents to avoid the
         // visible outline artifact around hard silhouettes.
-        float edgeProfile = edgeAmt * smoothstep(0.05, 0.8, boundary) * (1.0 - baseInfluence) * solidSide;
+        float edgeProfile = edgeAmt * smoothstep(0.05, 0.8, boundary) * (1.0 - baseInfluence) * solidSide * solidCore;
         float solidLift = terrainAuxOnlyMode ? TerrainMaskSolidLift * 0.35 : TerrainMaskSolidLift;
         float rimLift = terrainAuxOnlyMode ? 0.0 : TerrainMaskRimLift;
         color += maskSoft * edgeProfile * solidLift * terrainFactor;
@@ -167,7 +169,7 @@ void ApplyTerrainAuxPass(float2 uv, float terrainFactor, bool textureEnabled, bo
         float materialBlend = smoothstep(0.01, 0.08, materialBoundary);
         float materialCode = lerp(materialCodeNearest, materialCodeSmooth, materialBlend);
 
-        float contentMask = (1.0 - baseInfluence) * terrainFactor * solidSide;
+        float contentMask = (1.0 - baseInfluence) * terrainFactor * solidSide * solidCore;
         float dirtMask   = (1.0 - smoothstep(0.0, kMaterialMaskWidthWide,   abs(materialCode - kMaterialCodeDirt)))   * contentMask;
         float stoneMask  = (1.0 - smoothstep(0.0, kMaterialMaskWidthWide,   abs(materialCode - kMaterialCodeStone)))  * contentMask;
         float energyMask = (1.0 - smoothstep(0.0, kMaterialMaskWidthNarrow, abs(materialCode - kMaterialCodeEnergy))) * contentMask;
