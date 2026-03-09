@@ -20,7 +20,8 @@ public enum PostProcessPassFlags : byte
     TankGlow = 1 << 3,
     NativeTerrainSmoothing = 1 << 4,
     TerrainHeat = 1 << 5,
-    All = Vignette | TerrainCurve | TerrainAux | TankGlow | NativeTerrainSmoothing | TerrainHeat,
+    NativeEdgeCurving = 1 << 6,
+    All = Vignette | TerrainCurve | TerrainAux | TankGlow | NativeTerrainSmoothing | TerrainHeat | NativeEdgeCurving,
 }
 
 public readonly record struct GamePixelsUpload(

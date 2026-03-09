@@ -29,6 +29,7 @@ SamplerState s0 : register(s0);
 float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
 {
     bool sharpMode = NativeContinuousParams.x <= 1e-5 && NativeContinuousParams.y <= 1e-5;
+    bool nativeCurvingEnabled = NativeContinuousParams.w > 0.5;
 
     // ---- Screen → World coordinate mapping --------------------------------
     float2 screenPx = uv * ViewSize;
@@ -40,6 +41,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     int2 cell = clamp(int2(floor(worldCell)), int2(0, 0), maxCell);
     float4 nearestSample = sourceTex.Load(int3(cell, 0));
     float3 nearestColor = nearestSample.rgb;
+    float sdfNearest = auxTex.Load(int3(cell, 0)).g;
 
     // ---- Entity early-out -------------------------------------------------
     // Entity pixels (tanks, projectiles, bases) carry alpha < 1.0.
@@ -60,7 +62,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     // auxTex.g holds a Gaussian-blurred signed-distance field:
     //   0.0 = deep cave, 0.5 = boundary, 1.0 = deep solid.
     float2 sdfUv = texUv;
-    float sdf = auxTex.Sample(s0, sdfUv).g;
+    float sdf = nativeCurvingEnabled ? auxTex.Sample(s0, sdfUv).g : sdfNearest;
     float2 cellPx = 1.0 / WorldSize;
 
     // 3-cell central difference for a stable SDF gradient.
@@ -76,7 +78,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     // ±3.5 cells). This merges consecutive staircase steps, shifting the
     // 0.5 isoline from axis-aligned zigzag toward the true diagonal.
     float gradLen = length(sdfGrad);
-    if (!sharpMode && gradLen > 0.001)
+    if (!sharpMode && nativeCurvingEnabled && gradLen > 0.001)
     {
         float2 tangent = float2(-sdfGrad.y, sdfGrad.x) / gradLen;
         float2 t1 = tangent * cellPx * 3.5;
@@ -93,16 +95,17 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     }
 
     // Small inward bias to avoid a thin bright fringe on the cave side.
-    if (!sharpMode)
+    if (!sharpMode && nativeCurvingEnabled)
         sdf -= 0.012;
 
     // ---- Cave / solid alpha -----------------------------------------------
     // fwidth-adaptive softness: wider transitions where the SDF changes
     // rapidly in screen space (shallow-angle boundaries).
     float alpha;
-    if (sharpMode)
+    if (sharpMode || !nativeCurvingEnabled)
     {
-        // Hard cave/solid cut with no soft transition in sharp mode.
+        // Hard cave/solid cut with no soft transition when smoothing/curving
+        // is disabled so visuals match collision-occupied cells.
         alpha = step(0.5, sdf);
     }
     else
@@ -117,7 +120,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
     // Near the SDF boundary: prefer bilinear (smooth color transitions).
     // Deep inside solid terrain: prefer nearest (sharp cell textures).
     float bilinearWeight = 0.0;
-    if (!sharpMode)
+    if (!sharpMode && nativeCurvingEnabled)
     {
         float boundaryProximity = 1.0 - abs(sdf * 2.0 - 1.0);
         bilinearWeight = smoothstep(0.0, 0.6, boundaryProximity) * NativeContinuousParams.y;

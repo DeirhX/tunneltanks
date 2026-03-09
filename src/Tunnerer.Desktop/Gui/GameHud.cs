@@ -182,6 +182,7 @@ public class GameHud
             DrawPassStatusLine(passFlags, PostProcessPassFlags.TankGlow, "4 TankGlow");
             DrawPassStatusLine(passFlags, PostProcessPassFlags.NativeTerrainSmoothing, "5 NativeSmoothing");
             DrawPassStatusLine(passFlags, PostProcessPassFlags.TerrainHeat, "6 TerrainHeat");
+            DrawPassStatusLine(passFlags, PostProcessPassFlags.NativeEdgeCurving, "7 NativeEdgeCurving");
             ImGui.SetWindowFontScale(1.0f);
         }
         ImGui.End();

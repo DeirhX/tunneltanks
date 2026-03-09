@@ -67,7 +67,7 @@ public sealed unsafe partial class Backend
         cbData.NativeSampleFactor = upload.NativeContinuous.SampleCount <= 1
             ? 0f
             : upload.NativeContinuous.SampleCount <= 2 ? 0.5f : 1f;
-        cbData.NativePad = 0f;
+        cbData.NativeCurvingEnabled = BoolToFloat(HasPass(upload.PostProcess.PassFlags, PostProcessPassFlags.NativeEdgeCurving));
 
         float lx = DesktopScreenTweaks.LightDirX, ly = DesktopScreenTweaks.LightDirY, lz = DesktopScreenTweaks.LightDirZ;
         Normalize3(ref lx, ref ly, ref lz);
@@ -139,7 +139,7 @@ public sealed unsafe partial class Backend
         public float MaterialEnergyStrength, MaterialScorchedR, MaterialScorchedG, MaterialScorchedB;
         public float MaterialScorchedStrength, MaterialPulseFreq, MaterialPulseMin, MaterialPulseRange;
         public float MaterialPulsePad, NativeEdgeSoftness, NativeBoundaryBlend, NativeSampleFactor;
-        public float NativePad, LightDirX, LightDirY, LightDirZ;
+        public float NativeCurvingEnabled, LightDirX, LightDirY, LightDirZ;
         public float LightNormalStrength, HalfVecX, HalfVecY, HalfVecZ;
         public float LightMicroNormalStrength, LightAmbient, LightDiffuseWeight, LightShininess;
         public float LightSpecularIntensity, TankHeatGlowR, TankHeatGlowG, TankHeatGlowB;

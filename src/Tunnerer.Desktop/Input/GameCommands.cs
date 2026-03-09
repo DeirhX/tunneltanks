@@ -10,6 +10,7 @@ public enum GameCommand
     TogglePostTerrainHeat,
     TogglePostTankGlow,
     TogglePostNativeTerrainSmoothing,
+    TogglePostNativeEdgeCurving,
     RequestScreenshot,
     TogglePostPassOverlay,
     ToggleInputRecording,
