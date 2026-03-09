@@ -1,15 +1,19 @@
-namespace Tunnerer.Desktop;
+namespace Tunnerer.Desktop.Rendering;
 
 using Tunnerer.Core.Config;
+using Tunnerer.Core.Entities;
+using Tunnerer.Core.Terrain;
 using Tunnerer.Core.Types;
 using Tunnerer.Desktop.Config;
-using Tunnerer.Desktop.Rendering;
 
-public partial class Game
+public sealed class TerrainAuxBuilder
 {
-    private int BuildGpuTankHeatGlowData(
-        IReadOnlyList<Core.Entities.Tank> tanks,
-        in RenderView view)
+    private readonly TerrainBlurField _gpuBlurField = new();
+
+    public int BuildGpuTankHeatGlowData(
+        IReadOnlyList<Tank> tanks,
+        in RenderView view,
+        float[] target)
     {
         int camPixelX = view.CameraPixels.X;
         int camPixelY = view.CameraPixels.Y;
@@ -19,7 +23,7 @@ public partial class Game
         int count = 0;
         for (int i = 0; i < tanks.Count && count < Tweaks.World.MaxPlayers; i++)
         {
-            var tank = tanks[i];
+            Tank tank = tanks[i];
             if (tank.IsDead) continue;
 
             float t = tank.Heat / Tweaks.Tank.HeatMax;
@@ -48,30 +52,31 @@ public partial class Game
                 continue;
 
             int baseIdx = count * 4;
-            _gpuTankHeatGlow[baseIdx + 0] = cx / targetW;
-            _gpuTankHeatGlow[baseIdx + 1] = cy / targetH;
-            _gpuTankHeatGlow[baseIdx + 2] = glowRadiusPx / MathF.Max(targetW, targetH);
+            target[baseIdx + 0] = cx / targetW;
+            target[baseIdx + 1] = cy / targetH;
+            target[baseIdx + 2] = glowRadiusPx / MathF.Max(targetW, targetH);
             // Store normalized heat visibility; shader derives glow/distortion from this directly.
-            _gpuTankHeatGlow[baseIdx + 3] = visibleT;
+            target[baseIdx + 3] = visibleT;
             count++;
         }
 
         return count;
     }
 
-    private void BuildGpuTerrainAuxData(Core.Terrain.TerrainGrid terrain, byte[] target)
+    public void BuildGpuTerrainAuxData(TerrainGrid terrain, byte[] target)
     {
         _gpuBlurField.Rebuild(terrain);
         int w = terrain.Width;
         int len = terrain.Size.Area;
         for (int i = 0; i < len; i++)
         {
-            int x = i % w, y = i / w;
+            int x = i % w;
+            int y = i / w;
             WriteTerrainAux(terrain, i, terrain.GetPixelRaw(i), _gpuBlurField.SampleAsByte(x, y), target, i * 4);
         }
     }
 
-    private void BuildGpuTerrainAuxRect(Core.Terrain.TerrainGrid terrain, byte[] target, in Rect dirtyRect)
+    public void BuildGpuTerrainAuxRect(TerrainGrid terrain, byte[] target, in Rect dirtyRect)
     {
         RectMath.GetMinMaxInclusive(dirtyRect, out int minX, out int minY, out int maxX, out int maxY);
         _gpuBlurField.UpdateRect(terrain, minX, minY, maxX, maxY);
@@ -87,13 +92,13 @@ public partial class Game
         }
     }
 
-    private static void UpdateGpuTerrainAuxHeatOnly(Core.Terrain.TerrainGrid terrain, byte[] target, in Rect dirtyRect)
+    public static void UpdateGpuTerrainAuxHeatOnly(TerrainGrid terrain, byte[] target, in Rect dirtyRect)
     {
         RectMath.GetMinMaxInclusive(dirtyRect, out int minX, out int minY, out int maxX, out int maxY);
         int w = terrain.Width;
         int rowCount = maxY - minY + 1;
 
-        const float scale = Core.Terrain.TerrainGrid.HeatByteScale;
+        const float scale = TerrainGrid.HeatByteScale;
         if (rowCount >= 32)
         {
             Parallel.For(minY, maxY + 1, y =>
@@ -122,7 +127,7 @@ public partial class Game
         }
     }
 
-    private static void WriteTerrainAux(Core.Terrain.TerrainGrid terrain, int idx, Core.Terrain.TerrainPixel pixel, byte sdfValue, byte[] target, int writeIndex)
+    private static void WriteTerrainAux(TerrainGrid terrain, int idx, TerrainPixel pixel, byte sdfValue, byte[] target, int writeIndex)
     {
         // Aux channel layout:
         // R = heat, G = smoothed SDF, B = material class, A = scorch damage level.
@@ -133,31 +138,31 @@ public partial class Game
         const byte materialBase = 255;
 
         byte material = materialNone;
-        if (pixel == Core.Terrain.TerrainPixel.DirtGrow || Core.Terrain.Pixel.IsDirt(pixel))
+        if (pixel == TerrainPixel.DirtGrow || Pixel.IsDirt(pixel))
             material = materialDirt;
-        else if (Core.Terrain.Pixel.IsEnergy(pixel))
+        else if (Pixel.IsEnergy(pixel))
             material = materialEnergy;
-        else if (pixel == Core.Terrain.TerrainPixel.BaseBarrier ||
-                 pixel == Core.Terrain.TerrainPixel.BaseCore ||
-                 Core.Terrain.Pixel.IsBase(pixel))
+        else if (pixel == TerrainPixel.BaseBarrier ||
+                 pixel == TerrainPixel.BaseCore ||
+                 Pixel.IsBase(pixel))
             material = materialBase;
-        else if (Core.Terrain.Pixel.IsRock(pixel) || Core.Terrain.Pixel.IsConcrete(pixel) ||
-                 Core.Terrain.Pixel.IsMineral(pixel) || Core.Terrain.Pixel.IsBlockingCollision(pixel))
+        else if (Pixel.IsRock(pixel) || Pixel.IsConcrete(pixel) ||
+                 Pixel.IsMineral(pixel) || Pixel.IsBlockingCollision(pixel))
             material = materialStone;
 
         byte scorch = 0;
         switch (pixel)
         {
-            case Core.Terrain.TerrainPixel.DecalHigh:
+            case TerrainPixel.DecalHigh:
                 scorch = DesktopScreenTweaks.PostEmissiveScorchedHigh;
                 break;
-            case Core.Terrain.TerrainPixel.DecalLow:
+            case TerrainPixel.DecalLow:
                 scorch = DesktopScreenTweaks.PostEmissiveScorchedLow;
                 break;
         }
 
         float heat = terrain.GetHeatTemperature(idx);
-        target[writeIndex] = (byte)Math.Clamp((int)MathF.Round(heat / Core.Terrain.TerrainGrid.HeatByteScale), 0, 255);
+        target[writeIndex] = (byte)Math.Clamp((int)MathF.Round(heat / TerrainGrid.HeatByteScale), 0, 255);
         target[writeIndex + 1] = sdfValue;
         target[writeIndex + 2] = material;
         target[writeIndex + 3] = scorch;

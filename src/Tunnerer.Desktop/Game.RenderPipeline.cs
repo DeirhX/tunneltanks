@@ -14,66 +14,64 @@ public partial class Game
         var (winW, winH) = _renderer.GetWindowSize();
         float dt = 1f / Tweaks.Perf.TargetFps;
         int scale = DesktopScreenTweaks.PixelScale;
-        int viewportHeight = _renderBackend.SupportsUi
-            ? Math.Max(1, winH - (int)GameHud.BottomPanelHeight)
-            : Math.Max(1, winH);
-        var viewSize = new Size(Math.Max(1, winW), viewportHeight);
-        EnsureHiResBuffer(viewSize);
+        var viewSize = _renderViewState.ComputeViewSize(winW, winH, _renderBackend.SupportsUi);
+        _renderViewState.EnsureHiResBuffer(viewSize);
 
         var player = tanks.Count > 0 ? tanks[0] : null;
-        UpdateCamera(player, viewSize.X, viewSize.Y, scale);
+        _renderViewState.UpdateCamera(player, _terrainSize, viewSize.X, viewSize.Y, scale);
         var renderView = new RenderView(
-            ViewSize: _hiResSize,
+            ViewSize: _renderViewState.HiResSize,
             WorldSize: _terrainSize,
-            CameraPixels: new Position(_camPixelX, _camPixelY),
+            CameraPixels: new Position(_renderViewState.CamPixelX, _renderViewState.CamPixelY),
             PixelScale: scale);
 
         ProfileSection(ref _drawProfile.ScreenDraw, () =>
         {
             var hiResWatch = Stopwatch.StartNew();
 
-            var visibleRect = ComputeVisibleWorldRect();
+            var visibleRect = _renderViewState.ComputeVisibleWorldRect(_terrainSize, scale);
 
             Rect? auxDirtyRect;
             bool consumeHeatDirty;
             if (_gpuAuxFullUploadPending)
             {
                 ProfileSection(ref _drawProfile.ScreenAuxBuild, () =>
-                    BuildGpuTerrainAuxData(_world.Terrain, _gpuTerrainAux));
+                    _terrainAuxBuilder.BuildGpuTerrainAuxData(_world.Terrain, _gpuTerrainAux));
                 auxDirtyRect = new Rect(0, 0, _terrainSize.X, _terrainSize.Y);
                 consumeHeatDirty = true;
             }
             else
             {
-                Rect? terrainDirtyRect = ClampToViewport(TryGetDirtyCellBounds(_terrainDirtyCells), visibleRect);
+                Rect? terrainDirtyRect = RenderViewState.ClampToViewport(
+                    RenderViewState.TryGetDirtyCellBounds(_terrainDirtyCells), visibleRect);
                 bool includeHeatAux = (_heatAuxFrameCounter++ % DesktopScreenTweaks.HeatAuxUpdateIntervalFrames) == 0;
                 Rect? heatDirtyRect = includeHeatAux && _world.Terrain.TryGetHeatDirtyRect(out Rect dirtyRect)
-                    ? ClampToViewport(dirtyRect, visibleRect)
+                    ? RenderViewState.ClampToViewport(dirtyRect, visibleRect)
                     : null;
 
-                Rect? cameraRevealRect = ComputeCameraRevealRect(visibleRect);
+                Rect? cameraRevealRect = _renderViewState.ComputeCameraRevealRect(visibleRect);
 
                 // Terrain-change and camera-reveal need full 4-channel aux rebuild
                 // (R=heat, G=SDF, B=material class, A=scorch level).
-                Rect? fullAuxRect = MergeDirtyRects(terrainDirtyRect, cameraRevealRect);
+                Rect? fullAuxRect = RenderViewState.MergeDirtyRects(terrainDirtyRect, cameraRevealRect);
 
                 if (fullAuxRect is Rect fullRect)
                     ProfileSection(ref _drawProfile.AuxTerrainPack, () =>
-                        BuildGpuTerrainAuxRect(_world.Terrain, _gpuTerrainAux, fullRect));
+                        _terrainAuxBuilder.BuildGpuTerrainAuxRect(_world.Terrain, _gpuTerrainAux, fullRect));
 
                 // Heat-only R-channel fast path for the remaining visible heat area
                 Rect? heatOnlyRect = heatDirtyRect;
                 if (heatOnlyRect is not null && fullAuxRect is not null)
-                    heatOnlyRect = SubtractCoveredHeatRect(heatOnlyRect, fullAuxRect);
+                    heatOnlyRect = RenderViewState.SubtractCoveredHeatRect(heatOnlyRect, fullAuxRect);
 
                 if (heatOnlyRect is Rect heatRect)
                     ProfileSection(ref _drawProfile.AuxHeatPack, () =>
-                        UpdateGpuTerrainAuxHeatOnly(_world.Terrain, _gpuTerrainAux, heatRect));
+                        TerrainAuxBuilder.UpdateGpuTerrainAuxHeatOnly(_world.Terrain, _gpuTerrainAux, heatRect));
 
-                auxDirtyRect = MergeDirtyRects(fullAuxRect, heatOnlyRect);
+                auxDirtyRect = RenderViewState.MergeDirtyRects(fullAuxRect, heatOnlyRect);
                 consumeHeatDirty = includeHeatAux;
             }
-            _lastAuxViewport = visibleRect;
+            _renderViewState.UpdateLastAuxViewport(visibleRect);
             _terrainDirtyCells.Clear();
 
             _drawProfile.ScreenHiResTerrain += hiResWatch.Elapsed;
@@ -82,8 +80,8 @@ public partial class Game
             hiResWatch.Restart();
             int tankHeatGlowCount = 0;
             ProfileSection(ref _drawProfile.ScreenTankGlowBuild, () =>
-                tankHeatGlowCount = BuildGpuTankHeatGlowData(
-                    _world.TankList.Tanks, renderView));
+                tankHeatGlowCount = _terrainAuxBuilder.BuildGpuTankHeatGlowData(
+                    _world.TankList.Tanks, renderView, _gpuTankHeatGlow));
 
             _drawProfile.ScreenHiResEntities += hiResWatch.Elapsed;
 
@@ -93,8 +91,8 @@ public partial class Game
                 View: renderView,
                 PostProcess: new PostProcessUploadOptions(
                     Quality: HiResRenderQuality.High,
-                    HeatDebugOverlayEnabled: _showHeatDebugOverlay,
-                    PassFlags: _enabledPostPasses),
+                    HeatDebugOverlayEnabled: _commandController.ShowHeatDebugOverlay,
+                    PassFlags: _commandController.EnabledPostPasses),
                 TankGlow: new TankGlowUpload(
                     Data: _gpuTankHeatGlow,
                     Count: tankHeatGlowCount),
@@ -104,7 +102,7 @@ public partial class Game
                 NativeContinuous: new NativeContinuousUpload(
                     Enabled: true,
                     SourcePixels: _compositePixels,
-                    SampleCount: _nativeContinuousSampleCount));
+                    SampleCount: _renderViewState.NativeContinuousSampleCount));
             ProfileSection(ref _drawProfile.ScreenBackendUpload, () =>
                 _renderBackend.UploadGamePixels(upload));
             if (consumeHeatDirty)
@@ -115,7 +113,7 @@ public partial class Game
 
             ProfileSection(ref _drawProfile.ScreenQualityAdjust, () =>
             {
-                UpdateNativeContinuousQuality(terrainMs + uploadMs);
+                _renderViewState.UpdateNativeContinuousQuality(terrainMs + uploadMs);
             });
         });
 
@@ -147,8 +145,8 @@ public partial class Game
                         player,
                         _world,
                         dt,
-                        _enabledPostPasses,
-                        _showPostPassOverlay));
+                        _commandController.EnabledPostPasses,
+                        _commandController.ShowPostPassOverlay));
             }
 
         }
@@ -161,15 +159,5 @@ public partial class Game
         imguiWatch.Restart();
         _renderer.SwapWindow();
         _drawProfile.ScreenSwap += imguiWatch.Elapsed;
-    }
-
-    private static Rect? SubtractCoveredHeatRect(Rect? heat, Rect? full)
-    {
-        if (heat is null || full is null) return heat;
-        var h = heat.Value;
-        var f = full.Value;
-        if (h.Left >= f.Left && h.Top >= f.Top && h.Right <= f.Right && h.Bottom <= f.Bottom)
-            return null;
-        return heat;
     }
 }

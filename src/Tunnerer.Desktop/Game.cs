@@ -27,32 +27,18 @@ public partial class Game : IDisposable
     private readonly uint[] _compositePixels;
     private readonly KeyboardController _p1Controller;
     private readonly BotTankAI _p2AI;
-    private readonly ScriptedController? _scriptedController;
-    private readonly int _scriptScreenshotFrame;
-    private readonly HashSet<int> _scriptScreenshotFrames = [];
-    private readonly Dictionary<int, List<GameCommand>> _scriptCommandsByFrame = [];
+    private readonly ScriptedInputConfig _scriptedInput;
     private readonly InputRecorder _inputRecorder = new();
-    private readonly string? _recordInputPath;
-    private readonly bool _recordInputAutoStart;
+    private readonly GameSimulationStepper _simulationStepper;
+    private readonly RenderViewState _renderViewState = new();
+    private readonly TerrainAuxBuilder _terrainAuxBuilder = new();
+    private readonly GameCommandController _commandController = new();
     private readonly List<Position> _terrainDirtyCells = new();
     private readonly float[] _gpuTankHeatGlow = new float[Tweaks.World.MaxPlayers * 4];
     private readonly byte[] _gpuTerrainAux;
-    private readonly TerrainBlurField _gpuBlurField = new();
     private bool _gpuAuxFullUploadPending = true;
-    private Size _hiResSize;
-    private int _nativeContinuousSampleCount = DesktopScreenTweaks.NativeContinuousSampleHigh;
-    private int _nativeOverBudgetFrames;
-    private int _nativeUnderBudgetFrames;
     private int _heatAuxFrameCounter;
-    private bool _showThermalRegionDebug;
-    private bool _showHeatDebugOverlay;
-    private bool _showPostPassOverlay = true;
-    private PostProcessPassFlags _enabledPostPasses = PostProcessPassFlags.All;
-    private Rect _lastAuxViewport;
     private readonly Stopwatch _gameTimer = Stopwatch.StartNew();
-
-    private int _camPixelX;
-    private int _camPixelY;
 
     public const int DefaultSeed = 42;
 
@@ -60,6 +46,8 @@ public partial class Game : IDisposable
     private readonly PerfCaptureSession _perfSession;
     private bool _isRunning = true;
     private int _simFrameCounter;
+    private TimeSpan _simTimeAccumulator;
+    private const int MaxCatchUpSimulationSteps = 4;
 
     public unsafe Game(
         Size? terrainSizeOverride = null,
@@ -112,27 +100,28 @@ public partial class Game : IDisposable
             Left: Scancode.ScancodeA, Right: Scancode.ScancodeD,
             Up: Scancode.ScancodeW, Down: Scancode.ScancodeS,
             Shoot: Scancode.ScancodeSpace));
-        _scriptedController = ScriptedController.TryParse(Environment.GetEnvironmentVariable("TUNNERER_SCRIPTED_INPUT"));
-        _scriptScreenshotFrame = ParseNonNegativeInt(Environment.GetEnvironmentVariable("TUNNERER_SCRIPT_SCREENSHOT_FRAME"), -1);
-        if (_scriptScreenshotFrame >= 0)
-            _scriptScreenshotFrames.Add(_scriptScreenshotFrame);
-        ParseScriptScreenshotFrames(Environment.GetEnvironmentVariable("TUNNERER_SCRIPT_SCREENSHOT_FRAMES"), _scriptScreenshotFrames);
-        ParseScriptCommands(Environment.GetEnvironmentVariable("TUNNERER_COMMAND_SCRIPT"), _scriptCommandsByFrame);
-        _recordInputPath = NormalizeRecordPath(Environment.GetEnvironmentVariable("TUNNERER_RECORD_INPUT_PATH"));
-        _recordInputAutoStart = IsTruthy(Environment.GetEnvironmentVariable("TUNNERER_RECORD_INPUT_AUTOSTART"));
-        if (_scriptedController is not null)
+        _scriptedInput = ScriptedInputConfig.FromEnvironment();
+        if (_scriptedInput.HasScriptedController())
             Console.WriteLine("[Input] Scripted controller enabled via TUNNERER_SCRIPTED_INPUT.");
-        if (_scriptScreenshotFrames.Count > 0)
-            Console.WriteLine($"[Input] Scripted screenshot frames enabled ({_scriptScreenshotFrames.Count} frame(s)).");
-        if (_scriptCommandsByFrame.Count > 0)
-            Console.WriteLine($"[Input] Scripted commands enabled via TUNNERER_COMMAND_SCRIPT ({_scriptCommandsByFrame.Count} frame slot(s)).");
-        if (_recordInputPath is not null)
-            Console.WriteLine($"[Input] Scripted input recording path: {_recordInputPath}");
-        if (_recordInputAutoStart)
+        if (_scriptedInput.ScreenshotFrameCount > 0)
+            Console.WriteLine($"[Input] Scripted screenshot frames enabled ({_scriptedInput.ScreenshotFrameCount} frame(s)).");
+        if (_scriptedInput.CommandFrameCount > 0)
+            Console.WriteLine($"[Input] Scripted commands enabled via TUNNERER_COMMAND_SCRIPT ({_scriptedInput.CommandFrameCount} frame slot(s)).");
+        if (_scriptedInput.RecordPath is not null)
+            Console.WriteLine($"[Input] Scripted input recording path: {_scriptedInput.RecordPath}");
+        if (_scriptedInput.RecordAutoStart)
         {
             Console.WriteLine("[Input] Scripted input recording autostart enabled.");
             _inputRecorder.Start();
         }
+        _simulationStepper = new GameSimulationStepper(
+            world: _world,
+            p1Controller: _p1Controller,
+            p2AI: _p2AI,
+            scriptedInput: _scriptedInput,
+            inputRecorder: _inputRecorder,
+            executeCommand: ExecuteGameCommand,
+            requestScreenshot: label => _renderBackend.RequestScreenshot(label));
         Console.WriteLine("[Render] TerrainVisual=NativeContinuous");
     }
 
@@ -146,55 +135,29 @@ public partial class Game : IDisposable
 
             while (_isRunning)
             {
+                _simTimeAccumulator += frameTimer.Elapsed;
+                frameTimer.Restart();
+
                 if (!_renderer.PollEvents(HandleEvent))
                 { _isRunning = false; break; }
 
                 if (_world.IsGameOver)
                 { _isRunning = false; break; }
 
-                if (frameTimer.Elapsed >= targetFrameTime)
+                if (_simTimeAccumulator >= targetFrameTime)
                 {
-                    frameTimer.Restart();
                     var totalFrameWatch = Stopwatch.StartNew();
-                    ApplyScriptCommandsForFrame(_simFrameCounter);
-
-                    var aimDir = ComputeAimDirection(tanks);
-
-                    bool mouseShoot = IsMouseInViewport(out _, out _) && IsLeftMouseDown();
-                    ControllerOutput p1Output = default;
-
-                    _world.Advance(i =>
-                    {
-                        if (i == 0)
-                        {
-                            var kb = _p1Controller.Poll();
-                            ControllerOutput scripted = _scriptedController?.GetOutputAtFrame(_simFrameCounter) ?? default;
-                            var move = _scriptedController is null ? kb.MoveSpeed : scripted.MoveSpeed;
-                            p1Output = new ControllerOutput
-                            {
-                                MoveSpeed = move,
-                                ShootPrimary = kb.ShootPrimary || mouseShoot || scripted.ShootPrimary,
-                                AimDirection = aimDir ?? default,
-                            };
-                            return p1Output;
-                        }
-                        var enemy = tanks.Count > 0 ? tanks[0] : null;
-                        return _p2AI.GetInput(_world.TankList.Tanks[i], enemy, _world.Terrain);
-                    });
-
-                    _inputRecorder.RecordFrame(p1Output.MoveSpeed, p1Output.ShootPrimary);
-
-                    if (_scriptScreenshotFrames.Contains(_simFrameCounter))
-                        _renderBackend.RequestScreenshot($"script_frame_{_simFrameCounter:D4}");
-                    _simFrameCounter++;
-
+                    int simulatedSteps = 0;
                     _terrainDirtyCells.Clear();
-                    var changedCells = _world.Terrain.GetChangeList();
-                    if (changedCells.Count > 0)
-                        _terrainDirtyCells.AddRange(changedCells);
+                    while (_simTimeAccumulator >= targetFrameTime && simulatedSteps < MaxCatchUpSimulationSteps && _isRunning)
+                    {
+                        _simTimeAccumulator -= targetFrameTime;
+                        simulatedSteps++;
+                        AdvanceOneSimulationStep(tanks);
+                    }
 
-                    ProfileSection(ref _drawProfile.TerrainDraw,
-                        () => _world.Terrain.DrawChangesToSurface(_worldPixels));
+                    if (simulatedSteps == MaxCatchUpSimulationSteps && _simTimeAccumulator > targetFrameTime)
+                        _simTimeAccumulator = targetFrameTime;
 
                     ProfileSection(ref _drawProfile.ObjectsDraw, () =>
                     {
@@ -222,6 +185,28 @@ public partial class Game : IDisposable
             FlushInputRecordingOnExit();
             DisposeResources();
         }
+    }
+
+    private void AdvanceOneSimulationStep(IReadOnlyList<Core.Entities.Tank> tanks)
+    {
+        var aimDir = ComputeAimDirection(tanks);
+        bool mouseShoot = IsMouseInViewport(out _, out _) && IsLeftMouseDown();
+        SimulationStepResult stepResult = _simulationStepper.AdvanceOneStep(
+            simFrame: _simFrameCounter,
+            tanks: tanks,
+            aimDirection: aimDir,
+            mouseShoot: mouseShoot);
+        _simFrameCounter++;
+
+        var changedCells = _world.Terrain.GetChangeList();
+        if (changedCells.Count > 0)
+            _terrainDirtyCells.AddRange(changedCells);
+
+        ProfileSection(ref _drawProfile.TerrainDraw,
+            () => _world.Terrain.DrawChangesToSurface(_worldPixels));
+
+        if (stepResult.IsGameOver)
+            _isRunning = false;
     }
 
     private void LoadHudSprites()
@@ -266,88 +251,4 @@ public partial class Game : IDisposable
         accumulator += w.Elapsed;
     }
 
-    private static int ParseNonNegativeInt(string? value, int fallback)
-    {
-        if (int.TryParse(value, out int parsed) && parsed >= 0)
-            return parsed;
-        return fallback;
-    }
-
-    private static bool IsTruthy(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return false;
-        return value.Equals("1", StringComparison.OrdinalIgnoreCase)
-            || value.Equals("true", StringComparison.OrdinalIgnoreCase)
-            || value.Equals("yes", StringComparison.OrdinalIgnoreCase)
-            || value.Equals("on", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string? NormalizeRecordPath(string? raw)
-    {
-        if (string.IsNullOrWhiteSpace(raw))
-            return null;
-        string trimmed = raw.Trim();
-        if (Path.IsPathRooted(trimmed))
-            return trimmed;
-        return Path.GetFullPath(trimmed, Directory.GetCurrentDirectory());
-    }
-
-    private static void ParseScriptScreenshotFrames(string? value, HashSet<int> targetFrames)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return;
-
-        string[] tokens = value.Split([',', ';', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        for (int i = 0; i < tokens.Length; i++)
-        {
-            if (int.TryParse(tokens[i], out int frame) && frame >= 0)
-                targetFrames.Add(frame);
-        }
-    }
-
-    private static void ParseScriptCommands(string? value, Dictionary<int, List<GameCommand>> target)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return;
-
-        string[] entries = value.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        for (int i = 0; i < entries.Length; i++)
-        {
-            string entry = entries[i];
-            int split = entry.IndexOf(':');
-            if (split < 0)
-                split = entry.IndexOf('=');
-            if (split <= 0 || split >= entry.Length - 1)
-                continue;
-
-            string frameToken = entry[..split].Trim();
-            string commandToken = entry[(split + 1)..].Trim();
-            if (!int.TryParse(frameToken, out int frame) || frame < 0)
-                continue;
-            if (!TryParseScriptCommand(commandToken, out GameCommand command))
-                continue;
-
-            if (!target.TryGetValue(frame, out List<GameCommand>? commands))
-            {
-                commands = [];
-                target[frame] = commands;
-            }
-            commands.Add(command);
-        }
-    }
-
-    private static bool TryParseScriptCommand(string token, out GameCommand command)
-    {
-        return Enum.TryParse(token.Trim(), ignoreCase: true, out command);
-    }
-
-    private void ApplyScriptCommandsForFrame(int frame)
-    {
-        if (!_scriptCommandsByFrame.TryGetValue(frame, out List<GameCommand>? commands))
-            return;
-
-        for (int i = 0; i < commands.Count; i++)
-            ExecuteGameCommand(commands[i], "script");
-    }
 }

@@ -4,7 +4,7 @@ public partial class Game
 {
     private void ApplyThermalRegionDebugOverlay(uint[] pixels)
     {
-        if (!_showThermalRegionDebug)
+        if (!_commandController.ShowThermalRegionDebug)
             return;
         if (!_world.Terrain.TryGetThermalTileInfo(out int tileSize, out int tileCountX, out int tileCountY))
             return;
