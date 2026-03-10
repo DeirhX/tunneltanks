@@ -19,7 +19,8 @@ public partial class Game
             return;
 
         Scancode scancode = (Scancode)ev.Key.Keysym.Scancode;
-        if (GameCommandController.TryTranslateHotkey(scancode, out GameCommand command))
+        bool shiftHeld = (ev.Key.Keysym.Mod & (ushort)Keymod.Shift) != 0;
+        if (GameCommandController.TryTranslateHotkey(scancode, shiftHeld, out GameCommand command))
             ExecuteGameCommand(command, InputCommandSources.Input);
     }
 

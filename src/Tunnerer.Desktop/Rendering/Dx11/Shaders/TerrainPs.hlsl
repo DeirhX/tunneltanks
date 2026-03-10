@@ -29,7 +29,9 @@ SamplerState s0 : register(s0);
 float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_Target
 {
     bool sharpMode = NativeContinuousParams.x <= 1e-5 && NativeContinuousParams.y <= 1e-5;
-    bool nativeCurvingEnabled = NativeContinuousParams.w > 0.5;
+    // Curving only makes sense when smoothing is also active; otherwise
+    // "all passes off" should stay strictly nearest/uncurved.
+    bool nativeCurvingEnabled = !sharpMode && NativeContinuousParams.w > 0.5;
 
     // ---- Screen → World coordinate mapping --------------------------------
     float2 screenPx = uv * ViewSize;

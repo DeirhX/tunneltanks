@@ -24,7 +24,7 @@ public sealed unsafe class SdlRenderer : IDisposable
         if (_sdl.Init(Sdl.InitVideo | Sdl.InitEvents) < 0)
             throw new Exception($"SDL_Init failed: {Marshal.PtrToStringAnsi((nint)_sdl.GetError())}");
 
-        uint windowFlags = (uint)(WindowFlags.Shown | WindowFlags.Resizable);
+        uint windowFlags = (uint)(WindowFlags.Shown | WindowFlags.Borderless | WindowFlags.FullscreenDesktop);
 
         _window = _sdl.CreateWindow(
             title,

@@ -11,6 +11,7 @@ public sealed class GameSimulationStepper
     private readonly World _world;
     private readonly KeyboardController _p1Controller;
     private readonly BotTankAI _p2AI;
+    private readonly bool _enableAiTanks;
     private readonly ScriptedInputConfig _scriptedInput;
     private readonly InputRecorder _inputRecorder;
     private readonly Action<GameCommand, string> _executeCommand;
@@ -20,6 +21,7 @@ public sealed class GameSimulationStepper
         World world,
         KeyboardController p1Controller,
         BotTankAI p2AI,
+        bool enableAiTanks,
         ScriptedInputConfig scriptedInput,
         InputRecorder inputRecorder,
         Action<GameCommand, string> executeCommand,
@@ -28,6 +30,7 @@ public sealed class GameSimulationStepper
         _world = world;
         _p1Controller = p1Controller;
         _p2AI = p2AI;
+        _enableAiTanks = enableAiTanks;
         _scriptedInput = scriptedInput;
         _inputRecorder = inputRecorder;
         _executeCommand = executeCommand;
@@ -54,6 +57,9 @@ public sealed class GameSimulationStepper
                 };
                 return p1Output;
             }
+
+            if (!_enableAiTanks)
+                return default;
 
             var enemy = tanks.Count > 0 ? tanks[0] : null;
             return _p2AI.GetInput(_world.TankList.Tanks[i], enemy, _world.Terrain);

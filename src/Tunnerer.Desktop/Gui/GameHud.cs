@@ -177,8 +177,6 @@ public class GameHud
             ImGui.SetWindowFontScale(1.25f);
             ImGui.TextUnformatted("Post Passes");
             ImGui.Separator();
-            DrawToggleStatusLine(heatDebugOverlayEnabled, "0 HeatColormap");
-            DrawPassStatusLine(passFlags, PostProcessPassFlags.ThermalRegions, "9 ThermalRegions");
             DrawPassStatusLine(passFlags, PostProcessPassFlags.Vignette, "1 Vignette");
             DrawPassStatusLine(passFlags, PostProcessPassFlags.TerrainCurve, "2 TerrainCurve");
             DrawPassStatusLine(passFlags, PostProcessPassFlags.TerrainAux, "3 TerrainTex");
@@ -186,6 +184,8 @@ public class GameHud
             DrawPassStatusLine(passFlags, PostProcessPassFlags.NativeTerrainSmoothing, "5 NativeSmoothing");
             DrawPassStatusLine(passFlags, PostProcessPassFlags.TerrainHeat, "6 TerrainHeat");
             DrawPassStatusLine(passFlags, PostProcessPassFlags.NativeEdgeCurving, "7 NativeEdgeCurving");
+            DrawToggleStatusLine(heatDebugOverlayEnabled, "8 HeatColormap (Shift+1)");
+            DrawPassStatusLine(passFlags, PostProcessPassFlags.ThermalRegions, "9 ThermalRegions (Shift+2)");
             ImGui.SetWindowFontScale(1.0f);
         }
         ImGui.End();

@@ -7,24 +7,31 @@ public sealed class GameCommandController
 {
     private bool _showHeatDebugOverlay;
     private bool _showPostPassOverlay = true;
-    private PostProcessPassFlags _enabledPostPasses = PostProcessPassFlags.All;
+    private PostProcessPassFlags _enabledPostPasses = PostProcessPassFlags.All & ~PostProcessPassFlags.ThermalRegions;
 
     public bool ShowHeatDebugOverlay => _showHeatDebugOverlay;
     public bool ShowPostPassOverlay => _showPostPassOverlay;
     public PostProcessPassFlags EnabledPostPasses => _enabledPostPasses;
 
-    public static bool TryTranslateHotkey(Scancode scancode, out GameCommand command)
+    public static bool TryTranslateHotkey(Scancode scancode, bool shiftHeld, out GameCommand command)
     {
+        if (shiftHeld)
+        {
+            switch (scancode)
+            {
+                case Scancode.Scancode1:
+                    command = GameCommand.ToggleHeatOverlay;            // #8
+                    return true;
+                case Scancode.Scancode2:
+                    command = GameCommand.ToggleThermalRegionsOverlay;   // #9
+                    return true;
+            }
+        }
+
         switch (scancode)
         {
             case Scancode.ScancodeF9:
                 command = GameCommand.ToggleHeatOverlay;
-                return true;
-            case Scancode.Scancode0:
-                command = GameCommand.ToggleHeatOverlay;
-                return true;
-            case Scancode.Scancode9:
-                command = GameCommand.ToggleThermalRegionsOverlay;
                 return true;
             case Scancode.Scancode1:
                 command = GameCommand.TogglePostVignette;

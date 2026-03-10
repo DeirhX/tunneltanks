@@ -9,6 +9,7 @@ int perfWarmupFrames = 180;
 int perfMeasureFrames = 900;
 string? perfCsvPath = null;
 RenderBackendKind? renderBackend = null;
+bool enableAiTanks = true;
 foreach (var arg in args)
 {
     if (arg == "--large")
@@ -39,13 +40,17 @@ foreach (var arg in args)
         else
             Console.WriteLine($"[Args] Unknown backend '{backendRaw}', expected dx11|dx12. Using default.");
     }
+    else if (arg == "--no-ai" || arg == "--disable-ai")
+    {
+        enableAiTanks = false;
+    }
 }
 
 var mode = fastGen ? LevelGenMode.Optimized : LevelGenMode.Deterministic;
 Tunnerer.Desktop.PerfCaptureOptions? perfOptions = perfMode
     ? new Tunnerer.Desktop.PerfCaptureOptions(perfWarmupFrames, perfMeasureFrames, perfCsvPath)
     : null;
-var game = new Tunnerer.Desktop.Game(terrainSize, mode, perfOptions, renderBackend);
+var game = new Tunnerer.Desktop.Game(terrainSize, mode, perfOptions, renderBackend, enableAiTanks);
 game.Run();
 
 

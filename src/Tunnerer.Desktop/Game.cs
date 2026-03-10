@@ -52,7 +52,8 @@ public partial class Game : IDisposable
         Size? terrainSizeOverride = null,
         LevelGenMode genMode = LevelGenMode.Deterministic,
         PerfCaptureOptions? perfCapture = null,
-        RenderBackendKind? renderBackendOverride = null)
+        RenderBackendKind? renderBackendOverride = null,
+        bool enableAiTanks = true)
     {
         var windowSize = DesktopScreenTweaks.WindowSize;
         _terrainSize = terrainSizeOverride ?? DesktopScreenTweaks.RenderSurfaceSize;
@@ -113,14 +114,19 @@ public partial class Game : IDisposable
             Console.WriteLine("[Input] Scripted input recording autostart enabled.");
             _inputRecorder.Start();
         }
+        bool effectiveEnableAiTanks = enableAiTanks && !_scriptedInput.HasScriptedController();
+        if (enableAiTanks && !effectiveEnableAiTanks)
+            Console.WriteLine("[Input] AI tanks forced OFF during scripted replay.");
         _simulationStepper = new GameSimulationStepper(
             world: _world,
             p1Controller: _p1Controller,
             p2AI: _p2AI,
+            enableAiTanks: effectiveEnableAiTanks,
             scriptedInput: _scriptedInput,
             inputRecorder: _inputRecorder,
             executeCommand: ExecuteGameCommand,
             requestScreenshot: label => _renderBackend.RequestScreenshot(label));
+        Console.WriteLine($"[Input] AI tanks: {(effectiveEnableAiTanks ? "enabled" : "disabled")}");
         Console.WriteLine("[Render] TerrainVisual=NativeContinuous");
     }
 
